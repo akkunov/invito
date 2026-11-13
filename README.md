@@ -1,0 +1,79 @@
+# INVITO · frontend foundation
+
+**Статус:** первая рабочая итерация frontend-прототипа (архитектура → интерфейс → редактор локального черновика). Не production и не готовая система публикации.
+
+## Реализовано
+
+- Landing page `/ru` и `/ky` в утверждённой чёрно-бело-оранжевой палитре.
+- Интерактивный конверт на главном экране; доступность кнопки и `prefers-reduced-motion`.
+- Каталог `/[locale]/templates` с серверным поиском и фильтрацией по категории/типу тарифа.
+- 12 различающихся seed-шаблонов (цель публичного запуска — 60, см. `docs/ARCHITECTURE.md`).
+- `/[locale]/templates/[slug]` — работающий SSR-предпросмотр; у приглашений своя палитра, не фирменная.
+- `/[locale]/editor?template=<id>` — клиентский редактор: RU/KY, имена, заголовок, текст, дата, город/место, акцент, видимость и перестановка блоков, Undo/Redo.
+- Автосохранение черновика в **локальном браузере** с Zod-проверкой при чтении.
+- Статическая SEO metadata, canonical, alternate languages, sitemap и robots.
+
+## Пока не реализовано
+
+Backend, авторизация, настоящая публикация, загрузка медиа, запись RSVP, оплата, Drag & Drop и админ-панель. В интерфейсе действия, требующие сервер, не имитируют успех.
+
+## Запуск
+
+Требуется Node.js 20.9+ (рекомендуется Node 22) и доступ к npm/Google Fonts во время сборки.
+
+```bash
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+Открыть http://localhost:3000 — Next.js перенаправит на `/ru`.
+
+Проверка перед коммитом:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+> В среде подготовки архива npm registry недоступен (`EAI_AGAIN`), поэтому фактический `npm install` и build не запускались. Выполнялась только проверка синтаксиса TypeScript/JSX средствами компилятора, указанная в отчёте.
+
+## Папки
+
+```text
+src/
+  app/[locale]/              // локализованные серверные маршруты
+  components/brand/          // бренд
+  components/layout/         // навигация и футер
+  components/landing/        // независимые секции лендинга
+  components/templates/      // карточка и artwork шаблона
+  components/invitation/     // единый renderer приглашения
+  components/editor/         // панели редактора
+  features/invitations/      // схема документа, seed шаблоны, editor state
+  i18n/                      // RU/KY словари
+  constants/routes.ts        // source of truth для маршрутов
+  lib/                       // атомарные утилиты
+.cursor/rules/               // проектные стандарты
+```
+
+Утверждённый дизайн: desktop/mobile INVITO, dark ceremony, красно-оранжевый акцент. Правила разработки: user-provided DRY/performance/SEO + адаптированные рекомендации Awesome Cursor Rules/Next.js.
+
+## Что делать далее
+
+Следующая итерация: **NestJS + PostgreSQL + Prisma + контракт API + интеграция первого end-to-end сохранения проекта**. Затем админ-конструктор шаблонов, медиа, публикация и RSVP. Данные localStorage нужно мигрировать на серверный draft.
+
+## Обновление v0.2 — три шаблона дня рождения с фото
+
+Добавлены **Midnight Aura**, **Soft Bloom** и **Golden Milestone**. Это три разные страницы с реальными scroll-анимациями, загружаемыми портретами, настройкой возраста и кадрирования, дополнительными изображениями галереи и локальным автосохранением.
+
+Точки входа после `npm install && npm run dev`:
+
+- `/ru/templates/midnight-aura`
+- `/ru/templates/soft-bloom`
+- `/ru/templates/golden-milestone`
+- Те же маршруты доступны с `/ky/`.
+
+Чтобы проверить собственную фотографию, откройте шаблон и нажмите **Настроить шаблон**, затем выберите раздел **Обложка** в редакторе. Для демонстрации используются вымышленные портреты из предыдущих концептов INVITO. Форма RSVP и публикация до подключения backend остаются неактивными.
+
+Проверки: `npm run check:syntax`, `npm run test:birthday`, затем после установки зависимостей `npm run typecheck`, `npm run lint`, `npm run build`. Подробности — `docs/BIRTHDAY_TEMPLATES.md`.

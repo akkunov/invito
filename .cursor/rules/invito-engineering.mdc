@@ -1,0 +1,19 @@
+---
+description: "INVITO frontend code standards: modularity, performance, SEO and accessibility"
+globs: ["src/**/*.{ts,tsx,css}"]
+alwaysApply: true
+---
+# INVITO implementation rules
+- Use Next.js App Router (server-first), strict TypeScript without `any`, semantic HTML and metadata.
+- Keep one exported React component per file. Import exact modules, no barrel exports.
+- Share Zod schemas, contract types and route constants, not duplicated shapes or paths.
+- Apply feature-based decomposition; avoid giant helpers, unnecessary abstractions, and unused dependencies.
+- Use Tailwind and design tokens. Public platform palette: #0B0B0B, #F7F7F4, #FF4A0A; templates have independent styles.
+- For interactive modules, minimize client boundaries. Use dynamic import only when it materially reduces JS.
+- Use `next/image` with fixed intrinsic dimensions or fill + sizes when raster images are introduced.
+- Ensure focus-visible, reduced-motion, accessible labels, keyboard operability, RU/KY content.
+- SEO pages must render headings/text/links in server HTML, have canonical and hreflang.
+- Profile performance with real measurements; do not assume loading strategies are always beneficial.
+- Do not implement placeholder API success, fake payment or fake RSVP submission.
+- After backend work begins, use Axios/TanStack Query (client data), Zustand (ephemeral UI), React Hook Form + Zod, shadcn/ui when relevant.
+- Before suggesting package commands, check latest official API documentation, especially breaking changes in Next.js and React.
