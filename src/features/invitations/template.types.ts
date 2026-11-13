@@ -1,3 +1,4 @@
+import type { ReferenceTheme } from "@/features/invitations/reference-templates";
 import type { InvitationDocument } from "@/features/invitations/invitation.schema";
 
 export type TemplateCategory =
@@ -26,7 +27,8 @@ export type TemplateTheme =
   | "garden"
   | "birthday-midnight"
   | "birthday-bloom"
-  | "birthday-milestone";
+  | "birthday-milestone"
+  | ReferenceTheme;
 
 export interface TemplateDefinition {
   id: string;

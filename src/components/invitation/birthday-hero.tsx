@@ -6,7 +6,7 @@ import { BirthdayPhoto } from "@/components/invitation/birthday-photo";
 
 export function BirthdayHero({ document, variant }: { document: InvitationDocument; variant: BirthdayVariant }) {
   const { content, locale } = document;
-  return <section className="bd-hero" aria-label={content.title[locale]}>
+  return <section data-editor-block="cover" className="bd-hero" aria-label={content.title[locale]}>
     <div className="bd-hero-art" aria-hidden="true"><span className="bd-hero-glow" /></div>
     <BirthdayPhoto document={document} variant={variant} className="bd-hero-photo" />
     <div className="bd-hero-copy">

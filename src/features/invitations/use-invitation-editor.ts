@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invitationDocumentSchema, type BlockKind, type InvitationDocument } from "@/features/invitations/invitation.schema";
 import type { Locale } from "@/i18n/locales";
+import { useLocalAudio } from "@/features/invitations/use-local-audio";
 
 type LocalizedField = "title" | "message" | "venue" | "city";
 type TextField = "name1" | "name2" | "dateTimeLocal";
@@ -12,6 +13,7 @@ type DocumentChange = (document: InvitationDocument) => InvitationDocument;
 
 export function useInvitationEditor(initialDocument: InvitationDocument) {
   const storageKey = `invito:draft:v1:${initialDocument.templateId}`;
+  const music = useLocalAudio(initialDocument.templateId);
   const [history, setHistory] = useState<EditorHistory>({ past: [], present: initialDocument, future: [] });
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -23,7 +25,12 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
       if (stored) {
         const result = invitationDocumentSchema.safeParse(JSON.parse(stored));
         if (result.success && result.data.templateId === initialDocument.templateId) {
-          setHistory({ past: [], present: result.data, future: [] });
+          const old = result.data;
+          const missing = initialDocument.blocks.filter((block) => !old.blocks.some((saved) => saved.id === block.id));
+          const beforeRsvp = old.blocks.findIndex((block) => block.id === "rsvp");
+          const blocks = old.blocks.map((block) => block.id === "gallery" && (old.media?.galleryDataUrls?.length ?? 0) > 0 ? { ...block, enabled: true } : block);
+          blocks.splice(beforeRsvp < 0 ? blocks.length : beforeRsvp, 0, ...missing);
+          setHistory({ past: [], present: { ...old, blocks, program: old.program ?? initialDocument.program }, future: [] });
         }
       }
     } catch {
@@ -78,7 +85,32 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
   }, [change]);
 
   const updateGallery = useCallback((galleryDataUrls: string[]) => {
-    change((document) => ({ ...document, media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, focalY: document.media?.focalY ?? 50, galleryDataUrls: galleryDataUrls.slice(0, 3) } }));
+    change((document) => ({
+      ...document,
+      media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, focalY: document.media?.focalY ?? 50, galleryDataUrls: galleryDataUrls.slice(0, 6) },
+      // Photos must become visible immediately even for legacy drafts where gallery was disabled.
+      blocks: galleryDataUrls.length > 0 ? document.blocks.map((block) => block.id === "gallery" ? { ...block, enabled: true } : block) : document.blocks,
+    }));
+  }, [change]);
+
+  const updateProgramTime = useCallback((id: string, time: string) => {
+    change((document) => ({ ...document, program: (document.program ?? []).map((item) => item.id === id ? { ...item, time } : item) }));
+  }, [change]);
+
+  const updateProgramLocalized = useCallback((id: string, field: "title" | "description", locale: Locale, value: string) => {
+    change((document) => ({ ...document, program: (document.program ?? []).map((item) => item.id === id ? { ...item, [field]: { ...item[field], [locale]: value } } : item) }));
+  }, [change]);
+
+  const addProgramItem = useCallback(() => {
+    change((document) => {
+      if ((document.program?.length ?? 0) >= 8) return document;
+      const item = { id: `step-${crypto.randomUUID()}`, time: "20:00", title: { ru: "Новый этап", ky: "Жаңы этап" }, description: { ru: "Описание события", ky: "Иш-чаранын сүрөттөлүшү" } };
+      return { ...document, program: [...(document.program ?? []), item] };
+    });
+  }, [change]);
+
+  const removeProgramItem = useCallback((id: string) => {
+    change((document) => ({ ...document, program: (document.program ?? []).filter((item) => item.id !== id) }));
   }, [change]);
 
   const updateAccent = useCallback((accent: string) => {
@@ -135,12 +167,13 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
     try { window.localStorage.removeItem(storageKey); } catch { /* No storage permission. */ }
     setHistory({ past: [], present: initialDocument, future: [] });
     setSaveError(false);
-  }, [initialDocument, storageKey]);
+    void music.removeAudio();
+  }, [initialDocument, storageKey, music.removeAudio]);
 
   return useMemo(() => ({
     document: history.present, isHydrated, isSaved, saveError, canUndo: history.past.length > 0, canRedo: history.future.length > 0,
-    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset,
-  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset]);
+    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
+  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, music]);
 }
 
 export type InvitationEditorController = ReturnType<typeof useInvitationEditor>;

@@ -1,3 +1,4 @@
+import { referenceTemplates } from "@/features/invitations/reference-templates";
 import { birthdayTemplates } from "@/features/invitations/birthday-templates";
 import type { TemplateDefinition, TemplateCategory } from "@/features/invitations/template.types";
 
@@ -50,6 +51,7 @@ export const templates: readonly TemplateDefinition[] = [
   { id: "monochrome-union", category: "wedding", theme: "mono", premium: false, name: { ru: "Чёрно-белая история", ky: "Ак-кара окуя" }, description: { ru: "Редакционная типографика и минимализм", ky: "Минимализм жана типография" }, accent: "#1C1C1C", defaultContent: content("Наша свадьба", "Үйлөнүү той") },
   { id: "evening-garden", category: "corporate", theme: "garden", premium: true, name: { ru: "Вечер в саду", ky: "Бактагы кече" }, description: { ru: "Современная ботаническая графика", ky: "Заманбап ботаникалык графика" }, accent: "#809E66", defaultContent: content("Особенный вечер", "Өзгөчө кече", celebrationMessage, "Команда", "INVITO") },
   ...birthdayTemplates,
+  ...referenceTemplates,
 ];
 
 export function findTemplateById(id: string): TemplateDefinition | undefined {

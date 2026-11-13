@@ -1,9 +1,13 @@
+import { getReferenceTemplate } from "@/features/invitations/reference-templates";
+import { ReferenceTemplatePreview } from "@/components/templates/reference-template-artwork";
 import { getBirthdayVariant } from "@/features/invitations/birthday-templates";
 import { BirthdayTemplateArtwork } from "@/components/templates/birthday-template-artwork";
 import type { TemplateDefinition } from "@/features/invitations/template.types";
 import type { Locale } from "@/i18n/locales";
 
 export function TemplateArtwork({ template, locale }: { template: TemplateDefinition; locale: Locale }) {
+  const refDesign = getReferenceTemplate(template.id);
+  if (refDesign) return <ReferenceTemplatePreview design={refDesign} template={template} locale={locale} />;
   if (getBirthdayVariant(template.id)) return <BirthdayTemplateArtwork template={template} locale={locale} />;
   const details = template.defaultContent;
   return (

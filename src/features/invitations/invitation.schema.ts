@@ -6,7 +6,7 @@ export const localizedTextSchema = z.object({
 });
 
 export const blockKindSchema = z.enum([
-  "cover", "message", "countdown", "details", "location", "gallery", "rsvp",
+  "cover", "message", "countdown", "details", "program", "location", "gallery", "music", "rsvp",
 ]);
 
 export const invitationBlockSchema = z.object({
@@ -33,12 +33,19 @@ export const invitationDocumentSchema = z.object({
   media: z.object({
     portraitDataUrl: z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1800000).nullable(),
     focalY: z.number().min(0).max(100),
-    galleryDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1000000)).max(3),
+    galleryDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1000000)).max(6),
   }).optional(),
-  blocks: z.array(invitationBlockSchema).min(1).max(7),
+  program: z.array(z.object({
+    id: z.string().min(1).max(80),
+    time: z.string().max(30),
+    title: localizedTextSchema,
+    description: localizedTextSchema,
+  })).max(8).optional(),
+  blocks: z.array(invitationBlockSchema).min(1).max(9),
 });
 
 export type BlockKind = z.infer<typeof blockKindSchema>;
+export type InvitationBlock = z.infer<typeof invitationBlockSchema>;
 export type InvitationDocument = z.infer<typeof invitationDocumentSchema>;
 export type InvitationContent = InvitationDocument["content"];
 

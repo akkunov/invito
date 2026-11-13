@@ -1,6 +1,6 @@
 {
   "name": "invito-web",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
@@ -8,6 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "test:references": "node scripts/test-reference-templates.mjs",
+    "test:v03": "node scripts/check-v03.mjs",
+    "test:editor-navigation": "node scripts/test-editor-navigation.mjs",
     "test:birthday": "node scripts/test-birthday-templates.mjs",
     "check:syntax": "node scripts/check-birthday-source.mjs"
   },
