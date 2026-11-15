@@ -14,7 +14,8 @@
     "test:birthday": "node scripts/test-birthday-templates.mjs",
     "check:syntax": "node scripts/check-birthday-source.mjs",
     "test:editorial": "node scripts/test-editorial-templates.mjs",
-    "test:collection": "node scripts/test-collection.mjs"
+    "test:collection": "node scripts/test-collection.mjs",
+    "test:national": "node scripts/test-national-templates.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

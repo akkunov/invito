@@ -1,3 +1,4 @@
+import { nationalCoverOptions } from "@/features/invitations/national-templates";
 /** Fixed designer ornaments: independent from uploaded event portraits. */
 export const heritageCovers = [
   {
@@ -100,7 +101,7 @@ export const heritageCovers = [
     "category": "kyz-uzatuu",
     "accent": "#A57B44"
   }
-] as const;
+, ...nationalCoverOptions] as const;
 
 export type HeritageCoverId = typeof heritageCovers[number]["id"];
 

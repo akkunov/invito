@@ -9,7 +9,7 @@ export function HeritageCover({ document, coverId }: { document: InvitationDocum
   if (!cover) return null;
   const { locale, content, media } = document;
   return <section className="heritage-cover" data-cover={cover.id} data-editor-block="cover" lang={locale}>
-    <Image className="heritage-cover-ornament" src={cover.image} alt="" fill sizes="(max-width: 650px) 100vw, 650px" aria-hidden="true" />
+    <Image className="heritage-cover-ornament" src={cover.image} unoptimized alt="" fill sizes="(max-width: 650px) 100vw, 650px" aria-hidden="true" />
     <div className="heritage-cover-center">
       <p className="heritage-cover-kicker">{content.title[locale]}</p>
       {media?.portraitDataUrl && <div className="heritage-cover-portrait"><Image src={media.portraitDataUrl} alt={locale === "ky" ? "Майрамдын сүрөтү" : "Фото мероприятия"} fill unoptimized sizes="150px" style={{ objectPosition: `center ${media.focalY}%` }} /></div>}

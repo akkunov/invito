@@ -1,3 +1,4 @@
+import { nationalDesigns, type NationalDesign } from "@/features/invitations/national-templates";
 import type { TemplateDefinition } from "@/features/invitations/template.types";
 
 export const collectionDesigns = [
@@ -374,8 +375,8 @@ export const collectionDesigns = [
 ] as const;
 export type CollectionDesign = typeof collectionDesigns[number];
 
-export function getCollectionDesign(templateId: string): CollectionDesign | null {
-  return collectionDesigns.find((d) => d.id === templateId) ?? null;
+export function getCollectionDesign(templateId: string): CollectionDesign | NationalDesign | null {
+  return collectionDesigns.find((d) => d.id === templateId) ?? nationalDesigns.find((d) => d.id === templateId) ?? null;
 }
 
 const weddingMessage = {
