@@ -1,3 +1,5 @@
+import { CollectionTemplateArtwork } from "@/components/templates/collection-template-artwork";
+import { getCollectionDesign } from "@/features/invitations/collection-templates";
 import { EditorialTemplateArtwork } from "@/components/templates/editorial-template-artwork";
 import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import { getReferenceTemplate } from "@/features/invitations/reference-templates";
@@ -8,6 +10,7 @@ import type { TemplateDefinition } from "@/features/invitations/template.types";
 import type { Locale } from "@/i18n/locales";
 
 export function TemplateArtwork({ template, locale }: { template: TemplateDefinition; locale: Locale }) {
+  if (getCollectionDesign(template.id)) return <CollectionTemplateArtwork template={template} locale={locale} />;
   if (getEditorialVariant(template.id)) return <EditorialTemplateArtwork template={template} locale={locale} />;
   const refDesign = getReferenceTemplate(template.id);
   if (refDesign) return <ReferenceTemplatePreview design={refDesign} template={template} locale={locale} />;

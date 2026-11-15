@@ -1,3 +1,4 @@
+import { collectionTemplates } from "@/features/invitations/collection-templates";
 import { editorialTemplates } from "@/features/invitations/editorial-templates";
 import { referenceTemplates } from "@/features/invitations/reference-templates";
 import { birthdayTemplates } from "@/features/invitations/birthday-templates";
@@ -53,6 +54,7 @@ export const templates: readonly TemplateDefinition[] = [
   { id: "evening-garden", category: "corporate", theme: "garden", premium: true, name: { ru: "Вечер в саду", ky: "Бактагы кече" }, description: { ru: "Современная ботаническая графика", ky: "Заманбап ботаникалык графика" }, accent: "#809E66", defaultContent: content("Особенный вечер", "Өзгөчө кече", celebrationMessage, "Команда", "INVITO") },
   ...birthdayTemplates,
   ...editorialTemplates,
+  ...collectionTemplates,
   ...referenceTemplates,
 ];
 
