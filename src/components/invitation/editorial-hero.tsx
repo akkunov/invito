@@ -12,7 +12,7 @@ export function EditorialHero({ document, variant }: { document: InvitationDocum
   const image = media?.portraitDataUrl ?? editorialDesigns[variant].image;
   const title = content.title[locale];
   const date = formatEventDate(content.dateTimeLocal, locale);
-  const coverAlt = variant === "wedding" ? (isRu ? "Фотография свадьбы" : "Үйлөнүү тойдун сүрөтү") : (isRu ? "Фото именинницы или невесты" : "Кеченин башкы каарманынын сүрөтү");
+  const coverAlt = isRu ? "Фотография на обложке приглашения" : "Чакыруунун мукабасындагы сүрөт";
 
   return (
     <section className="ed-cover" data-editor-block="cover" aria-label={title}>
