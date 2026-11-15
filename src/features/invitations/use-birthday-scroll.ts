@@ -15,8 +15,19 @@ function findScrollRoot(element: HTMLElement): HTMLElement | null {
 }
 
 /** Tracks scroll progress without React state updates; also supports the editor's nested scroller. */
-export function useBirthdayScroll() {
-  const ref = useRef<HTMLDivElement>(null);
+interface ScrollConfig {
+  heroSelector?: string;
+  offsetVariable?: string;
+  scaleVariable?: string;
+}
+
+/** Shared scroll/reveal behavior; customized per visual family without extra listeners. */
+export function useBirthdayScroll<T extends HTMLElement = HTMLDivElement>({
+  heroSelector = ".bd-hero",
+  offsetVariable = "--bd-photo-offset",
+  scaleVariable = "--bd-photo-scale",
+}: ScrollConfig = {}) {
+  const ref = useRef<T>(null);
 
   useEffect(() => {
     const element = ref.current;
@@ -43,14 +54,14 @@ export function useBirthdayScroll() {
     let frameId = 0;
     const update = () => {
       frameId = 0;
-      const hero = element.querySelector<HTMLElement>(".bd-hero");
+      const hero = element.querySelector<HTMLElement>(heroSelector);
       if (!hero) return;
       const viewTop = scrollRoot?.getBoundingClientRect().top ?? 0;
       const viewHeight = scrollRoot?.clientHeight ?? window.innerHeight;
       const heroTop = hero.getBoundingClientRect().top;
       const progress = Math.max(0, Math.min(1, (viewTop + viewHeight * 0.12 - heroTop) / Math.max(hero.offsetHeight, 1)));
-      element.style.setProperty("--bd-photo-offset", `${Math.round(progress * -35)}px`);
-      element.style.setProperty("--bd-photo-scale", `${(1.025 + progress * 0.095).toFixed(4)}`);
+      element.style.setProperty(offsetVariable, `${Math.round(progress * -35)}px`);
+      element.style.setProperty(scaleVariable, `${(1.025 + progress * 0.095).toFixed(4)}`);
 
       const ageStory = element.querySelector<HTMLElement>(".bd-age-story");
       if (ageStory) {
@@ -76,7 +87,7 @@ export function useBirthdayScroll() {
       if (frameId) window.cancelAnimationFrame(frameId);
       element.classList.remove("bd-motion-on");
     };
-  }, []);
+  }, [heroSelector, offsetVariable, scaleVariable]);
 
   return ref;
 }

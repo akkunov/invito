@@ -91,3 +91,15 @@ src/
 ## v0.4: синхронизация секций редактора
 
 Выбор секции прокручивает мобильный предпросмотр к соответствующему блоку. Ручная прокрутка выделяет текущий блок в панели и синхронизирует инспектор. Описание и тесты: `docs/EDITOR_NAVIGATION.md`.
+
+
+## Editorial collection v0.5
+
+Three editable invitations based on the approved editorial design:
+- `/ru/templates/editorial-birthday`
+- `/ru/templates/editorial-wedding`
+- `/ru/templates/editorial-kyz-uzatuu`
+
+Switch to `/ky` for Kyrgyz; edit at `/ru/editor?template=editorial-wedding`. Cover photos, content, program, gallery, music, dress code and guest notes use the shared editor, while ornaments remain fixed. Run `npm run test:editorial` for static checks. See `docs/EDITORIAL_TEMPLATES.md`.
+
+Media and drafts remain local until backend publication is implemented.

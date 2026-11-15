@@ -1,3 +1,4 @@
+import type { EditorialVariant } from "@/features/invitations/editorial-templates";
 import type { ReferenceTheme } from "@/features/invitations/reference-templates";
 import type { InvitationDocument } from "@/features/invitations/invitation.schema";
 
@@ -28,7 +29,8 @@ export type TemplateTheme =
   | "birthday-midnight"
   | "birthday-bloom"
   | "birthday-milestone"
-  | ReferenceTheme;
+  | ReferenceTheme
+  | `editorial-${EditorialVariant}`;
 
 export interface TemplateDefinition {
   id: string;
@@ -39,4 +41,5 @@ export interface TemplateDefinition {
   description: { ru: string; ky: string };
   accent: string;
   defaultContent: InvitationDocument["content"];
+  defaultProgram?: InvitationDocument["program"];
 }

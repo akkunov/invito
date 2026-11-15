@@ -4,6 +4,8 @@ import { Onest, Noto_Serif_Display } from "next/font/google";
 import { locales, isLocale } from "@/i18n/locales";
 import "@/app/globals.css";
 import "@/app/birthday.css";
+import "@/app/editorial.css";
+import "@/app/collection.css";
 
 const uiFont = Onest({ subsets: ["latin", "cyrillic"], variable: "--font-ui", display: "swap" });
 const displayFont = Noto_Serif_Display({ subsets: ["latin", "cyrillic"], variable: "--font-display", display: "swap" });

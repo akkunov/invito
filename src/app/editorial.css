@@ -1,0 +1,188 @@
+/* Editorial invitations have an independent palette from INVITO's dark interface. */
+.editorial-invitation {
+  --ed-photo-offset: 0px;
+  --ed-photo-scale: 1.025;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-width: 0;
+  overflow: clip;
+  color: var(--ed-ink);
+  background: var(--ed-paper);
+  font-family: var(--font-ui), Arial, sans-serif;
+}
+.editorial-invitation *, .editorial-invitation *::before, .editorial-invitation *::after { box-sizing: border-box; }
+.editorial-invitation h2, .editorial-invitation h3, .editorial-invitation h4 { font-family: var(--font-display), Georgia, serif; font-weight: 400; }
+.editorial-invitation .ed-overline, .editorial-invitation .ed-kicker { font: 500 11px/1.5 var(--font-ui),Arial,sans-serif; letter-spacing: .095em; }
+.editorial-invitation .ed-cover {
+  position: relative; min-height: 690px; overflow: hidden; display: flex; flex-direction: column;
+  background: var(--ed-paper);
+}
+.editorial-invitation .ed-hero-photo {
+  z-index: 0; position: absolute; top: 0; right: 0; width: 73%; height: 100%; overflow: hidden;
+  background: color-mix(in srgb,var(--ed-paper),var(--ed-ink) 10%);
+}
+.editorial-invitation .ed-hero-photo img { object-fit: cover; transform: translateY(var(--ed-photo-offset)) scale(var(--ed-photo-scale)); transform-origin: center center; }
+.editorial-invitation .ed-cover::after { content: ""; z-index: 0; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg,var(--ed-paper) 4%,color-mix(in srgb,var(--ed-paper),transparent 8%) 27%,transparent 78%); }
+.editorial-invitation .ed-hero-topline { position: relative; z-index: 2; margin: 25px 6% 0; display: flex; justify-content: space-between; gap: 12px; text-transform: uppercase; font-size: 9px; letter-spacing: .18em; }
+.editorial-invitation .ed-hero-topline span:first-child { font-family: var(--font-display),serif; font-size: 17px; letter-spacing: .17em; }
+.editorial-invitation .ed-hero-copy { z-index: 2; position: relative; display: flex; flex-direction: column; align-items: flex-start; flex: 1; justify-content: center; padding: 60px 7% 110px; }
+.editorial-invitation .ed-kicker { margin-bottom: 15px; max-width: 230px; }
+.editorial-invitation .ed-hero-copy h2 { max-width: 100%; font-size: clamp(54px,10vw,112px); line-height: .92; letter-spacing: -.045em; text-wrap: balance; overflow-wrap: anywhere; }
+.editorial-invitation .ed-hero-date { margin-top: 28px; font: 450 14px/1.5 var(--font-ui),Arial,sans-serif; }
+.editorial-invitation .ed-scroll-note { position: absolute; z-index: 2; left: 7%; bottom: 30px; display: flex; align-items: center; gap: 10px; font-size: 10px; letter-spacing: .07em; }
+.editorial-invitation .ed-fixed-motif { position: absolute; z-index: 1; pointer-events: none; }
+
+/* Birthday — editorial portrait, oversized translucent age and candid composition. */
+.editorial-invitation.ed-birthday .ed-hero-photo { width: 77%; filter: grayscale(1); }
+.editorial-invitation.ed-birthday .ed-cover::after { background: linear-gradient(90deg,var(--ed-paper) 0%,var(--ed-paper) 19%,color-mix(in srgb,var(--ed-paper),transparent 30%) 38%,transparent 71%); }
+.editorial-invitation.ed-birthday .ed-hero-copy { justify-content: flex-start; padding-top: 143px; }
+.editorial-invitation.ed-birthday .ed-hero-copy h2 { text-transform: uppercase; font-size: clamp(66px,12vw,134px); max-width: 65%; }
+.editorial-invitation.ed-birthday .ed-birthday-caption { margin-top: 17px; font: italic 23px/1.4 var(--font-display),Georgia,serif; }
+.editorial-invitation.ed-birthday .ed-ghost-number { position: absolute; left: 24%; bottom: 45px; color: color-mix(in srgb,var(--ed-paper),transparent 30%); font: 300 clamp(174px,28vw,380px)/.8 var(--font-display),Georgia,serif; letter-spacing: -.11em; pointer-events: none; }
+.editorial-invitation.ed-birthday .ed-hero-date { position: absolute; left: 7%; bottom: 83px; z-index: 2; }
+
+/* Wedding — split layout with a calm photographic column and deliberate type. */
+.editorial-invitation.ed-wedding .ed-cover { min-height: 770px; }
+.editorial-invitation.ed-wedding .ed-hero-photo { width: 55%; height: 88%; top: 6%; right: 4%; }
+.editorial-invitation.ed-wedding .ed-cover::after { background: linear-gradient(90deg,var(--ed-paper) 8%,color-mix(in srgb,var(--ed-paper),transparent 12%) 42%,transparent 75%); }
+.editorial-invitation.ed-wedding .ed-hero-copy { padding-top: 72px; padding-left: 7%; max-width: 75%; }
+.editorial-invitation.ed-wedding .ed-hero-copy h2 { font-size: clamp(48px,7.5vw,89px); max-width: 480px; text-transform: none; }
+.editorial-invitation.ed-wedding .ed-amp { display: block; font-family: var(--font-display),Georgia,serif; font-style: italic; line-height: .68; margin: 18px 0 15px 32%; color: var(--ed-accent); }
+.editorial-invitation.ed-wedding .ed-hero-small { font: italic 20px/1.4 var(--font-display),Georgia,serif; margin: 4px 0 26px; }
+.editorial-invitation.ed-wedding .ed-wedding-monogram { position: absolute; top: 29%; right: -25%; color: #fffefcb8; font: italic clamp(85px,15vw,190px)/1 var(--font-display),serif; white-space: nowrap; }
+.editorial-invitation.ed-wedding .ed-fixed-motif { right: 6%; top: 7%; bottom: 7%; width: 1px; background: color-mix(in srgb,var(--ed-paper),transparent 25%); }
+.editorial-invitation.ed-wedding .ed-fixed-motif::after { content:"✳"; position:absolute; left:-6px; bottom:8%; color:var(--ed-paper); font:14px/1 serif; }
+
+/* Kyz uzatuu — contemporary editorial with restrained, fixed border ornament. */
+.editorial-invitation.ed-kyz .ed-cover { min-height: 780px; }
+.editorial-invitation.ed-kyz .ed-hero-photo { width: 56%; height: 83%; top: 11%; right: 7%; }
+.editorial-invitation.ed-kyz .ed-cover::after { background: linear-gradient(90deg,var(--ed-paper) 5%,color-mix(in srgb,var(--ed-paper),transparent 7%) 31%,transparent 76%); }
+.editorial-invitation.ed-kyz .ed-hero-copy { padding-top: 76px; max-width: 70%; }
+.editorial-invitation.ed-kyz .ed-hero-copy h2 { font-size: clamp(72px,11vw,120px); }
+.editorial-invitation.ed-kyz .ed-hero-small { font: italic 21px/1.3 var(--font-display),Georgia,serif; margin: 12px 0 15px; }
+.editorial-invitation.ed-kyz .ed-kyz-subtitle { margin-top: 22px; font: 400 28px/1.2 var(--font-display),Georgia,serif; color: var(--ed-accent); }
+.editorial-invitation.ed-kyz .ed-fixed-motif {
+  right: 2.5%; top: 8%; bottom: 8%; width: 21px; opacity: .72;
+  background: repeating-linear-gradient(180deg,transparent 0 18px,var(--ed-accent) 18px 19px,transparent 19px 36px);
+  border-left: 1px solid var(--ed-accent); border-right: 1px solid var(--ed-accent);
+}
+.editorial-invitation.ed-kyz .ed-fixed-motif::before { content:"◇"; position:absolute; top:40%; left:-5px; background:var(--ed-paper); color:var(--ed-accent); font: 28px/1 serif; }
+
+.editorial-invitation .ed-letter { position: relative; min-height: 395px; padding: 85px 8% 90px; display: grid; grid-template-columns: minmax(100px,.7fr) minmax(0,1.55fr); gap: 8%; border-bottom: 1px solid color-mix(in srgb,var(--ed-ink),transparent 85%); }
+.editorial-invitation .ed-letter-index { font: italic clamp(27px,4.3vw,60px)/1.3 var(--font-display),Georgia,serif; color: var(--ed-accent); opacity: .7; }
+.editorial-invitation .ed-letter-copy { max-width: 600px; }
+.editorial-invitation .ed-letter h3 { margin: 14px 0 24px; font-size: clamp(30px,5vw,52px); line-height: 1.12; letter-spacing: -.025em; }
+.editorial-invitation .ed-letter-copy > p:not(.ed-overline) { font-size: 16px; line-height: 1.9; max-width: 520px; }
+.editorial-invitation .ed-signature { display: block; text-align: right; margin-top: 30px; font: italic 24px/1.4 var(--font-display),Georgia,serif; color: var(--ed-accent); }
+.editorial-invitation .ed-countdown { padding: 20px 8%; }
+.editorial-invitation .ed-countdown .invitation-countdown { background: transparent; border-color: color-mix(in srgb,var(--ed-ink),transparent 75%); }
+.editorial-invitation .ed-countdown strong { color: var(--ed-accent); }
+.editorial-invitation .ed-details { padding: 58px 8% 65px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; border-block: 1px solid color-mix(in srgb,var(--ed-ink),transparent 84%); }
+.editorial-invitation .ed-detail-item { min-width: 0; border-right: 1px solid color-mix(in srgb,var(--ed-ink),transparent 76%); padding-right: 12px; }
+.editorial-invitation .ed-detail-item:last-child { border-right: 0; }
+.editorial-invitation .ed-detail-item svg { color: var(--ed-accent); margin-bottom: 12px; }
+.editorial-invitation .ed-detail-item h3 { margin-top: 10px; font-size: clamp(18px,2.9vw,29px); line-height: 1.25; overflow-wrap: anywhere; }
+.editorial-invitation .invite-roadmap { background: color-mix(in srgb,var(--ed-paper),var(--ed-accent) 8%); color:var(--ed-ink); padding-block: 80px; }
+.editorial-invitation .invite-roadmap h3 { font: 400 clamp(34px,6vw,64px)/1.14 var(--font-display),Georgia,serif; }
+.editorial-invitation .invite-roadmap .road-number { border-color: var(--ed-accent); color: var(--ed-ink); }
+.editorial-invitation .invite-roadmap .road-track::after { background: var(--ed-accent); }
+.editorial-invitation .invite-gallery-section { background: var(--ed-paper); color: var(--ed-ink); padding: 80px 6%; }
+.editorial-invitation .invite-gallery-section h3 { font: 400 clamp(32px,5.5vw,54px)/1.2 var(--font-display),Georgia,serif; }
+.editorial-invitation .invite-gallery-grid { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; padding-bottom: 16px; }
+.editorial-invitation .invite-gallery-photo { flex: 0 0 min(58%,275px); min-width: 0; aspect-ratio: 4/5; border-radius: 2px; overflow: hidden; scroll-snap-align: start; }
+.editorial-invitation .invite-gallery-photo img { object-fit: cover; }
+.editorial-invitation .ed-location { padding: 80px 8% 88px; text-align: center; background: color-mix(in srgb,var(--ed-paper),var(--ed-ink) 3%); }
+.editorial-invitation .ed-location h3 { margin: 18px auto 8px; font: 400 clamp(28px,5vw,45px)/1.2 var(--font-display),Georgia,serif; }
+.editorial-invitation .ed-location > p:not(.ed-overline) { font-size: 14px; }
+.editorial-invitation .ed-additional { margin: 50px auto 0; border-top: 1px solid color-mix(in srgb,var(--ed-ink),transparent 80%); padding-top: 20px; max-width: 420px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+.editorial-invitation .ed-additional span { font: 550 11px/1.4 var(--font-ui),Arial,sans-serif; letter-spacing:.09em; }
+.editorial-invitation .ed-additional p { font: 16px/1.6 var(--font-display),Georgia,serif; }
+.editorial-invitation .ed-rsvp { padding: 100px 9% 115px; text-align: center; border-top: 1px solid color-mix(in srgb,var(--ed-ink),transparent 80%); }
+.editorial-invitation .ed-rsvp h3 { max-width: 580px; margin: 17px auto 25px; font-size: clamp(34px,6vw,62px); line-height: 1.15; }
+.editorial-invitation .ed-rsvp > p { max-width: 480px; margin: auto; line-height: 1.65; }
+.editorial-invitation .ed-rsvp-status { display:block; margin:30px auto 0; max-width:390px; padding-top:14px; border-top:1px solid color-mix(in srgb,var(--ed-ink),transparent 80%); opacity:.66; font:11px/1.65 var(--font-ui),sans-serif; }
+.editorial-invitation.bd-motion-on [data-birthday-reveal] { transition: opacity .7s ease, transform .7s cubic-bezier(.24,.68,.3,1); }
+.editorial-invitation.bd-motion-on [data-birthday-reveal]:not(.is-visible) { opacity: 0; transform: translateY(17px); }
+
+/* Catalog artwork is only a preview: it does not load the editor or scroll observers. */
+.ed-template-preview { position: relative; overflow: hidden; isolation: isolate; width: 100%; aspect-ratio: 3 / 4.55; color:#292421; background:#f2ebe3; }
+.ed-template-preview img { z-index: -2; object-fit: cover; filter: grayscale(1); }
+.ed-template-preview::after { content:""; position:absolute; z-index:-1; inset:0; background:linear-gradient(0deg,#f2ebe3 0%,#f2ebe3c5 19%,transparent 60%); }
+.ed-template-preview .ed-preview-overline { position:absolute; top:6%; left:7%; max-width:86%; font:9px/1.3 var(--font-ui),sans-serif; letter-spacing:.1em; text-transform: uppercase; }
+.ed-template-preview strong { position:absolute; left:7%; bottom:18%; max-width:86%; font:400 clamp(26px,3vw,46px)/.99 var(--font-display),Georgia,serif; overflow-wrap:anywhere; }
+.ed-template-preview strong em { display:block; color:var(--ed-accent,#a88a70); font:italic 24px/1.1 var(--font-display),serif; margin:6px 0; }
+.ed-template-preview .ed-preview-age { position:absolute; right:8%; bottom:26%; color:#ffffffb9; font:italic 95px/1 var(--font-display),serif; }
+.ed-template-preview .ed-preview-date { position:absolute; bottom:6%; left:7%; font:11px/1 var(--font-ui),sans-serif; }
+.ed-preview-wedding { background:#f7f5f0; color:#303332; }
+.ed-preview-wedding img { width:82%!important; left:auto!important; right:0!important; filter:none; }
+.ed-preview-wedding::after { background:linear-gradient(90deg,#f7f5f0 0%,#f7f5f0bb 44%,transparent 90%),linear-gradient(0deg,#f7f5f0 0%,transparent 40%); }
+.ed-preview-wedding strong { bottom:14%; }
+.ed-preview-wedding strong em { color:#867d6d; }
+.ed-preview-kyz { background:#f4e7de; color:#4c3638; }
+.ed-preview-kyz img { width:81%!important; left:auto!important; right:0!important; filter: none; }
+.ed-preview-kyz::after { background:linear-gradient(90deg,#f4e7de 0%,#f4e7debb 38%,transparent 90%),linear-gradient(0deg,#f4e7de 0%,transparent 39%); }
+.ed-preview-kyz strong { bottom:18%; }
+.ed-preview-kyz::before { content:"◇"; position:absolute; z-index:1; right:3%; top:7%; color:#a25750; font:32px/1 serif; }
+
+@media (max-width: 640px) {
+  .editorial-invitation .ed-cover { min-height: 655px; }
+  .editorial-invitation .ed-hero-topline { margin-top: 22px; font-size: 8px; }
+  .editorial-invitation .ed-cover .ed-hero-copy { padding: 125px 7% 100px; }
+  .editorial-invitation .ed-cover .ed-hero-copy h2 { font-size: clamp(52px,12vw,75px); }
+  .editorial-invitation .ed-cover .ed-hero-date { font-size: 12px; }
+  .editorial-invitation .ed-hero-photo { width:100%!important; height:72%!important; top:0!important; right:0!important; }
+  .editorial-invitation.ed-birthday .ed-cover::after { background:linear-gradient(90deg,#f2ebe3d5,transparent 80%),linear-gradient(0deg,#f2ebe3 0%,#f2ebe3d9 25%,transparent 65%); }
+  .editorial-invitation.ed-birthday .ed-hero-copy h2 { max-width:100%; }
+  .editorial-invitation.ed-birthday .ed-ghost-number { bottom:78px; left:44%; font-size:175px; }
+  .editorial-invitation.ed-birthday .ed-hero-date { left:7%; bottom:95px; }
+  .editorial-invitation.ed-wedding .ed-cover::after { background:linear-gradient(90deg,#f7f5f0aa,transparent 78%),linear-gradient(0deg,#f7f5f0 3%,#f7f5f0dd 25%,transparent 73%); }
+  .editorial-invitation.ed-wedding .ed-cover .ed-hero-copy { max-width:100%; justify-content:flex-end; }
+  .editorial-invitation.ed-wedding .ed-hero-copy h2 { max-width:100%; font-size:clamp(48px,10vw,64px); }
+  .editorial-invitation.ed-wedding .ed-wedding-monogram { top:42%; right:5%; font-size:75px; }
+  .editorial-invitation.ed-kyz .ed-cover::after { background:linear-gradient(90deg,#f4e7ded8,transparent 75%),linear-gradient(0deg,#f4e7de 2%,#f4e7deea 26%,transparent 73%); }
+  .editorial-invitation.ed-kyz .ed-cover .ed-hero-copy { max-width:100%; justify-content:flex-end; }
+  .editorial-invitation.ed-kyz .ed-cover .ed-hero-copy h2 { font-size:clamp(64px,12vw,82px); }
+  .editorial-invitation .ed-letter { display:block; min-height:0; padding:60px 8%; }
+  .editorial-invitation .ed-letter-index { font-size:34px; margin-bottom:24px; }
+  .editorial-invitation .ed-letter h3 { font-size:32px; }
+  .editorial-invitation .ed-letter-copy > p:not(.ed-overline) { font-size:14px; }
+  .editorial-invitation .ed-details { grid-template-columns:1fr; padding:40px 8%; gap:20px; }
+  .editorial-invitation .ed-detail-item { padding-bottom:20px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--ed-ink),transparent 76%); }
+  .editorial-invitation .ed-detail-item:last-child { border-bottom:0; }
+  .editorial-invitation .ed-detail-item h3 { font-size:25px; }
+  .editorial-invitation .invite-gallery-section, .editorial-invitation .invite-roadmap { padding-block:60px; }
+  .editorial-invitation .invite-gallery-photo { flex-basis: 72%; }
+  .editorial-invitation .ed-location, .editorial-invitation .ed-rsvp { padding-block: 68px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editorial-invitation .ed-hero-photo img { transform:none!important; }
+  .editorial-invitation [data-birthday-reveal] { opacity:1!important; transform:none!important; transition:none!important; }
+  .editorial-invitation .invite-gallery-grid { scroll-behavior:auto; }
+}
+
+/* Nested phone preview also uses mobile composition on a desktop viewport. */
+.editor-phone .editorial-invitation .ed-cover,
+.detail-preview .editorial-invitation .ed-cover { min-height: 655px; }
+.editor-phone .editorial-invitation .ed-hero-photo,
+.detail-preview .editorial-invitation .ed-hero-photo { width:100%!important; height:72%!important; top:0!important; right:0!important; }
+.editor-phone .editorial-invitation .ed-cover .ed-hero-copy,
+.detail-preview .editorial-invitation .ed-cover .ed-hero-copy { max-width:100%; padding:125px 7% 100px; justify-content:flex-end; }
+.editor-phone .editorial-invitation .ed-cover .ed-hero-copy h2,
+.detail-preview .editorial-invitation .ed-cover .ed-hero-copy h2 { font-size:clamp(48px,11vw,66px); max-width:100%; }
+.editor-phone .editorial-invitation.ed-birthday .ed-cover::after,
+.detail-preview .editorial-invitation.ed-birthday .ed-cover::after { background:linear-gradient(90deg,#f2ebe3d5,transparent 80%),linear-gradient(0deg,#f2ebe3 0%,#f2ebe3d9 25%,transparent 65%); }
+.editor-phone .editorial-invitation.ed-wedding .ed-cover::after,
+.detail-preview .editorial-invitation.ed-wedding .ed-cover::after { background:linear-gradient(90deg,#f7f5f0aa,transparent 78%),linear-gradient(0deg,#f7f5f0 3%,#f7f5f0dd 25%,transparent 73%); }
+.editor-phone .editorial-invitation.ed-kyz .ed-cover::after,
+.detail-preview .editorial-invitation.ed-kyz .ed-cover::after { background:linear-gradient(90deg,#f4e7ded8,transparent 75%),linear-gradient(0deg,#f4e7de 2%,#f4e7deea 26%,transparent 73%); }
+.editor-phone .editorial-invitation.ed-birthday .ed-ghost-number,
+.detail-preview .editorial-invitation.ed-birthday .ed-ghost-number { left:42%; bottom:70px; font-size:150px; }
+.editor-phone .editorial-invitation .ed-letter,
+.detail-preview .editorial-invitation .ed-letter { display:block; min-height:0; padding:60px 8%; }
+.editor-phone .editorial-invitation .ed-details,
+.detail-preview .editorial-invitation .ed-details { grid-template-columns:1fr; padding:40px 8%; gap:20px; }
+.editor-phone .editorial-invitation .ed-detail-item,
+.detail-preview .editorial-invitation .ed-detail-item { border-right:0; border-bottom:1px solid color-mix(in srgb,var(--ed-ink),transparent 76%); padding-bottom:20px; }
+.editor-phone .editorial-invitation .invite-gallery-photo,
+.detail-preview .editorial-invitation .invite-gallery-photo { flex-basis:72%; }

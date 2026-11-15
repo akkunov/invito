@@ -25,6 +25,8 @@ export const invitationDocumentSchema = z.object({
     name2: z.string().max(100),
     title: localizedTextSchema,
     message: localizedTextSchema,
+    dressCode: localizedTextSchema.optional(),
+    giftNote: localizedTextSchema.optional(),
     venue: localizedTextSchema,
     city: localizedTextSchema,
     dateTimeLocal: z.string().max(16),
@@ -33,6 +35,7 @@ export const invitationDocumentSchema = z.object({
   media: z.object({
     portraitDataUrl: z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1800000).nullable(),
     focalY: z.number().min(0).max(100),
+    coverStyleId: z.string().max(80).optional(),
     galleryDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1000000)).max(6),
   }).optional(),
   program: z.array(z.object({

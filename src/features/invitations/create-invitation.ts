@@ -13,7 +13,7 @@ export function createInvitationFromTemplate(
     accent: template.accent,
     media: { portraitDataUrl: null, focalY: 50, galleryDataUrls: [] },
     content: structuredClone(template.defaultContent),
-    program: [
+    program: template.defaultProgram ? structuredClone(template.defaultProgram) : [
       { id: "welcome", time: "17:30", title: { ru: "Сбор гостей", ky: "Конокторду тосуу" }, description: { ru: "Встречаемся и знакомимся", ky: "Коноктор менен жолугушуу" } },
       { id: "ceremony", time: "18:00", title: { ru: "Начало торжества", ky: "Салтанаттын башталышы" }, description: { ru: "Самый важный момент", ky: "Эң маанилүү учур" } },
       { id: "dinner", time: "19:00", title: { ru: "Праздничный ужин", ky: "Майрамдык кечки тамак" }, description: { ru: "Ужин и поздравления", ky: "Кечки тамак жана куттуктоолор" } },
