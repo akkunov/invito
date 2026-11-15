@@ -11,7 +11,7 @@ import { formatEventDate, formatEventTime } from "@/lib/format-event-date";
 
 export function ReferenceInvitation({ document }: { document: InvitationDocument }) {
   const design = getReferenceTemplate(document.templateId);
-  const ref = useBirthdayScroll();
+  const ref = useBirthdayScroll<HTMLElement>();
   if (!design) return null;
   const { content, locale } = document;
   const vars = {

@@ -160,3 +160,29 @@
   .editorial-invitation [data-birthday-reveal] { opacity:1!important; transform:none!important; transition:none!important; }
   .editorial-invitation .invite-gallery-grid { scroll-behavior:auto; }
 }
+
+/* Nested phone preview also uses mobile composition on a desktop viewport. */
+.editor-phone .editorial-invitation .ed-cover,
+.detail-preview .editorial-invitation .ed-cover { min-height: 655px; }
+.editor-phone .editorial-invitation .ed-hero-photo,
+.detail-preview .editorial-invitation .ed-hero-photo { width:100%!important; height:72%!important; top:0!important; right:0!important; }
+.editor-phone .editorial-invitation .ed-cover .ed-hero-copy,
+.detail-preview .editorial-invitation .ed-cover .ed-hero-copy { max-width:100%; padding:125px 7% 100px; justify-content:flex-end; }
+.editor-phone .editorial-invitation .ed-cover .ed-hero-copy h2,
+.detail-preview .editorial-invitation .ed-cover .ed-hero-copy h2 { font-size:clamp(48px,11vw,66px); max-width:100%; }
+.editor-phone .editorial-invitation.ed-birthday .ed-cover::after,
+.detail-preview .editorial-invitation.ed-birthday .ed-cover::after { background:linear-gradient(90deg,#f2ebe3d5,transparent 80%),linear-gradient(0deg,#f2ebe3 0%,#f2ebe3d9 25%,transparent 65%); }
+.editor-phone .editorial-invitation.ed-wedding .ed-cover::after,
+.detail-preview .editorial-invitation.ed-wedding .ed-cover::after { background:linear-gradient(90deg,#f7f5f0aa,transparent 78%),linear-gradient(0deg,#f7f5f0 3%,#f7f5f0dd 25%,transparent 73%); }
+.editor-phone .editorial-invitation.ed-kyz .ed-cover::after,
+.detail-preview .editorial-invitation.ed-kyz .ed-cover::after { background:linear-gradient(90deg,#f4e7ded8,transparent 75%),linear-gradient(0deg,#f4e7de 2%,#f4e7deea 26%,transparent 73%); }
+.editor-phone .editorial-invitation.ed-birthday .ed-ghost-number,
+.detail-preview .editorial-invitation.ed-birthday .ed-ghost-number { left:42%; bottom:70px; font-size:150px; }
+.editor-phone .editorial-invitation .ed-letter,
+.detail-preview .editorial-invitation .ed-letter { display:block; min-height:0; padding:60px 8%; }
+.editor-phone .editorial-invitation .ed-details,
+.detail-preview .editorial-invitation .ed-details { grid-template-columns:1fr; padding:40px 8%; gap:20px; }
+.editor-phone .editorial-invitation .ed-detail-item,
+.detail-preview .editorial-invitation .ed-detail-item { border-right:0; border-bottom:1px solid color-mix(in srgb,var(--ed-ink),transparent 76%); padding-bottom:20px; }
+.editor-phone .editorial-invitation .invite-gallery-photo,
+.detail-preview .editorial-invitation .invite-gallery-photo { flex-basis:72%; }

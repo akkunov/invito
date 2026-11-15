@@ -22,12 +22,12 @@ interface ScrollConfig {
 }
 
 /** Shared scroll/reveal behavior; customized per visual family without extra listeners. */
-export function useBirthdayScroll({
+export function useBirthdayScroll<T extends HTMLElement = HTMLDivElement>({
   heroSelector = ".bd-hero",
   offsetVariable = "--bd-photo-offset",
   scaleVariable = "--bd-photo-scale",
 }: ScrollConfig = {}) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<T>(null);
 
   useEffect(() => {
     const element = ref.current;

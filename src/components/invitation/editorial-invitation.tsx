@@ -13,7 +13,7 @@ import { formatEventDate, formatEventTime } from "@/lib/format-event-date";
 
 export function EditorialInvitation({ document }: { document: InvitationDocument }) {
   const variant = getEditorialVariant(document.templateId);
-  const ref = useBirthdayScroll({ heroSelector: ".ed-cover", offsetVariable: "--ed-photo-offset", scaleVariable: "--ed-photo-scale" });
+  const ref = useBirthdayScroll<HTMLElement>({ heroSelector: ".ed-cover", offsetVariable: "--ed-photo-offset", scaleVariable: "--ed-photo-scale" });
   if (!variant) return null;
   const { locale, content } = document;
   const isRu = locale === "ru";
