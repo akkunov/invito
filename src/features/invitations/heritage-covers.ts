@@ -100,8 +100,9 @@ export const heritageCovers = [
     "image": "/images/heritage/tulpar.webp",
     "category": "kyz-uzatuu",
     "accent": "#A57B44"
-  }
-, ...nationalCoverOptions] as const;
+  },
+  ...nationalCoverOptions,
+] as const;
 
 export type HeritageCoverId = typeof heritageCovers[number]["id"];
 
