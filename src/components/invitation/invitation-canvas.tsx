@@ -1,3 +1,5 @@
+import { EditorialInvitation } from "@/components/invitation/editorial-invitation";
+import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import Image from "next/image";
 import { ReferenceInvitation } from "@/components/invitation/reference-invitation";
 import { getReferenceTemplate } from "@/features/invitations/reference-templates";
@@ -19,6 +21,7 @@ export function InvitationCanvas({ document, musicSrc, musicName }: { document: 
   if (!template) return null;
   const birthdayVariant = getBirthdayVariant(document.templateId);
   if (birthdayVariant) return <><BirthdayInvitation document={document} variant={birthdayVariant} />{music}</>;
+  if (getEditorialVariant(document.templateId)) return <><EditorialInvitation document={document} />{music}</>;
   if (getReferenceTemplate(document.templateId)) return <><ReferenceInvitation document={document} />{music}</>;
   const { locale, content } = document;
   const dict = getDictionary(locale).invitation;

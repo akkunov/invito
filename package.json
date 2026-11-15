@@ -1,6 +1,6 @@
 {
   "name": "invito-web",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
@@ -12,7 +12,8 @@
     "test:v03": "node scripts/check-v03.mjs",
     "test:editor-navigation": "node scripts/test-editor-navigation.mjs",
     "test:birthday": "node scripts/test-birthday-templates.mjs",
-    "check:syntax": "node scripts/check-birthday-source.mjs"
+    "check:syntax": "node scripts/check-birthday-source.mjs",
+    "test:editorial": "node scripts/test-editorial-templates.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

@@ -5,7 +5,7 @@ import { invitationDocumentSchema, type BlockKind, type InvitationDocument } fro
 import type { Locale } from "@/i18n/locales";
 import { useLocalAudio } from "@/features/invitations/use-local-audio";
 
-type LocalizedField = "title" | "message" | "venue" | "city";
+type LocalizedField = "title" | "message" | "venue" | "city" | "dressCode" | "giftNote";
 type TextField = "name1" | "name2" | "dateTimeLocal";
 interface EditorHistory { past: InvitationDocument[]; present: InvitationDocument; future: InvitationDocument[] }
 
@@ -68,7 +68,7 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
   }, [change]);
 
   const updateLocalized = useCallback((field: LocalizedField, locale: Locale, value: string) => {
-    change((document) => ({ ...document, content: { ...document.content, [field]: { ...document.content[field], [locale]: value } } }));
+    change((document) => ({ ...document, content: { ...document.content, [field]: { ...(document.content[field] ?? {ru: "", ky: ""}), [locale]: value } } }));
   }, [change]);
 
   const updateAge = useCallback((age: number) => {

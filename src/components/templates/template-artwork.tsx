@@ -1,3 +1,5 @@
+import { EditorialTemplateArtwork } from "@/components/templates/editorial-template-artwork";
+import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import { getReferenceTemplate } from "@/features/invitations/reference-templates";
 import { ReferenceTemplatePreview } from "@/components/templates/reference-template-artwork";
 import { getBirthdayVariant } from "@/features/invitations/birthday-templates";
@@ -6,6 +8,7 @@ import type { TemplateDefinition } from "@/features/invitations/template.types";
 import type { Locale } from "@/i18n/locales";
 
 export function TemplateArtwork({ template, locale }: { template: TemplateDefinition; locale: Locale }) {
+  if (getEditorialVariant(template.id)) return <EditorialTemplateArtwork template={template} locale={locale} />;
   const refDesign = getReferenceTemplate(template.id);
   if (refDesign) return <ReferenceTemplatePreview design={refDesign} template={template} locale={locale} />;
   if (getBirthdayVariant(template.id)) return <BirthdayTemplateArtwork template={template} locale={locale} />;
