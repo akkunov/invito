@@ -1,3 +1,4 @@
+import { nationalTemplates } from "@/features/invitations/national-templates";
 import { collectionTemplates } from "@/features/invitations/collection-templates";
 import { editorialTemplates } from "@/features/invitations/editorial-templates";
 import { referenceTemplates } from "@/features/invitations/reference-templates";
@@ -55,6 +56,7 @@ export const templates: readonly TemplateDefinition[] = [
   ...birthdayTemplates,
   ...editorialTemplates,
   ...collectionTemplates,
+  ...nationalTemplates,
   ...referenceTemplates,
 ];
 

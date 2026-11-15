@@ -8,7 +8,7 @@ export function CollectionTemplateArtwork({ template, locale }: {template: Templ
   const design = getCollectionDesign(template.id);
   if (!design) return null;
   return <div className={`collection-template-preview collection-preview-${design.theme}`} style={{"--collection-paper":design.paper,"--collection-ink":design.ink,"--invite-accent":design.accent} as CSSProperties} aria-hidden="true">
-    <Image src={design.image} alt="" fill sizes="(max-width: 600px) 46vw, (max-width: 1100px) 30vw, 22vw" />
+    <Image src={design.image} alt="" fill unoptimized={design.image.endsWith(".svg")} sizes="(max-width: 600px) 46vw, (max-width: 1100px) 30vw, 22vw" />
     <div className="collection-template-text"><small>{template.defaultContent.title[locale]}</small><strong>{template.defaultContent.name1}{template.defaultContent.name2 && <> & {template.defaultContent.name2}</>}</strong></div>
   </div>;
 }

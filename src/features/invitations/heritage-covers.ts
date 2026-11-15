@@ -1,3 +1,4 @@
+import { nationalCoverOptions } from "@/features/invitations/national-templates";
 /** Fixed designer ornaments: independent from uploaded event portraits. */
 export const heritageCovers = [
   {
@@ -99,7 +100,8 @@ export const heritageCovers = [
     "image": "/images/heritage/tulpar.webp",
     "category": "kyz-uzatuu",
     "accent": "#A57B44"
-  }
+  },
+  ...nationalCoverOptions,
 ] as const;
 
 export type HeritageCoverId = typeof heritageCovers[number]["id"];
