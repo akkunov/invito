@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { TemplateDefinition } from "@/features/invitations/template.types";
 import { getEditorialVariant, editorialDesigns } from "@/features/invitations/editorial-templates";
 import type { Locale } from "@/i18n/locales";
+import { formatEventDate } from "@/lib/format-event-date";
 
 /** Lightweight preview; no animation runtime or editor JavaScript in the catalog. */
 export function EditorialTemplateArtwork({ template, locale }: { template: TemplateDefinition; locale: Locale }) {
@@ -13,6 +14,6 @@ export function EditorialTemplateArtwork({ template, locale }: { template: Templ
     <span className="ed-preview-overline">{defaultContent.title[locale]}</span>
     <strong>{defaultContent.name1}{variant === "wedding" && <><em>&</em>{defaultContent.name2}</>}</strong>
     {variant === "birthday" && <span className="ed-preview-age">{defaultContent.age}</span>}
-    <span className="ed-preview-date">{locale === "ru" ? "20 / 06 / 2027" : "20 / 06 / 2027"}</span>
+    <span className="ed-preview-date">{formatEventDate(defaultContent.dateTimeLocal, locale)}</span>
   </div>;
 }
