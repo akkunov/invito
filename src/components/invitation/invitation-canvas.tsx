@@ -1,3 +1,6 @@
+import { HeritageCover } from "@/components/invitation/heritage-cover";
+import { CollectionInvitation } from "@/components/invitation/collection-invitation";
+import { getCollectionDesign } from "@/features/invitations/collection-templates";
 import { EditorialInvitation } from "@/components/invitation/editorial-invitation";
 import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import Image from "next/image";
@@ -16,21 +19,27 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { formatEventDate, formatEventTime } from "@/lib/format-event-date";
 
 export function InvitationCanvas({ document, musicSrc, musicName }: { document: InvitationDocument; musicSrc?: string | null; musicName?: string }) {
+  const overrideId = document.media?.coverStyleId;
+  const showOverride = Boolean(overrideId && document.blocks.some(b => b.id === "cover" && b.enabled));
+  const visibleDocument = showOverride ? { ...document, blocks: document.blocks.map(b => b.id === "cover" ? {...b, enabled:false} : b) } : document;
+  const override = showOverride && overrideId ? <HeritageCover document={document} coverId={overrideId} /> : null;
   const music = musicSrc && document.blocks.some((block) => block.id === "music" && block.enabled) ? <MusicPlayer src={musicSrc} name={musicName} locale={document.locale} /> : null;
   const template = findTemplateById(document.templateId);
   if (!template) return null;
   const birthdayVariant = getBirthdayVariant(document.templateId);
-  if (birthdayVariant) return <><BirthdayInvitation document={document} variant={birthdayVariant} />{music}</>;
-  if (getEditorialVariant(document.templateId)) return <><EditorialInvitation document={document} />{music}</>;
-  if (getReferenceTemplate(document.templateId)) return <><ReferenceInvitation document={document} />{music}</>;
+  if (birthdayVariant) return <>{override}<BirthdayInvitation document={visibleDocument} variant={birthdayVariant} />{music}</>;
+  if (getEditorialVariant(document.templateId)) return <>{override}<EditorialInvitation document={visibleDocument} />{music}</>;
+  if (getReferenceTemplate(document.templateId)) return <>{override}<ReferenceInvitation document={visibleDocument} />{music}</>;
+  if (getCollectionDesign(document.templateId)) return <>{override}<CollectionInvitation document={visibleDocument} />{music}</>;
   const { locale, content } = document;
   const dict = getDictionary(locale).invitation;
   const visible = new Set(document.blocks.filter((block) => block.enabled).map((block) => block.id));
   const cssVars = { "--invite-accent": document.accent } as CSSProperties;
   return (
     <>
+      {override}
       <article className={`invitation-canvas invitation-theme-${template.theme}`} lang={locale} style={cssVars}>
-      {document.blocks.map((block) => {
+      {visibleDocument.blocks.map((block) => {
         if (!visible.has(block.id)) return null;
         switch (block.id) {
           case "cover":

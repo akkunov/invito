@@ -77,17 +77,26 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
   }, [change]);
 
   const updatePortrait = useCallback((portraitDataUrl: string | null) => {
-    change((document) => ({ ...document, media: { portraitDataUrl, focalY: document.media?.focalY ?? 50, galleryDataUrls: document.media?.galleryDataUrls ?? [] } }));
+    change((document) => ({ ...document, media: { portraitDataUrl, focalY: document.media?.focalY ?? 50, galleryDataUrls: document.media?.galleryDataUrls ?? [], coverStyleId: document.media?.coverStyleId } }));
   }, [change]);
 
   const updateFocalY = useCallback((focalY: number) => {
-    change((document) => ({ ...document, media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, galleryDataUrls: document.media?.galleryDataUrls ?? [], focalY } }));
+    change((document) => ({ ...document, media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, galleryDataUrls: document.media?.galleryDataUrls ?? [], focalY, coverStyleId: document.media?.coverStyleId } }));
+  }, [change]);
+
+  const updateCoverStyle = useCallback((coverStyleId: string | undefined) => {
+    change((document) => ({ ...document, media: {
+      portraitDataUrl: document.media?.portraitDataUrl ?? null,
+      focalY: document.media?.focalY ?? 50,
+      galleryDataUrls: document.media?.galleryDataUrls ?? [],
+      coverStyleId,
+    } }));
   }, [change]);
 
   const updateGallery = useCallback((galleryDataUrls: string[]) => {
     change((document) => ({
       ...document,
-      media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, focalY: document.media?.focalY ?? 50, galleryDataUrls: galleryDataUrls.slice(0, 6) },
+      media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, focalY: document.media?.focalY ?? 50, galleryDataUrls: galleryDataUrls.slice(0, 6), coverStyleId: document.media?.coverStyleId },
       // Photos must become visible immediately even for legacy drafts where gallery was disabled.
       blocks: galleryDataUrls.length > 0 ? document.blocks.map((block) => block.id === "gallery" ? { ...block, enabled: true } : block) : document.blocks,
     }));
@@ -172,8 +181,8 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
 
   return useMemo(() => ({
     document: history.present, isHydrated, isSaved, saveError, canUndo: history.past.length > 0, canRedo: history.future.length > 0,
-    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
-  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, music]);
+    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateCoverStyle, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
+  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateCoverStyle, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, music]);
 }
 
 export type InvitationEditorController = ReturnType<typeof useInvitationEditor>;
