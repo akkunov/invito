@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { readFileSync, existsSync } from "node:fs";
+const read = path => readFileSync(path,"utf8");
+const paths = ["src/components/invitation/riviera-invitation.tsx","src/components/templates/riviera-template-artwork.tsx","src/features/invitations/riviera-template.ts","src/app/riviera.css"];
+paths.forEach(p=>assert.ok(existsSync(p),p));
+assert.match(read("src/features/invitations/seed-templates.ts"),/rivieraTemplate/);
+assert.match(read("src/components/invitation/invitation-canvas.tsx"),/RivieraInvitation/);
+assert.match(read("src/components/templates/template-artwork.tsx"),/RivieraTemplateArtwork/);
+for(const id of ["cover","message","details","location","program","rsvp"])assert.ok(read(paths[0]).includes(`data-editor-block="${id}"`),id);
+for(const file of ["couple","villa","flowers","fabric-left","fabric-right"])assert.ok(existsSync(`public/images/riviera/${file}.webp`),file);
+assert.match(read("src/app/riviera.css"),/max-width:600px/);
+console.log("PASS: Riviera registered, artwork, editable blocks, responsive styles and reference imagery");

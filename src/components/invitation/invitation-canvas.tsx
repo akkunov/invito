@@ -1,3 +1,4 @@
+import { RivieraInvitation } from "@/components/invitation/riviera-invitation";
 import { EditorialInvitation } from "@/components/invitation/editorial-invitation";
 import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import Image from "next/image";
@@ -19,6 +20,7 @@ export function InvitationCanvas({ document, musicSrc, musicName }: { document: 
   const music = musicSrc && document.blocks.some((block) => block.id === "music" && block.enabled) ? <MusicPlayer src={musicSrc} name={musicName} locale={document.locale} /> : null;
   const template = findTemplateById(document.templateId);
   if (!template) return null;
+  if (document.templateId === "editorial-riviera-wedding") return <><RivieraInvitation document={document} />{music}</>;
   const birthdayVariant = getBirthdayVariant(document.templateId);
   if (birthdayVariant) return <><BirthdayInvitation document={document} variant={birthdayVariant} />{music}</>;
   if (getEditorialVariant(document.templateId)) return <><EditorialInvitation document={document} />{music}</>;
@@ -29,7 +31,6 @@ export function InvitationCanvas({ document, musicSrc, musicName }: { document: 
   const cssVars = { "--invite-accent": document.accent } as CSSProperties;
   return (
     <>
-      
       <article className={`invitation-canvas invitation-theme-${template.theme}`} lang={locale} style={cssVars}>
       {document.blocks.map((block) => {
         if (!visible.has(block.id)) return null;

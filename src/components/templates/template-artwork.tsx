@@ -1,3 +1,4 @@
+import { RivieraTemplateArtwork } from "@/components/templates/riviera-template-artwork";
 import { EditorialTemplateArtwork } from "@/components/templates/editorial-template-artwork";
 import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import { getReferenceTemplate } from "@/features/invitations/reference-templates";
@@ -8,6 +9,7 @@ import type { TemplateDefinition } from "@/features/invitations/template.types";
 import type { Locale } from "@/i18n/locales";
 
 export function TemplateArtwork({ template, locale }: { template: TemplateDefinition; locale: Locale }) {
+  if (template.id === "editorial-riviera-wedding") return <RivieraTemplateArtwork template={template} locale={locale} />;
   if (getEditorialVariant(template.id)) return <EditorialTemplateArtwork template={template} locale={locale} />;
   const refDesign = getReferenceTemplate(template.id);
   if (refDesign) return <ReferenceTemplatePreview design={refDesign} template={template} locale={locale} />;

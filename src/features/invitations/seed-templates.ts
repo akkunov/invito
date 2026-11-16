@@ -1,4 +1,5 @@
 import { editorialTemplates } from "@/features/invitations/editorial-templates";
+import { rivieraTemplate } from "@/features/invitations/riviera-template";
 import { referenceTemplates } from "@/features/invitations/reference-templates";
 import { birthdayTemplates } from "@/features/invitations/birthday-templates";
 import type { TemplateDefinition, TemplateCategory } from "@/features/invitations/template.types";
@@ -16,6 +17,7 @@ export const categories: readonly { id: TemplateCategory; name: { ru: string; ky
 ];
 
 export const templates: readonly TemplateDefinition[] = [
+  rivieraTemplate,
   ...birthdayTemplates,
   ...editorialTemplates,
   ...referenceTemplates,
