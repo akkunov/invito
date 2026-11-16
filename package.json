@@ -11,7 +11,8 @@
     "test:editor-navigation": "node scripts/test-editor-navigation.mjs",
     "test:riviera": "node scripts/test-riviera-template.mjs",
     "test:monochrome": "node scripts/test-monochrome-template.mjs",
-    "test:santorini": "node scripts/test-santorini-template.mjs"
+    "test:santorini": "node scripts/test-santorini-template.mjs",
+    "test:landing": "node scripts/test-landing-editorial.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

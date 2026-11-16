@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { routes } from "@/constants/routes";
-import { getDictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/locales";
 
 export function ClosingCta({ locale }: { locale: Locale }) {
-  const dict = getDictionary(locale);
-  return (
-    <section className="closing-cta page-container" aria-labelledby="closing-title"><div className="closing-panel"><h2 id="closing-title">{dict.landing.footerHeading}</h2><p>{dict.landing.footerDescription}</p><Link href={routes.templates(locale)} className="button-primary button-large">{dict.actions.create}<ArrowUpRight size={18} aria-hidden="true" /></Link></div></section>
-  );
+  const ru = locale === "ru";
+  return <section className="ed-final page-container" aria-labelledby="ed-final-title">
+    <div className="ed-final-head"><span>INVITO / {ru ? "НАЧНИТЕ С ВАШЕЙ ИСТОРИИ" : "ӨЗ ОКУЯҢЫЗДАН БАШТАҢЫЗ"}</span><span>✳</span></div>
+    <h2 id="ed-final-title">{ru ? <>Пусть всё начнётся<br/><em>красиво.</em></> : <>Баары кооз<br/><em>башталсын.</em></>}</h2>
+    <Link href={routes.templates(locale)}>{ru ? "Выбрать своё приглашение" : "Чакырууну тандоо"}<ArrowUpRight size={22} strokeWidth={1.5}/></Link>
+    <p>{ru ? "Ваш день. Ваши люди. Ваша история." : "Сиздин күнүңүз. Жакындарыңыз. Окуяңыз."}</p>
+  </section>;
 }
