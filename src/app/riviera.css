@@ -512,70 +512,51 @@
     background: var(--rv-paper);
 }
 
-/* The catalog uses a mobile invitation card, not an image scaled to desktop proportions. */
+/* Riviera catalog cover: same composition, proportions and photo blending as the live invitation.
+ * Container units maintain the same 440px art direction at any card width. */
 .riviera-card-preview {
-    width: 100%;
-    height: 100%;
-    min-height: 245px;
-    overflow: hidden;
-    position: relative;
-    isolation: isolate;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 15px;
-    color: #14110f;
-    background: var(--rv-paper);
+    container-type:inline-size;
+    position:relative;isolation:isolate;
+    width:100%;aspect-ratio:440 / 728;overflow:hidden;
+    background:radial-gradient(ellipse at 6% 18%,#fffcf9 0%,#f5f0eb 52%,#ebe4df 100%);
+    color:#14110f;
+    font-family:var(--font-ui),Arial,sans-serif;
 }
-
-.riviera-card-photo {
-    position: absolute;
-    z-index: -1;
-    inset: 0 0 12% 30%;
+.riviera-card-preview *,.riviera-card-preview *::before,.riviera-card-preview *::after{box-sizing:border-box;}
+.riviera-card-portrait{position:absolute;z-index:-1;inset:0 0 auto 24%;height:116cqw;overflow:hidden;}
+.riviera-card-portrait img{object-fit:cover;object-position:54% 27%;display:block;}
+.riviera-card-portrait::before{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(90deg,#f6f1ed 0%,rgba(246,241,237,.66) 17%,transparent 60%),
+      linear-gradient(0deg,#f4f0ed 0%,rgba(244,240,237,.85) 12%,transparent 52%);
 }
-
-.riviera-card-photo img {
-    object-fit: cover;
-    object-position: 54% 28%;
+.riviera-card-topbar{
+    position:relative;z-index:3;
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+    gap:3.2cqw;padding:4.8cqw 5.4% 0;
 }
-
-.riviera-card-preview::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    inset: 0;
-    background: linear-gradient(90deg, #f4f0ed 3%, rgba(244, 240, 237, .65) 32%, transparent 82%),
-    linear-gradient(0deg, #f4f0ed, transparent 45%);
-}
-
-.riviera-card-preview > span {
-    font-size: 8px;
-    letter-spacing: .24em;
-}
-
-.riviera-card-preview strong {
-    margin: auto 0;
-    max-width: 97%;
-    display: flex;
-    flex-direction: column;
-    font: 400 clamp(22px, 5vw, 40px)/1 var(--font-display), Georgia, serif;
-    letter-spacing: -.07em;
-    text-transform: uppercase;
-}
-
-.riviera-card-preview strong i {
-    position: absolute;
-    left: 34%;
-    top: 40%;
-    font-style: italic;
-    color: var(--rv-gold);
-}
-
-.riviera-card-preview small {
-    font-size: 9px;
-    letter-spacing: .15em;
-    margin-top: auto;
-}
+.riviera-card-topbar>span:first-child{font-size:3.2cqw;letter-spacing:.4em;font-weight:600;}
+.riviera-card-rule{height:1px;width:100%;background:rgba(42,38,35,.45);}
+.riviera-card-music{width:10cqw;height:10cqw;border:1px solid rgba(28,24,21,.4);border-radius:50%;
+    display:grid;place-items:center;background:rgba(247,244,239,.7);}
+.riviera-card-music svg{width:4.5cqw;height:4.5cqw;}
+.riviera-card-body{position:relative;z-index:2;padding:9.1cqw 5.4% 11.4cqw;}
+.riviera-card-eyebrow{width:55%;max-width:50cqw;font-size:2.27cqw;line-height:1.8;
+    font-weight:650;letter-spacing:.35em;text-transform:uppercase;}
+.riviera-card-names{display:flex;flex-direction:column;align-items:flex-start;gap:0;
+    margin:5.45cqw 0 0;max-width:96%;font:400 11.3cqw/.97 var(--font-display),Georgia,serif;
+    letter-spacing:-.075em;text-transform:uppercase;overflow-wrap:anywhere;}
+.riviera-card-names span{display:block;max-width:100%;}
+.riviera-card-letter{padding-top:10.2cqw;max-width:67cqw;}
+.riviera-card-short-rule{display:block;width:8.64cqw;height:1px;background:#3d3732;margin-bottom:5cqw;}
+.riviera-card-letter p{margin:0;max-width:65cqw;white-space:pre-line;
+    font:italic 3.64cqw/1.55 var(--font-display),Georgia,serif;
+    text-wrap:pretty;text-shadow:0 1px 16px #f4f0ed;}
+.riviera-card-arrow{display:grid;place-items:center;width:10.45cqw;height:10.45cqw;
+    margin-top:6.8cqw;border:1px solid #48423b;border-radius:50%;}
+.riviera-card-arrow svg{width:4.8cqw;height:4.8cqw;}
+.riviera-card-wave{pointer-events:none;position:absolute;z-index:3;bottom:-1px;left:-4%;width:108%;height:13.4cqw;
+    background:#f4f0ed;clip-path:ellipse(80% 90% at 50% 100%);}
 
 /* Very narrow devices: labels shrink but retain the reference's layout. */
 @media (max-width: 359px) {
