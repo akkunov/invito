@@ -349,3 +349,35 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .inspector-music-item{display:flex;gap:8px;align-items:center;padding:10px;background:#202020;border:1px solid #383838;border-radius:8px;font-size:12px;}
 .inspector-music-item span{min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 .inspector-music-item button{color:#ff876c;}
+
+/* Reusable image upload controls, retained after removing unused birthday layouts. */
+
+.birthday-inspector-photo { padding-top: 18px; margin-top: 18px; border-top: 1px solid #303030; display: grid; gap: 16px; }
+
+.birthday-inspector-label { display: grid; gap: 8px; font-size: 12px; color: #b4b4b4; }
+
+.birthday-inspector-label input[type=number] { width: 100%; padding: 11px 13px; border-radius: 8px; border: 1px solid #414141; background: #202020; color: #fff; }
+
+.birthday-inspector-label input[type=range] { accent-color: #ff4a0a; }
+
+.birthday-upload-button { position: relative; display: flex; justify-content: center; align-items: center; gap: 9px; min-height: 46px; background: #29201d; border: 1px solid #7b3c26; border-radius: 8px; padding: 10px; color: #f8c0a7; font-size: 12px; font-weight: 650; cursor: pointer; }
+
+.birthday-upload-button:hover { border-color: #ff4a0a; }
+
+.birthday-upload-button input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+
+.birthday-upload-button:focus-within { outline: 2px solid #ff4a0a; outline-offset: 2px; }
+
+.birthday-remove-button { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #cfcfcf; }
+
+.birthday-remove-button:hover { color: #ff8561; }
+
+.birthday-upload-error { color: #ff9984; font-size: 12px; line-height: 1.5; margin-top: 8px; }
+
+.birthday-gallery-control { display: grid; gap: 14px; }
+
+.birthday-upload-gallery-preview { display: flex; gap: 9px; }
+
+.birthday-gallery-chip { position: relative; flex: 0 1 75px; height: 96px; border-radius: 7px; border: 1px solid #4a4a4a; background-position: center; background-size: cover; }
+
+.birthday-gallery-chip button { position: absolute; top: 4px; right: 4px; background: #000c; color: #fff; border-radius: 5px; padding: 4px; }
