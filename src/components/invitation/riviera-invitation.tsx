@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowDown, ArrowUpRight, Check, MapPin, Music2, Pause, Play, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, MapPin, Pause, Play, X } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { GalleryBlock } from "@/components/invitation/gallery-block";
 import { CountdownBlock } from "@/components/invitation/countdown-block";
@@ -66,7 +66,6 @@ export function RivieraInvitation({ document, musicSrc }: { document: Invitation
       <header className="riviera-topbar">
         <span className="riviera-brand">INVITO</span>
         <span className="riviera-topbar-rule" aria-hidden="true" />
-        <span className="riviera-topbar-caption">{ru ? "Свадебное приглашение" : "Үйлөнүү тойго чакыруу"}</span>
         <div className="riviera-music-control">
           {musicSrc && <audio ref={audioRef} src={musicSrc} preload="auto" loop autoPlay
             onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
@@ -98,7 +97,7 @@ export function RivieraInvitation({ document, musicSrc }: { document: Invitation
         <h2>{content.venue[locale]}</h2><p>{content.city[locale]}</p>
         <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer">{ru ? "ПОСМОТРЕТЬ НА КАРТЕ" : "КАРТАДАН КӨРҮҮ"}<ArrowUpRight size={16}/></a>
       </div></div>
-      <div className="riviera-villa"><Image src={IMAGES.villa} alt={ru ? "Место торжества" : "Той өтүүчү жер"} fill sizes="(max-width: 700px) 100vw, 40vw"/></div>
+      <div className="riviera-villa"><Image src={media?.venuePhotoDataUrl ?? IMAGES.villa} unoptimized={Boolean(media?.venuePhotoDataUrl)} alt={ru ? "Место торжества" : "Той өтүүчү жер"} fill sizes="(max-width: 700px) 100vw, 40vw"/></div>
     </section>}
 
     {enabled.has("program") && <section className="riviera-program" data-editor-block="program" id="riviera-program">
@@ -110,7 +109,7 @@ export function RivieraInvitation({ document, musicSrc }: { document: Invitation
     </section>}
 
     {enabled.has("countdown") && <div className="riviera-countdown" data-editor-block="countdown"><CountdownBlock locale={locale} dateTimeLocal={content.dateTimeLocal}/></div>}
-    {enabled.has("gallery") && (media?.galleryDataUrls?.length ?? 0) > 0 && <div className="riviera-gallery" data-editor-block="gallery"><GalleryBlock document={document}/></div>}
+    {enabled.has("gallery") && <div className="riviera-gallery" data-editor-block="gallery"><GalleryBlock document={document}/></div>}
 
     {enabled.has("rsvp") && <section className="riviera-rsvp" data-editor-block="rsvp" id="riviera-rsvp">
       <div className="riviera-rsvp-heading"><h2>{ru ? <>ПОДТВЕРДИТЕ<br/>СВОЁ УЧАСТИЕ</> : <>КАТЫШУУҢУЗДУ<br/>ЫРАСТАҢЫЗ</>}</h2><span className="riviera-slash" aria-hidden="true"/><p>{ru ? "Будем признательны, если вы сообщите о своём решении заранее." : "Келериңизди алдын ала билдирсеңиздер кубанабыз."}</p></div>

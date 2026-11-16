@@ -3,7 +3,7 @@ import type { InvitationDocument } from "@/features/invitations/invitation.schem
 
 /** Shared gallery: one source of truth for editor, birthday and wedding previews. */
 export function GalleryBlock({ document }: { document: InvitationDocument }) {
-  const photos = document.media?.galleryDataUrls ?? [];
+  const photos = document.media?.galleryDataUrls?.slice(0, 4) ?? [];
   const isRu = document.locale === "ru";
   return (
     <section data-editor-block="gallery" className="invite-gallery-section" aria-label={isRu ? "Фотогалерея" : "Сүрөт галереясы"}>

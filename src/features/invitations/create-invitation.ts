@@ -11,7 +11,7 @@ export function createInvitationFromTemplate(
     templateId: template.id,
     locale,
     accent: template.accent,
-    media: { portraitDataUrl: null, focalY: 50, galleryDataUrls: [] },
+    media: { portraitDataUrl: null, venuePhotoDataUrl: null, focalY: 50, galleryDataUrls: [] },
     content: structuredClone(template.defaultContent),
     program: template.defaultProgram ? structuredClone(template.defaultProgram) : [
       { id: "welcome", time: "17:30", title: { ru: "Сбор гостей", ky: "Конокторду тосуу" }, description: { ru: "Встречаемся и знакомимся", ky: "Коноктор менен жолугушуу" } },

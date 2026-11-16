@@ -1,11 +1,9 @@
 "use client";
-import {getEditorialVariant} from "@/features/invitations/editorial-templates";
 
-import {getBirthdayVariant} from "@/features/invitations/birthday-templates";
-import {getReferenceTemplate} from "@/features/invitations/reference-templates";
 import {MusicUploader} from "@/components/editor/music-uploader";
 import {BirthdayPhotoUploader} from "@/components/editor/birthday-photo-uploader";
 import {BirthdayGalleryUploader} from "@/components/editor/birthday-gallery-uploader";
+import {RivieraVenuePhotoUploader} from "@/components/editor/riviera-venue-photo-uploader";
 
 import type {BlockKind} from "@/features/invitations/invitation.schema";
 import type {InvitationEditorController} from "@/features/invitations/use-invitation-editor";
@@ -20,8 +18,6 @@ export function EditorInspector({locale, editor, selected}: {
     const dict = getDictionary(locale);
     const activeLocale = editor.document.locale;
     const {content} = editor.document;
-    const editorial = getEditorialVariant(editor.document.templateId);
-    const isBirthday = editorial === "birthday" || getBirthdayVariant(editor.document.templateId) !== null || getReferenceTemplate(editor.document.templateId)?.category === "birthday";
     return (
         <aside className="editor-inspector" aria-label={dict.editor.content}>
             <h2>{dict.editor.blocks[selected]}</h2>
@@ -44,12 +40,7 @@ export function EditorInspector({locale, editor, selected}: {
                     value={content.title[activeLocale]} maxLength={100}
                     onChange={(event) => editor.updateLocalized("title", activeLocale, event.target.value)}/></label>
                 </div>}
-            {selected === "cover" && <div className="birthday-inspector-photo">{isBirthday &&
-                <label className="birthday-inspector-label">{locale === "ru" ? "Возраст" : "Жашы"}<input type="number"
-                                                                                                         min={1}
-                                                                                                         max={120}
-                                                                                                         value={content.age ?? 25}
-                                                                                                         onChange={(event) => editor.updateAge(Number(event.target.value))}/></label>}<BirthdayPhotoUploader
+            {selected === "cover" && <div className="birthday-inspector-photo"><BirthdayPhotoUploader
                 locale={locale} hasPhoto={Boolean(editor.document.media?.portraitDataUrl)}
                 onChange={editor.updatePortrait}/><label
                 className="birthday-inspector-label">{locale === "ru" ? "Положение фото по вертикали" : "Сүрөттү тигинен жайгаштыруу"}<input
@@ -60,16 +51,6 @@ export function EditorInspector({locale, editor, selected}: {
                                                                                         value={content.message[activeLocale]}
                                                                                         onChange={(event) => editor.updateLocalized("message", activeLocale, event.target.value)}/></label>
                 </div>}
-            {selected === "location" && editorial &&
-                <div className="inspector-fields"><label>{locale === "ru" ? "Дресс-код" : "Кийим үлгүсү"}<textarea
-                    rows={2} maxLength={500} value={content.dressCode?.[activeLocale] ?? ""}
-                    onChange={(event) => editor.updateLocalized("dressCode", activeLocale, event.target.value)}/></label>
-                </div>}
-            {selected === "rsvp" && editorial && <div className="inspector-fields">
-                <label>{locale === "ru" ? "Пожелание гостям" : "Конокторго каалоо"}<textarea rows={2} maxLength={500}
-                                                                                             value={content.giftNote?.[activeLocale] ?? ""}
-                                                                                             onChange={(event) => editor.updateLocalized("giftNote", activeLocale, event.target.value)}/></label>
-            </div>}
             {(selected === "details" || selected === "countdown") &&
                 <div className="inspector-fields"><label>{dict.editor.date}<input type="datetime-local"
                                                                                   value={content.dateTimeLocal}
@@ -82,6 +63,10 @@ export function EditorInspector({locale, editor, selected}: {
                     value={content.venue[activeLocale]} maxLength={100}
                     onChange={(event) => editor.updateLocalized("venue", activeLocale, event.target.value)}/></label>
                 </div>}
+            {selected === "location" &&
+                <RivieraVenuePhotoUploader locale={locale}
+                    photo={editor.document.media?.venuePhotoDataUrl ?? null}
+                    onChange={editor.updateVenuePhoto}/>}
             {selected === "gallery" &&
                 <BirthdayGalleryUploader locale={locale} photos={editor.document.media?.galleryDataUrls ?? []}
                                          onChange={editor.updateGallery}/>}
@@ -109,7 +94,7 @@ export function EditorInspector({locale, editor, selected}: {
             </div>}
             {selected === "rsvp" && <p className="inspector-help">{dict.invitation.rsvpNote}</p>}
             {selected === "cover" &&
-                <p className="inspector-help">{locale === "ru" ? "Орнаменты закреплены за шаблоном. Можно менять фото, сохраняя пропорции оформления." : "Каптал оймо-чиймелер шаблонго бекитилген жана мукаба өзгөргөндө сакталат."}</p>}
+                <p className="inspector-help">{locale === "ru" ? "Фотографию пары можно заменить, сохраняя оформление." : "Каптал оймо-чиймелер шаблонго бекитилген жана мукаба өзгөргөндө сакталат."}</p>}
             <div className="inspector-design"><label>{dict.editor.accent}<span className="accent-input"><input
                 type="color" value={editor.document.accent}
                 onChange={(event) => editor.updateAccent(event.target.value)}/><code>{editor.document.accent}</code></span></label>
