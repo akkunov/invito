@@ -90,52 +90,6 @@
     width: 100%;
 }
 
-.riviera-topbar-caption {
-    display: none;
-}
-
-.riviera-menu {
-    position: relative;
-}
-
-.riviera-menu summary {
-    cursor: pointer;
-    list-style: none;
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    touch-action: manipulation;
-}
-
-.riviera-menu summary::-webkit-details-marker {
-    display: none;
-}
-
-.riviera-menu nav {
-    position: absolute;
-    top: 40px;
-    right: 0;
-    display: grid;
-    gap: 0;
-    min-width: 178px;
-    z-index: 10;
-    background: #f8f5f1;
-    border: 1px solid #c1b7ab;
-    box-shadow: 0 16px 35px #0002;
-}
-
-.riviera-menu nav a {
-    padding: 12px 15px;
-    font-size: 12px;
-    letter-spacing: .1em;
-    text-decoration: none;
-}
-
-.riviera-menu nav a + a {
-    border-top: 1px solid #ddd5cd;
-}
-
 .riviera-hero-body {
     position: relative;
     z-index: 2;
@@ -171,20 +125,6 @@
     max-width: 100%;
 }
 
-.riviera-names i {
-    position: absolute;
-    z-index: 1;
-    left: 52%;
-    top: .01em;
-    color: var(--rv-gold);
-    font-size: 1.13em;
-    font-weight: 300;
-    font-style: italic;
-    line-height: 1;
-    transform: rotate(-12deg);
-    pointer-events: none;
-}
-
 .riviera-hero-letter {
     padding-top: 45px;
     max-width: 295px;
@@ -217,7 +157,7 @@
     text-decoration: none;
 }
 
-.riviera-scroll:focus-visible, .riviera-menu summary:focus-visible {
+.riviera-scroll:focus-visible {
     outline: 2px solid var(--rv-gold);
     outline-offset: 3px
 }
@@ -721,3 +661,9 @@
 .riviera-music-button[aria-pressed="true"] {border-color:var(--rv-gold);background:#e9dfd2;}
 .riviera-music-button:focus-visible {outline:2px solid var(--rv-gold);outline-offset:3px;}
 .riviera-music-button:disabled {opacity:.5;cursor:not-allowed;}
+
+/* Riviera gallery: maximum four portraits in a 2 x 2 mobile layout. */
+.riviera-gallery .invite-gallery-section{padding:28px 4% 38px;}
+.riviera-gallery .invite-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+.riviera-gallery .invite-gallery-photo{aspect-ratio:4/5;min-width:0;}
+.riviera-venue-upload-preview{width:100%;aspect-ratio:16/10;background-size:cover;background-position:center;border-radius:8px;margin:12px 0;}
