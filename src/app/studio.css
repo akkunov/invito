@@ -96,3 +96,26 @@
 .studio-render-node:has(.studio-inline-textarea){overflow:visible}
 @media(max-width:830px){.studio-context-toolbar{padding:9px;gap:8px;position:relative}.studio-context-actions{margin-left:0}}
 @media(max-width:530px){.studio-context-toolbar{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:thin;overscroll-behavior-inline:contain}.studio-context-toolbar>*{flex:none}.studio-context-toolbar .studio-context-edit{min-height:42px}.studio-context-toolbar button{min-width:40px;min-height:40px}.studio-context-swatches button{min-width:24px;min-height:24px}.studio-context-size input{min-height:40px}}
+
+/* Studio 2: editor-only geometry tools; no grid/rulers are serialized in templates. */
+.studio-canvas-options{display:flex;align-items:center;gap:7px;width:100%;padding:9px 18px;background:#191f21;border-bottom:1px solid #313b3d;flex-wrap:wrap}
+.studio-canvas-options button{min-height:35px;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid #3a484b;border-radius:5px;color:#c4cfca;font-size:11px}
+.studio-canvas-options button[aria-pressed=true]{background:#334b4b;border-color:#8cb7b1;color:#f3f9f4}
+.studio-canvas-options button:hover{border-color:#d2ded4}
+.studio-grid-overlay{position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(to right,rgba(36,68,100,.20) 1px,transparent 1px),linear-gradient(to bottom,rgba(36,68,100,.20) 1px,transparent 1px),linear-gradient(to right,rgba(36,68,100,.33) 1px,transparent 1px),linear-gradient(to bottom,rgba(36,68,100,.33) 1px,transparent 1px);background-size:20px 20px,20px 20px,100px 100px,100px 100px}
+.studio-render-node{z-index:1}
+.studio-render-node.is-selected{z-index:2}
+.studio-ruler-corner{position:absolute;left:0;top:0;width:24px;height:24px;background:#d4d9d7;border-right:1px solid #a4b2b3;border-bottom:1px solid #a4b2b3}
+.studio-ruler-horizontal,.studio-ruler-vertical{position:absolute;background:#d4d9d7;color:#374c54;font:500 9px/1 Arial,sans-serif;z-index:3;overflow:hidden}
+.studio-ruler-horizontal{height:24px;top:0;background-image:repeating-linear-gradient(90deg,transparent 0px,transparent 9px,#82969c 9px,#82969c 10px);background-size:10px 8px;background-repeat:repeat-x;background-position:left bottom}
+.studio-ruler-vertical{width:24px;left:0;background-image:repeating-linear-gradient(0deg,transparent 0px,transparent 9px,#82969c 9px,#82969c 10px);background-size:8px 10px;background-repeat:repeat-y;background-position:right top}
+.studio-ruler-horizontal span{position:absolute;top:4px;transform:translateX(2px)}
+.studio-ruler-vertical span{position:absolute;left:2px;transform:translateY(1px) rotate(-90deg);transform-origin:10px 8px}
+.studio-resize-handle{position:absolute;right:0;bottom:0;width:14px;height:14px;background:#2549d9;border:2px solid white;z-index:5;cursor:nwse-resize;touch-action:none}
+.studio-render-node.is-selected{overflow:visible}
+.studio-upload-action{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#2f3e45!important;border:1px dashed #86a7b4!important;color:#e6f1f0!important;border-radius:6px;padding:11px 8px!important;font-size:11px;line-height:1.4;margin:13px 0 8px}
+.studio-upload-action:hover{background:#415962!important}
+.studio-context-spacing{display:flex;align-items:center;gap:5px;color:#d6e1dc;white-space:nowrap;font-size:11px}
+.studio-context-spacing input{background:#2c3434;color:white;border:1px solid #516367;width:43px;min-height:34px;text-align:center;border-radius:5px}
+.studio-field input[type=checkbox]{width:18px;height:18px;accent-color:#2549d9;vertical-align:middle}
+@media(max-width:530px){.studio-canvas-options{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;padding:8px}.studio-canvas-options button{min-height:44px;flex:none}.studio-context-spacing input{min-height:40px}.studio-ruler-horizontal,.studio-ruler-vertical{font-size:8px}}

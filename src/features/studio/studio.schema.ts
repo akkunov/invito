@@ -13,12 +13,17 @@ export const elementSchema = z.object({
   fontSize: z.number().finite().min(8).max(120),
   fontFamily: z.enum(["sans","serif"]),
   fontWeight: z.enum(["400","500","600","700"]),
+  italic: z.boolean().default(false),
+  underline: z.boolean().default(false),
+  strike: z.boolean().default(false),
+  letterSpacing: z.number().finite().min(-4).max(20).default(0),
+  shapeKind: z.enum(["rectangle","circle","ellipse","triangle","diamond","star","heart"]).default("rectangle"),
   textAlign: z.enum(["left","center","right"]),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   background: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   radius: z.number().finite().min(0).max(200),
   opacity: z.number().finite().min(0).max(1),
-  imageSrc: z.string().max(300).refine(value => !value || value.startsWith("/images/"),"Use an existing /images/ asset"),
+  imageSrc: z.string().max(750000).refine(value => !value || value.startsWith("/images/") || /^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(value),"Only built-in images or rasterized image files"),
 });
 export const studioTemplateSchema = z.object({
   schemaVersion: z.literal(1),
@@ -45,7 +50,7 @@ export function createElement(type: StudioElementType, id: string): StudioElemen
   const base: StudioElement = {
     id,type,x:50,y:160,width:340,height:75,text:"",
     binding:"none",fontSize:30,fontFamily:"serif",fontWeight:"400",textAlign:"center",
-    color:"#34372F",background:"#E9E3D8",radius:0,opacity:1,imageSrc:"",
+    color:"#34372F",background:"#E9E3D8",radius:0,opacity:1,imageSrc:"",italic:false,underline:false,strike:false,letterSpacing:0,shapeKind:"rectangle",
   };
   if(type==="text") return {...base,text:"Ваша история",background:"#F5F1E9",fontSize:36};
   if(type==="image") return {...base,y:250,height:310,imageSrc:"/images/riviera/couple.webp"};

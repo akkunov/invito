@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowLeft, ArrowUp, Copy, Download, FileUp, ImagePlus, Plus, Redo2, RotateCcw, Save, Trash2, Type, Undo2, Square, MousePointer2, Smartphone, Monitor, Move } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Copy, Download, FileUp, ImagePlus, Plus, Redo2, Save, Trash2, Type, Undo2, Square, MousePointer2, Move, Grid2X2, Ruler, Magnet, Upload } from "lucide-react";
 import { StudioCanvas } from "@/components/studio/studio-canvas";
 import { StudioTextToolbar } from "@/components/studio/studio-text-toolbar";
+import { processStudioAsset } from "@/features/studio/studio-media";
 import { createElement, starterTemplate, studioTemplateSchema, type StudioElement, type StudioElementType, type StudioTemplate } from "@/features/studio/studio.schema";
 import type { Locale } from "@/i18n/locales";
 
@@ -20,7 +21,10 @@ function downloadJson(data:unknown,name:string){
 }
 export function TemplateStudio({locale}:{locale:Locale}){
   const [template,setTemplate]=useState<StudioTemplate>(starterTemplate);
-  const [selectedId,setSelectedId]=useState<string|null>("name-one");
+  const [selectedId,setSelectedId]=useState<string|null>(null);
+  const [showGrid,setShowGrid]=useState(true);
+  const [showRulers,setShowRulers]=useState(true);
+  const [snapToGrid,setSnapToGrid]=useState(true);
   const [editingId,setEditingId]=useState<string|null>(null);
   const [viewport,setViewport]=useState<320|375|440>(375);
   const [saved,setSaved]=useState<string[]>([]);
@@ -29,6 +33,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
   const [undo,setUndo]=useState<StudioTemplate[]>([]);
   const [redo,setRedo]=useState<StudioTemplate[]>([]);
   const fileRef=useRef<HTMLInputElement>(null);
+  const assetRef=useRef<HTMLInputElement>(null);
 
   const ru=locale==="ru";
   useEffect(()=>{
@@ -69,17 +74,33 @@ export function TemplateStudio({locale}:{locale:Locale}){
     if(template.elements.find(el=>el.id===id)?.text===text)return;
     change({...template,elements:template.elements.map(el=>el.id===id?{...el,text}:el)});
   }
+  function resizeNode(id:string,width:number,height:number){
+    setTemplate(previous=>({...previous,elements:previous.elements.map(el=>el.id===id?{...el,width,height}:el)}));
+  }
   function moveNode(id:string,x:number,y:number){
     const current=template.elements.find(el=>el.id===id);
     if(!current||current.x===x&&current.y===y)return;
     setTemplate(previous=>({...previous,elements:previous.elements.map(el=>el.id===id?{...el,x,y}:el)}));
+  }
+  async function uploadAsset(file:File){
+    try{
+      const imageSrc=await processStudioAsset(file);
+      if(template.elements.length>=80){setMessage("Лимит элементов — 80");return}
+      const element=createElement("image",id());
+      element.imageSrc=imageSrc;
+      element.x=55;
+      element.y=Math.min(template.canvasHeight-element.height,Math.max(10,template.elements.reduce((max,node)=>Math.max(max,node.y+node.height),0)+18));
+      change({...template,elements:[...template.elements,element]});
+      setSelectedId(null);
+      setMessage("Элемент загружен. Нажмите на него для выбора, затем перетащите.");
+    }catch(error){setMessage(error instanceof Error?error.message:"Не удалось загрузить файл")}
   }
   function add(type:StudioElementType){
     const element=createElement(type,id());
     const availableY=Math.max(0,template.canvasHeight-element.height);
     element.y=Math.min(availableY,Math.max(30,template.elements.reduce((max,node)=>Math.max(max,node.y+node.height),0)+24));
     element.x=Math.max(0,Math.min(element.x,440-element.width));
-    change({...template,elements:[...template.elements,element]});setSelectedId(element.id);
+    change({...template,elements:[...template.elements,element]});setSelectedId(null);
   }
   function remove(){
     setEditingId(null);
@@ -117,7 +138,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
     }catch{setMessage("Не удалось открыть шаблон")}
   }
   async function importFile(file:File){
-    if(file.size>200_000){setMessage("JSON слишком большой (максимум 200 КБ)");return}
+    if(file.size>4_500_000){setMessage("JSON слишком большой (максимум 4,5 МБ)");return}
     try{
       const parsed=studioTemplateSchema.safeParse(JSON.parse(await file.text()));
       if(!parsed.success)throw Error(parsed.error.issues[0]?.message||"Некорректная схема");
@@ -164,6 +185,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
         <div className="studio-elements">
           {([{type:"text",icon:Type,label:"Текст"},{type:"image",icon:ImagePlus,label:"Фото"},{type:"shape",icon:Square,label:"Фигура"},{type:"button",icon:MousePointer2,label:"Кнопка"}] as const).map(item=><button key={item.type} onClick={()=>add(item.type)} disabled={template.elements.length>=80}><item.icon size={21}/><span>{item.label}</span><Plus size={13}/></button>)}
         </div>
+        <button type="button" className="studio-upload-action" onClick={()=>assetRef.current?.click()}><Upload size={18}/> Загрузить PNG, JPG, WebP или SVG</button>
         <p className="studio-panel-title">СЛОИ <span>{template.elements.length}/80</span></p>
         <div className="studio-layers">{[...template.elements].reverse().map(el=><button className={selectedId===el.id?"is-active":""} key={el.id} onClick={()=>setSelectedId(el.id)}><span className="studio-layer-kind">{el.type==="text"?"T":el.type==="image"?"▧":el.type==="button"?"◉":"▢"}</span><span>{el.text||el.type}</span></button>)}</div>
         <div className="studio-layer-actions"><button disabled={!selected} onClick={()=>reorder(1)} title="На слой выше"><ArrowUp size={17}/></button><button disabled={!selected} onClick={()=>reorder(-1)} title="На слой ниже"><ArrowDown size={17}/></button><button disabled={!selected} onClick={duplicate} title="Дублировать"><Copy size={17}/></button><button disabled={!selected} onClick={remove} title="Удалить"><Trash2 size={17}/></button></div>
@@ -171,10 +193,15 @@ export function TemplateStudio({locale}:{locale:Locale}){
         <div className="studio-saved">{saved.length===0?<p>Нет сохранённых шаблонов</p>:saved.map(key=><button key={key} onClick={()=>load(key)}>{key}</button>)}</div>
       </aside>
       <section className="studio-workspace" aria-label="Холст шаблона">
-        <div className="studio-workspace-head"><div><span>ХОЛСТ / {template.name}</span><small>Дважды нажмите на текст или используйте быструю панель ниже</small></div><div className="studio-viewport-choices">{([320,375,440] as const).map(value=><button key={value} aria-pressed={viewport===value} onClick={()=>setViewport(value)}>{value}</button>)}</div></div>
+        <div className="studio-workspace-head"><div><span>ХОЛСТ / {template.name}</span><small>Нажмите на элемент, чтобы выбрать. После выбора его можно передвинуть.</small></div><div className="studio-viewport-choices">{([320,375,440] as const).map(value=><button key={value} aria-pressed={viewport===value} onClick={()=>setViewport(value)}>{value}</button>)}</div></div>
+        <div className="studio-canvas-options" role="toolbar" aria-label="Вид холста">
+          <button aria-pressed={showGrid} onClick={()=>setShowGrid(x=>!x)}><Grid2X2 size={16}/> Сетка</button>
+          <button aria-pressed={showRulers} onClick={()=>setShowRulers(x=>!x)}><Ruler size={16}/> Линейки</button>
+          <button aria-pressed={snapToGrid} onClick={()=>setSnapToGrid(x=>!x)}><Magnet size={16}/> Привязка 10 px</button>
+        </div>
         {selected&&<StudioTextToolbar element={selected} onChange={changeNode} onEdit={()=>beginTextEdit(selected.id)} onDuplicate={duplicate} onDelete={remove}/>}
-        <div className="studio-canvas-scroll"><StudioCanvas template={template} selectedId={selectedId} onSelect={id=>{setSelectedId(id)}} onMove={moveNode} editingId={editingId} onBeginEdit={beginTextEdit} onCommitText={commitInlineText} onCancelEdit={()=>setEditingId(null)} viewport={viewport}/></div>
-        <p className="studio-canvas-hint"><Move size={15}/> Холст рассчитан на 440 px. Кнопки 320/375/440 меняют масштаб превью.</p>
+        <div className="studio-canvas-scroll"><StudioCanvas template={template} selectedId={selectedId} onSelect={setSelectedId} onMove={moveNode} onResize={resizeNode} editingId={editingId} onBeginEdit={beginTextEdit} onCommitText={commitInlineText} onCancelEdit={()=>setEditingId(null)} viewport={viewport} showGrid={showGrid} showRulers={showRulers} snapToGrid={snapToGrid}/></div>
+        <p className="studio-canvas-hint"><Move size={15}/> Холст рассчитан на 440 px. Кнопки 320/375/440 меняют масштаб превью. Сетка и линейки не попадут в приглашение.</p>
       </section>
       <aside className="studio-inspector" aria-label="Свойства">
         <p className="studio-panel-title">ШАБЛОН</p>
@@ -188,7 +215,8 @@ export function TemplateStudio({locale}:{locale:Locale}){
             <label className="studio-field">Текст<textarea rows={3} maxLength={300} value={selected.text} onChange={e=>changeNode({text:e.target.value})}/></label>
             <label className="studio-field">Динамическое поле<select value={selected.binding} onChange={e=>changeNode({binding:e.target.value as StudioElement["binding"]})}>{["none","name1","name2","date","venue","message"].map(x=><option value={x} key={x}>{x}</option>)}</select></label>
           </>}
-          {selected.type==="image"&&<label className="studio-field">Изображение<select value={selected.imageSrc} onChange={e=>changeNode({imageSrc:e.target.value})}><option value="">Без изображения</option>{galleryImages.map(x=><option value={x} key={x}>{x.split("/").pop()}</option>)}</select></label>}
+          {selected.type==="image"&&<><label className="studio-field">Изображение<select value={galleryImages.includes(selected.imageSrc)?selected.imageSrc:selected.imageSrc?"uploaded":""} onChange={e=>{if(e.target.value!=="uploaded")changeNode({imageSrc:e.target.value})}}><option value="">Без изображения</option>{selected.imageSrc.startsWith("data:")&&<option value="uploaded">Загруженный файл</option>}{galleryImages.map(x=><option value={x} key={x}>{x.split("/").pop()}</option>)}</select></label><button className="studio-upload-action" type="button" onClick={()=>assetRef.current?.click()}>Загрузить другое изображение</button></>}
+          {selected.type==="shape"&&<label className="studio-field">Форма<select value={selected.shapeKind} onChange={e=>changeNode({shapeKind:e.target.value as StudioElement["shapeKind"]})}>{([{v:"rectangle",label:"Прямоугольник"},{v:"circle",label:"Круг"},{v:"ellipse",label:"Эллипс"},{v:"triangle",label:"Треугольник"},{v:"diamond",label:"Ромб"},{v:"star",label:"Звезда"},{v:"heart",label:"Сердце"}] as const).map(x=><option key={x.v} value={x.v}>{x.label}</option>)}</select></label>}
           <div className="studio-field-grid">{number("X","x",0,440-selected.width)}{number("Y","y",0,template.canvasHeight-selected.height)}{number("Ширина","width",24,440)}{number("Высота","height",20,Math.min(1000,template.canvasHeight))}</div>
           {(selected.type==="text"||selected.type==="button")&&<>
             <div className="studio-field-grid">{number("Размер шрифта","fontSize",8,120)}<label className="studio-field">Шрифт<select value={selected.fontFamily} onChange={e=>changeNode({fontFamily:e.target.value as StudioElement["fontFamily"]})}><option value="serif">Serif</option><option value="sans">Sans</option></select></label></div>
@@ -196,6 +224,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
             <label className="studio-field">Насыщенность<select value={selected.fontWeight} onChange={e=>changeNode({fontWeight:e.target.value as StudioElement["fontWeight"]})}>{["400","500","600","700"].map(x=><option value={x} key={x}>{x}</option>)}</select></label>
             <label className="studio-field">Цвет текста<input type="color" value={selected.color} onChange={e=>changeNode({color:e.target.value})}/></label>
           </>}
+          {(selected.type==="text"||selected.type==="button")&&<div className="studio-field-grid"><label className="studio-field"><input type="checkbox" checked={selected.italic} onChange={e=>changeNode({italic:e.target.checked})}/>Курсив</label><label className="studio-field"><input type="checkbox" checked={selected.underline} onChange={e=>changeNode({underline:e.target.checked})}/>Подчёркнутый</label><label className="studio-field"><input type="checkbox" checked={selected.strike} onChange={e=>changeNode({strike:e.target.checked})}/>Зачёркнутый</label></div>}
           {selected.type!=="image"&&<label className="studio-field">Фон<input type="color" value={selected.background} onChange={e=>changeNode({background:e.target.value})}/></label>}
           {number("Скругление","radius",0,200)}
           {number("Прозрачность","opacity",0,1)}
@@ -203,6 +232,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
       </aside>
     </div>
     {message&&<div className="studio-status" role="status">{message}<button onClick={()=>setMessage("")} aria-label="Закрыть">×</button></div>}
+    <input ref={assetRef} className="studio-file-input" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml" onChange={e=>{const file=e.target.files?.[0];if(file)void uploadAsset(file);e.currentTarget.value=""}}/>
     <input ref={fileRef} className="studio-file-input" type="file" accept="application/json,.json" onChange={e=>{const file=e.target.files?.[0];if(file)void importFile(file);e.currentTarget.value=""}}/>
   </main>;
 }
