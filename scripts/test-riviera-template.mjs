@@ -22,4 +22,12 @@ assert.ok(!layout.includes("birthday.css") && !layout.includes("editorial.css"))
 for (const file of ["couple","villa","flowers","fabric-left","fabric-right"]) {
   assert.ok(existsSync(`public/images/riviera/${file}.webp`));
 }
+const art=read("src/components/templates/riviera-template-artwork.tsx");
+const css=read("src/app/riviera.css");
+assert.match(art, /riviera-card-portrait/);
+assert.match(art, /riviera-card-wave/);
+assert.match(art, /riviera-card-topbar/);
+assert.match(css, /\.riviera-card-portrait::before/);
+assert.match(css, /\.riviera-card-preview\s*\{/);
+assert.ok(!css.includes(".riviera-card-photo"), "old standalone card style removed");
 console.log("PASS: Riviera retained, venue photo editable, gallery max four");
