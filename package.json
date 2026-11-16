@@ -13,7 +13,8 @@
     "test:monochrome": "node scripts/test-monochrome-template.mjs",
     "test:santorini": "node scripts/test-santorini-template.mjs",
     "test:landing": "node scripts/test-landing-editorial.mjs",
-    "test:public-routes": "node scripts/test-public-routes.mjs"
+    "test:public-routes": "node scripts/test-public-routes.mjs",
+    "test:studio": "node scripts/test-studio.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
