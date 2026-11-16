@@ -66,7 +66,6 @@ export function RivieraInvitation({ document, musicSrc }: { document: Invitation
       <header className="riviera-topbar">
         <span className="riviera-brand">INVITO</span>
         <span className="riviera-topbar-rule" aria-hidden="true" />
-        <span className="riviera-topbar-caption">{ru ? "Свадебное приглашение" : "Үйлөнүү тойго чакыруу"}</span>
         <div className="riviera-music-control">
           {musicSrc && <audio ref={audioRef} src={musicSrc} preload="auto" loop autoPlay
             onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
