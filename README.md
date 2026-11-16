@@ -1,105 +1,40 @@
-# INVITO · frontend foundation
+# INVITO — Riviera-only frontend
 
-**Статус:** первая рабочая итерация frontend-прототипа (архитектура → интерфейс → редактор локального черновика). Не production и не готовая система публикации.
+The catalog deliberately contains **one approved invitation**: `editorial-riviera-wedding`.
+All gradient starters, earlier birthday/editorial/reference approximations, national mockups
+and interchangeably stretched cover collections were removed. New designs will be
+implemented and visually reviewed **one at a time**.
 
-## Реализовано
-
-- Landing page `/ru` и `/ky` в утверждённой чёрно-бело-оранжевой палитре.
-- Интерактивный конверт на главном экране; доступность кнопки и `prefers-reduced-motion`.
-- Каталог `/[locale]/templates` с серверным поиском и фильтрацией по категории/типу тарифа.
-- 12 различающихся seed-шаблонов (цель публичного запуска — 60, см. `docs/ARCHITECTURE.md`).
-- `/[locale]/templates/[slug]` — работающий SSR-предпросмотр; у приглашений своя палитра, не фирменная.
-- `/[locale]/editor?template=<id>` — клиентский редактор: RU/KY, имена, заголовок, текст, дата, город/место, акцент, видимость и перестановка блоков, Undo/Redo.
-- Автосохранение черновика в **локальном браузере** с Zod-проверкой при чтении.
-- Статическая SEO metadata, canonical, alternate languages, sitemap и robots.
-
-## Пока не реализовано
-
-Backend, авторизация, настоящая публикация, загрузка медиа, запись RSVP, оплата, Drag & Drop и админ-панель. В интерфейсе действия, требующие сервер, не имитируют успех.
-
-## Запуск
-
-Требуется Node.js 20.9+ (рекомендуется Node 22) и доступ к npm/Google Fonts во время сборки.
+## Run
 
 ```bash
-cp .env.example .env.local
-npm install
+npm ci
 npm run dev
-```
-
-Открыть http://localhost:3000 — Next.js перенаправит на `/ru`.
-
-Проверка перед коммитом:
-
-```bash
+npm run test:riviera
+npm run test:editor-navigation
 npm run typecheck
-npm run lint
 npm run build
 ```
 
-> В среде подготовки архива npm registry недоступен (`EAI_AGAIN`), поэтому фактический `npm install` и build не запускались. Выполнялась только проверка синтаксиса TypeScript/JSX средствами компилятора, указанная в отчёте.
+Open `/ru/templates/editorial-riviera-wedding` or `/ky/templates/editorial-riviera-wedding`.
+Edit at `/ru/editor?template=editorial-riviera-wedding`.
 
-## Папки
+## Riviera editor
 
-```text
-src/
-  app/[locale]/              // локализованные серверные маршруты
-  components/brand/          // бренд
-  components/layout/         // навигация и футер
-  components/landing/        // независимые секции лендинга
-  components/templates/      // карточка и artwork шаблона
-  components/invitation/     // единый renderer приглашения
-  components/editor/         // панели редактора
-  features/invitations/      // схема документа, seed шаблоны, editor state
-  i18n/                      // RU/KY словари
-  constants/routes.ts        // source of truth для маршрутов
-  lib/                       // атомарные утилиты
-.cursor/rules/               // проектные стандарты
-```
+- Editable names, message, date, venue, address, roadmap, portrait and audio (RU/KY).
+- In **Место проведения / Өтүүчү жай**, upload or reset the restaurant photograph.
+  Its image is independent of the cover photograph and falls back to
+  `/images/riviera/villa.webp`.
+- In **Фотогалерея / Сүрөт галереясы**, add up to **4 photos**.
+  The UI, Zod document schema and rendering each enforce that limit.
+- Old saved drafts with up to six photos are migrated to four photos on load.
+- Photos are compressed and saved as local browser data URLs; the audio is
+  stored locally. No remote upload or backend persistence is claimed.
+- Mobile invitation is capped at 440 px. Existing Riviera padding and font-size
+  improvements from the most recent `main` are retained.
+- RSVP selection is preview only; sending responses and publishing await backend.
 
-Утверждённый дизайн: desktop/mobile INVITO, dark ceremony, красно-оранжевый акцент. Правила разработки: user-provided DRY/performance/SEO + адаптированные рекомендации Awesome Cursor Rules/Next.js.
-
-## Что делать далее
-
-Следующая итерация: **NestJS + PostgreSQL + Prisma + контракт API + интеграция первого end-to-end сохранения проекта**. Затем админ-конструктор шаблонов, медиа, публикация и RSVP. Данные localStorage нужно мигрировать на серверный draft.
-
-## Обновление v0.2 — три шаблона дня рождения с фото
-
-Добавлены **Midnight Aura**, **Soft Bloom** и **Golden Milestone**. Это три разные страницы с реальными scroll-анимациями, загружаемыми портретами, настройкой возраста и кадрирования, дополнительными изображениями галереи и локальным автосохранением.
-
-Точки входа после `npm install && npm run dev`:
-
-- `/ru/templates/midnight-aura`
-- `/ru/templates/soft-bloom`
-- `/ru/templates/golden-milestone`
-- Те же маршруты доступны с `/ky/`.
-
-Чтобы проверить собственную фотографию, откройте шаблон и нажмите **Настроить шаблон**, затем выберите раздел **Обложка** в редакторе. Для демонстрации используются вымышленные портреты из предыдущих концептов INVITO. Форма RSVP и публикация до подключения backend остаются неактивными.
-
-Проверки: `npm run check:syntax`, `npm run test:birthday`, затем после установки зависимостей `npm run typecheck`, `npm run lint`, `npm run build`. Подробности — `docs/BIRTHDAY_TEMPLATES.md`.
-
-## Обновление v0.3 — шаблоны пользователя, фото, программа, музыка
-
-- Девять новых дизайнов из предоставленных референсов, с локализованными данными RU/KY; всего теперь **24 демонстрационных шаблона** (цель запуска — 60).
-- Все шаблоны поддерживают сменяемую фотообложку. Боковые декоративные слои из исходных референсов закреплены за шаблоном и недоступны для замены в редакторе.
-- Общая фотогалерея теперь отображает изображения **в контентной части**, а не только в панели загрузки; до шести фото.
-- Новый блок **«Программа»**: редактируемые пункты RU/KY и scroll-roadmap с анимацией линии.
-- Новый блок **«Музыка»**: загрузка аудиофайла в IndexedDB, управление в редакторе и плеер в приглашении без автовоспроизведения.
-- Подробности, маршруты и ограничения: [docs/REFERENCE_TEMPLATES.md](docs/REFERENCE_TEMPLATES.md).
-- Само веб-приложение нужно проверить после `npm install`; автоматическая browser/build проверка в текущем окружении не выполнена.
-
-## v0.4: синхронизация секций редактора
-
-Выбор секции прокручивает мобильный предпросмотр к соответствующему блоку. Ручная прокрутка выделяет текущий блок в панели и синхронизирует инспектор. Описание и тесты: `docs/EDITOR_NAVIGATION.md`.
-
-
-## Editorial collection v0.5
-
-Three editable invitations based on the approved editorial design:
-- `/ru/templates/editorial-birthday`
-- `/ru/templates/editorial-wedding`
-- `/ru/templates/editorial-kyz-uzatuu`
-
-Switch to `/ky` for Kyrgyz; edit at `/ru/editor?template=editorial-wedding`. Cover photos, content, program, gallery, music, dress code and guest notes use the shared editor, while ornaments remain fixed. Run `npm run test:editorial` for static checks. See `docs/EDITORIAL_TEMPLATES.md`.
-
-Media and drafts remain local until backend publication is implemented.
+Styling: `src/app/riviera.css` contains the invitation's art direction;
+`src/app/globals.css` contains the necessary site, editor, gallery, countdown
+and image uploader styles. Obsolete birthday/editorial/reference styles and
+assets were deleted.
