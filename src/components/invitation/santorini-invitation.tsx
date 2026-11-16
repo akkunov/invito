@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { CalendarDays, Compass, Heart, MapPin, Music2, Pause, Plane, Play, Send, Ticket, Check, X, Camera, Ship, Binoculars, Landmark, ArrowRight } from "lucide-react";
+import { CalendarDays, Compass, Heart, MapPin, Music2, Pause, Plane, Play, Send, Ticket, Check, X, Ship, Landmark, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { InvitationDocument } from "@/features/invitations/invitation.schema";
 import { GalleryBlock } from "@/components/invitation/gallery-block";
@@ -77,7 +77,7 @@ export function SantoriniInvitation({ document, musicSrc }: { document: Invitati
     </section>}
 
     {enabled.has("details") && <section className="santo-ticket" data-editor-block="details" id="santo-details">
-      <div className="santo-ticket-cell"><CalendarDays size={26}/><strong>{new Intl.DateTimeFormat(ru ? "ru-RU" : "ky-KG",{day:"numeric",month:"long",timeZone:"UTC"}).format(new Date(startDate+"T12:00:00Z"))} –<br/>{compactDate(endDate,locale)}</strong></div>
+      <div className="santo-ticket-cell"><CalendarDays size={26}/><strong>{compactDate(startDate,locale)} –<br/>{compactDate(endDate,locale)}</strong></div>
       <div className="santo-ticket-cell"><MapPin size={28}/><strong>{content.venue[locale]}</strong><small>{content.city[locale]}</small></div>
       <div className="santo-ticket-stamp" aria-hidden="true">✈<span>GREECE</span></div>
     </section>}
