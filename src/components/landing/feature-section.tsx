@@ -1,13 +1,32 @@
-import { Check } from "lucide-react";
-import { getDictionary } from "@/i18n/dictionaries";
+import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { routes } from "@/constants/routes";
 import type { Locale } from "@/i18n/locales";
 
 export function FeatureSection({ locale }: { locale: Locale }) {
-  const dict = getDictionary(locale);
-  return (
-    <section id="features" className="features-section page-container" aria-labelledby="features-title">
-      <div className="feature-art" aria-hidden="true"><div className="feature-art-card"><span>Азамат & Айпери</span><i>20.06.2027</i></div></div>
-      <div className="feature-copy"><h2 id="features-title">{dict.landing.featureTitle}</h2><ul>{dict.landing.features.map((feature) => <li key={feature}><Check size={19} strokeWidth={2} aria-hidden="true" />{feature}</li>)}</ul></div>
-    </section>
-  );
+  const ru = locale === "ru";
+  const features = ru ? [
+    "Ваши фотографии и история",
+    "Музыка для настроения",
+    "Программа и важные детали",
+    "Два языка — русский и кыргызский",
+  ] : [
+    "Сиздин сүрөттөрүңүз жана окуяңыз",
+    "Маанай үчүн музыка",
+    "Программа жана маанилүү маалыматтар",
+    "Кыргызча жана орусча",
+  ];
+  return <section id="features" className="ed-feature-section" aria-labelledby="ed-feature-title">
+    <div className="page-container ed-feature-layout">
+      <div className="ed-feature-photo"><Image src="/images/riviera/villa.webp" alt={ru ? "Атмосфера свадебного торжества в саду" : "Бакчадагы үйлөнүү салтанаты"} fill sizes="(max-width: 800px) 100vw, 48vw"/></div>
+      <div className="ed-feature-text">
+        <p className="ed-eyebrow">{ru ? "03 / ВАШИ ДЕТАЛИ" : "03 / СИЗДИН МААЛЫМАТТАР"}</p>
+        <h2 id="ed-feature-title">{ru ? <>Каждая деталь<br/><em>о вас.</em></> : <>Ар бир бөлүгү<br/><em>сиз жөнүндө.</em></>}</h2>
+        <p className="ed-feature-lead">{ru ? "Мы оставляем главное на первом плане — ваши чувства. А дизайн помогает рассказать о них." : "Эң негизгиси — сиздин сезимдериңиз. Дизайн аларды айтып берүүгө жардам берет."}</p>
+        <ul>{features.map(item=><li key={item}><span>✳</span>{item}</li>)}</ul>
+        <Link href={routes.templates(locale)} className="ed-section-link">{ru ? "Перейти к дизайнам" : "Дизайндарды көрүү"}<ArrowUpRight size={18}/></Link>
+      </div>
+    </div>
+  </section>;
 }
