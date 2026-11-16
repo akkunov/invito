@@ -85,7 +85,7 @@
 
 /* Heritage cover decoration is part of the chosen artwork; editable data is HTML above it. */
 .heritage-cover{position:relative;display:grid;place-items:center;isolation:isolate;min-height:clamp(590px,87svh,850px);background:#EFE7D8;color:#40342A;overflow:hidden;padding:55px 20%}
-.heritage-cover-ornament{object-fit:fill;z-index:-1}
+.heritage-cover-ornament{object-fit:contain;z-index:-1}
 .heritage-cover-center{max-width:440px;display:flex;align-items:center;flex-direction:column;gap:clamp(15px,3vw,34px);text-align:center;overflow-wrap:anywhere}
 .heritage-cover h2{font-family:var(--font-display),serif;font-weight:500;font-size:clamp(27px,5vw,60px);line-height:1.14;text-shadow:0 1px 7px #F2E9DD;letter-spacing:-.025em}
 .heritage-cover-amp{color:#A27D42;font-style:italic}
@@ -101,7 +101,7 @@
 .heritage-cover-grid button.active{outline:2px solid #FF4A0A;outline-offset:1px}
 .heritage-cover-grid button:focus-visible{outline:3px solid #FF4A0A;outline-offset:2px}
 .heritage-cover-thumbnail{width:100%;height:100px;position:relative;display:block;overflow:hidden;border-radius:3px}
-.heritage-cover-thumbnail img{object-fit:fill}
+.heritage-cover-thumbnail img{object-fit:contain}
 .heritage-cover-original{display:grid;place-items:center;width:100%;height:100px;border:1px solid #aaa5;font-size:30px}
 .heritage-cover-grid small{text-align:center;font-size:10px;line-height:1.3;min-height:26px}
 
@@ -114,7 +114,7 @@
 .collection-preview-dark-luxury,.collection-preview-mono-typography {color:white;text-shadow:0 1px 20px black}
 .collection-preview-dark-luxury:after,.collection-preview-mono-typography:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#0009,transparent 70%);z-index:-1}
 .collection-preview-romantic-floral,.collection-preview-botanical-natural,.collection-preview-classic-ivory-gold{color:#302822}
-.collection-preview-heritage>img{object-fit:fill;opacity:1}
+.collection-preview-heritage>img{object-fit:contain;opacity:1}
 .collection-preview-heritage .collection-template-text{top:42%;bottom:auto;transform:translateY(-50%);text-shadow:0 1px 9px #F8F0E9,0 1px 7px #F8F0E9}
 
 @media(max-width:600px){
@@ -154,3 +154,7 @@
 .collection-national-arch .heritage-cover-center,.collection-national-frame .heritage-cover-center{max-width:76%}
 .collection-invitation[class*="collection-national-"] .heritage-cover h2{color:inherit;text-shadow:none}
 @media(max-width:620px){.collection-invitation[class*="collection-national-"] .heritage-cover{padding:60px 12%}.collection-national-arch .heritage-cover-center,.collection-national-frame .heritage-cover-center{max-width:100%}}
+
+/* National SVG cards keep their authored 760x1160 aspect ratio. */
+.collection-invitation[class*="collection-national-"] .heritage-cover{width:min(100%,560px);aspect-ratio:760 / 1160;min-height:0;margin-inline:auto}
+@media(max-width:620px){.collection-invitation[class*="collection-national-"] .heritage-cover{width:100%;min-height:0;padding:50px 12%}}
