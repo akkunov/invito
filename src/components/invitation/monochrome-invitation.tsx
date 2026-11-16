@@ -71,7 +71,7 @@ export function MonochromeInvitation({ document, musicSrc }: {
         <span className="mono-initials">{initials}</span>
       </header>
       <div className="mono-hero-copy">
-        <h1><span>{content.name1}</span><span><b>&amp;</b></span><span>{content.name2}</span></h1>
+        <h1><span>{content.name1} <b>&amp;</b></span><span>{content.name2}</span></h1>
         <p>{content.title[locale]}</p>
       </div>
       {musicSrc && <audio ref={audio} src={musicSrc} preload="auto" loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>}

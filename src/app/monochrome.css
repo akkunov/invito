@@ -20,8 +20,7 @@
 .mono-hero-copy{position:relative;z-index:2;padding:72px 4% 0 5%;}
 .mono-hero-copy h1{display:flex;flex-direction:column;align-items:flex-start;max-width:97%;font:900 clamp(45px,13vw,68px)/.92 Arial,"Helvetica Neue",sans-serif;letter-spacing:-.085em;text-transform:uppercase;overflow-wrap:anywhere;}
 .mono-hero-copy h1>span{display:block;max-width:100%;}
-.mono-hero-copy h1>span:nth-child(2){height:0;overflow:visible;}
-.mono-hero-copy h1 b{position:relative;left:132px;top:-43px;font-weight:900;}
+.mono-hero-copy h1 b{font:inherit;font-weight:900;letter-spacing:-.085em;}
 .mono-hero-copy>p{max-width:70%;margin-top:35px;font-size:11px;line-height:1.5;letter-spacing:.28em;text-transform:uppercase;white-space:normal;text-wrap:balance;}
 .mono-music-button{position:absolute;right:4%;bottom:15px;z-index:4;display:flex;align-items:center;justify-content:center;gap:3px;width:42px;height:42px;border:1px solid #000;border-radius:50%;color:#111;background:#ffffffd9;}
 .mono-music-button[aria-pressed="true"]{background:#111;color:#fff;}
@@ -87,7 +86,6 @@
   .mono-hero{height:408px;}
   .mono-hero-copy{padding-top:63px;}
   .mono-hero-copy h1{font-size:clamp(39px,12.6vw,47px);}
-  .mono-hero-copy h1 b{left:111px;top:-37px;}
   .mono-intro{gap:11px;}
   .mono-intro h2{font-size:29px;}
   .mono-intro p{font-size:11px;}
