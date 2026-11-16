@@ -544,7 +544,7 @@
 .riviera-card-eyebrow{width:55%;max-width:50cqw;font-size:2.27cqw;line-height:1.8;
     font-weight:650;letter-spacing:.35em;text-transform:uppercase;}
 .riviera-card-names{display:flex;flex-direction:column;align-items:flex-start;gap:0;
-    margin:5.45cqw 0 0;max-width:96%;font:400 11.3cqw/.97 var(--font-display),Georgia,serif;
+    margin:5.45cqw 0 0;max-width:96%;font:400 10.7cqw/.97 var(--font-display),Georgia,serif;
     letter-spacing:-.075em;text-transform:uppercase;overflow-wrap:anywhere;}
 .riviera-card-names span{display:block;max-width:100%;}
 .riviera-card-letter{padding-top:10.2cqw;max-width:67cqw;}
