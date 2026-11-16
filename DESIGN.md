@@ -9,9 +9,7 @@ colors:
   surface: "#e2e7f0"
 typography:
   ui:
-    fontFamily: "Onest, Arial, sans-serif"
-  display:
-    fontFamily: "Noto Serif Display, Georgia, serif"
+    fontFamily: "Inter Tight, Arial, sans-serif"
 rounded:
   control: "6px"
   stage: "8px"
@@ -56,10 +54,17 @@ has no theme switcher; do not advertise dark-mode support.
 
 ## Typography
 
-Keep the existing Next font pipeline: Onest (`--font-ui`) for UI and strong display
-headings, Noto Serif Display (`--font-display`) for short expressive phrases.
-Both have Cyrillic subsets. Body copy is 14–16px with comfortable line height.
-Large type uses fluid clamps and compact tracking; avoid all-serif headings everywhere.
+The public interface uses **Inter Tight**, matching the observed Awwwards UI font.
+`src/components/layout/public-font.ts` loads only the normal style with Latin and
+Cyrillic subsets via next/font. Its `--font-public` variable is applied to each public
+shell and consumed by `landing-editorial.css`. Body/navigation use normal upright
+weights; headings use 600, card titles 500–550. Headline tracking is no tighter than
+-.04em for readability. Colored phrases inherit their heading typography.
+
+No italic, decorative serif or artificially slanted text is permitted in public UI.
+Typography contrast comes from scale, weight, spacing and color. Existing Onest and
+Noto Serif Display remain confined to the editor and invitation artwork, whose
+independent template identities are outside the public-shell typography contract.
 
 ## Layout
 

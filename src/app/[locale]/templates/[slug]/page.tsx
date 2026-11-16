@@ -1,3 +1,4 @@
+import { publicFont } from "@/components/layout/public-font";
 import "@/app/landing-editorial.css";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -31,7 +32,7 @@ export default async function TemplateDetailPage({ params, searchParams }: { par
   const dict = getDictionary(locale);
   const document = createInvitationFromTemplate(template, locale);
   if ((await searchParams).preview === "1") return <main className="invitation-embed"><InvitationCanvas document={document} /></main>;
-  return <div className="invito-landing"><SiteHeader locale={locale} /><main className="detail-main page-container">
+  return <div className={`invito-landing ${publicFont.variable}`}><SiteHeader locale={locale} /><main className="detail-main page-container">
     <Link className="back-link" href={routes.templates(locale)}><ArrowLeft size={17} />{dict.actions.back}</Link>
     <div className="detail-layout"><div className="detail-description"><h1>{template.name[locale]}</h1><p>{template.description[locale]}</p><span className="detail-price">{template.premium ? dict.catalog.premium : dict.catalog.free}</span><p className="detail-note">{dict.catalog.demo}</p><Link className="button-primary button-large" href={routes.editor(locale, template.id)}>{dict.actions.edit}<ArrowUpRight size={18} /></Link></div><div className="detail-preview"><InvitationCanvas document={document} /></div></div>
   </main><SiteFooter locale={locale} /></div>;

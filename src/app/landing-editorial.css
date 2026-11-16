@@ -6,13 +6,14 @@
   --ed-line: #cdd1d9;
   --ed-blue: #2549d9;
   --ed-surface: #e2e7f0;
-  --ed-display: var(--font-display), Georgia, serif;
   --background: var(--ed-paper);
   --foreground: var(--ed-ink);
   --accent: var(--ed-blue);
   --border: var(--ed-line);
   --muted: var(--ed-muted);
   min-height: 100vh;
+  font-family: var(--font-public), Arial, sans-serif;
+  font-style: normal;
   color-scheme: light;
   color: var(--ed-ink);
   background: var(--ed-paper);
@@ -25,7 +26,7 @@
 .invito-landing .page-container { width: min(100% - 80px, 1440px); }
 .invito-landing .site-header { background: var(--ed-paper); border-color: var(--ed-line); }
 .invito-landing .site-header-inner { min-height: 88px; gap: 30px; }
-.invito-landing .brand-wordmark { font-family: var(--font-ui), Arial, sans-serif; font-weight: 750; letter-spacing: -.07em; font-size: 29px; }
+.invito-landing .brand-wordmark { font-family: var(--font-public), Arial, sans-serif; font-weight: 750; letter-spacing: -.07em; font-size: 29px; }
 .invito-landing .brand-icon { color: var(--ed-blue); }
 .invito-landing .desktop-nav a { color: var(--ed-muted); }
 .invito-landing .desktop-nav a:hover { color: var(--ed-blue); }
@@ -48,8 +49,8 @@
 /* Type is the architecture; the invitation is the hero. */
 .invito-landing .ed-eyebrow { font-size: 11px; letter-spacing: .14em; font-weight: 600; color: var(--ed-blue); margin: 0 0 24px; }
 .invito-landing .ed-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 36px; }
-.invito-landing :is(.ed-section-heading h2,.ed-feature-text h2,.ed-final h2) { margin: 0; font: 600 clamp(40px,5.1vw,76px)/1.07 var(--font-ui), Arial, sans-serif; letter-spacing: -.065em; text-wrap: balance; }
-.invito-landing :is(h1,h2) em { font-family: var(--ed-display); font-weight: 400; color: var(--ed-blue); }
+.invito-landing :is(.ed-section-heading h2,.ed-feature-text h2,.ed-final h2) { margin: 0; font: 600 clamp(40px,5.1vw,76px)/1.07 var(--font-public), Arial, sans-serif; letter-spacing: -.04em; text-wrap: balance; }
+.invito-landing .ed-title-accent { font: inherit; color: var(--ed-blue); }
 .invito-landing .ed-section-link { display: inline-flex; align-items: center; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--ed-ink); font-size: 14px; white-space: nowrap; }
 .invito-landing .ed-section-link:hover { color: var(--ed-blue); border-color: var(--ed-blue); }
 .invito-landing .ed-section-link svg { transition: transform .25s; }
@@ -58,8 +59,8 @@
 .invito-landing .ed-hero-topline { display: flex; justify-content: space-between; gap: 16px; color: var(--ed-muted); font-size: 10px; letter-spacing: .12em; }
 .invito-landing .ed-hero-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 36px; align-items: center; padding-block: 56px 50px; }
 .invito-landing .ed-hero-copy { min-width: 0; padding-block: 20px; }
-.invito-landing .ed-hero-copy h1 { margin: 0; font: 650 clamp(48px,5.8vw,92px)/1.03 var(--font-ui),Arial,sans-serif; letter-spacing: -.075em; }
-.invito-landing .ed-hero-copy h1 em { font-size: .97em; letter-spacing: -.075em; }
+.invito-landing .ed-hero-copy h1 { margin: 0; font: 600 clamp(48px,5.8vw,92px)/1.03 var(--font-public),Arial,sans-serif; letter-spacing: -.04em; }
+
 .invito-landing .ed-hero-support { margin-top: 38px; }
 .invito-landing .ed-hero-support p { max-width: 410px; font-size: 16px; line-height: 1.7; color: var(--ed-muted); margin: 0; }
 .invito-landing .ed-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 25px; margin-top: 28px; }
@@ -71,7 +72,7 @@
 .invito-landing .ed-showcase-stage { position: relative; display: grid; place-items: center; min-height: 590px; padding: 64px 40px; background: var(--ed-surface); border-radius: 8px; overflow: hidden; isolation: isolate; }
 .invito-landing .ed-stage-label { position: absolute; top: 24px; left: 24px; font-size: 9px; letter-spacing: .12em; color: var(--ed-muted); }
 .invito-landing .ed-stage-orbit { position: absolute; z-index: -1; top: 35%; left: -8%; font-size: clamp(90px,12vw,195px); font-weight: 750; letter-spacing: -.09em; color: #c7d0e4; transform: rotate(-90deg); pointer-events: none; }
-.invito-landing .ed-stage-note { position: absolute; right: 18px; bottom: 24px; font: italic 18px/1.2 var(--ed-display); color: var(--ed-blue); transform: rotate(-6deg); }
+.invito-landing .ed-stage-note { position: absolute; right: 18px; bottom: 24px; font: 500 18px/1.4 var(--font-public), Arial, sans-serif; color: var(--ed-blue); }
 .invito-landing .ed-showcase-invitation { width: 260px; max-width: 80%; position: relative; transform: rotate(5deg); border: 6px solid white; box-shadow: 0 24px 50px #15275933; animation: ed-arrive .5s ease both; transition: transform .45s; }
 .invito-landing .ed-showcase-invitation:hover { transform: rotate(0deg) translateY(-6px); }
 .invito-landing .ed-showcase-invitation > :first-child { width: 100%; height: auto; }
@@ -123,21 +124,22 @@
 .invito-landing .ed-final-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 10px; letter-spacing: .12em; }
 .invito-landing .ed-final-head > span:last-child { font-size: 32px; }
 .invito-landing .ed-final h2 { margin: 65px 0 32px; }
-.invito-landing .ed-final h2 em { color: white; }
+.invito-landing .ed-final h2 .ed-title-accent { color: white; }
 .invito-landing .ed-final > a { display: inline-flex; align-items: center; justify-content: space-between; gap: 40px; min-height: 54px; padding: 14px 20px; border-radius: 6px; background: white; color: var(--ed-blue); font-size: 14px; }
 .invito-landing .ed-final > a:hover { background: var(--ed-surface); }
 .invito-landing .ed-final > p { font-size: 13px; margin: 26px 0 0; }
 /* Catalog and detail use the same shell; the canvas retains its own styles. */
 .invito-landing .catalog-main { padding-block: 64px 100px; }
-.invito-landing .catalog-intro h1 { color: var(--ed-ink); font: 600 clamp(42px,6vw,84px)/1.08 var(--font-ui),sans-serif; letter-spacing: -.065em; }
+.invito-landing .catalog-intro h1 { color: var(--ed-ink); font: 600 clamp(42px,6vw,84px)/1.08 var(--font-public),sans-serif; letter-spacing: -.04em; }
 .invito-landing .catalog-intro p { color: var(--ed-muted); }
-.invito-landing .catalog-total { color: var(--ed-blue); }
+.invito-landing .catalog-total { color: var(--ed-blue); font-family: var(--font-public), Arial, sans-serif; }
+.invito-landing .catalog-empty h2 { font-family: var(--font-public), Arial, sans-serif; font-weight: 600; }
 .invito-landing :is(.search-control,.filter-select select) { background: white; border-color: var(--ed-line); color: var(--ed-ink); }
 .invito-landing .search-control input { color: var(--ed-ink); }
 .invito-landing .catalog-summary { color: var(--ed-muted); }
 .invito-landing .catalog-empty { border-color: var(--ed-line); }
 .invito-landing .catalog-grid { gap: 36px; grid-template-columns: repeat(3,minmax(0,1fr)); }
-.invito-landing .detail-description h1 { font: 550 clamp(38px,4vw,64px)/1.1 var(--font-ui),sans-serif; letter-spacing: -.055em; }
+.invito-landing .detail-description h1 { font: 550 clamp(38px,4vw,64px)/1.1 var(--font-public),sans-serif; letter-spacing: -.04em; }
 .invito-landing .detail-description p { color: var(--ed-muted); }
 .invito-landing .detail-price { color: var(--ed-blue); background: var(--ed-surface); }
 .invito-landing .back-link { color: var(--ed-muted); }
@@ -147,7 +149,7 @@
 .template-preview-dialog::backdrop { background: #141d35b8; backdrop-filter: blur(5px); }
 .template-preview-dialog .preview-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 22px; }
 .template-preview-dialog .preview-dialog-head small { color: #606773; font-size: 9px; letter-spacing: .12em; }
-.template-preview-dialog h2 { font-family: var(--font-ui),Arial,sans-serif; font-size: 16px; font-weight: 550; line-height: 1.3; margin: 6px 0 0; }
+.template-preview-dialog h2 { font-family: var(--font-public),Arial,sans-serif; font-size: 16px; font-weight: 550; line-height: 1.3; margin: 6px 0 0; }
 .template-preview-dialog .preview-dialog-body { position: relative; min-height: 240px; height: min(65dvh,680px); margin-inline: auto; width: min(100%,440px); background: #e2e7f0; }
 .template-preview-dialog iframe { display: block; width: 100%; height: 100%; border: 0; position: relative; }
 .template-preview-dialog .preview-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #606773; font-size: 14px; }
