@@ -8,5 +8,11 @@ assert.match(read("src/components/invitation/invitation-canvas.tsx"),/RivieraInv
 assert.match(read("src/components/templates/template-artwork.tsx"),/RivieraTemplateArtwork/);
 for(const id of ["cover","message","details","location","program","rsvp"])assert.ok(read(paths[0]).includes(`data-editor-block="${id}"`),id);
 for(const file of ["couple","villa","flowers","fabric-left","fabric-right"])assert.ok(existsSync(`public/images/riviera/${file}.webp`),file);
-assert.match(read("src/app/riviera.css"),/max-width:600px/);
+const css=read("src/app/riviera.css");
+assert.match(css,/max-width:440px/);
+assert.match(css,/min-width:441px/);
+assert.match(css,/max-width:359px/);
+assert.match(css,/riviera-hero-portrait/);
+assert.match(css,/riviera-timeline/);
+assert.match(css,/riviera-rsvp-actions/);
 console.log("PASS: Riviera registered, artwork, editable blocks, responsive styles and reference imagery");
