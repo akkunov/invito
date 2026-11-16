@@ -338,3 +338,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .editor-phone:focus-visible { outline: 3px solid #FF4A0A; outline-offset: 5px; }
 .editor-block-select:focus-visible { outline: 2px solid #FF4A0A; outline-offset: 3px; border-radius: 5px; }
 .editor-block-list li.is-selected .editor-block-select { color: #FF6A38; font-weight: 650; }
+
+
+/* Program and music controls remain part of the single Riviera editor. */
+.inspector-program{display:grid;gap:13px;}
+.inspector-program-item{padding:12px;border:1px solid #383838;border-radius:9px;display:grid;gap:10px;}
+.inspector-program-item legend{padding:0 5px;font-size:12px;color:#f7f7f4;}
+.inspector-program-remove{width:fit-content;color:#ff9d7d;font-size:12px;padding:5px 0;}
+.inspector-music{display:grid;gap:14px;}
+.inspector-music-item{display:flex;gap:8px;align-items:center;padding:10px;background:#202020;border:1px solid #383838;border-radius:8px;font-size:12px;}
+.inspector-music-item span{min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.inspector-music-item button{color:#ff876c;}
