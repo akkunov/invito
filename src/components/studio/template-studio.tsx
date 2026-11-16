@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, Download, FileUp, ImagePlus, Plus, Redo2, RotateCcw, Save, Trash2, Type, Undo2, Square, MousePointer2, Smartphone, Monitor, Move } from "lucide-react";
 import { StudioCanvas } from "@/components/studio/studio-canvas";
+import { StudioTextToolbar } from "@/components/studio/studio-text-toolbar";
 import { createElement, starterTemplate, studioTemplateSchema, type StudioElement, type StudioElementType, type StudioTemplate } from "@/features/studio/studio.schema";
 import type { Locale } from "@/i18n/locales";
 
@@ -20,6 +21,7 @@ function downloadJson(data:unknown,name:string){
 export function TemplateStudio({locale}:{locale:Locale}){
   const [template,setTemplate]=useState<StudioTemplate>(starterTemplate);
   const [selectedId,setSelectedId]=useState<string|null>("name-one");
+  const [editingId,setEditingId]=useState<string|null>(null);
   const [viewport,setViewport]=useState<320|375|440>(375);
   const [saved,setSaved]=useState<string[]>([]);
   const [message,setMessage]=useState("");
@@ -27,7 +29,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
   const [undo,setUndo]=useState<StudioTemplate[]>([]);
   const [redo,setRedo]=useState<StudioTemplate[]>([]);
   const fileRef=useRef<HTMLInputElement>(null);
-  const dragRef=useRef<{original:StudioTemplate;lastMove:number}|null>(null);
+
   const ru=locale==="ru";
   useEffect(()=>{
     try{
@@ -52,6 +54,18 @@ export function TemplateStudio({locale}:{locale:Locale}){
     if(!selectedId)return;
     change({...template,elements:template.elements.map(el=>el.id===selectedId?{...el,...patch}:el)});
   }
+  function beginTextEdit(id:string){
+    setSelectedId(id);
+    const node=template.elements.find(el=>el.id===id);
+    if(!node)return;
+    if(node.binding!=="none"){setMessage("Текст привязан к переменной. Отключите привязку в панели свойств, чтобы изменить его на холсте.");return;}
+    setEditingId(id);
+  }
+  function commitInlineText(id:string,text:string){
+    setEditingId(null);
+    if(template.elements.find(el=>el.id===id)?.text===text)return;
+    change({...template,elements:template.elements.map(el=>el.id===id?{...el,text}:el)});
+  }
   function moveNode(id:string,x:number,y:number){
     const current=template.elements.find(el=>el.id===id);
     if(!current||current.x===x&&current.y===y)return;
@@ -65,6 +79,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
     change({...template,elements:[...template.elements,element]});setSelectedId(element.id);
   }
   function remove(){
+    setEditingId(null);
     if(!selectedId)return;
     change({...template,elements:template.elements.filter(el=>el.id!==selectedId)});setSelectedId(null);
   }
@@ -153,8 +168,9 @@ export function TemplateStudio({locale}:{locale:Locale}){
         <div className="studio-saved">{saved.length===0?<p>Нет сохранённых шаблонов</p>:saved.map(key=><button key={key} onClick={()=>load(key)}>{key}</button>)}</div>
       </aside>
       <section className="studio-workspace" aria-label="Холст шаблона">
-        <div className="studio-workspace-head"><div><span>ХОЛСТ / {template.name}</span><small>Перетащите элемент или используйте стрелки клавиатуры</small></div><div className="studio-viewport-choices">{([320,375,440] as const).map(value=><button key={value} aria-pressed={viewport===value} onClick={()=>setViewport(value)}>{value}</button>)}</div></div>
-        <div className="studio-canvas-scroll"><StudioCanvas template={template} selectedId={selectedId} onSelect={setSelectedId} onMove={moveNode} viewport={viewport}/></div>
+        <div className="studio-workspace-head"><div><span>ХОЛСТ / {template.name}</span><small>Дважды нажмите на текст или используйте быструю панель ниже</small></div><div className="studio-viewport-choices">{([320,375,440] as const).map(value=><button key={value} aria-pressed={viewport===value} onClick={()=>setViewport(value)}>{value}</button>)}</div></div>
+        {selected&&<StudioTextToolbar element={selected} onChange={changeNode} onEdit={()=>beginTextEdit(selected.id)} onDuplicate={duplicate} onDelete={remove}/>}
+        <div className="studio-canvas-scroll"><StudioCanvas template={template} selectedId={selectedId} onSelect={id=>{setSelectedId(id)}} onMove={moveNode} editingId={editingId} onBeginEdit={beginTextEdit} onCommitText={commitInlineText} onCancelEdit={()=>setEditingId(null)} viewport={viewport}/></div>
         <p className="studio-canvas-hint"><Move size={15}/> Холст рассчитан на 440 px. Кнопки 320/375/440 меняют масштаб превью.</p>
       </section>
       <aside className="studio-inspector" aria-label="Свойства">

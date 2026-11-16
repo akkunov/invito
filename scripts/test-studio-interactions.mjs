@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=x=>readFileSync(x,"utf8");
+const studio=read("src/components/studio/template-studio.tsx");
+const canvas=read("src/components/studio/studio-canvas.tsx");
+const bar=read("src/components/studio/studio-text-toolbar.tsx");
+assert.match(studio,/StudioTextToolbar/);
+assert.match(studio,/commitInlineText/);
+assert.match(canvas,/studio-inline-textarea/);
+assert.match(canvas,/onDoubleClick/);
+assert.match(bar,/fontSize/);
+assert.match(bar,/fontFamily/);
+assert.match(bar,/textAlign/);
+assert.match(bar,/type="color"/);
+console.log("PASS: contextual typography and on-canvas text editing wired");

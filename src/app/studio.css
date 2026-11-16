@@ -76,3 +76,23 @@
 @media(max-width:830px){.studio-layout{grid-template-columns:1fr;}.studio-sidebar,.studio-inspector{border:0;border-bottom:1px solid var(--st-border);}.studio-elements{grid-template-columns:repeat(4,1fr);}.studio-layers{max-height:115px;}.studio-workspace{order:-1;}.studio-canvas-scroll{min-height:380px;max-height:680px;}.studio-inspector{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:15px;}.studio-inspector>.studio-panel-title{grid-column:1/-1;}.studio-fields{grid-column:1/-1;}.studio-toolbar{padding-inline:12px;}}
 @media(max-width:530px){.studio-toolbar{align-items:flex-start;flex-wrap:wrap;}.studio-toolbar-actions{width:100%;justify-content:space-between;}.studio-toolbar-actions button{padding:9px 5px;}.studio-toolbar-actions button>span{display:none;}.studio-toolbar-actions .studio-save{padding:9px 14px;}.studio-toolbar-actions .studio-save span{display:block;}.studio-workspace-head{flex-wrap:wrap;}.studio-canvas-scroll{padding:20px 6px;}.studio-canvas-hint{font-size:10px;}.studio-elements{grid-template-columns:repeat(4,1fr);}.studio-elements button{min-height:72px;}.studio-elements button>span{font-size:9px;}}
 @media(prefers-reduced-motion:reduce){.studio *{transition-duration:.01ms!important;animation:none!important;}}
+
+/* Contextual formatting: visible next to the work, with touch-sized controls. */
+.studio-context-toolbar{width:100%;min-height:62px;padding:10px 18px;display:flex;align-items:center;justify-content:flex-start;gap:9px;flex-wrap:wrap;background:#202628;border-bottom:1px solid #444c4e;position:sticky;top:0;z-index:8}
+.studio-context-name{display:flex;gap:5px;align-items:center;color:#cdd8cb;font-size:11px;margin-right:4px}
+.studio-context-toolbar button{min-width:32px;min-height:34px;border:1px solid #485353;border-radius:5px;display:flex;justify-content:center;align-items:center;color:#edf1ef}
+.studio-context-toolbar button:hover,.studio-context-toolbar button.is-on,.studio-context-toolbar button[aria-pressed=true]{background:#3b4748;border-color:#8ba8a3}
+.studio-context-toolbar .studio-context-edit{padding:0 12px;color:#15261b;background:#d1e4c9;border-color:#d1e4c9;font-weight:700;white-space:nowrap}
+.studio-context-select select{min-height:35px;max-width:88px;color:#fff;background:#2d3436;border:1px solid #4e585a;border-radius:4px;padding:5px 6px}
+.studio-context-size,.studio-context-align,.studio-context-actions{display:flex;align-items:center;gap:3px}
+.studio-context-size input{color:#fff;background:#2d3436;border:1px solid #50595b;border-radius:4px;text-align:center;width:48px;min-height:34px;font-size:14px}
+.studio-context-color{display:flex;gap:7px;align-items:center;font-size:11px;color:#cfd5cf}
+.studio-context-color input{width:37px;height:34px;border:1px solid #57605c;border-radius:5px;background:transparent;padding:3px;cursor:pointer}
+.studio-context-swatches{display:flex;align-items:center;gap:4px}
+.studio-context-swatches button{width:22px;min-width:22px;height:22px;min-height:22px;border-radius:50%;border:1px solid #a0a7a5}
+.studio-context-swatches button[aria-pressed=true]{outline:2px solid #a9c6ee;outline-offset:2px}
+.studio-context-actions{margin-left:auto}
+.studio-inline-textarea{display:block;width:100%;height:100%;min-height:0;resize:none;outline:2px solid #2549d9;border:0;padding:4px;background:rgba(255,255,255,.9);font:inherit;line-height:inherit;color:inherit;text-align:inherit;white-space:pre-wrap;user-select:text;touch-action:auto}
+.studio-render-node:has(.studio-inline-textarea){overflow:visible}
+@media(max-width:830px){.studio-context-toolbar{padding:9px;gap:8px;position:relative}.studio-context-actions{margin-left:0}}
+@media(max-width:530px){.studio-context-toolbar{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:thin;overscroll-behavior-inline:contain}.studio-context-toolbar>*{flex:none}.studio-context-toolbar .studio-context-edit{min-height:42px}.studio-context-toolbar button{min-width:40px;min-height:40px}.studio-context-swatches button{min-width:24px;min-height:24px}.studio-context-size input{min-height:40px}}

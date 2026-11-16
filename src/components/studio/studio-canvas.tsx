@@ -1,24 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { demoBindings, type StudioElement, type StudioTemplate } from "@/features/studio/studio.schema";
 
 function elementText(el: StudioElement) {
   return el.binding === "none" ? el.text : demoBindings[el.binding];
 }
 
-export function StudioCanvas({template,selectedId,onSelect,onMove,editable=true,viewport=440}:{
+export function StudioCanvas({template,selectedId,onSelect,onMove,editingId,onBeginEdit,onCommitText,onCancelEdit,editable=true,viewport=440}:{
   template:StudioTemplate;
   selectedId?:string|null;
   onSelect?:(id:string)=>void;
   onMove?:(id:string,x:number,y:number)=>void;
+  editingId?:string|null;
+  onBeginEdit?:(id:string)=>void;
+  onCommitText?:(id:string,value:string)=>void;
+  onCancelEdit?:()=>void;
   editable?:boolean;
   viewport?:number;
 }) {
   const scale=viewport/440;
+  const editorRef=useRef<HTMLTextAreaElement>(null);
+  const [draft,setDraft]=useState("");
+  useEffect(()=>{if(!editingId)return;setDraft(template.elements.find(x=>x.id===editingId)?.text??"");requestAnimationFrame(()=>{editorRef.current?.focus();editorRef.current?.select()}); /* eslint-disable-next-line react-hooks/exhaustive-deps */ },[editingId]);
   function handlePointerDown(event:PointerEvent<HTMLDivElement>,node:StudioElement){
-    if(!editable||!onMove||!onSelect||event.button!==0)return;
+    if(!editable||!onMove||!onSelect||event.button!==0||editingId===node.id)return;
     const originX=event.clientX,originY=event.clientY;
     const initialX=node.x,initialY=node.y;
     const target=event.currentTarget;
@@ -39,7 +46,7 @@ export function StudioCanvas({template,selectedId,onSelect,onMove,editable=true,
     target.addEventListener("pointercancel",finish);
   }
   function handleKey(event:KeyboardEvent<HTMLDivElement>,node:StudioElement){
-    if(!editable||!onMove||!onSelect)return;
+    if(!editable||!onMove||!onSelect||editingId===node.id)return;
     const delta=event.shiftKey?10:1;
     const movement:Record<string,[number,number]>={ArrowLeft:[-delta,0],ArrowRight:[delta,0],ArrowUp:[0,-delta],ArrowDown:[0,delta]};
     const d=movement[event.key];
@@ -60,9 +67,10 @@ export function StudioCanvas({template,selectedId,onSelect,onMove,editable=true,
           style={style} role={editable?"button":undefined} tabIndex={editable?0:undefined}
           aria-label={editable?`Элемент: ${node.text||node.type}. Стрелки — перемещение`:undefined}
           onClick={editable?()=>onSelect?.(node.id):undefined}
+          onDoubleClick={editable&&(node.type==="text"||node.type==="button")?()=>{onSelect?.(node.id);onBeginEdit?.(node.id)}:undefined}
           onPointerDown={event=>handlePointerDown(event,node)}
           onKeyDown={event=>handleKey(event,node)}>
-          {node.type==="image" ? (node.imageSrc ?
+          {editingId===node.id&&(node.type==="text"||node.type==="button")?<textarea ref={editorRef} className="studio-inline-textarea" maxLength={300} aria-label="Редактировать текст на холсте" value={draft} onChange={e=>setDraft(e.target.value)} onPointerDown={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()} onKeyDown={e=>{e.stopPropagation();if(e.key==="Escape"){e.preventDefault();onCancelEdit?.()}if((e.metaKey||e.ctrlKey)&&e.key==="Enter"){e.preventDefault();onCommitText?.(node.id,draft)}}} onBlur={()=>{if(editingId===node.id)onCommitText?.(node.id,draft)}}/> : node.type==="image" ? (node.imageSrc ?
             <Image src={`${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${node.imageSrc}`} alt="" fill sizes="440px" draggable={false} style={{objectFit:"cover",borderRadius:node.radius}}/> :
             <span className="studio-image-empty">Фото</span>) :
             node.type==="shape"?null:<span>{elementText(node)}</span>}
