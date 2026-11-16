@@ -228,3 +228,14 @@
   .riviera {border-inline:1px solid rgba(54,41,33,.11);box-shadow:0 10px 80px rgba(0,0,0,.11);}
 }
 @media(prefers-reduced-motion:reduce){.riviera *{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+/* A compact audio control replaces the Riviera hamburger. */
+.riviera-music-control { position:relative; z-index:5; }
+.riviera-music-button {
+  display:flex;align-items:center;justify-content:center;gap:1px;
+  width:44px;height:44px;padding:0;border:1px solid rgba(28,24,21,.4);
+  border-radius:50%;background:rgba(247,244,239,.7);color:#211d19;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.riviera-music-button[aria-pressed="true"] {border-color:var(--rv-gold);background:#e9dfd2;}
+.riviera-music-button:focus-visible {outline:2px solid var(--rv-gold);outline-offset:3px;}
+.riviera-music-button:disabled {opacity:.5;cursor:not-allowed;}

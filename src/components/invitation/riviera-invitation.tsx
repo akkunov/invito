@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowDown, ArrowUpRight, Check, MapPin, Menu, X } from "lucide-react";
-import { useState, type CSSProperties } from "react";
+import { ArrowDown, ArrowUpRight, Check, MapPin, Music2, Pause, Play, X } from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { GalleryBlock } from "@/components/invitation/gallery-block";
 import { CountdownBlock } from "@/components/invitation/countdown-block";
 import type { InvitationDocument } from "@/features/invitations/invitation.schema";
@@ -23,12 +23,35 @@ function dateParts(value: string, locale: "ru" | "ky") {
 }
 
 /** A dedicated reference-led layout. Photos are assets; typography, buttons and layout are real DOM. */
-export function RivieraInvitation({ document }: { document: InvitationDocument }) {
+export function RivieraInvitation({ document, musicSrc }: { document: InvitationDocument; musicSrc?: string | null }) {
   const { content, media, locale } = document;
   const ru = locale === "ru";
   const enabled = new Set(document.blocks.filter((item) => item.enabled).map((item) => item.id));
   const date = dateParts(content.dateTimeLocal, locale);
   const [rsvp, setRsvp] = useState<"yes" | "no" | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const canPlayMusic = Boolean(musicSrc && enabled.has("music"));
+
+  // Most mobile browsers block unmuted autoplay. Try it, but let the visitor
+  // start the track with the music control when the browser rejects play().
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!canPlayMusic) { audio.pause(); return; }
+    let active = true;
+    audio.play().then(() => { if (active) setPlaying(true); }).catch(() => {
+      if (active) setPlaying(false);
+    });
+    return () => { active = false; audio.pause(); };
+  }, [canPlayMusic, musicSrc]);
+
+  async function toggleMusic() {
+    const audio = audioRef.current;
+    if (!audio || !canPlayMusic) return;
+    if (!audio.paused) { audio.pause(); return; }
+    try { await audio.play(); } catch { setPlaying(false); }
+  }
   const image = media?.portraitDataUrl ?? IMAGES.couple;
   const mapQuery = encodeURIComponent(`${content.venue[locale]}, ${content.city[locale]}`);
   const vars = { "--invite-accent": document.accent, "--invite-paper": "#F4F0ED", "--invite-text": "#151310" } as CSSProperties;
@@ -44,7 +67,17 @@ export function RivieraInvitation({ document }: { document: InvitationDocument }
         <span className="riviera-brand">INVITO</span>
         <span className="riviera-topbar-rule" aria-hidden="true" />
         <span className="riviera-topbar-caption">{ru ? "Свадебное приглашение" : "Үйлөнүү тойго чакыруу"}</span>
-        <details className="riviera-menu"><summary aria-label={ru ? "Открыть навигацию" : "Менюну ачуу"}><Menu size={27} strokeWidth={1.4}/></summary><nav><a href="#riviera-cover">{ru ? "Начало" : "Башы"}</a><a href="#riviera-date">{ru ? "Дата" : "Күнү"}</a><a href="#riviera-program">{ru ? "Программа" : "Программа"}</a><a href="#riviera-rsvp">RSVP</a></nav></details>
+        <div className="riviera-music-control">
+          {musicSrc && <audio ref={audioRef} src={musicSrc} preload="auto" loop
+            onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
+          <button type="button" className="riviera-music-button" disabled={!canPlayMusic}
+            onClick={toggleMusic} aria-pressed={playing}
+            title={!canPlayMusic ? (ru ? "Добавьте музыку в редакторе" : "Редактордон музыка кошуңуз") : undefined}
+            aria-label={playing ? (ru ? "Приостановить музыку" : "Музыканы токтотуу") : (ru ? "Включить музыку" : "Музыканы күйгүзүү")}>
+            <Music2 size={23} strokeWidth={1.45} aria-hidden="true" />
+            {playing ? <Pause size={12} fill="currentColor" aria-hidden="true" /> : <Play size={12} fill="currentColor" aria-hidden="true" />}
+          </button>
+        </div>
       </header>
       <div className="riviera-hero-body">
         <div className="riviera-eyebrow">{ru ? <>ПРИГЛАШАЕМ<br/>НА НАШУ СВАДЬБУ</> : <>СИЗДЕРДИ<br/>ҮЙЛӨНҮҮ ТОЮБУЗГА ЧАКЫРАБЫЗ</>}</div>
