@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 const read = path => readFileSync(path,"utf8");
 const registry = read("src/features/invitations/seed-templates.ts");
-assert.match(registry, /\[rivieraTemplate\]/);
+assert.match(registry, /rivieraTemplate/);
 assert.ok(!registry.includes("birthdayTemplates") && !registry.includes("referenceTemplates"));
 const schema = read("src/features/invitations/invitation.schema.ts");
 assert.match(schema, /venuePhotoDataUrl/);
@@ -22,4 +22,4 @@ assert.ok(!layout.includes("birthday.css") && !layout.includes("editorial.css"))
 for (const file of ["couple","villa","flowers","fabric-left","fabric-right"]) {
   assert.ok(existsSync(`public/images/riviera/${file}.webp`));
 }
-console.log("PASS: only Riviera registered, venue photo editable, gallery max four");
+console.log("PASS: Riviera retained, venue photo editable, gallery max four");
