@@ -72,7 +72,7 @@
 .editorial-invitation .ed-letter { position: relative; min-height: 395px; padding: 85px 8% 90px; display: grid; grid-template-columns: minmax(100px,.7fr) minmax(0,1.55fr); gap: 8%; border-bottom: 1px solid color-mix(in srgb,var(--ed-ink),transparent 85%); }
 .editorial-invitation .ed-letter-index { font: italic clamp(27px,4.3vw,60px)/1.3 var(--font-display),Georgia,serif; color: var(--ed-accent); opacity: .7; }
 .editorial-invitation .ed-letter-copy { max-width: 600px; }
-.editorial-invitation .ed-letter h3 { margin: 14px 0 24px; font-size: clamp(30px,5vw,52px); line-height: 1.12; letter-spacing: -.025em; }
+.editorial-invitation .ed-letter h3 { margin: 14px 0 24px; font-size: clamp(30px,4vw,52px); line-height: 1.12; letter-spacing: -.025em; }
 .editorial-invitation .ed-letter-copy > p:not(.ed-overline) { font-size: 16px; line-height: 1.9; max-width: 520px; }
 .editorial-invitation .ed-signature { display: block; text-align: right; margin-top: 30px; font: italic 24px/1.4 var(--font-display),Georgia,serif; color: var(--ed-accent); }
 .editorial-invitation .ed-countdown { padding: 20px 8%; }
@@ -84,11 +84,11 @@
 .editorial-invitation .ed-detail-item svg { color: var(--ed-accent); margin-bottom: 12px; }
 .editorial-invitation .ed-detail-item h3 { margin-top: 10px; font-size: clamp(18px,2.9vw,29px); line-height: 1.25; overflow-wrap: anywhere; }
 .editorial-invitation .invite-roadmap { background: color-mix(in srgb,var(--ed-paper),var(--ed-accent) 8%); color:var(--ed-ink); padding-block: 80px; }
-.editorial-invitation .invite-roadmap h3 { font: 400 clamp(34px,6vw,64px)/1.14 var(--font-display),Georgia,serif; }
+.editorial-invitation .invite-roadmap h3 { font: 400 clamp(34px,4.5vw,64px)/1.14 var(--font-display),Georgia,serif; }
 .editorial-invitation .invite-roadmap .road-number { border-color: var(--ed-accent); color: var(--ed-ink); }
 .editorial-invitation .invite-roadmap .road-track::after { background: var(--ed-accent); }
 .editorial-invitation .invite-gallery-section { background: var(--ed-paper); color: var(--ed-ink); padding: 80px 6%; }
-.editorial-invitation .invite-gallery-section h3 { font: 400 clamp(32px,5.5vw,54px)/1.2 var(--font-display),Georgia,serif; }
+.editorial-invitation .invite-gallery-section h3 { font: 400 clamp(32px,4.5vw,54px)/1.2 var(--font-display),Georgia,serif; }
 .editorial-invitation .invite-gallery-grid { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; padding-bottom: 16px; }
 .editorial-invitation .invite-gallery-photo { flex: 0 0 min(58%,275px); min-width: 0; aspect-ratio: 4/5; border-radius: 2px; overflow: hidden; scroll-snap-align: start; }
 .editorial-invitation .invite-gallery-photo img { object-fit: cover; }
@@ -99,7 +99,7 @@
 .editorial-invitation .ed-additional span { font: 550 11px/1.4 var(--font-ui),Arial,sans-serif; letter-spacing:.09em; }
 .editorial-invitation .ed-additional p { font: 16px/1.6 var(--font-display),Georgia,serif; }
 .editorial-invitation .ed-rsvp { padding: 100px 9% 115px; text-align: center; border-top: 1px solid color-mix(in srgb,var(--ed-ink),transparent 80%); }
-.editorial-invitation .ed-rsvp h3 { max-width: 580px; margin: 17px auto 25px; font-size: clamp(34px,6vw,62px); line-height: 1.15; }
+.editorial-invitation .ed-rsvp h3 { max-width: 580px; margin: 17px auto 25px; font-size: clamp(34px,4.5vw,62px); line-height: 1.15; }
 .editorial-invitation .ed-rsvp > p { max-width: 480px; margin: auto; line-height: 1.65; }
 .editorial-invitation .ed-rsvp-status { display:block; margin:30px auto 0; max-width:390px; padding-top:14px; border-top:1px solid color-mix(in srgb,var(--ed-ink),transparent 80%); opacity:.66; font:11px/1.65 var(--font-ui),sans-serif; }
 .editorial-invitation.bd-motion-on [data-birthday-reveal] { transition: opacity .7s ease, transform .7s cubic-bezier(.24,.68,.3,1); }

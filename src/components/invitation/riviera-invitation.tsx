@@ -68,20 +68,19 @@ export function RivieraInvitation({ document, musicSrc }: { document: Invitation
         <span className="riviera-topbar-rule" aria-hidden="true" />
         <span className="riviera-topbar-caption">{ru ? "Свадебное приглашение" : "Үйлөнүү тойго чакыруу"}</span>
         <div className="riviera-music-control">
-          {musicSrc && <audio ref={audioRef} src={musicSrc} preload="auto" loop
+          {musicSrc && <audio ref={audioRef} src={musicSrc} preload="auto" loop autoPlay
             onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
           <button type="button" className="riviera-music-button" disabled={!canPlayMusic}
             onClick={toggleMusic} aria-pressed={playing}
             title={!canPlayMusic ? (ru ? "Добавьте музыку в редакторе" : "Редактордон музыка кошуңуз") : undefined}
             aria-label={playing ? (ru ? "Приостановить музыку" : "Музыканы токтотуу") : (ru ? "Включить музыку" : "Музыканы күйгүзүү")}>
-            <Music2 size={23} strokeWidth={1.45} aria-hidden="true" />
-            {playing ? <Pause size={12} fill="currentColor" aria-hidden="true" /> : <Play size={12} fill="currentColor" aria-hidden="true" />}
+            {playing ? <Pause size={20} fill="currentColor" aria-hidden="true" /> : <Play size={20} fill="currentColor" aria-hidden="true" />}
           </button>
         </div>
       </header>
       <div className="riviera-hero-body">
         <div className="riviera-eyebrow">{ru ? <>ПРИГЛАШАЕМ<br/>НА НАШУ СВАДЬБУ</> : <>СИЗДЕРДИ<br/>ҮЙЛӨНҮҮ ТОЮБУЗГА ЧАКЫРАБЫЗ</>}</div>
-        <h1 className="riviera-names"><span>{name1}</span><i aria-label="и">&</i><span>{name2}</span></h1>
+        <h1 className="riviera-names"><span>{name1}</span> <span>{name2}</span></h1>
         {enabled.has("message") && <div className="riviera-hero-letter" data-editor-block="message"><span className="riviera-short-rule"/><p>{content.message[locale]}</p></div>}
         <a href="#riviera-date" className="riviera-scroll" aria-label={ru ? "К дате торжества" : "Тойдун күнүнө өтүү"}><ArrowDown strokeWidth={1.3} size={21}/></a>
       </div>

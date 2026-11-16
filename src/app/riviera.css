@@ -1,233 +1,715 @@
 /* INVITO Riviera — intentionally mobile-only (320–440px), reference-led layout. */
 .riviera {
-  --rv-paper:#f4f0ed; --rv-ink:#14110f; --rv-gold:#b8a489;
-  position:relative; isolation:isolate; overflow:clip; box-sizing:border-box;
-  width:100%; max-width:440px; margin-inline:auto;
-  background:var(--rv-paper);color:var(--rv-ink);
-  font-family:var(--font-ui),Arial,sans-serif;
-  font-size:14px; line-height:1.45;
+    --rv-paper: #f4f0ed;
+    --rv-ink: #14110f;
+    --rv-gold: #b8a489;
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 440px;
+    margin-inline: auto;
+    background: var(--rv-paper);
+    color: var(--rv-ink);
+    font-family: var(--font-ui), Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
 }
-.riviera *, .riviera *::before, .riviera *::after { box-sizing:border-box; }
-.riviera img { display:block; }
-.riviera h1,.riviera h2,.riviera p,.riviera ol { margin:0; }
-.riviera a { color:inherit; }
-.riviera section { scroll-margin-top:12px; }
+
+.riviera *, .riviera *::before, .riviera *::after {
+    box-sizing: border-box;
+}
+
+.riviera img {
+    display: block;
+}
+
+.riviera h1, .riviera h2, .riviera p, .riviera ol {
+    margin: 0;
+}
+
+.riviera a {
+    color: inherit;
+}
+
+.riviera section {
+    scroll-margin-top: 12px;
+}
 
 /* Header + overlapping photo, editorial names and invitation letter. */
 .riviera-hero {
-  position:relative; min-height:728px; isolation:isolate;
-  background:radial-gradient(ellipse at 6% 18%,#fffcf9 0%,#f5f0eb 52%,#ebe4df 100%);
+    position: relative;
+    min-height: 728px;
+    isolation: isolate;
+    background: radial-gradient(ellipse at 6% 18%, #fffcf9 0%, #f5f0eb 52%, #ebe4df 100%);
 }
-.riviera-hero-portrait { position:absolute;z-index:-1;inset:0 0 auto 24%;height:510px;overflow:hidden; }
-.riviera-hero-portrait img { object-fit:cover;object-position:54% 27%; }
+
+.riviera-hero-portrait {
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 auto 24%;
+    height: 510px;
+    overflow: hidden;
+}
+
+.riviera-hero-portrait img {
+    object-fit: cover;
+    object-position: 54% 27%;
+}
+
 .riviera-hero-portrait::before {
-  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(90deg,#f6f1ed 0%,rgba(246,241,237,.66) 17%,transparent 60%),
-             linear-gradient(0deg,#f4f0ed 0%,rgba(244,240,237,.85) 12%,transparent 52%);
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(90deg, #f6f1ed 0%, rgba(246, 241, 237, .66) 17%, transparent 60%),
+    linear-gradient(0deg, #f4f0ed 0%, rgba(244, 240, 237, .85) 12%, transparent 52%);
 }
+
 .riviera-topbar {
-  position:relative;z-index:4;display:grid;grid-template-columns:auto 1fr auto;
-  gap:14px;align-items:center;padding:21px 5.4% 0;
+    position: relative;
+    z-index: 4;
+    display: grid;
+    grid-template-columns:auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 21px 5.4% 0;
 }
-.riviera-brand { font-size:14px;letter-spacing:.40em;font-weight:600; }
-.riviera-topbar-rule { background:rgba(42,38,35,.45);height:1px;width:100%; }
-.riviera-topbar-caption { display:none; }
-.riviera-menu { position:relative; }
+
+.riviera-brand {
+    font-size: 14px;
+    letter-spacing: .40em;
+    font-weight: 600;
+}
+
+.riviera-topbar-rule {
+    background: rgba(42, 38, 35, .45);
+    height: 1px;
+    width: 100%;
+}
+
+.riviera-topbar-caption {
+    display: none;
+}
+
+.riviera-menu {
+    position: relative;
+}
+
 .riviera-menu summary {
-  cursor:pointer;list-style:none;display:grid;place-items:center;
-  width:36px;height:36px;touch-action:manipulation;
+    cursor: pointer;
+    list-style: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    touch-action: manipulation;
 }
-.riviera-menu summary::-webkit-details-marker { display:none; }
+
+.riviera-menu summary::-webkit-details-marker {
+    display: none;
+}
+
 .riviera-menu nav {
-  position:absolute;top:40px;right:0;display:grid;gap:0;min-width:178px;
-  z-index:10;background:#f8f5f1;border:1px solid #c1b7ab;
-  box-shadow:0 16px 35px #0002;
+    position: absolute;
+    top: 40px;
+    right: 0;
+    display: grid;
+    gap: 0;
+    min-width: 178px;
+    z-index: 10;
+    background: #f8f5f1;
+    border: 1px solid #c1b7ab;
+    box-shadow: 0 16px 35px #0002;
 }
-.riviera-menu nav a { padding:12px 15px;font-size:12px;letter-spacing:.1em;text-decoration:none; }
-.riviera-menu nav a+a { border-top:1px solid #ddd5cd; }
-.riviera-hero-body { position:relative;z-index:2;padding:70px 5.4% 95px;width:100%; }
+
+.riviera-menu nav a {
+    padding: 12px 15px;
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-decoration: none;
+}
+
+.riviera-menu nav a + a {
+    border-top: 1px solid #ddd5cd;
+}
+
+.riviera-hero-body {
+    position: relative;
+    z-index: 2;
+    padding: 40px 5.4% 50px;
+    width: 100%;
+}
+
 .riviera-eyebrow {
-  width:55%;max-width:220px;font-size:10px;line-height:1.8;
-  font-weight:650;letter-spacing:.35em;text-transform:uppercase;
+    width: 55%;
+    max-width: 220px;
+    font-size: 10px;
+    line-height: 1.8;
+    font-weight: 650;
+    letter-spacing: .35em;
+    text-transform: uppercase;
 }
+
 .riviera-names {
-  display:flex;flex-direction:column;align-items:flex-start;position:relative;
-  margin:24px 0 0;font:400 clamp(47px,12.4vw,69px)/.97 var(--font-display),Georgia,serif;
-  letter-spacing:-.075em;text-transform:uppercase;
-  max-width:96%;overflow-wrap:anywhere;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    margin: 24px 0 0;
+    font: 400 clamp(47px, 9vw, 50px)/.97 var(--font-display), Georgia, serif;
+    letter-spacing: -.075em;
+    text-transform: uppercase;
+    max-width: 96%;
+    overflow-wrap: anywhere;
 }
-.riviera-names span { display:block;max-width:100%; }
+
+.riviera-names span {
+    display: block;
+    max-width: 100%;
+}
+
 .riviera-names i {
-  position:absolute;z-index:1;left:52%;top:.01em;
-  color:var(--rv-gold);font-size:1.13em;font-weight:300;font-style:italic;line-height:1;
-  transform:rotate(-12deg);pointer-events:none;
+    position: absolute;
+    z-index: 1;
+    left: 52%;
+    top: .01em;
+    color: var(--rv-gold);
+    font-size: 1.13em;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1;
+    transform: rotate(-12deg);
+    pointer-events: none;
 }
-.riviera-hero-letter { padding-top:45px; max-width:295px; }
-.riviera-short-rule { display:block;width:38px;height:1px;background:#3d3732;margin-bottom:22px; }
+
+.riviera-hero-letter {
+    padding-top: 45px;
+    max-width: 295px;
+}
+
+.riviera-short-rule {
+    display: block;
+    width: 38px;
+    height: 1px;
+    background: #3d3732;
+    margin-bottom: 22px;
+}
+
 .riviera-hero-letter p {
-  max-width:285px;white-space:pre-line;font:italic 16px/1.55 var(--font-display),Georgia,serif;
-  text-wrap:pretty;text-shadow:0 1px 16px #f4f0ed;
+    max-width: 285px;
+    white-space: pre-line;
+    font: italic 16px/1.55 var(--font-display), Georgia, serif;
+    text-wrap: pretty;
+    text-shadow: 0 1px 16px #f4f0ed;
 }
+
 .riviera-scroll {
-  display:grid;place-items:center;width:46px;height:46px;margin-top:30px;
-  border:1px solid #48423b;border-radius:50%;text-decoration:none;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin-top: 30px;
+    border: 1px solid #48423b;
+    border-radius: 50%;
+    text-decoration: none;
 }
-.riviera-scroll:focus-visible,.riviera-menu summary:focus-visible{outline:2px solid var(--rv-gold);outline-offset:3px}
+
+.riviera-scroll:focus-visible, .riviera-menu summary:focus-visible {
+    outline: 2px solid var(--rv-gold);
+    outline-offset: 3px
+}
+
 .riviera-hero-wave {
-  pointer-events:none;position:absolute;z-index:3;bottom:-1px;left:-4%;width:108%;height:59px;
-  background:var(--rv-paper);clip-path:ellipse(80% 90% at 50% 100%);
+    pointer-events: none;
+    position: absolute;
+    z-index: 3;
+    bottom: -1px;
+    left: -4%;
+    width: 108%;
+    height: 59px;
+    background: var(--rv-paper);
+    clip-path: ellipse(80% 90% at 50% 100%);
 }
 
 /* Horizontal date caption as in the supplied reference. */
 .riviera-date {
-  position:relative;display:grid;grid-template-columns:66px 12px minmax(0,1fr);
-  align-items:center;column-gap:12px;min-height:122px;padding:8px 5.4% 20px;
+    position: relative;
+    display: grid;
+    grid-template-columns:66px 12px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    min-height: 122px;
+    padding: 8px 5.4% 20px;
 }
-.riviera-section-label {font-size:9px;font-weight:650;line-height:1.7;letter-spacing:.18em;}
-.riviera-slash {height:67px;width:1px;background:var(--rv-gold);transform:rotate(23deg);justify-self:center;}
-.riviera-date-main {min-width:0;}
+
+.riviera-section-label {
+    font-size: 9px;
+    font-weight: 650;
+    line-height: 1.7;
+    letter-spacing: .18em;
+}
+
+.riviera-slash {
+    height: 67px;
+    width: 1px;
+    background: var(--rv-gold);
+    transform: rotate(23deg);
+    justify-self: center;
+}
+
+.riviera-date-main {
+    min-width: 0;
+}
+
 .riviera-date-main strong {
-  display:block;font:italic 400 clamp(37px,10.4vw,53px)/1 var(--font-display),Georgia,serif;
-  white-space:nowrap;letter-spacing:-.078em;
+    display: block;
+    font: italic 400 clamp(37px, 8vw, 40px)/1 var(--font-display), Georgia, serif;
+    white-space: nowrap;
+    letter-spacing: -.078em;
 }
-.riviera-date-main span {display:block;margin-top:7px;font-size:9px;letter-spacing:.40em;font-weight:650;text-transform:uppercase;}
+
+.riviera-date-main span {
+    display: block;
+    margin-top: 7px;
+    font-size: 9px;
+    letter-spacing: .40em;
+    font-weight: 650;
+    text-transform: uppercase;
+}
 
 /* Venue: editorial diagonal photo to the right, readable address to the left. */
 .riviera-venue {
-  position:relative;display:grid;grid-template-columns:52% 48%;
-  align-items:center;min-height:264px;padding:5px 0 18px 5.4%;
+    position: relative;
+    display: grid;
+    grid-template-columns:52% 48%;
+    align-items: center;
+    min-height: 264px;
+    padding: 5px 0 18px 5.4%;
 }
-.riviera-venue-info {position:relative;z-index:2;display:flex;align-items:flex-start;gap:7px;min-width:0;padding-right:4px;}
-.riviera-venue-info>svg {width:19px;height:19px;flex:none;margin-top:1px;}
-.riviera-venue-info>div {min-width:0;}
+
+.riviera-venue-info {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    min-width: 0;
+    padding-right: 4px;
+}
+
+.riviera-venue-info > svg {
+    width: 19px;
+    height: 19px;
+    flex: none;
+    margin-top: 1px;
+}
+
+.riviera-venue-info > div {
+    min-width: 0;
+}
+
 .riviera-venue-info h2 {
-  font:400 16px/1.14 var(--font-display),Georgia,serif;
-  letter-spacing:.12em;text-transform:uppercase;overflow-wrap:anywhere;
+    font: 400 16px/1.14 var(--font-display), Georgia, serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
 }
+
 .riviera-venue-info p {
-  font-size:9px;line-height:1.55;letter-spacing:.12em;text-transform:uppercase;
-  margin-top:9px;overflow-wrap:anywhere;
+    font-size: 9px;
+    line-height: 1.55;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-top: 9px;
+    overflow-wrap: anywhere;
 }
+
 .riviera-venue-info a {
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  min-height:37px;border:1px solid #a69a8e;padding:8px 9px;margin-top:17px;
-  font-size:8px;font-weight:600;letter-spacing:.08em;text-decoration:none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 37px;
+    border: 1px solid #a69a8e;
+    padding: 8px 9px;
+    margin-top: 17px;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-decoration: none;
 }
-.riviera-venue-info a svg{width:13px;height:13px;flex:none;}
+
+.riviera-venue-info a svg {
+    width: 13px;
+    height: 13px;
+    flex: none;
+}
+
 .riviera-villa {
-  position:relative;height:248px;min-height:0;align-self:stretch;
-  overflow:hidden;clip-path:polygon(30% 0,100% 0,100% 100%,0 100%);
+    position: relative;
+    height: 248px;
+    min-height: 0;
+    align-self: stretch;
+    overflow: hidden;
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
 }
-.riviera-villa img {object-fit:cover;object-position:58% 50%;}
+
+.riviera-villa img {
+    object-fit: cover;
+    object-position: 58% 50%;
+}
 
 /* Program with visible timeline and decorative floral strip. */
 .riviera-program {
-  position:relative;isolation:isolate;min-height:348px;
-  padding:23px 6% 38px 27%;
+    position: relative;
+    isolation: isolate;
+    min-height: 348px;
+    padding: 23px 6% 38px 27%;
 }
+
 .riviera-flowers {
-  position:absolute;z-index:-1;top:-115px;left:-6%;width:28%;height:415px;
-  overflow:hidden;transform:rotate(-8deg);clip-path:polygon(0 0,75% 0,100% 100%,0 100%);
+    position: absolute;
+    z-index: -1;
+    top: -115px;
+    left: -12%;
+    width: 28%;
+    height: 415px;
+    overflow: hidden;
+    transform: rotate(-4deg);
+    clip-path: polygon(0 0, 75% 0, 100% 100%, 0 100%);
 }
-.riviera-flowers img {object-fit:cover;object-position:42% 50%;}
-.riviera-program-content {position:relative;z-index:1;}
-.riviera-program h2,.riviera-rsvp h2 {
-  font:400 clamp(22px,6.5vw,30px)/1.12 var(--font-display),Georgia,serif;
-  letter-spacing:.10em;text-transform:uppercase;
+
+.riviera-flowers img {
+    object-fit: cover;
+    object-position: 42% 50%;
 }
+
+.riviera-program-content {
+    position: relative;
+    z-index: 1;
+}
+
+.riviera-program h2, .riviera-rsvp h2 {
+    font: 400 clamp(22px, 6.5vw, 30px)/1.12 var(--font-display), Georgia, serif;
+    letter-spacing: .10em;
+    text-transform: uppercase;
+}
+
 .riviera-timeline {
-  margin:23px 0 0 9px;padding:0 0 0 20px;
-  border-left:1px solid #afa399;list-style:none;
+    margin: 23px 0 0 9px;
+    padding: 0 0 0 20px;
+    border-left: 1px solid #afa399;
+    list-style: none;
 }
+
 .riviera-timeline li {
-  display:grid;grid-template-columns:53px minmax(0,1fr);
-  position:relative;column-gap:8px;padding:0 0 19px;min-width:0;
+    display: grid;
+    grid-template-columns:53px minmax(0, 1fr);
+    position: relative;
+    column-gap: 8px;
+    padding: 0 0 19px;
+    min-width: 0;
 }
-.riviera-timeline li:last-child {padding-bottom:0;}
+
+.riviera-timeline li:last-child {
+    padding-bottom: 0;
+}
+
 .riviera-timeline li::before {
-  position:absolute;left:-24px;top:7px;content:"";width:7px;height:7px;
-  border-radius:50%;background:#231c17;
+    position: absolute;
+    left: -24px;
+    top: 7px;
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #231c17;
 }
-.riviera-timeline time {font:italic 17px/1.35 var(--font-display),Georgia,serif;}
-.riviera-timeline strong {display:block;font-size:12px;font-weight:550;line-height:1.35;}
-.riviera-timeline li span {display:block;font-size:10px;line-height:1.45;color:#36302b;}
-.riviera-heart {position:absolute;width:63px;height:105px;right:-4px;top:18px;color:var(--rv-gold);opacity:.7;pointer-events:none;}
+
+.riviera-timeline time {
+    font: italic 17px/1.35 var(--font-display), Georgia, serif;
+}
+
+.riviera-timeline strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 550;
+    line-height: 1.35;
+}
+
+.riviera-timeline li span {
+    display: block;
+    font-size: 10px;
+    line-height: 1.45;
+    color: #36302b;
+}
+
+.riviera-heart {
+    position: absolute;
+    width: 63px;
+    height: 105px;
+    right: -4px;
+    top: 18px;
+    color: var(--rv-gold);
+    opacity: .7;
+    pointer-events: none;
+}
 
 /* RSVP: two full-width tactile buttons, no horizontal page overflow. */
-.riviera-rsvp {position:relative;isolation:isolate;padding:25px 8% 95px;min-height:350px;}
-.riviera-rsvp-heading {display:grid;grid-template-columns:1fr;gap:12px;}
-.riviera-rsvp-heading>.riviera-slash{display:none}
+.riviera-rsvp {
+    position: relative;
+    isolation: isolate;
+    padding: 25px 8% 95px;
+    min-height: 350px;
+}
+
+.riviera-rsvp-heading {
+    display: grid;
+    grid-template-columns:1fr;
+    gap: 12px;
+}
+
+.riviera-rsvp-heading > .riviera-slash {
+    display: none
+}
+
 .riviera-rsvp-heading p {
-  font:italic 15px/1.52 var(--font-display),Georgia,serif;max-width:260px;
+    font: italic 15px/1.52 var(--font-display), Georgia, serif;
+    max-width: 260px;
 }
-.riviera-rsvp-actions {display:grid;grid-template-columns:1fr;gap:11px;margin-top:25px;}
+
+.riviera-rsvp-actions {
+    display: grid;
+    grid-template-columns:1fr;
+    gap: 11px;
+    margin-top: 25px;
+}
+
 .riviera-rsvp-actions button {
-  width:100%;min-height:51px;padding:12px 15px;border:1px solid #82786e;
-  background:transparent;color:#211d19;display:flex;align-items:center;
-  justify-content:center;gap:14px;font-size:10px;font-weight:600;
-  letter-spacing:.17em;text-align:center;cursor:pointer;
+    width: 100%;
+    min-height: 51px;
+    padding: 12px 15px;
+    border: 1px solid #82786e;
+    background: transparent;
+    color: #211d19;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .17em;
+    text-align: center;
+    cursor: pointer;
 }
-.riviera-rsvp-actions button:first-child,.riviera-rsvp-actions button.riviera-selected {
-  background:#292622;color:#fff;border-color:#292622;
+
+.riviera-rsvp-actions button:first-child, .riviera-rsvp-actions button.riviera-selected {
+    background: #292622;
+    color: #fff;
+    border-color: #292622;
 }
-.riviera-rsvp-actions button:focus-visible {outline:2px solid var(--rv-gold);outline-offset:3px;}
-.riviera-rsvp-note {text-align:center;margin:12px 0 0;font-size:11px;line-height:1.4;color:#564f48;}
+
+.riviera-rsvp-actions button:focus-visible {
+    outline: 2px solid var(--rv-gold);
+    outline-offset: 3px;
+}
+
+.riviera-rsvp-note {
+    text-align: center;
+    margin: 12px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #564f48;
+}
+
 .riviera-footer {
-  position:relative;z-index:2;margin:57px 0 0;text-align:center;
-  font-size:10px;letter-spacing:.36em;font-weight:600;line-height:1.65;text-transform:uppercase;
+    position: relative;
+    z-index: 2;
+    margin: 57px 0 0;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: .36em;
+    font-weight: 600;
+    line-height: 1.65;
+    text-transform: uppercase;
 }
-.riviera-footer-rule {display:block;width:35px;height:1px;margin:14px auto 0;background:#77716c;}
+
+.riviera-footer-rule {
+    display: block;
+    width: 35px;
+    height: 1px;
+    margin: 14px auto 0;
+    background: #77716c;
+}
+
 .riviera-fabric {
-  position:absolute;bottom:-11px;width:45%;height:98px;z-index:-1;
-  background-size:cover;background-position:top center;opacity:.68;pointer-events:none;
+    position: absolute;
+    bottom: -11px;
+    width: 45%;
+    height: 98px;
+    z-index: -1;
+    background-size: cover;
+    background-position: top center;
+    opacity: .68;
+    pointer-events: none;
 }
-.riviera-fabric-left{left:-4%;clip-path:polygon(0 0,100% 40%,100% 100%,0 100%)}
-.riviera-fabric-right{right:-4%;clip-path:polygon(0 55%,100% 0,100% 100%,0 100%)}
-.riviera-gallery,.riviera-countdown {padding:24px 5%;background:var(--rv-paper);}
+
+.riviera-fabric-left {
+    left: -4%;
+    clip-path: polygon(0 0, 100% 40%, 100% 100%, 0 100%)
+}
+
+.riviera-fabric-right {
+    right: -4%;
+    clip-path: polygon(0 55%, 100% 0, 100% 100%, 0 100%)
+}
+
+.riviera-gallery, .riviera-countdown {
+    padding: 24px 5%;
+    background: var(--rv-paper);
+}
 
 /* The catalog uses a mobile invitation card, not an image scaled to desktop proportions. */
 .riviera-card-preview {
-  width:100%;height:100%;min-height:245px;overflow:hidden;position:relative;
-  isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;
-  padding:15px;color:#14110f;background:var(--rv-paper);
+    width: 100%;
+    height: 100%;
+    min-height: 245px;
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px;
+    color: #14110f;
+    background: var(--rv-paper);
 }
-.riviera-card-photo {position:absolute;z-index:-1;inset:0 0 12% 30%;}
-.riviera-card-photo img {object-fit:cover;object-position:54% 28%;}
+
+.riviera-card-photo {
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 12% 30%;
+}
+
+.riviera-card-photo img {
+    object-fit: cover;
+    object-position: 54% 28%;
+}
+
 .riviera-card-preview::before {
-  content:"";position:absolute;z-index:-1;inset:0;
-  background:linear-gradient(90deg,#f4f0ed 3%,rgba(244,240,237,.65) 32%,transparent 82%),
-             linear-gradient(0deg,#f4f0ed,transparent 45%);
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(90deg, #f4f0ed 3%, rgba(244, 240, 237, .65) 32%, transparent 82%),
+    linear-gradient(0deg, #f4f0ed, transparent 45%);
 }
-.riviera-card-preview>span {font-size:8px;letter-spacing:.24em;}
+
+.riviera-card-preview > span {
+    font-size: 8px;
+    letter-spacing: .24em;
+}
+
 .riviera-card-preview strong {
-  margin:auto 0;max-width:97%;display:flex;flex-direction:column;
-  font:400 clamp(22px,5vw,40px)/1 var(--font-display),Georgia,serif;
-  letter-spacing:-.07em;text-transform:uppercase;
+    margin: auto 0;
+    max-width: 97%;
+    display: flex;
+    flex-direction: column;
+    font: 400 clamp(22px, 5vw, 40px)/1 var(--font-display), Georgia, serif;
+    letter-spacing: -.07em;
+    text-transform: uppercase;
 }
-.riviera-card-preview strong i {position:absolute;left:34%;top:40%;font-style:italic;color:var(--rv-gold);}
-.riviera-card-preview small {font-size:9px;letter-spacing:.15em;margin-top:auto;}
+
+.riviera-card-preview strong i {
+    position: absolute;
+    left: 34%;
+    top: 40%;
+    font-style: italic;
+    color: var(--rv-gold);
+}
+
+.riviera-card-preview small {
+    font-size: 9px;
+    letter-spacing: .15em;
+    margin-top: auto;
+}
 
 /* Very narrow devices: labels shrink but retain the reference's layout. */
-@media(max-width:359px) {
-  .riviera-hero {min-height:704px;}
-  .riviera-hero-portrait {height:470px;inset-inline-start:27%;}
-  .riviera-hero-body {padding-top:65px;}
-  .riviera-names {font-size:clamp(42px,12.1vw,49px);}
-  .riviera-date {grid-template-columns:57px 10px minmax(0,1fr);column-gap:8px;}
-  .riviera-date-main strong {font-size:clamp(34px,10.2vw,37px);}
-  .riviera-venue-info h2{font-size:14px;}
-  .riviera-venue-info a{font-size:7px;padding-inline:5px;}
-  .riviera-timeline {padding-left:16px;}
-  .riviera-timeline li {grid-template-columns:47px minmax(0,1fr);gap:5px;}
-  .riviera-timeline li::before {left:-20px;}
-  .riviera-timeline strong{font-size:11px;}
-  .riviera-timeline li span{font-size:9px;}
+@media (max-width: 359px) {
+    .riviera-hero {
+        min-height: 704px;
+    }
+
+    .riviera-hero-portrait {
+        height: 470px;
+        inset-inline-start: 27%;
+    }
+
+    .riviera-hero-body {
+        padding-top: 65px;
+    }
+
+    .riviera-names {
+        font-size: clamp(42px, 12.1vw, 49px);
+    }
+
+    .riviera-date {
+        grid-template-columns:57px 10px minmax(0, 1fr);
+        column-gap: 8px;
+    }
+
+    .riviera-date-main strong {
+        font-size: clamp(34px, 10.2vw, 37px);
+    }
+
+    .riviera-venue-info h2 {
+        font-size: 14px;
+    }
+
+    .riviera-venue-info a {
+        font-size: 7px;
+        padding-inline: 5px;
+    }
+
+    .riviera-timeline {
+        padding-left: 16px;
+    }
+
+    .riviera-timeline li {
+        grid-template-columns:47px minmax(0, 1fr);
+        gap: 5px;
+    }
+
+    .riviera-timeline li::before {
+        left: -20px;
+    }
+
+    .riviera-timeline strong {
+        font-size: 11px;
+    }
+
+    .riviera-timeline li span {
+        font-size: 9px;
+    }
 }
+
 /* On desktop the invitation remains a centered mobile canvas (no desktop variant). */
-@media(min-width:441px) {
-  .riviera {border-inline:1px solid rgba(54,41,33,.11);box-shadow:0 10px 80px rgba(0,0,0,.11);}
+@media (min-width: 441px) {
+    .riviera {
+        border-inline: 1px solid rgba(54, 41, 33, .11);
+        box-shadow: 0 10px 80px rgba(0, 0, 0, .11);
+    }
 }
-@media(prefers-reduced-motion:reduce){.riviera *{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+@media (prefers-reduced-motion: reduce) {
+    .riviera * {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important
+    }
+}
 /* A compact audio control replaces the Riviera hamburger. */
 .riviera-music-control { position:relative; z-index:5; }
 .riviera-music-button {
