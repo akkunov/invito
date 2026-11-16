@@ -20,7 +20,7 @@ export function InvitationCanvas({ document, musicSrc, musicName }: { document: 
   const music = musicSrc && document.blocks.some((block) => block.id === "music" && block.enabled) ? <MusicPlayer src={musicSrc} name={musicName} locale={document.locale} /> : null;
   const template = findTemplateById(document.templateId);
   if (!template) return null;
-  if (document.templateId === "editorial-riviera-wedding") return <><RivieraInvitation document={document} />{music}</>;
+  if (document.templateId === "editorial-riviera-wedding") return <RivieraInvitation document={document} musicSrc={musicSrc} />;
   const birthdayVariant = getBirthdayVariant(document.templateId);
   if (birthdayVariant) return <><BirthdayInvitation document={document} variant={birthdayVariant} />{music}</>;
   if (getEditorialVariant(document.templateId)) return <><EditorialInvitation document={document} />{music}</>;
