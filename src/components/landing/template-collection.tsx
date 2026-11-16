@@ -10,8 +10,8 @@ export function TemplateCollection({ locale }: { locale: Locale }) {
   return <section id="designs" className="ed-collection page-container" aria-labelledby="ed-collection-title">
     <div className="ed-section-heading">
       <div>
-        <p className="ed-eyebrow">{ru ? "01 / КОЛЛЕКЦИЯ" : "01 / КОЛЛЕКЦИЯ"}</p>
-        <h2 id="ed-collection-title">{ru ? <>Не шаблон.<br/><em>Ваш характер.</em></> : <>Жөн гана калып эмес.<br/><em>Сиздин стилиңиз.</em></>}</h2>
+        <p className="ed-eyebrow">{ru ? "КОЛЛЕКЦИЯ INVITO" : "КОЛЛЕКЦИЯ INVITO"}</p>
+        <h2 id="ed-collection-title">{ru ? <>Три настроения.<br/><em>Одно ваше.</em></> : <>Үч маанай.<br/><em>Бири сиздики.</em></>}</h2>
       </div>
       <Link href={routes.templates(locale)} className="ed-section-link">{ru ? "Все дизайны" : "Бардык дизайндар"}<ArrowUpRight size={19} aria-hidden="true"/></Link>
     </div>

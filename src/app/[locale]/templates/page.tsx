@@ -1,6 +1,7 @@
+import "@/app/landing-editorial.css";
 import type {Metadata} from "next";
 import Link from "next/link";
-import {Search} from "lucide-react";
+import {CatalogSearch} from "@/components/templates/catalog-search";
 import {SiteHeader} from "@/components/layout/site-header";
 import {SiteFooter} from "@/components/layout/site-footer";
 import {TemplateCard} from "@/components/templates/template-card";
@@ -45,16 +46,14 @@ export default async function TemplatesPage({params, searchParams}: {
         if (filters.price === "premium" && !template.premium) return false;
         return !search || `${template.name.ru} ${template.name.ky} ${template.description.ru} ${template.description.ky}`.toLocaleLowerCase().includes(search);
     });
-    return <><SiteHeader locale={locale}/>
+    return <div className="invito-landing"><SiteHeader locale={locale}/>
         <main className="catalog-main page-container">
             <div className="catalog-intro">
                 <div><h1>{dict.catalog.title}</h1><p>{dict.catalog.description}</p></div>
                 <span className="catalog-total">{templates.length}</span></div>
-            <form action={routes.templates(locale)} method="get" className="catalog-toolbar">
-                <label className="search-control"><Search size={19} aria-hidden="true"/><span
-                    className="sr-only">{dict.catalog.search}</span><input name="search" type="search"
-                                                                           defaultValue={filters.search ?? ""}
-                                                                           placeholder={dict.catalog.search}/></label>
+            <form noValidate action={routes.templates(locale)} method="get" className="catalog-toolbar">
+                <CatalogSearch key={filters.search ?? ""} initialValue={filters.search ?? ""} label={dict.catalog.search}
+                  clearLabel={locale === "ru" ? "Очистить поиск" : "Издөөнү тазалоо"}/>
                 <label className="filter-select"><span className="sr-only">{dict.catalog.category}</span><select
                     name="category" defaultValue={filters.category ?? ""}>
                     <option value="">{dict.catalog.all}</option>
@@ -80,5 +79,5 @@ export default async function TemplatesPage({params, searchParams}: {
                                                                                       href={routes.templates(locale)}>{dict.catalog.emptyAction}</Link>
                 </div>}
         </main>
-        <SiteFooter locale={locale}/></>;
+        <SiteFooter locale={locale}/></div>;
 }

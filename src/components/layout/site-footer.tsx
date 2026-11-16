@@ -10,7 +10,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     <footer className="site-footer page-container">
       <BrandWordmark locale={locale} />
       <p>© {new Date().getFullYear()} INVITO</p>
-      <nav aria-label="Нижнее меню"><Link href={routes.templates(locale)}>{dict.nav.templates}</Link><Link href={`${routes.home(locale)}#how`}>{dict.nav.how}</Link></nav>
+      <nav aria-label={locale === "ru" ? "Нижнее меню" : "Төмөнкү меню"}><Link href={routes.templates(locale)}>{dict.nav.templates}</Link><Link href={`${routes.home(locale)}#how`}>{dict.nav.how}</Link></nav>
     </footer>
   );
 }
