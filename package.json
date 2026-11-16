@@ -13,7 +13,8 @@
     "test:editor-navigation": "node scripts/test-editor-navigation.mjs",
     "test:birthday": "node scripts/test-birthday-templates.mjs",
     "check:syntax": "node scripts/check-birthday-source.mjs",
-    "test:editorial": "node scripts/test-editorial-templates.mjs"
+    "test:editorial": "node scripts/test-editorial-templates.mjs",
+    "test:riviera": "node scripts/test-riviera-template.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

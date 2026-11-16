@@ -31,7 +31,7 @@ export type TemplateTheme =
   | "birthday-milestone"
   | ReferenceTheme
   | `editorial-${EditorialVariant}`
-;
+  | "editorial-riviera";
 
 export interface TemplateDefinition {
   id: string;
