@@ -16,7 +16,7 @@ export function HowItWorks({ locale }: { locale: Locale }) {
   ];
   return <section id="how" className="ed-process page-container" aria-labelledby="ed-process-title">
     <div className="ed-section-heading">
-      <div><p className="ed-eyebrow">{ru ? "ОТ ИДЕИ К ПРИГЛАШЕНИЮ" : "ИДЕЯДАН ЧАКЫРУУГА"}</p><h2 id="ed-process-title">{ru ? <>Красиво.<br/><em>И просто.</em></> : <>Кооз.<br/><em>Жана оңой.</em></>}</h2></div>
+      <div><p className="ed-eyebrow">{ru ? "ОТ ИДЕИ К ПРИГЛАШЕНИЮ" : "ИДЕЯДАН ЧАКЫРУУГА"}</p><h2 id="ed-process-title">{ru ? <>Красиво.<br/><span className="ed-title-accent">И просто.</span></> : <>Кооз.<br/><span className="ed-title-accent">Жана оңой.</span></>}</h2></div>
       <p className="ed-heading-aside">{ru ? "Никаких сложных инструментов. Только ваши слова, фотографии и немного вдохновения." : "Татаал куралдар жок. Болгону сөздөрүңүз, сүрөттөрүңүз жана илхам."}</p>
     </div>
     <ol className="ed-process-list">{steps.map(step=><li key={step.num}>

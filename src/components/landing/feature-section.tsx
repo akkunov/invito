@@ -22,7 +22,7 @@ export function FeatureSection({ locale }: { locale: Locale }) {
       <div className="ed-feature-photo"><Image src="/images/riviera/villa.webp" alt={ru ? "Атмосфера свадебного торжества в саду" : "Бакчадагы үйлөнүү салтанаты"} fill sizes="(max-width: 800px) 100vw, 48vw"/></div>
       <div className="ed-feature-text">
         <p className="ed-eyebrow">{ru ? "СДЕЛАЙТЕ ЕГО СВОИМ" : "ӨЗҮҢҮЗГӨ ЫЛАЙЫКТАШТЫРЫҢЫЗ"}</p>
-        <h2 id="ed-feature-title">{ru ? <>Каждая деталь<br/><em>о вас.</em></> : <>Ар бир бөлүгү<br/><em>сиз жөнүндө.</em></>}</h2>
+        <h2 id="ed-feature-title">{ru ? <>Каждая деталь<br/><span className="ed-title-accent">о вас.</span></> : <>Ар бир бөлүгү<br/><span className="ed-title-accent">сиз жөнүндө.</span></>}</h2>
         <p className="ed-feature-lead">{ru ? "Мы оставляем главное на первом плане — ваши чувства. А дизайн помогает рассказать о них." : "Эң негизгиси — сиздин сезимдериңиз. Дизайн аларды айтып берүүгө жардам берет."}</p>
         <ul>{features.map(item=><li key={item}><span>✳</span>{item}</li>)}</ul>
         <Link href={routes.templates(locale)} className="ed-section-link">{ru ? "Перейти к дизайнам" : "Дизайндарды көрүү"}<ArrowUpRight size={18}/></Link>

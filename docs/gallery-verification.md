@@ -45,3 +45,11 @@ Invitation templates and local editor persistence/history are preserved.
 Quick view mounts the existing invitation canvas through `?preview=1`; closing it
 unmounts the frame. Template detail uses dynamic rendering to support this mode.
 New motion uses CSS rather than adding an animation dependency.
+
+## Typography revision
+
+Awwwards computed styles were inspected in the browser: Inter Tight, normal style;
+body weight 300, section labels 400, main headings 600 and card labels 500–600.
+Public INVITO pages now load upright Inter Tight with Cyrillic support; italic
+headline markup and decorative serif accents were removed. Template fonts remain
+independent. Readability is favored over copying the reference body weight.

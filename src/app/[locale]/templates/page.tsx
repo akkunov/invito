@@ -1,3 +1,4 @@
+import { publicFont } from "@/components/layout/public-font";
 import "@/app/landing-editorial.css";
 import type {Metadata} from "next";
 import Link from "next/link";
@@ -46,7 +47,7 @@ export default async function TemplatesPage({params, searchParams}: {
         if (filters.price === "premium" && !template.premium) return false;
         return !search || `${template.name.ru} ${template.name.ky} ${template.description.ru} ${template.description.ky}`.toLocaleLowerCase().includes(search);
     });
-    return <div className="invito-landing"><SiteHeader locale={locale}/>
+    return <div className={`invito-landing ${publicFont.variable}`}><SiteHeader locale={locale}/>
         <main className="catalog-main page-container">
             <div className="catalog-intro">
                 <div><h1>{dict.catalog.title}</h1><p>{dict.catalog.description}</p></div>

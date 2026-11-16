@@ -1,3 +1,4 @@
+import { publicFont } from "@/components/layout/public-font";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return <div className="invito-landing">
+  return <div className={`invito-landing ${publicFont.variable}`}>
     <SiteHeader locale={locale}/>
     <main>
       <HeroSection locale={locale}/>
