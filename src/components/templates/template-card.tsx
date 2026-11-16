@@ -5,6 +5,7 @@ import {routes} from "@/constants/routes";
 import type {TemplateDefinition} from "@/features/invitations/template.types";
 import type {Locale} from "@/i18n/locales";
 import {getDictionary} from "@/i18n/dictionaries";
+import {TemplatePreviewButton} from "@/components/templates/template-preview-button";
 
 export function TemplateCard({template, locale}: { template: TemplateDefinition; locale: Locale }) {
     const dict = getDictionary(locale);
@@ -19,6 +20,7 @@ export function TemplateCard({template, locale}: { template: TemplateDefinition;
                 href={routes.template(locale, template.id)}>{template.name[locale]}</Link></h3><span
                 className={template.premium ? "is-premium" : ""}>{template.premium ? dict.catalog.premium : dict.catalog.free}</span>
             </div>
+            <TemplatePreviewButton id={template.id} name={template.name[locale]} locale={locale}/>
         </article>
     );
 }

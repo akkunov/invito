@@ -381,3 +381,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .birthday-gallery-chip { position: relative; flex: 0 1 75px; height: 96px; border-radius: 7px; border: 1px solid #4a4a4a; background-position: center; background-size: cover; }
 
 .birthday-gallery-chip button { position: absolute; top: 4px; right: 4px; background: #000c; color: #fff; border-radius: 5px; padding: 4px; }
+
+/* Shared scrolling baseline, including previews and editor overflow surfaces. */
+:root { --scroll-thumb: #7d8490; --scroll-track: transparent; --scroll-hover: #545d6c; --scroll-active: #2549d9; scrollbar-gutter: stable; }
+* { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: var(--scroll-track); }
+*::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border: 2px solid transparent; background-clip: padding-box; border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background-color: var(--scroll-hover); }
+*::-webkit-scrollbar-thumb:active { background-color: var(--scroll-active); }
+@media (forced-colors: active) { * { scrollbar-color: auto; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

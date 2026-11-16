@@ -1,3 +1,4 @@
+import "@/app/landing-editorial.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
@@ -22,15 +23,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: `${template.name[locale]} — INVITO`, description: template.description[locale], alternates: { canonical: `${siteUrl}/${locale}/templates/${slug}`, languages: { ru: `${siteUrl}/ru/templates/${slug}`, ky: `${siteUrl}/ky/templates/${slug}` } } };
 }
 
-export default async function TemplateDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+export default async function TemplateDetailPage({ params, searchParams }: { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ preview?: string }> }) {
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
   const template = findTemplateById(slug);
   if (!template) notFound();
   const dict = getDictionary(locale);
   const document = createInvitationFromTemplate(template, locale);
-  return <><SiteHeader locale={locale} /><main className="detail-main page-container">
+  if ((await searchParams).preview === "1") return <main className="invitation-embed"><InvitationCanvas document={document} /></main>;
+  return <div className="invito-landing"><SiteHeader locale={locale} /><main className="detail-main page-container">
     <Link className="back-link" href={routes.templates(locale)}><ArrowLeft size={17} />{dict.actions.back}</Link>
     <div className="detail-layout"><div className="detail-description"><h1>{template.name[locale]}</h1><p>{template.description[locale]}</p><span className="detail-price">{template.premium ? dict.catalog.premium : dict.catalog.free}</span><p className="detail-note">{dict.catalog.demo}</p><Link className="button-primary button-large" href={routes.editor(locale, template.id)}>{dict.actions.edit}<ArrowUpRight size={18} /></Link></div><div className="detail-preview"><InvitationCanvas document={document} /></div></div>
-  </main><SiteFooter locale={locale} /></>;
+  </main><SiteFooter locale={locale} /></div>;
 }

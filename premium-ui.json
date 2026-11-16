@@ -1,0 +1,19 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": [
+    "src/components/landing",
+    "src/components/layout",
+    "src/components/templates",
+    "src/app/[locale]/templates"
+  ],
+  "locale": "ru-RU,ky-KG",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": [
+    "Select/Listbox",
+    "Form",
+    "Scrollbar"
+  ],
+  "ownership": {
+    "Select/Listbox": "native"
+  }
+}
