@@ -31,8 +31,7 @@ export type TemplateTheme =
   | "birthday-milestone"
   | ReferenceTheme
   | `editorial-${EditorialVariant}`
-  | `national-${"center" | "frame" | "landscape" | "arch" | "split" | "editorial" | "portrait"}`
-  | `collection-${string}`;
+;
 
 export interface TemplateDefinition {
   id: string;

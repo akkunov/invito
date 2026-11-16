@@ -1,5 +1,3 @@
-import { CollectionInvitation } from "@/components/invitation/collection-invitation";
-import { getCollectionDesign } from "@/features/invitations/collection-templates";
 import { EditorialInvitation } from "@/components/invitation/editorial-invitation";
 import { getEditorialVariant } from "@/features/invitations/editorial-templates";
 import Image from "next/image";
@@ -25,7 +23,6 @@ export function InvitationCanvas({ document, musicSrc, musicName }: { document: 
   if (birthdayVariant) return <><BirthdayInvitation document={document} variant={birthdayVariant} />{music}</>;
   if (getEditorialVariant(document.templateId)) return <><EditorialInvitation document={document} />{music}</>;
   if (getReferenceTemplate(document.templateId)) return <><ReferenceInvitation document={document} />{music}</>;
-  if (getCollectionDesign(document.templateId)) return <><CollectionInvitation document={document} />{music}</>;
   const { locale, content } = document;
   const dict = getDictionary(locale).invitation;
   const visible = new Set(document.blocks.filter((block) => block.enabled).map((block) => block.id));
