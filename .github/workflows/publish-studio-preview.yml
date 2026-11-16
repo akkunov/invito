@@ -1,4 +1,5 @@
 name: Publish INVITO Studio preview
+# Preview includes canvas v2 geometry, typography and media uploads.
 
 on:
   push:
