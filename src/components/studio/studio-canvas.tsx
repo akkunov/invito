@@ -34,7 +34,7 @@ export function StudioCanvas({template,selectedId,onSelect,onMove,onResize,editi
    // eslint-disable-next-line react-hooks/exhaustive-deps
  },[editingId]);
 
- function handlePointer(event:PointerEvent<HTMLDivElement>,node:StudioElement,mode:"move"|"resize"){
+ function handlePointer(event:PointerEvent<HTMLElement>,node:StudioElement,mode:"move"|"resize"){
    if(!editable||event.button!==0||editingId===node.id)return;
    event.stopPropagation();
    // First click only selects; a second deliberate gesture starts moving.
