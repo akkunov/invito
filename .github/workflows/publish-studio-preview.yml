@@ -1,0 +1,69 @@
+name: Publish INVITO Studio preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-studio-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "invito-studio-preview"
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout experimental Studio code (keep main site unchanged)
+        uses: actions/checkout@v4
+        with:
+          ref: feat/invito-template-studio-mvp-20261116
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Export only Studio as a static Pages site
+        shell: bash
+        env:
+          NEXT_PUBLIC_PAGES_BASE_PATH: /invito
+        run: |
+          set -euo pipefail
+          rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor'
+          rm 'src/app/[locale]/page.tsx'
+          cat > next.config.ts <<'CONFIG'
+          import type { NextConfig } from "next";
+          const config: NextConfig = {
+            output: "export",
+            basePath: "/invito",
+            images: { unoptimized: true },
+            trailingSlash: true,
+          };
+          export default config;
+          CONFIG
+          npm run build
+          test -f out/ru/admin/studio/index.html
+          touch out/.nojekyll
+          cat > out/index.html <<'HTML'
+          <!doctype html>
+          <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <meta http-equiv="refresh" content="0;url=/invito/ru/admin/studio/">
+          <title>INVITO Studio</title></head><body><a href="/invito/ru/admin/studio/">Открыть INVITO Studio</a></body></html>
+          HTML
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
