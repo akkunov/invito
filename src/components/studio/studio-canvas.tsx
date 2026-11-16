@@ -63,7 +63,7 @@ export function StudioCanvas({template,selectedId,onSelect,onMove,editable=true,
           onPointerDown={event=>handlePointerDown(event,node)}
           onKeyDown={event=>handleKey(event,node)}>
           {node.type==="image" ? (node.imageSrc ?
-            <Image src={node.imageSrc} alt="" fill sizes="440px" draggable={false} style={{objectFit:"cover",borderRadius:node.radius}}/> :
+            <Image src={`${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${node.imageSrc}`} alt="" fill sizes="440px" draggable={false} style={{objectFit:"cover",borderRadius:node.radius}}/> :
             <span className="studio-image-empty">Фото</span>) :
             node.type==="shape"?null:<span>{elementText(node)}</span>}
         </div>;
