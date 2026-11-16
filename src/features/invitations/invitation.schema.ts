@@ -35,7 +35,8 @@ export const invitationDocumentSchema = z.object({
   media: z.object({
     portraitDataUrl: z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1800000).nullable(),
     focalY: z.number().min(0).max(100),
-    galleryDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1000000)).max(6),
+    venuePhotoDataUrl: z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(900000).nullable().optional(),
+    galleryDataUrls: z.array(z.string().regex(/^data:image\/(jpeg|webp);base64,/).max(1000000)).max(4),
   }).optional(),
   program: z.array(z.object({
     id: z.string().min(1).max(80),

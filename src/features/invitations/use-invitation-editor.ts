@@ -23,7 +23,11 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
     try {
       const stored = window.localStorage.getItem(storageKey);
       if (stored) {
-        const result = invitationDocumentSchema.safeParse(JSON.parse(stored));
+        const restored = JSON.parse(stored);
+        if (restored?.media && Array.isArray(restored.media.galleryDataUrls)) {
+          restored.media.galleryDataUrls = restored.media.galleryDataUrls.slice(0, 4);
+        }
+        const result = invitationDocumentSchema.safeParse(restored);
         if (result.success && result.data.templateId === initialDocument.templateId) {
           const old = result.data;
           const missing = initialDocument.blocks.filter((block) => !old.blocks.some((saved) => saved.id === block.id));
@@ -77,18 +81,30 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
   }, [change]);
 
   const updatePortrait = useCallback((portraitDataUrl: string | null) => {
-    change((document) => ({ ...document, media: { portraitDataUrl, focalY: document.media?.focalY ?? 50, galleryDataUrls: document.media?.galleryDataUrls ?? [] } }));
+    change((document) => ({ ...document, media: { portraitDataUrl, focalY: document.media?.focalY ?? 50, galleryDataUrls: document.media?.galleryDataUrls ?? [], venuePhotoDataUrl: document.media?.venuePhotoDataUrl ?? null } }));
   }, [change]);
 
   const updateFocalY = useCallback((focalY: number) => {
-    change((document) => ({ ...document, media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, galleryDataUrls: document.media?.galleryDataUrls ?? [], focalY } }));
+    change((document) => ({ ...document, media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, galleryDataUrls: document.media?.galleryDataUrls ?? [], focalY, venuePhotoDataUrl: document.media?.venuePhotoDataUrl ?? null } }));
   }, [change]);
 
+
+  const updateVenuePhoto = useCallback((venuePhotoDataUrl: string | null) => {
+    change(document => ({
+      ...document,
+      media: {
+        portraitDataUrl: document.media?.portraitDataUrl ?? null,
+        venuePhotoDataUrl,
+        focalY: document.media?.focalY ?? 50,
+        galleryDataUrls: document.media?.galleryDataUrls ?? [],
+      },
+    }));
+  }, [change]);
 
   const updateGallery = useCallback((galleryDataUrls: string[]) => {
     change((document) => ({
       ...document,
-      media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, focalY: document.media?.focalY ?? 50, galleryDataUrls: galleryDataUrls.slice(0, 6) },
+      media: { portraitDataUrl: document.media?.portraitDataUrl ?? null, focalY: document.media?.focalY ?? 50, galleryDataUrls: galleryDataUrls.slice(0, 4), venuePhotoDataUrl: document.media?.venuePhotoDataUrl ?? null },
       // Photos must become visible immediately even for legacy drafts where gallery was disabled.
       blocks: galleryDataUrls.length > 0 ? document.blocks.map((block) => block.id === "gallery" ? { ...block, enabled: true } : block) : document.blocks,
     }));
@@ -173,8 +189,8 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
 
   return useMemo(() => ({
     document: history.present, isHydrated, isSaved, saveError, canUndo: history.past.length > 0, canRedo: history.future.length > 0,
-    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
-  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, music]);
+    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateVenuePhoto, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
+  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateVenuePhoto, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, music]);
 }
 
 export type InvitationEditorController = ReturnType<typeof useInvitationEditor>;
