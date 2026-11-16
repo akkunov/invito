@@ -27,6 +27,7 @@ export const invitationDocumentSchema = z.object({
     message: localizedTextSchema,
     dressCode: localizedTextSchema.optional(),
     giftNote: localizedTextSchema.optional(),
+    otherNote: localizedTextSchema.optional(),
     venue: localizedTextSchema,
     city: localizedTextSchema,
     dateTimeLocal: z.string().max(16),

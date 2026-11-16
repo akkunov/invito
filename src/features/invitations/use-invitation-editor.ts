@@ -5,7 +5,7 @@ import { invitationDocumentSchema, type BlockKind, type InvitationDocument } fro
 import type { Locale } from "@/i18n/locales";
 import { useLocalAudio } from "@/features/invitations/use-local-audio";
 
-type LocalizedField = "title" | "message" | "venue" | "city" | "dressCode" | "giftNote";
+type LocalizedField = "title" | "message" | "venue" | "city" | "dressCode" | "giftNote" | "otherNote";
 type TextField = "name1" | "name2" | "dateTimeLocal";
 interface EditorHistory { past: InvitationDocument[]; present: InvitationDocument; future: InvitationDocument[] }
 

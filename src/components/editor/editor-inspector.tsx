@@ -63,6 +63,21 @@ export function EditorInspector({locale, editor, selected}: {
                     value={content.venue[activeLocale]} maxLength={100}
                     onChange={(event) => editor.updateLocalized("venue", activeLocale, event.target.value)}/></label>
                 </div>}
+            {editor.document.templateId === "editorial-monochrome-wedding" && selected === "program" &&
+                <div className="inspector-fields">
+                    <label>{locale === "ru" ? "Дресс-код" : "Кийим үлгүсү"}
+                        <textarea rows={3} maxLength={500} value={content.dressCode?.[activeLocale] ?? ""}
+                            onChange={event=>editor.updateLocalized("dressCode",activeLocale,event.target.value)}/>
+                    </label>
+                    <label>{locale === "ru" ? "Подарки" : "Белектер"}
+                        <textarea rows={3} maxLength={500} value={content.giftNote?.[activeLocale] ?? ""}
+                            onChange={event=>editor.updateLocalized("giftNote",activeLocale,event.target.value)}/>
+                    </label>
+                    <label>{locale === "ru" ? "Прочее" : "Кошумча"}
+                        <textarea rows={3} maxLength={500} value={content.otherNote?.[activeLocale] ?? ""}
+                            onChange={event=>editor.updateLocalized("otherNote",activeLocale,event.target.value)}/>
+                    </label>
+                </div>}
             {selected === "location" &&
                 <RivieraVenuePhotoUploader locale={locale}
                     photo={editor.document.media?.venuePhotoDataUrl ?? null}
