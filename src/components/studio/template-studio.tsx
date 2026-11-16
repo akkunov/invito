@@ -58,7 +58,10 @@ export function TemplateStudio({locale}:{locale:Locale}){
     setSelectedId(id);
     const node=template.elements.find(el=>el.id===id);
     if(!node)return;
-    if(node.binding!=="none"){setMessage("Текст привязан к переменной. Отключите привязку в панели свойств, чтобы изменить его на холсте.");return;}
+    if(node.binding!=="none"){
+      setMessage("Привязка к переменной отключена для ручного редактирования этого элемента.");
+      change({...template,elements:template.elements.map(el=>el.id===id?{...el,binding:"none",text:el.text}:el)});
+    }
     setEditingId(id);
   }
   function commitInlineText(id:string,text:string){
