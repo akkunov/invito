@@ -41,6 +41,7 @@ jobs:
           set -euo pipefail
           rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor'
           rm 'src/app/[locale]/page.tsx'
+          rm -f src/app/robots.ts src/app/sitemap.ts
           cat > next.config.ts <<'CONFIG'
           import type { NextConfig } from "next";
           const config: NextConfig = {
