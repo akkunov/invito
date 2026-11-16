@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test:editor-navigation": "node scripts/test-editor-navigation.mjs",
-    "test:riviera": "node scripts/test-riviera-template.mjs"
+    "test:riviera": "node scripts/test-riviera-template.mjs",
+    "test:monochrome": "node scripts/test-monochrome-template.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
