@@ -5,6 +5,7 @@ import { locales, isLocale } from "@/i18n/locales";
 import "@/app/globals.css";
 import "@/app/riviera.css";
 import "@/app/monochrome.css";
+import "@/app/santorini.css";
 
 const uiFont = Onest({ subsets: ["latin", "cyrillic"], variable: "--font-ui", display: "swap" });
 const displayFont = Noto_Serif_Display({ subsets: ["latin", "cyrillic"], variable: "--font-display", display: "swap" });

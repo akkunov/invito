@@ -56,6 +56,21 @@ export function EditorInspector({locale, editor, selected}: {
                                                                                   value={content.dateTimeLocal}
                                                                                   onChange={(event) => editor.updateText("dateTimeLocal", event.target.value)}/></label>
                     <p className="inspector-help">Asia/Bishkek (UTC+06:00)</p></div>}
+            {editor.document.templateId === "wedding-travel-santorini" && selected === "details" &&
+                <div className="inspector-fields">
+                    <label>{locale === "ru" ? "Начало путешествия" : "Саякаттын башталышы"}
+                        <input type="date" value={content.tripStartDateLocal ?? ""} onChange={event=>editor.updateText("tripStartDateLocal",event.target.value)}/>
+                    </label>
+                    <label>{locale === "ru" ? "Окончание путешествия" : "Саякаттын аякташы"}
+                        <input type="date" min={content.tripStartDateLocal} value={content.tripEndDateLocal ?? ""} onChange={event=>editor.updateText("tripEndDateLocal",event.target.value)}/>
+                    </label>
+                </div>}
+            {editor.document.templateId === "wedding-travel-santorini" && selected === "rsvp" &&
+                <div className="inspector-fields">
+                    <label>{locale === "ru" ? "Подтвердить участие до" : "Катышууну ырастоо мөөнөтү"}
+                        <input type="date" value={content.rsvpDeadlineLocal ?? ""} onChange={event=>editor.updateText("rsvpDeadlineLocal",event.target.value)}/>
+                    </label>
+                </div>}
             {selected === "location" &&
                 <div className="inspector-fields"><label>{dict.editor.city}<input value={content.city[activeLocale]}
                                                                                   maxLength={100}

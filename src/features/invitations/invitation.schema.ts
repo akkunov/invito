@@ -31,6 +31,9 @@ export const invitationDocumentSchema = z.object({
     venue: localizedTextSchema,
     city: localizedTextSchema,
     dateTimeLocal: z.string().max(16),
+    tripStartDateLocal: z.string().max(10).optional(),
+    tripEndDateLocal: z.string().max(10).optional(),
+    rsvpDeadlineLocal: z.string().max(10).optional(),
     timezone: z.literal("Asia/Bishkek"),
   }),
   media: z.object({

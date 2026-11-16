@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n/locales";
 import { useLocalAudio } from "@/features/invitations/use-local-audio";
 
 type LocalizedField = "title" | "message" | "venue" | "city" | "dressCode" | "giftNote" | "otherNote";
-type TextField = "name1" | "name2" | "dateTimeLocal";
+type TextField = "name1" | "name2" | "dateTimeLocal" | "tripStartDateLocal" | "tripEndDateLocal" | "rsvpDeadlineLocal";
 interface EditorHistory { past: InvitationDocument[]; present: InvitationDocument; future: InvitationDocument[] }
 
 type DocumentChange = (document: InvitationDocument) => InvitationDocument;

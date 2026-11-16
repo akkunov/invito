@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - run: npm run test:riviera
       - run: npm run test:monochrome
+      - run: npm run test:santorini
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build

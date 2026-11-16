@@ -1,6 +1,6 @@
 import type { InvitationDocument } from "@/features/invitations/invitation.schema";
 export type TemplateCategory = "wedding";
-export type TemplateTheme = "editorial-riviera" | "editorial-monochrome";
+export type TemplateTheme = "editorial-riviera" | "editorial-monochrome" | "wedding-travel-santorini";
 export interface TemplateDefinition {
   id: string;
   category: TemplateCategory;

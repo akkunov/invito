@@ -1,0 +1,96 @@
+/* Wedding Travel: reference-led mobile postcard, isolated from Riviera/Monochrome. */
+.santo{--sea:#123653;--gold:#b98433;--parchment:#fff1d9;--ink:#14283b;position:relative;isolation:isolate;overflow:clip;width:100%;max-width:440px;margin:0 auto;color:var(--ink);background:var(--parchment);font-family:var(--font-display),Georgia,serif;font-size:14px;line-height:1.45;}
+.santo *,.santo *::before,.santo *::after{box-sizing:border-box;}
+.santo h1,.santo h2,.santo h3,.santo p,.santo ol{margin:0;}
+.santo button{cursor:pointer;}
+.santo-remote-photo{position:absolute;inset:0;background-size:cover;background-position:center;filter:saturate(1.15);}
+.santo-hero{position:relative;isolation:isolate;height:520px;overflow:hidden;color:#082947;background:linear-gradient(180deg,#bdd2e1,#f4cfa5 39%,#2a6383 78%,#1a5a82);}
+.santo-hero-photo{position:absolute;z-index:-2;inset:0;}
+.santo-hero-photo img{object-fit:cover;object-position:50% 55%;}
+.santo-hero-photo .santo-remote-photo{background-position:50% 48%;}
+.santo-hero::after{content:"";pointer-events:none;position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(255,248,238,.32),rgba(255,237,211,.30) 39%,transparent 71%);}
+.santo-cover-heading{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:22px;gap:7px;text-shadow:0 1px 8px #fff5;}
+.santo-cover-heading>div{width:90%;max-width:340px;}
+.santo-cover-heading span{display:block;font-size:11px;font-weight:700;letter-spacing:.27em;text-transform:uppercase;white-space:normal;}
+.santo-cover-heading small{display:block;margin-top:8px;font-size:8px;font-weight:650;letter-spacing:.29em;text-transform:uppercase;}
+.santo-stamp{position:absolute;right:12px;top:14px;width:79px;height:79px;border:2px solid #183956;border-radius:50%;transform:rotate(13deg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;z-index:3;color:#193653;background:#fff7e629;text-align:center;}
+.santo-stamp::after{content:"";position:absolute;inset:5px;border:1px solid #183956;border-radius:50%;}
+.santo-stamp span{font:700 7px/1.1 var(--font-ui),sans-serif;letter-spacing:.09em;}
+.santo-names{position:relative;z-index:2;padding:40px 7% 0;display:flex;flex-direction:column;align-items:center;color:#0e3a58;font:italic 400 clamp(46px,13vw,74px)/.94 "URW Chancery L","Segoe Script","Brush Script MT",cursive;text-shadow:0 2px 7px #fce8d4ab;text-align:center;letter-spacing:-.055em;}
+.santo-names span{display:block;max-width:100%;overflow-wrap:anywhere;}
+.santo-names i{font:italic 46px/1 Georgia,serif;color:#b5812e;margin:-3px 0 -11px;}
+.santo-blossoms{position:absolute;z-index:2;top:-16px;left:-19px;width:117px;height:130px;pointer-events:none;color:#de2861;filter:drop-shadow(1px 3px 2px #410d264a);}
+.santo-blossoms span{font-size:54px;position:absolute;line-height:1;}
+.santo-blossoms span:nth-child(1){top:0;left:-5px}.santo-blossoms span:nth-child(2){top:10px;left:35px;font-size:39px}.santo-blossoms span:nth-child(3){top:54px;left:12px;font-size:34px}.santo-blossoms span:nth-child(4){top:75px;left:62px;font-size:27px}
+.santo-sail{position:absolute;bottom:77px;left:13%;font-size:34px;filter:drop-shadow(1px 2px 1px #1234);}
+.santo-music{position:absolute;bottom:110px;right:18px;display:flex;align-items:center;justify-content:center;gap:2px;width:41px;height:41px;border-radius:50%;border:1px solid #15364b;background:#fff9dfb9;color:#133a50;z-index:3;}
+.santo-music:disabled{opacity:.55}.santo-music[aria-pressed=true]{color:white;background:#153a56;}
+/* Ticket intentionally overlaps the photograph and paper surface. */
+.santo-ticket{position:relative;z-index:4;min-height:114px;display:grid;grid-template-columns:44% 45% 11%;align-items:stretch;margin:-56px 9% 0;background:#f5e8cf;color:#132939;box-shadow:0 5px 16px #32201240;transform:rotate(-.7deg);clip-path:polygon(1% 0,99% 0,100% 10%,99% 90%,100% 100%,1% 100%,0 90%,1% 60%,0 50%,1% 40%,0 10%);}
+.santo-ticket::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.4;background-image:repeating-linear-gradient(25deg,transparent 0 5px,#997c5a0b 6px 7px);}
+.santo-ticket-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:11px 8px;min-width:0;gap:6px;}
+.santo-ticket-cell+ .santo-ticket-cell{border-left:1px dashed #567083;}
+.santo-ticket-cell strong{font:700 clamp(11px,3.5vw,17px)/1.15 var(--font-display),Georgia,serif;text-transform:uppercase;overflow-wrap:anywhere;}
+.santo-ticket-cell small{font-size:9px;line-height:1.3;overflow-wrap:anywhere;}
+.santo-ticket-stamp{align-self:end;display:flex;flex-direction:column;align-items:center;color:#547087;font-size:22px;transform:rotate(-10deg);padding:0 0 13px 0;}
+.santo-ticket-stamp span{font:700 6px/1 var(--font-ui),sans-serif;letter-spacing:.1em;}
+/* Inexpensive paper texture built from CSS rather than stretching a rasterized reference. */
+.santo-paper{position:relative;isolation:isolate;overflow:hidden;padding:51px 0 0;background-color:#f7e9d1;background-image:radial-gradient(circle at 15% 20%,#fff7e6b5 0,transparent 25%),radial-gradient(circle at 76% 75%,#d7bea575 0,transparent 32%),repeating-linear-gradient(17deg,#9b80540b 0 1px,transparent 2px 6px);color:#183047;}
+.santo-paper::before{content:"";pointer-events:none;position:absolute;inset:0;z-index:-1;opacity:.3;background-image:radial-gradient(#aa866a 0.5px,transparent .8px);background-size:7px 8px;}
+.santo-route-deco{position:absolute;inset:20px auto auto 11px;z-index:0;display:flex;flex-direction:column;align-items:center;transform:rotate(19deg);color:#9d875f;opacity:.5;gap:4px;}
+.santo-route-deco svg{width:19px}.santo-route-deco span{writing-mode:vertical-rl;letter-spacing:7px}
+.santo-intro{position:relative;text-align:center;padding:2px 11% 17px;}
+.santo-intro h2{font:italic 400 clamp(34px,9vw,52px)/1.25 "URW Chancery L","Segoe Script",cursive;color:#a7772a;margin-bottom:11px;}
+.santo-intro p{font:400 15px/1.43 var(--font-display),Georgia,serif;white-space:pre-line;letter-spacing:.01em;text-wrap:pretty;}
+.santo-ornament{text-align:center;margin:12px auto 0;font:italic 27px/1 Georgia,serif;color:#b27e2b;}
+.santo-ornament span{font-size:25px;color:#547c80;margin:0 20px;}
+.santo-location{text-align:center;padding:7px 11% 20px;}
+.santo-label{font:700 10px/1.4 var(--font-ui),sans-serif;letter-spacing:.2em;color:#1d4257;text-transform:uppercase;}
+.santo-location a{display:flex;align-items:center;justify-content:center;gap:5px;margin:9px auto 0;color:#214e67;text-decoration:underline;text-underline-offset:3px;font-size:13px;}
+.santo-program{position:relative;isolation:isolate;padding:18px 7% 29px;}
+.santo-program-label{margin:0 auto 21px;width:95%;padding:10px 8px;color:#fffbe9;text-align:center;background:linear-gradient(160deg,#315f7a,#123752 65%,#092941);border-radius:22px;box-shadow:0 4px 8px #3b2b1e4d;letter-spacing:.11em;font:700 13px/1.3 var(--font-display),Georgia,serif;position:relative;z-index:2;}
+.santo-program-label::before,.santo-program-label::after{content:"";position:absolute;top:50%;width:13px;height:13px;background:#c79744;border:2px solid #e9cc84;border-radius:50%;transform:translateY(-50%)}.santo-program-label::before{left:-4px}.santo-program-label::after{right:-4px}
+.santo-itinerary{position:relative;z-index:2;list-style:none;padding:0 0 0 4px;max-width:100%;}
+.santo-itinerary::before{content:"";position:absolute;top:18px;bottom:22px;left:19px;border-left:1px dashed #587587;}
+.santo-itinerary li{display:grid;grid-template-columns:36px minmax(84px,32%) minmax(0,1fr);column-gap:7px;align-items:start;margin-bottom:15px;position:relative;min-height:64px;}
+.santo-itinerary-icon{height:38px;width:38px;border:1px solid #3a6075;border-radius:50%;display:grid;place-items:center;background:#f8edd9;color:#1c425c;}
+.santo-itinerary time{padding-top:7px;font-weight:700;font-size:11px;letter-spacing:-.015em;text-transform:uppercase;}
+.santo-itinerary li>div{padding-top:3px;}
+.santo-itinerary strong{display:block;font:700 13px/1.28 var(--font-display),serif;}
+.santo-itinerary p{font:400 11px/1.35 var(--font-display),Georgia,serif;margin-top:4px;}
+.santo-itinerary .is-wedding time,.santo-itinerary .is-wedding strong,.santo-itinerary .is-wedding .santo-itinerary-icon{color:#a56f22;}
+.santo-itinerary .is-wedding strong{font-size:15px;font-style:italic;background:#e8c994a0;display:inline;box-decoration-break:clone;padding:1px 4px;}
+.santo-postcard{position:absolute;z-index:0;overflow:hidden;transform:rotate(-12deg);background:white;box-shadow:0 3px 10px #392c1b55;border:6px solid #fffaf0;border-bottom-width:16px;pointer-events:none;}
+.santo-postcard .santo-remote-photo{inset:0;filter:saturate(1.1);}
+.santo-postcard-left{left:-70px;top:90px;width:125px;height:150px;opacity:.67}
+.santo-postcard-right{right:-72px;bottom:70px;width:130px;height:157px;transform:rotate(13deg);opacity:.62}
+.santo-gallery{padding:5px 8% 24px;}
+.santo-gallery .invite-gallery-section{background:transparent;padding:20px 4px;color:#193b51;}
+.santo-gallery .invite-gallery-photo{border-radius:1px;border:6px solid #fff8ea;border-bottom-width:15px;box-shadow:0 3px 10px #4a392c4d;}
+.santo-countdown{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 8%;padding:14px 0;border-top:1px solid #c7ab84;border-bottom:1px solid #c7ab84;}
+.santo-countdown>span:last-child{font:italic 16px/1.3 Georgia,serif;}
+.santo-rsvp{position:relative;text-align:center;padding:14px 9% 40px;}
+.santo-rsvp-cta{width:100%;border:1px solid #d1aa73;border-radius:999px;background:linear-gradient(170deg,#2e6582,#0a2840);color:#fff9e8;min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 11px;font:700 12px/1.3 var(--font-display),serif;letter-spacing:.02em;box-shadow:0 4px 7px #4a312d4d;}
+.santo-rsvp-cta svg{flex:none;}
+.santo-rsvp-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.santo-rsvp-options button{border:1px solid #506b7c;border-radius:20px;background:#fff2dd;color:#1a3d55;min-height:45px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;}
+.santo-rsvp-options button[aria-pressed=true]{background:#17435d;color:white;}
+.santo-rsvp-options small{grid-column:1/-1;font-size:10px;color:#35526a;}
+.santo-rsvp>p{margin:18px 0 0;font-size:13px;line-height:1.35;}
+.santo-farewell{display:block;font:700 10px/1.8 var(--font-display),serif;letter-spacing:.23em;max-width:92%;margin:20px auto 0;text-transform:uppercase;}
+.santo-ticket-decor{position:absolute;right:3px;top:-37px;display:flex;align-items:center;gap:6px;transform:rotate(12deg);color:#46637b;opacity:.65;}
+.santo-compass{position:absolute;right:9px;top:55px;color:#6f93a3;opacity:.65;pointer-events:none;}
+.santo button:focus-visible,.santo a:focus-visible{outline:2px solid #af762b;outline-offset:3px;}
+@media(max-width:359px){.santo-hero{height:490px}.santo-names{font-size:45px}.santo-stamp{width:66px;height:66px;top:12px}.santo-ticket{margin-inline:6%;grid-template-columns:43% 46% 11%}.santo-itinerary li{grid-template-columns:35px minmax(76px,31%) minmax(0,1fr);gap:4px}.santo-itinerary strong{font-size:12px}.santo-itinerary p{font-size:10px}.santo-program{padding-inline:5%}}
+@media(min-width:441px){.santo{box-shadow:0 12px 60px #0003;border-inline:1px solid #cfbea4;}}
+@media(prefers-reduced-motion:reduce){.santo *{animation:none!important;transition-duration:.01ms!important}}
+/* Catalog artwork: same hero and ticket composition, no nested interactive controls. */
+.santo-card{container-type:inline-size;position:relative;isolation:isolate;aspect-ratio:440/610;width:100%;overflow:hidden;background:#c9d9e3;color:#123952;font-family:var(--font-display),Georgia,serif;}
+.santo-card-bg{position:absolute;inset:0 0 16%;z-index:-2;background-size:cover;background-position:center;}
+.santo-card::before{content:"";position:absolute;inset:0 0 0 0;z-index:-1;background:linear-gradient(180deg,#fff3de5e,transparent 58%,#ead5b8 85%);}
+.santo-card-top{position:relative;text-align:center;margin:5cqw auto 0;max-width:80%;font-size:3.2cqw;letter-spacing:.16em;font-weight:700;}
+.santo-card-names{position:relative;z-index:2;margin:9cqw 0 0;display:flex;flex-direction:column;text-align:center;align-items:center;font:italic 15cqw/.9 "URW Chancery L","Segoe Script",cursive;color:#123953;overflow-wrap:anywhere;}
+.santo-card-names i{font:italic 12cqw/1 Georgia,serif;color:#b38338;}
+.santo-card-ticket{position:absolute;bottom:9%;left:10%;width:80%;height:22%;background:#f5ead9;box-shadow:0 2px 6px #3334;display:grid;grid-template-columns:1fr 1fr;align-items:center;text-align:center;transform:rotate(-1deg);color:#19344d;}
+.santo-card-ticket span{padding:6%;font:700 4.4cqw/1.3 Georgia,serif;}
+.santo-card-ticket span+span{border-left:1px dashed #123953;}
