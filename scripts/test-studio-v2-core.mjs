@@ -25,7 +25,7 @@ invalid(p => { p.assets.foo = { id: "different", mimeType: "image/png", name: "x
 
 const multi = structuredClone(fresh);
 multi.pages.push({ id: "page-2", name: "RSVP", rootNodeId: "frame-2", placement: { x: 1500, y: -350 } });
-multi.nodes["frame-2"] = { ...multi.nodes["frame-1"], id: "frame-2", name: "RSVP" };
+multi.nodes["frame-2"] = { ...multi.nodes["frame-1"], id: "frame-2", name: "RSVP", children: [] };
 assert.equal(parseProjectV2(multi).pages.length, 2, "multiple independently placed frames");
 
 const nested = structuredClone(multi);
