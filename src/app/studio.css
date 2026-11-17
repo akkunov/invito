@@ -119,3 +119,25 @@
 .studio-context-spacing input{background:#2c3434;color:white;border:1px solid #516367;width:43px;min-height:34px;text-align:center;border-radius:5px}
 .studio-field input[type=checkbox]{width:18px;height:18px;accent-color:#2549d9;vertical-align:middle}
 @media(max-width:530px){.studio-canvas-options{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;padding:8px}.studio-canvas-options button{min-height:44px;flex:none}.studio-context-spacing input{min-height:40px}.studio-ruler-horizontal,.studio-ruler-vertical{font-size:8px}}
+
+/* Figma-style interaction pass: persistent mode tools, scrollable zoomed artboard, marquee. */
+.studio-modebar{display:flex;align-items:center;gap:8px;padding:10px 18px;background:#1d2225;border-bottom:1px solid #3c4548;width:100%}
+.studio-modebar button{display:flex;align-items:center;gap:7px;min-height:40px;padding:7px 12px;border:1px solid #465057;border-radius:6px;color:#d6e0de;font-size:12px}
+.studio-modebar button[aria-pressed=true]{color:#152338;background:#d1e0f6;border-color:#b8cef3;font-weight:650}
+.studio-modebar kbd{font:500 10px var(--font-ui),sans-serif;color:inherit;opacity:.7}
+.studio-selection-count{font-size:11px;color:#a6b6b3;margin-left:auto}
+.studio-workspace .studio-canvas-scroll{justify-content:flex-start;padding:42px max(30px,calc((100% - 465px)/2));scrollbar-width:thin;overscroll-behavior:contain}
+.studio-workspace .studio-canvas-scroll.is-panning{cursor:grab;touch-action:none}
+.studio-workspace .studio-canvas-scroll.is-panning:active{cursor:grabbing}
+.studio-canvas-scroll>.studio-preview-viewport{margin-inline:auto;overflow:visible}
+.studio-render-surface.is-hand .studio-render-node{pointer-events:none}
+.studio-render-surface{cursor:crosshair}
+.studio-render-surface.is-hand{cursor:grab}
+.studio-render-node{cursor:move}
+.studio-render-node.is-selected{outline:2px solid #4c77de;outline-offset:0}
+.studio-marquee{position:absolute;z-index:10;pointer-events:none;background:rgba(37,73,217,.14);border:1px solid #2549d9}
+.studio-render-node .studio-resize-handle{width:16px;height:16px;right:-8px;bottom:-8px;border-radius:3px;cursor:nwse-resize;pointer-events:auto}
+.studio-viewport-choices button{display:grid;place-items:center;min-height:34px;min-width:40px}
+.studio-viewport-choices button:nth-child(2){min-width:64px}
+@media(max-width:830px){.studio-modebar{flex-wrap:wrap}.studio-workspace .studio-canvas-scroll{padding:28px 12px;min-height:420px;max-height:700px}.studio-selection-count{flex-basis:100%;margin-left:0}}
+@media(max-width:530px){.studio-modebar button{min-height:44px}.studio-workspace .studio-canvas-scroll{padding-inline:8px}.studio-modebar{gap:6px;padding:8px}.studio-viewport-choices button{min-height:40px}}
