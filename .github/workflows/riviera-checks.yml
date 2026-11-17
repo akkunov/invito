@@ -23,6 +23,8 @@ jobs:
       - run: npm run test:studio
       - run: npm run test:studio-v2-core
       - run: npm run test:studio-v2-commands
+      - run: npm run test:studio-v2-viewport
+      - run: npm run test:studio-v2-ui
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build

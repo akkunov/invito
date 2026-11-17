@@ -16,7 +16,9 @@
     "test:public-routes": "node scripts/test-public-routes.mjs",
     "test:studio": "node scripts/test-studio.mjs",
     "test:studio-v2-core": "node --experimental-strip-types scripts/test-studio-v2-core.mjs",
-    "test:studio-v2-commands": "node --experimental-strip-types scripts/test-studio-v2-commands.mjs"
+    "test:studio-v2-commands": "node --experimental-strip-types scripts/test-studio-v2-commands.mjs",
+    "test:studio-v2-viewport": "node --experimental-strip-types scripts/test-studio-v2-viewport.mjs",
+    "test:studio-v2-ui": "node scripts/test-studio-v2-ui.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
