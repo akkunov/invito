@@ -39,6 +39,7 @@ jobs:
           npm run test:studio
           node scripts/test-studio-interactions.mjs
           node scripts/test-studio-canvas-v2.mjs
+          node scripts/test-studio-figma-controls.mjs
           npm run typecheck
       - name: Export only Studio as a static Pages site
         shell: bash
