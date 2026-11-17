@@ -36,6 +36,7 @@ nested.nodes["title-1"] = {
   runs: [{ text: "Привет мир", style: { fontFamily: "serif", fontSize: 62, fontWeight: 700, italic: false, underline: false, strike: false, color: "#20242B" } }],
   textAlign: "center", bindingKey: null
 };
-assert.ok(isProjectV2(nested), "valid nested text node");
+const nestedParsed = (() => { try { return parseProjectV2(nested); } catch (error) { console.error("Nested validation:", error.issues); throw error; } })();
+assert.equal(nestedParsed.nodes["title-1"].type, "text", "valid nested text node");
 invalid(p => { p.nodes["frame-1"].children.push("frame-1"); }, "root cycle");
 console.log("PASS: v2 project schema, roundtrip, multiple frames, text nodes and invalid refs");
