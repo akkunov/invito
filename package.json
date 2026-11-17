@@ -14,7 +14,8 @@
     "test:santorini": "node scripts/test-santorini-template.mjs",
     "test:landing": "node scripts/test-landing-editorial.mjs",
     "test:public-routes": "node scripts/test-public-routes.mjs",
-    "test:studio": "node scripts/test-studio.mjs"
+    "test:studio": "node scripts/test-studio.mjs",
+    "test:studio-v2-core": "node --experimental-strip-types scripts/test-studio-v2-core.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
