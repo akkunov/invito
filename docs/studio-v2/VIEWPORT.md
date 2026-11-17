@@ -27,7 +27,7 @@
 | Drag blank canvas | Pan |
 | Drag page caption (select mode) | Move page world placement via one transaction |
 | Click page / sidebar item | Select/center page |
-| +/- buttons | Zoom clamped 10%–300% |
+| +/- buttons | Zoom clamped 2.5%–300% |
 | Fit all | Camera fit of full document |
 | Mini-map click / Enter | Center world camera |
 | Rulers/grid | Toggle view-only overlays |

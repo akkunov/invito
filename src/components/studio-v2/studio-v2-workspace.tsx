@@ -17,7 +17,7 @@ import {
 } from "@/features/studio-v2/core/viewport.ts";
 
 type Tool = "select" | "hand";
-const clampZoom = (zoom: number) => clamp(zoom, 0.1, 3);
+const clampZoom = (zoom: number) => clamp(zoom, 0.025, 3);
 const initialViewport: Viewport = { x: 150, y: 120, zoom: .25 };
 function pageRect(document: ProjectDocumentV2, page: StudioPageV2): Rect {
   const root = document.nodes[page.rootNodeId];

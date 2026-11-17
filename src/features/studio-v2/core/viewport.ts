@@ -6,7 +6,7 @@ export type Rect = Readonly<{ x: number; y: number; width: number; height: numbe
 export type Viewport = Readonly<{ x: number; y: number; zoom: number }>;
 export type Size = Readonly<{ width: number; height: number }>;
 
-export const MIN_ZOOM = 0.1;
+export const MIN_ZOOM = 0.025;
 export const MAX_ZOOM = 3;
 export const RULER_THICKNESS = 14;
 export const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
