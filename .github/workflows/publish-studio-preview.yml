@@ -28,7 +28,7 @@ jobs:
       - name: Checkout experimental Studio code (keep main site unchanged)
         uses: actions/checkout@v4
         with:
-          ref: feat/invito-template-studio-mvp-20261116
+          ref: feat/studio-v2-infinite-canvas-20261117
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -40,6 +40,10 @@ jobs:
           node scripts/test-studio-interactions.mjs
           node scripts/test-studio-canvas-v2.mjs
           node scripts/test-studio-figma-controls.mjs
+          npm run test:studio-v2-core
+          npm run test:studio-v2-commands
+          npm run test:studio-v2-viewport
+          npm run test:studio-v2-ui
           npm run typecheck
       - name: Export only Studio as a static Pages site
         shell: bash
@@ -62,12 +66,13 @@ jobs:
           CONFIG
           npm run build
           test -f out/ru/admin/studio/index.html
+          test -f out/ru/admin/studio-v2/index.html
           touch out/.nojekyll
           cat > out/index.html <<'HTML'
           <!doctype html>
           <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-          <meta http-equiv="refresh" content="0;url=/invito/ru/admin/studio/">
-          <title>INVITO Studio</title></head><body><a href="/invito/ru/admin/studio/">Открыть INVITO Studio</a></body></html>
+          <meta http-equiv="refresh" content="0;url=/invito/ru/admin/studio-v2/">
+          <title>INVITO Studio</title></head><body><a href="/invito/ru/admin/studio-v2/">Открыть INVITO Studio</a></body></html>
           HTML
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
