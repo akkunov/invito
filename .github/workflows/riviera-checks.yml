@@ -41,6 +41,7 @@ jobs:
       - run: npm run test:studio-v2-template-registry
       - run: npm run test:studio-v2-template-output
       - run: npm run test:studio-v2-professional-print
+      - run: npm run test:studio-v2-personalization
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build
