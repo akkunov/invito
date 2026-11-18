@@ -23,7 +23,7 @@ function CropPreview({node,document,mediaUrls,onChange}:{node:Extract<ProjectNod
 }
 export function AdvancedProperties({node,document,mediaUrls,onChange,disabled}:Props){
  const v=node.visual??{},corners=v.corners??ZERO_CORNERS;
- const [separate,setSeparate]=useState(false);
+ const [separate,setSeparate]=useState(()=>new Set(Object.values(corners)).size>1);
  const update=(patch:Partial<VisualProperties>)=>onChange({...v,...patch});
  const fallback=node.type==="shape"?node.fill:node.type==="frame"&&node.background!=="transparent"?node.background:"#FFFFFF";
  const fill=v.fill??{kind:"solid" as const,color:fallback};
