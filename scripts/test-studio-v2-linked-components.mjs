@@ -64,6 +64,12 @@ const before=doc;doc=applyStudioCommand(doc,{kind:"putComponent",component:{...c
 assert.equal(doc.nodes[extra],undefined);assert.equal(doc.responsiveOverrides.mobile[extra],undefined);
 assert.equal(doc.nodes[b].children[0],bChild);
 assert.equal(before.nodes[b].children.length,2);
+const oldClipboard=copySelection(before,layoutDocument(before),[b]);
+let freshCounter=0;
+const freshPaste=pasteSelection(doc,oldClipboard,"frame-1",()=>"refresh-"+(++freshCounter));
+doc=applyStudioCommand(doc,freshPaste.command);
+assert.equal(doc.nodes[freshPaste.ids[0]].children.length,1,"Stale clipboard reconciles to the latest master");
+assert.equal(doc.nodes[doc.nodes[freshPaste.ids[0]].children[0]].componentSourceId,"ornament");
 assert.deepEqual(parseProjectV2(JSON.parse(JSON.stringify(doc))),doc);
 const legacy={...shape,id:"legacy",parentId:"frame-1",componentRef:{componentId:component.id,variantId:"base"}};
 doc=applyStudioCommand(doc,{kind:"insertNode",parentId:"frame-1",node:legacy});
