@@ -26,7 +26,6 @@ try{
   assert.ok((await page.locator(".editor-phone").boundingBox())?.width>=330);
   assert.equal(await page.locator(".editor-appearance-section").count(),0);
   const cover=page.locator(".editor-inspector");
-  await cover.getByLabel("Имя жениха").count().catch(()=>0);
   const first=cover.locator(".inspector-fields input").first();
   const initial=await first.inputValue();
   await first.fill("Имя Тест");
