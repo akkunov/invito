@@ -22,7 +22,7 @@ const sections:readonly {id:Section;ru:string;ky:string;descRu:string;descKy:str
 ];
 type Props={source:ProjectDocumentV2;contract:PersonalizationContract;name:string;version:number;onClose:()=>void};
 export function SimpleEditor({source,contract,name,version,onClose}:Props){
- const [patch,setPatch]=useState<PersonalizationPatch>({values:{}}),[error,setError]=useState(""),[notice,setNotice]=useState(""),[uiLocale,setUiLocale]=useState<Locale>(source.locale);
+ const [patch,setPatch]=useState<PersonalizationPatch>(()=>({values:{},...(!contract.locales.includes(source.locale)?{locale:contract.locales[0]}:{})})),[error,setError]=useState(""),[notice,setNotice]=useState(""),[uiLocale,setUiLocale]=useState<Locale>(source.locale);
  const available=sections.filter(s=>contract.fields.some(f=>f.section===s.id));
  const [section,setSection]=useState<Section>(available[0]?.id??"main"),[device,setDevice]=useState<Device>("mobile"),[mode,setMode]=useState<"edit"|"preview">("edit");
  const [previewRun,setPreviewRun]=useState(0),[review,setReview]=useState(false);
@@ -58,7 +58,7 @@ export function SimpleEditor({source,contract,name,version,onClose}:Props){
      {error&&<p role="alert" className="se-error">{error}</p>}
      {notice&&<p role="status" className="se-notice">{notice}</p>}
      {review&&issues.length>0&&<div className="se-review">{issues.map((issue,i)=><button key={i} className="se-text-button" onClick={()=>{const field=contract.fields.find(f=>f.id===issue.fieldId);if(field){choose(field.section);setReview(true);}}}>{contract.fields.find(f=>f.id===issue.fieldId)?.label[uiLocale]??issue.fieldId}: {issue.message}</button>)}</div>}
-     <div className="se-form-footer"><button className="se-secondary" disabled={!dirty} onClick={()=>{if(window.confirm(t("Сбросить изменения?","Өзгөртүүлөр кайтарылсынбы?")))update({values:{}});}}><StudioIcon name="undo"/> {t("Сбросить","Кайтаруу")}</button>{index>=0&&index<available.length-1?<button className="se-primary" onClick={()=>choose(available[index+1].id)}>{t("Далее","Кийинки")}<StudioIcon name="chevron"/></button>:<button className="se-primary" onClick={check}>{t("Проверить","Текшерүү")}<StudioIcon name="check"/></button>}</div>
+     <div className="se-form-footer"><button className="se-secondary" disabled={!dirty} onClick={()=>{if(window.confirm(t("Сбросить изменения?","Өзгөртүүлөр кайтарылсынбы?")))update({values:{},...(!contract.locales.includes(source.locale)?{locale:contract.locales[0]}:{})});}}><StudioIcon name="undo"/> {t("Сбросить","Кайтаруу")}</button>{index>=0&&index<available.length-1?<button className="se-primary" onClick={()=>choose(available[index+1].id)}>{t("Далее","Кийинки")}<StudioIcon name="chevron"/></button>:<button className="se-primary" onClick={check}>{t("Проверить","Текшерүү")}<StudioIcon name="check"/></button>}</div>
      <p className="se-local-note">{t("Изменения существуют только в этой тестовой сессии. Исходный шаблон не изменяется.","Өзгөртүүлөр ушул сыноо сессиясында гана болот. Баштапкы шаблон өзгөрбөйт.")}</p>
     </div>
    </section>
