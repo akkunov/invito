@@ -54,7 +54,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
         justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
         whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
       }}>
-        <TextContent node={node} onMeasure={options.onMeasure}/>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} onMeasure={options.onMeasure}/></div>
         {options.editingId===id&&options.renderEditor?.(node)}
       </div>;
     case "image": {
