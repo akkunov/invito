@@ -91,6 +91,7 @@ export function snapMove(doc:ProjectDocumentV2,ids:readonly string[],delta:Point
   for(const x of [b.x,b.x+b.width/2,b.x+b.width])for(const own of xs){const d=x-own;if(Math.abs(d)<bestX){bestX=Math.abs(d);dx=d;guideX=x;}}
   for(const y of [b.y,b.y+b.height/2,b.y+b.height])for(const own of ys){const d=y-own;if(Math.abs(d)<bestY){bestY=Math.abs(d);dy=d;guideY=y;}}
  }
+ for(const guide of doc.guides??[]){if(guide.axis==="x"){for(const own of xs){const d=guide.position-own;if(Math.abs(d)<bestX){bestX=Math.abs(d);dx=d;guideX=guide.position;}}}else{for(const own of ys){const d=guide.position-own;if(Math.abs(d)<bestY){bestY=Math.abs(d);dy=d;guideY=guide.position;}}}}
  return {delta:{x:delta.x+dx,y:delta.y+dy},guideX,guideY};
 }
 export function groupSelection(doc:ProjectDocumentV2,ids:readonly string[],groupId:string):StudioCommand[]{
