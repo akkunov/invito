@@ -18,7 +18,8 @@
     "test:studio-v2-core": "node --experimental-strip-types scripts/test-studio-v2-core.mjs",
     "test:studio-v2-commands": "node --experimental-strip-types scripts/test-studio-v2-commands.mjs",
     "test:studio-v2-viewport": "node --experimental-strip-types scripts/test-studio-v2-viewport.mjs",
-    "test:studio-v2-ui": "node scripts/test-studio-v2-ui.mjs"
+    "test:studio-v2-ui": "node scripts/test-studio-v2-ui.mjs",
+    "test:studio-v2-selection": "node --experimental-strip-types scripts/test-studio-v2-selection.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

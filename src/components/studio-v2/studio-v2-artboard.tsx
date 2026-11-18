@@ -15,7 +15,7 @@ function nodeStyle(node: ProjectNodeV2): CSSProperties {
     opacity: node.opacity,
     transform: node.rotation ? `rotate(${node.rotation}deg)` : undefined,
     transformOrigin: "center",
-    pointerEvents: "none",
+    pointerEvents: node.locked ? "none" : "auto",
   };
   return base;
 }
@@ -25,13 +25,13 @@ function renderNode(document: ProjectDocumentV2, id: string): React.ReactNode {
   const style = nodeStyle(node);
   switch (node.type) {
     case "frame":
-      return <div key={id} style={{
+      return <div key={id} data-studio-node={id} style={{
         ...style,
         background: node.background,
         overflow: node.clip ? "hidden" : "visible",
       }}>{node.children.map(child => renderNode(document, child))}</div>;
     case "text":
-      return <div key={id} style={{
+      return <div key={id} data-studio-node={id} style={{
         ...style, textAlign: node.textAlign,
         display: "flex", alignItems: "center",
         justifyContent: node.textAlign === "left" ? "flex-start" : node.textAlign === "right" ? "flex-end" : "center",
@@ -46,14 +46,14 @@ function renderNode(document: ProjectDocumentV2, id: string): React.ReactNode {
       const asset = document.assets[node.assetId];
       if (!asset || !asset.storageKey.startsWith("/images/")) return null;
       const path = `${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${asset.storageKey}`;
-      return <div key={id} style={{ ...style, overflow: "hidden" }}>
+      return <div key={id} data-studio-node={id} style={{ ...style, overflow: "hidden" }}>
         <Image unoptimized draggable={false} src={path} alt={asset.name}
           fill sizes="(max-width: 900px) 300px, 500px"
           style={{ objectFit: node.fit, objectPosition: `${node.focalX * 100}% ${node.focalY * 100}%` }}/>
       </div>;
     }
     case "shape":
-      return <div key={id} style={{
+      return <div key={id} data-studio-node={id} style={{
         ...style, background: node.fill,
         border: node.stroke ? `${node.strokeWidth}px solid ${node.stroke}` : undefined,
         borderRadius: node.shape === "circle" || node.shape === "ellipse" ? "50%" : 0,
