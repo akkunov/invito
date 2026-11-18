@@ -1,5 +1,6 @@
 "use client";
 
+import {ChevronDown} from "lucide-react";
 import {MusicUploader} from "@/components/editor/music-uploader";
 import {BirthdayPhotoUploader} from "@/components/editor/birthday-photo-uploader";
 import {BirthdayGalleryUploader} from "@/components/editor/birthday-gallery-uploader";
@@ -125,10 +126,12 @@ export function EditorInspector({locale, editor, selected}: {
             {selected === "rsvp" && <p className="inspector-help">{dict.invitation.rsvpNote}</p>}
             {selected === "cover" &&
                 <p className="inspector-help">{locale === "ru" ? "Фотографию пары можно заменить, сохраняя оформление." : "Каптал оймо-чиймелер шаблонго бекитилген жана мукаба өзгөргөндө сакталат."}</p>}
-            <div className="inspector-design"><label>{dict.editor.accent}<span className="accent-input"><input
-                type="color" value={editor.document.accent}
-                onChange={(event) => editor.updateAccent(event.target.value)}/><code>{editor.document.accent}</code></span></label>
-            </div>
+            <details className="inspector-appearance-section">
+                <summary><span>{locale==="ru"?"Оформление":"Жасалгалоо"}</span><ChevronDown size={16}/></summary>
+                <div className="inspector-design"><label>{dict.editor.accent}<span className="accent-input"><input
+                    type="color" value={editor.document.accent} aria-label={dict.editor.accent}
+                    onChange={(event) => editor.updateAccent(event.target.value)}/><code>{editor.document.accent}</code></span></label></div>
+            </details>
             <p className="inspector-footer">{dict.editor.autosave}</p>
         </aside>
     );
