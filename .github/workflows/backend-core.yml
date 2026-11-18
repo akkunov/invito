@@ -1,0 +1,78 @@
+name: INVITO Backend Core
+on:
+  push:
+    branches: [main, feat/29-2-backend-core]
+    paths:
+      - 'tsconfig.json'
+      - 'server/**'
+      - '.github/workflows/backend-core.yml'
+  pull_request:
+    paths:
+      - 'tsconfig.json'
+      - 'server/**'
+      - '.github/workflows/backend-core.yml'
+
+concurrency:
+  group: backend-core-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: invito_ci
+          POSTGRES_USER: invito
+          POSTGRES_PASSWORD: invito_ci_only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U invito -d invito_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=15
+    env:
+      DATABASE_URL: postgresql://invito:invito_ci_only@127.0.0.1:5432/invito_ci?schema=public
+      DIRECT_DATABASE_URL: postgresql://invito:invito_ci_only@127.0.0.1:5432/invito_ci?schema=public
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install isolated API dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Prisma schema validation
+        run: npm exec prisma validate -- --config prisma.config.ts
+      - name: Compile API and generated Prisma Client
+        run: npm run build
+      - name: Apply migrations to disposable PostgreSQL
+        run: npm run db:migrate:deploy
+      - name: E2E integration tests (real PostgreSQL)
+        run: npm test
+ 
+  frontend-contract:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+          cache: npm
+      - name: Install frontend independently
+        run: npm ci --no-audit --no-fund
+      - name: Verify root frontend TypeScript
+        run: npm run typecheck
+      - name: Verify existing backend-domain contracts
+        run: npm run test:backend-contract

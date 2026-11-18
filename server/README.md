@@ -1,33 +1,64 @@
-# INVITO server — #29.1 persistence contract
+# INVITO API — #29.2 Backend Core
 
-This directory is a **schema and domain-contract layer**, not an already-running NestJS API. It contains the Prisma 7/PostgreSQL data model, a CLI migration configuration, environment variable names and pure server-side validators. No production database is touched. All existing browser-local user projects are preserved.
+NestJS 12 + Prisma 7.10.1 + PostgreSQL. Source lives in the **same repo** as the Next.js frontend, but installs/builds independently in `server/`.
 
-## Current validation
+## Prerequisites
 
-From the repository root (Node.js 22.18+):
+- Node.js >= 22.18, npm, Docker (or a disposable PostgreSQL 17 database)
+- A trustworthy OIDC provider that issues **RS256 signed JWT access tokens** with `iss`, `aud`, `sub`, `iat` and `exp`. Opaque OAuth tokens are not supported by this API.
+- A separate DB and identity provider for development, preview, and production.
+
+## Local setup
 
 ```bash
+cd server
+docker compose up -d postgres
+cp .env.example .env
 npm ci
-npm run test:backend-contract
-npx --yes prisma@7.10.1 validate --schema server/prisma/schema.prisma
-npm run typecheck
+npm run prisma:generate
+npm run db:migrate:deploy
+npm run start:dev
 ```
 
-The Prisma CLI runs in **schema-only validation** mode here, with no actual database connection. Do not run `prisma migrate dev` against a shared or production database.
+On Windows PowerShell use `Copy-Item .env.example .env`. The example secrets are **only** for the local Docker database; never expose it externally.
 
-## Prisma setup for #29.2
+```text
+GET http://localhost:4000/api/v1/health          (public liveness)
+GET http://localhost:4000/api/v1/health/ready    (PostgreSQL readiness)
+GET http://localhost:4000/api/v1/me              (Bearer JWT)
+GET http://localhost:4000/api/v1/me/workspaces
+POST http://localhost:4000/api/v1/workspaces
+GET http://localhost:4000/api/v1/workspaces/:workspaceId
+PATCH http://localhost:4000/api/v1/workspaces/:workspaceId
+```
 
-Implement the server as a separate NestJS 12 ESM service using Prisma ORM 7.10.1, `@prisma/adapter-pg`, `pg` and TypeScript 5.9+ with its **own checked-in package-lock.json**. Keep server dependencies separate from the Next.js UI package. For CLI migration commands use `server/prisma.config.ts`, provide a **real** `DIRECT_DATABASE_URL`, and review migration SQL before `migrate deploy`. Runtime queries use `DATABASE_URL`. Never commit either environment variable's actual value.
+`POST /workspaces` accepts `{"slug":"my-studio","name":"My Studio"}`. `PATCH /workspaces/:id` accepts only `{"name":"Updated"}` and requires ADMIN or OWNER.
 
-The generated Prisma client is output to `server/src/generated/prisma` and deliberately ignored by git. The first executable server PR will add dependency lockfile, `prisma generate`, Nest modules, dedicated migrations and PostgreSQL end-to-end CI, not mock network endpoints.
+## Authorization security
 
-## Contract recap
+- Only JWTs verified against `AUTH_JWKS_URL` with the configured `AUTH_ISSUER` and `AUTH_AUDIENCE`, `RS256`, and a maximum token age of 15 minutes are accepted.
+- Valid identity is persisted in `AuthIdentity(provider, subject)`. Unverified email is *not* used for account linking, and accounts with DISABLED status get 403.
+- `WorkspaceMember` is queried on every protected workspace operation; client-supplied roles and identity fields are ignored.
+- Nonmembers get 404 (tenant existence not disclosed). Authenticated VIEWERs receive 403 for ADMIN actions.
+- Missing OIDC configuration makes private routes return 503 rather than granting access. No local bypass or hard-coded admin credentials.
+- CORS accepts only `FRONTEND_ORIGINS`; tokens are sent in Authorization headers, not cookies. Do not put OAuth secrets in `NEXT_PUBLIC_*`.
 
-- Members/roles are looked up from authenticated workspace membership.
-- Project and template JSON snapshots are parsed using existing Studio v2 Zod validators. The renderer and customer personalization contract are not duplicated.
-- `expectedRevision` / `expectedVersion` / `expectedRelease` provide optimistic concurrency; revisions/releases are append-only.
-- Public invite links select an **ACTIVE** publication and its **committed release**, never the editor working copy.
-- Browser `local:` assets cannot be saved to the backend. Uploaded media must be verified and mapped to `asset:<UUID>`; bundled assets require a known-static-resource allowlist.
-- No auth tokens, payment credentials, raw image data or public RSVP writes exist in this module.
+## Prisma and migrations
 
-Read [ADR-029-01](../docs/backend/ADR-029-01-PERSISTENCE.md) for endpoints, transaction rules, privacy and the implementation sequence.
+- Runtime connection: `DATABASE_URL` through `@prisma/adapter-pg`.
+- CLI migrations: `DIRECT_DATABASE_URL` (no pooler) via `prisma.config.ts`.
+- SQL migrations are checked into `prisma/migrations`; **never run `migrate dev` against staging/production**.
+- Review migration SQL and run `npm run db:migrate:deploy` on a disposable database first.
+- Production migrations belong in a controlled CI/CD release step, **not** a Vercel request handler or build hook.
+
+## CI and deployment
+
+`.github/workflows/backend-core.yml` builds the API and tests JWT and workspace isolation on a real PostgreSQL service. Backend has its own checked-in `server/package-lock.json`; CI uses reproducible `npm ci` (the root Next.js lockfile remains independent).
+
+For Vercel create a separate project from `akkunov/invito`, set Root Directory to `server`, Node.js >=22, and configure production credentials. No credentials are committed.
+
+## Deliberate scope limits
+
+This stage implements actual authorization, identity and workspace access, not project/template CRUD, file upload, publication/RSVP or payment APIs. Those remain in #29.3–#29.6. Existing local Studio drafts are untouched; a future sync adapter is required.
+
+See [ADR-029-01](../docs/backend/ADR-029-01-PERSISTENCE.md).
