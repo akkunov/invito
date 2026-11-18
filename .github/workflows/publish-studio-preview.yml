@@ -6,6 +6,10 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/publish-studio-preview.yml"
+      - "src/features/studio-v2/**"
+      - "src/components/studio-v2/**"
+      - "src/app/studio-v2.css"
+      - "src/app/[locale]/admin/studio-v2/**"
   workflow_dispatch:
 
 permissions:
@@ -25,10 +29,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Checkout experimental Studio code (keep main site unchanged)
+      - name: Checkout workflow ref
         uses: actions/checkout@v4
-        with:
-          ref: feat/studio-v2-infinite-canvas-20261117
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -43,6 +45,8 @@ jobs:
           npm run test:studio-v2-commands
           npm run test:studio-v2-viewport
           npm run test:studio-v2-ui
+          npm run test:studio-v2-selection
+          npm run test:studio-v2-layout
           npm run typecheck
       - name: Export only Studio as a static Pages site
         shell: bash
