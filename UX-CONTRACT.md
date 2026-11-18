@@ -38,3 +38,7 @@ The published deployment is paused. The user authorized work without current-sit
 screenshots. Localhost was not reachable from the connected cloud browser. Build,
 static regression and server response evidence do not substitute for desktop/mobile,
 modal keyboard, reduced-motion and visual comparison in a real browser.
+
+## Studio v2 invitation blocks
+
+The canonical guest form and widget renderer is InvitationBlockView, with RSVP validation and guest-mode isolation in invitation-behavior.ts. Native inputs/selects use platform semantics; date settings use typed ISO instants with explicit time zones. Preview validates locally and does not send or persist guest responses. Live requires an injected transport, not a simulated success state. See [ADR-009](docs/studio-v2/INVITATION-BEHAVIOR.md). Browser interaction and accessibility verification remain required.
