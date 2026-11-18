@@ -25,7 +25,8 @@
     "test:studio-v2-assets": "node --experimental-strip-types scripts/test-studio-v2-assets.mjs",
     "test:studio-v2-responsive": "node --experimental-strip-types scripts/test-studio-v2-responsive.mjs",
     "test:studio-v2-invitation": "node --experimental-strip-types scripts/test-studio-v2-invitation.mjs",
-    "test:studio-v2-canvas-pro": "node --experimental-strip-types scripts/test-studio-v2-canvas-pro.mjs"
+    "test:studio-v2-canvas-pro": "node --experimental-strip-types scripts/test-studio-v2-canvas-pro.mjs",
+    "test:studio-v2-appearance": "node --experimental-strip-types scripts/test-studio-v2-appearance.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
