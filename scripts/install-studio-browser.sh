@@ -3,4 +3,5 @@ set -euo pipefail
 prefix="${RUNNER_TEMP:?}/invito-browser"
 npm install --prefix "$prefix" --no-save --package-lock=false --ignore-scripts playwright@1.56.1
 "$prefix/node_modules/.bin/playwright" install --with-deps chromium
+sudo apt-get install -y poppler-utils
 echo "STUDIO_BROWSER_PREFIX=$prefix" >> "$GITHUB_ENV"
