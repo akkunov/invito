@@ -4,10 +4,10 @@ import {templateRecordSchema,type TemplateRecord} from "../core/template-registr
 import type {Asset} from "../core/component-engine.ts";
 const DB="invito-studio-v2-local";
 function database():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{
- const req=indexedDB.open(DB,2);req.onupgradeneeded=()=>{for(const name of ["media","projects","templates"])if(!req.result.objectStoreNames.contains(name))req.result.createObjectStore(name);};
+ const req=indexedDB.open(DB,3);req.onupgradeneeded=()=>{for(const name of ["media","projects","templates","projectRecovery"])if(!req.result.objectStoreNames.contains(name))req.result.createObjectStore(name);};
  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(Error("Local storage blocked"));
 });}
-async function request<T>(store:"media"|"projects"|"templates",mode:IDBTransactionMode,action:(s:IDBObjectStore)=>IDBRequest<T>):Promise<T>{
+async function request<T>(store:"media"|"projects"|"templates"|"projectRecovery",mode:IDBTransactionMode,action:(s:IDBObjectStore)=>IDBRequest<T>):Promise<T>{
  const db=await database();
  try{return await new Promise<T>((resolve,reject)=>{
   const tx=db.transaction(store,mode),req=action(tx.objectStore(store));
@@ -16,7 +16,46 @@ async function request<T>(store:"media"|"projects"|"templates",mode:IDBTransacti
 }
 export async function storeMedia(key:string,blob:Blob){await request("media","readwrite",s=>s.put(blob,key));}
 export async function readMedia(key:string):Promise<Blob|null>{return (await request("media","readonly",s=>s.get(key)))??null;}
-export async function saveLocalProject(doc:ProjectDocumentV2){await request("projects","readwrite",s=>s.put(parseProjectV2(doc),doc.id));}
+type RecoveryRecord={document:ProjectDocumentV2;savedAt:number};
+export type LocalProjectLoad={kind:"ready";document:ProjectDocumentV2}|{kind:"missing"}|{kind:"recoverable";document:ProjectDocumentV2;savedAt:number};
+let projectWriteQueue:Promise<unknown>=Promise.resolve();
+function serializeProjectWrite<T>(write:()=>Promise<T>):Promise<T>{const next=projectWriteQueue.then(write);projectWriteQueue=next.catch(()=>undefined);return next;}
+function validProject(value:unknown,id:string):ProjectDocumentV2|null{try{const doc=parseProjectV2(value);return doc.id===id?doc:null;}catch{return null;}}
+export async function saveLocalProject(doc:ProjectDocumentV2,{allowRecovery=false}:{allowRecovery?:boolean}={}):Promise<void>{
+ const parsed=parseProjectV2(doc);
+ return serializeProjectWrite(async()=>{
+  const db=await database();
+  try{await new Promise<void>((resolve,reject)=>{
+   const tx=db.transaction(["projects","projectRecovery"],"readwrite"),projects=tx.objectStore("projects"),backup=tx.objectStore("projectRecovery");
+   let conflict:Error|undefined;
+   tx.oncomplete=()=>resolve();tx.onerror=()=>reject(conflict??tx.error??Error("Project save failed"));tx.onabort=()=>reject(conflict??tx.error??Error("Project save cancelled"));
+   const req=projects.get(parsed.id);
+   req.onsuccess=()=>{
+    const previous=validProject(req.result,parsed.id);
+    if(req.result!==undefined&&!previous&&!allowRecovery){conflict=Error("Project requires recovery");tx.abort();return;}
+    if(previous&&JSON.stringify(previous)===JSON.stringify(parsed))return;
+    if(previous&&allowRecovery){conflict=Error("Project changed in another tab; reload before restoring");tx.abort();return;}
+    if(previous)backup.put({document:previous,savedAt:Date.now()} satisfies RecoveryRecord,parsed.id);
+    projects.put(parsed,parsed.id);
+   };
+  });}finally{db.close();}
+ });
+}
+export async function loadLocalProjectWithRecovery(id:string):Promise<LocalProjectLoad>{
+ const db=await database();
+ try{return await new Promise<LocalProjectLoad>((resolve,reject)=>{
+  const tx=db.transaction(["projects","projectRecovery"],"readonly"),current=tx.objectStore("projects").get(id),backup=tx.objectStore("projectRecovery").get(id);
+  tx.oncomplete=()=>{
+   const primary=validProject(current.result,id);if(primary){resolve({kind:"ready",document:primary});return;}
+   const record=backup.result as Partial<RecoveryRecord>|undefined,previous=validProject(record?.document,id);
+   if(previous&&typeof record?.savedAt==="number"&&Number.isFinite(record.savedAt)){resolve({kind:"recoverable",document:previous,savedAt:record.savedAt});return;}
+   if(current.result===undefined&&backup.result===undefined){resolve({kind:"missing"});return;}
+   reject(Error("No valid local project or backup"));
+  };
+  tx.onerror=()=>reject(tx.error??Error("Project load failed"));tx.onabort=()=>reject(tx.error??Error("Project load cancelled"));
+ });}finally{db.close();}
+}
+
 export async function loadLocalProject(id:string):Promise<ProjectDocumentV2|null>{const value=await request("projects","readonly",s=>s.get(id));return value?parseProjectV2(value):null;}
 export function sanitizeSvg(source:string):string{
  validateSvgSource(source);
