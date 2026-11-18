@@ -1,5 +1,7 @@
 "use client";
 import Image from "next/image";
+import {motionTracks} from "@/features/studio-v2/core/motion-engine.ts";
+import {useStudioMotion,type MotionPlayback} from "./use-studio-motion";
 import {appearanceCss,maskCss,contentTransform} from "@/features/studio-v2/core/appearance.ts";
 import {InvitationBlockView} from "./studio-v2-invitation-block";
 import type {GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
@@ -27,7 +29,7 @@ function TextContent({node,onMeasure}:{node:TextNode;onMeasure?:(id:string,heigh
  },[node.id,node.autoHeight,onMeasure]);
  return <div ref={ref} style={{width:"100%",whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node}/></div>;
 }
-export type ArtboardTextOptions={guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
+export type ArtboardTextOptions={motionPlayback?:MotionPlayback;guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
   const base: CSSProperties = {
     position: "absolute",
@@ -84,8 +86,11 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
 }
 export function StudioV2Artboard({ document, rootNodeId, ...options }: { document: ProjectDocumentV2; rootNodeId: string } & ArtboardTextOptions) {
   const root = document.nodes[rootNodeId];
+  const motionRef=useRef<HTMLDivElement>(null);
+  const pageId=document.pages.find(p=>p.rootNodeId===rootNodeId)?.id;
+  useStudioMotion(motionRef,options.motionPlayback&&pageId?motionTracks(document,pageId):[],options.motionPlayback);
   if (!root || root.type !== "frame") return null;
-  return <div className="studio-v2-artboard-content" style={{
+  return <div ref={motionRef} data-motion-root={rootNodeId} className="studio-v2-artboard-content" style={{
     width: root.width, height: root.height, position: "relative", ...appearanceCss(root),
     overflow: root.clip || (root.visual?.corners && Object.values(root.visual.corners).some(r=>r>0)) ? "hidden" : "visible",
   }}>
