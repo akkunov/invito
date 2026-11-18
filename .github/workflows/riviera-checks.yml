@@ -39,6 +39,7 @@ jobs:
       - run: npm run test:studio-v2-responsive-pro
       - run: npm run test:studio-v2-color-math
       - run: npm run test:studio-v2-template-registry
+      - run: npm run test:studio-v2-template-output
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build

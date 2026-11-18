@@ -46,3 +46,12 @@ export function filterTemplates(records:readonly TemplateRecord[],query:string,c
  return records.filter(t=>(!category||t.meta.category===category)&&(!status||t.meta.status===status)&&(!q||[t.meta.name,t.meta.description,...t.meta.tags].join(" ").toLocaleLowerCase().includes(q))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||a.id.localeCompare(b.id));
 }
 export function updateTemplateMeta(record:TemplateRecord,meta:TemplateMeta,now:string){return templateRecordSchema.parse({...record,meta,updatedAt:now});}
+
+/** A theme preset forks the latest snapshot; the original and other variants never change. */
+export function createThemeVariant(record:TemplateRecord,themeId:string|null,id:string,now:string){
+ const doc=structuredClone(templateDocument(record)),theme=themeId?doc.themes?.[themeId]:undefined;
+ if(themeId&&!theme)throw Error("Theme not found");
+ doc.activeThemeId=themeId;
+ const name=(record.meta.name.slice(0,70)+" · "+(theme?.name??"Базовая")).slice(0,100);
+ return createTemplate(id,{...record.meta,name,status:"draft"},doc,now);
+}
