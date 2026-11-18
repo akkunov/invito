@@ -21,10 +21,10 @@ export function EditorSidebar({ locale, editor, selected, onSelect }: { locale: 
   return (
     <aside className="editor-sidebar" aria-label={dict.editor.structure}>
       <h2>{dict.editor.structure}</h2>
-      <p className="editor-sidebar-note">{locale === "ru" ? "Меняйте порядок и видимость секций" : "Бөлүктөрдүн ордун жана көрүнүшүн өзгөртүңүз"}</p>
+      <p className="editor-sidebar-note">{locale === "ru" ? "Выберите раздел, чтобы изменить текст, фото или детали. Порядок и видимость можно настроить рядом." : "Текстти, сүрөттөрдү же маалыматтарды өзгөртүү үчүн бөлүм тандаңыз."}</p>
       <ol className="editor-block-list" ref={listRef}>{editor.document.blocks.map((block, index) => (
         <li key={block.id} className={selected === block.id ? "is-selected" : ""}>
-          <button type="button" className="editor-block-select" onClick={() => onSelect(block.id)} aria-current={selected === block.id ? "true" : undefined}>{dict.editor.blocks[block.id]}</button>
+          <button type="button" className="editor-block-select" onClick={() => onSelect(block.id)} aria-current={selected === block.id ? "true" : undefined}><span className="editor-block-index">{String(index+1).padStart(2,"0")}</span><span className="editor-block-name">{dict.editor.blocks[block.id]}</span></button>
           <div className="editor-block-controls"><button type="button" onClick={() => editor.moveBlock(block.id, -1)} disabled={index === 0} aria-label={`${dict.editor.higher}: ${dict.editor.blocks[block.id]}`}><ArrowUp size={15} /></button><button type="button" onClick={() => editor.moveBlock(block.id, 1)} disabled={index === editor.document.blocks.length - 1} aria-label={`${dict.editor.lower}: ${dict.editor.blocks[block.id]}`}><ArrowDown size={15} /></button><button type="button" onClick={() => editor.toggleBlock(block.id)} aria-label={`${block.enabled ? dict.editor.hide : dict.editor.show}: ${dict.editor.blocks[block.id]}`} aria-pressed={block.enabled}>{block.enabled ? <Eye size={15} /> : <EyeOff size={15} />}</button></div>
         </li>
       ))}</ol>
