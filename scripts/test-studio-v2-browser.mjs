@@ -387,6 +387,21 @@ try{
   await output.getByRole("button",{name:"Создать вариант из темы"}).click();
   await manager.getByRole("button",{name:/Базовая.*v1/}).waitFor();
   assert.equal(await manager.locator(".v2-template-card").count(),4);
+  // Designer explicitly opts into one customer-editable image field.
+  const config=manager.locator(".v2-personalization-config");
+  await config.locator("summary").click();
+  await config.getByRole("checkbox",{name:/Разрешить/}).first().check();
+  await config.getByRole("button",{name:"Сохранить поля клиента"}).click();
+  await manager.getByRole("status").filter({hasText:"Поля клиента сохранены новой версией."}).waitFor();
+  await manager.getByRole("button",{name:/Базовая.*v2/}).waitFor();
+  assert.match(await config.locator("summary").innerText(),/Поля клиента · 1/);
+  const policyPending=page.waitForEvent("download");
+  await manager.getByRole("button",{name:"Экспорт последней версии"}).click();
+  const policyDownload=await policyPending,policyPath=join(artifacts,"template-customer-fields.invito.json");
+  await policyDownload.saveAs(policyPath);
+  const policyPackage=JSON.parse(await fs.readFile(policyPath,"utf8"));
+  assert.equal(policyPackage.personalization.fields.length,1);
+  assert.equal(policyPackage.personalization.fields[0].kind,"image");
   await page.screenshot({path:join(artifacts,"template-manager.png")});
   await manager.getByRole("button",{name:"Открыть выбранную версию в Studio"}).click();
   await manager.waitFor({state:"hidden"});

@@ -1,5 +1,7 @@
 import {z} from "zod";
 import {projectDocumentSchema,parseProjectV2,type ProjectDocumentV2} from "./document.schema.ts";
+import {personalizationSchema,type PersonalizationContract} from "./personalization.schema.ts";
+import {contractIssues} from "./personalization.ts";
 const id=z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,79}$/);
 export const templateCategories=["wedding","kyz-uzatuu","birthday","anniversary","corporate","other"] as const;
 export const templateMetaSchema=z.strictObject({
@@ -10,7 +12,7 @@ export const templateMetaSchema=z.strictObject({
  coverPageId:id,
  status:z.enum(["draft","ready"])
 });
-export const templateVersionSchema=z.strictObject({number:z.number().int().positive(),createdAt:z.string().datetime(),note:z.string().max(300),document:projectDocumentSchema});
+export const templateVersionSchema=z.strictObject({number:z.number().int().positive(),createdAt:z.string().datetime(),note:z.string().max(300),document:projectDocumentSchema,personalization:personalizationSchema.optional()}).superRefine((v,ctx)=>{if(v.personalization)for(const issue of contractIssues(v.document,v.personalization))ctx.addIssue({code:"custom",path:["personalization"],message:issue.fieldId+": "+issue.message});});
 export const templateRecordSchema=z.strictObject({
  id,meta:templateMetaSchema,createdAt:z.string().datetime(),updatedAt:z.string().datetime(),
  versions:z.array(templateVersionSchema).min(1).max(50)
@@ -22,24 +24,26 @@ export type TemplateMeta=z.infer<typeof templateMetaSchema>;
 export type TemplateRecord=z.infer<typeof templateRecordSchema>;
 export type TemplateVersion=z.infer<typeof templateVersionSchema>;
 export function templateDocument(t:TemplateRecord){return t.versions[t.versions.length-1].document;}
+export function templatePersonalization(t:TemplateRecord):PersonalizationContract{return structuredClone(t.versions.at(-1)?.personalization??{version:1,locales:[templateDocument(t).locale],fields:[]});}
 /** Snapshot retains only authored state. A new workspace ID avoids replacing the source project. */
 export function forkTemplateDocument(doc:ProjectDocumentV2,projectId:string):ProjectDocumentV2{
  return parseProjectV2({...structuredClone(doc),id:projectId,revision:0});
 }
-export function createTemplate(id:string,meta:TemplateMeta,document:ProjectDocumentV2,now:string):TemplateRecord{
- return templateRecordSchema.parse({id,meta,createdAt:now,updatedAt:now,versions:[{number:1,createdAt:now,note:"Initial snapshot",document:forkTemplateDocument(document,id)}]});
+export function createTemplate(id:string,meta:TemplateMeta,document:ProjectDocumentV2,now:string,personalization?:PersonalizationContract):TemplateRecord{
+ return templateRecordSchema.parse({id,meta,createdAt:now,updatedAt:now,versions:[{number:1,createdAt:now,note:"Initial snapshot",document:forkTemplateDocument(document,id),...(personalization?{personalization}: {})}]});
 }
-export function appendTemplateVersion(record:TemplateRecord,document:ProjectDocumentV2,note:string,now:string):TemplateRecord{
+export function appendTemplateVersion(record:TemplateRecord,document:ProjectDocumentV2,note:string,now:string,personalization?:PersonalizationContract|null):TemplateRecord{
  const t=templateRecordSchema.parse(record);
  const cover=t.meta.coverPageId;
- return templateRecordSchema.parse({...t,meta:{...t.meta,coverPageId:document.pages.some(p=>p.id===cover)?cover:document.pages[0].id,status:"draft"},updatedAt:now,versions:[...t.versions,{number:t.versions.length+1,createdAt:now,note,document:forkTemplateDocument(document,t.id)}]});
+ const policy=personalization===null?undefined:personalization??t.versions.at(-1)?.personalization;
+ return templateRecordSchema.parse({...t,meta:{...t.meta,coverPageId:document.pages.some(p=>p.id===cover)?cover:document.pages[0].id,status:"draft"},updatedAt:now,versions:[...t.versions,{number:t.versions.length+1,createdAt:now,note,document:forkTemplateDocument(document,t.id),...(policy?{personalization:policy}:{})}]});
 }
 export function restoreTemplateVersion(record:TemplateRecord,number:number,now:string){
  const v=record.versions.find(v=>v.number===number);if(!v)throw Error("Version not found");
- return appendTemplateVersion(record,v.document,"Restore v"+number,now);
+ return appendTemplateVersion(record,v.document,"Restore v"+number,now,v.personalization??null);
 }
 export function duplicateTemplate(record:TemplateRecord,id:string,now:string){
- return createTemplate(id,{...record.meta,name:(record.meta.name.slice(0,90)+" — копия").slice(0,100),status:"draft"},templateDocument(record),now);
+ return createTemplate(id,{...record.meta,name:(record.meta.name.slice(0,90)+" — копия").slice(0,100),status:"draft"},templateDocument(record),now,record.versions.at(-1)?.personalization);
 }
 export function filterTemplates(records:readonly TemplateRecord[],query:string,category:string,status:string){
  const q=query.trim().toLocaleLowerCase();
@@ -53,5 +57,7 @@ export function createThemeVariant(record:TemplateRecord,themeId:string|null,id:
  if(themeId&&!theme)throw Error("Theme not found");
  doc.activeThemeId=themeId;
  const name=(record.meta.name.slice(0,70)+" · "+(theme?.name??"Базовая")).slice(0,100);
- return createTemplate(id,{...record.meta,name,status:"draft"},doc,now);
+ return createTemplate(id,{...record.meta,name,status:"draft"},doc,now,record.versions.at(-1)?.personalization);
 }
+
+export function savePersonalization(record:TemplateRecord,contract:PersonalizationContract,now:string){return appendTemplateVersion(record,templateDocument(record),"Customer fields",now,contract);}
