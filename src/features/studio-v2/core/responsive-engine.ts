@@ -15,8 +15,8 @@ export function responsiveSource(doc:ProjectDocumentV2,device:Device):ProjectDoc
   const n=nodes[id];if(!n)continue;
   const {textStyle,frameLayout,...geometry}=patch;
   let next={...n,...Object.fromEntries(Object.entries(geometry).filter(([,v])=>v!==undefined))} as ProjectNodeV2;
-  if(next.type==="text"&&textStyle){const {fontSize,...paragraph}=textStyle;next={...next,...paragraph,runs:fontSize===undefined?next.runs:next.runs.map(r=>({...r,style:{...r.style,fontSize}}))};}
-  if(next.type==="frame"&&frameLayout){next={...next,...frameLayout};if(next.layout==="free"&&next.sizing)next.sizing={...next.sizing,width:next.sizing.width==="hug"?"fixed":next.sizing.width,height:next.sizing.height==="hug"?"fixed":next.sizing.height};}
+  if(next.type==="text"&&textStyle){const {fontSize,...paragraph}=textStyle;next={...next,...Object.fromEntries(Object.entries(paragraph).filter(([,v])=>v!==undefined)),runs:fontSize===undefined?next.runs:next.runs.map(r=>({...r,style:{...r.style,fontSize}}))};}
+  if(next.type==="frame"&&frameLayout){next={...next,...Object.fromEntries(Object.entries(frameLayout).filter(([,v])=>v!==undefined))};if(next.layout==="free"&&next.sizing)next.sizing={...next.sizing,width:next.sizing.width==="hug"?"fixed":next.sizing.width,height:next.sizing.height==="hug"?"fixed":next.sizing.height};}
   nodes[id]=next;
  }
  return {...doc,nodes};
