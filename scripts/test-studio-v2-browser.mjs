@@ -121,9 +121,9 @@ try{
   await styles.getByRole("button",{name:"+ Создать стиль",exact:true}).click();
   await styles.getByLabel("Значение цвета",{exact:true}).fill("#336699");
   await page.locator(".v2-layer-row").filter({hasText:"Алина & Тимур"}).first().click();
-  await page.getByLabel("Цвет текста",{exact:true}).selectOption({label:"Primary ink"});
+  await page.locator(".v2-style-bindings").getByLabel("Цвет текста",{exact:true}).selectOption({label:"Primary ink"});
   await page.locator(".v2-layer-row").filter({hasText:"14 ИЮНЯ 2027"}).first().click();
-  await page.getByLabel("Цвет текста",{exact:true}).selectOption({label:"Primary ink"});
+  await page.locator(".v2-style-bindings").getByLabel("Цвет текста",{exact:true}).selectOption({label:"Primary ink"});
   const colorOf=(id)=>page.locator('[data-studio-page="page-1"] [data-studio-node="'+id+'"] span').first().evaluate(el=>getComputedStyle(el).color);
   assert.equal(await colorOf("cover-names"),"rgb(51, 102, 153)");
   assert.equal(await colorOf("cover-date"),"rgb(51, 102, 153)");
@@ -140,7 +140,7 @@ try{
   assert.equal(await dialog.locator('[data-studio-node="cover-names"] span').first().evaluate(el=>getComputedStyle(el).color),"rgb(170, 68, 0)");
   await page.screenshot({path:join(artifacts,"style-theme-preview.png")});
   await dialog.getByRole("button",{name:"Закрыть предпросмотр"}).click();
-  await page.getByLabel("Цвет текста",{exact:true}).selectOption({label:"Локальный стиль"});
+  await page.locator(".v2-style-bindings").getByLabel("Цвет текста",{exact:true}).selectOption({label:"Локальный стиль"});
   await styles.getByLabel("Тема проекта",{exact:true}).selectOption({label:"Базовая"});
   assert.equal(await colorOf("cover-date"),"rgb(170, 68, 0)");
   assert.equal(await colorOf("cover-names"),"rgb(51, 102, 153)");
