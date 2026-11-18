@@ -648,7 +648,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </div>
         <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте страницу в списке для изменения порядка; название над холстом — для перемещения.</span></div></>)}}
       </aside>
-      <section className="v2-workspace" aria-label="Бесконечная рабочая область">
+      <section className={`v2-workspace ${inspectorTab==="animation"?"v2-workspace-animation":""} ${canvasPlayback?"v2-workspace-playback":""}`} aria-label="Бесконечная рабочая область">
         <div className="v2-mobile-panel-controls">
           <button aria-label="Открыть страницы" onClick={()=>setLeftOpen(v=>!v)}><Layers3 size={18}/> Страницы</button>
           <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}>Свойства</button>
@@ -780,7 +780,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </section></InspectorGroup>}
         {(authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><InspectorGroup title="Связанные стили" icon="styles"><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></InspectorGroup><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} palette={palette} authoredNode={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)} onUnlink={slot=>proAction(()=>({kind:"bindStyle",id:n.id,slot,tokenId:null}))}/></>;})()}
         {authoredNode?.type==="image"&&<InspectorGroup title="Изображение" icon="image"><ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/></InspectorGroup>}
-        <InspectorGroup title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
+        <InspectorGroup key={authoredNode?.id??"page"} title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
         </InspectorPanel>
         <InspectorPanel active={inspectorTab==="animation"} label="Анимация"><MotionControls document={sourceDocument} node={authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null)} ids={nodeIds} disabled={!!editing||!!session.transaction} onCommand={command=>proAction(()=>command)} onPreview={()=>{setTimelineTime(0);setTimelineOpen(true);setPreviewOpen(true);}}/></InspectorPanel>
         <InspectorPanel active={inspectorTab==="responsive"} label="Адаптив"><section className="v2-inspector-section">
