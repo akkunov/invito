@@ -88,8 +88,9 @@ test("POSTGRES integration: JWT, identity and workspace boundaries", async t => 
 
   const slug = "e2e-" + randomUUID().slice(0, 12);
   const create = await request("/workspaces", tokenA, {method: "POST", body: {slug, name: "CI Workspace"}});
-  assert.equal(create.status, 201, await create.text());
-  const workspace = await create.json() as {id: string; slug: string};
+  const createBody = await create.json() as {id?: string; slug?: string; message?: string};
+  assert.equal(create.status, 201, JSON.stringify(createBody));
+  const workspace = createBody as {id: string; slug: string};
   workspaceId = workspace.id;
 
   const ownerMembership = await prisma.workspaceMember.findUnique({
