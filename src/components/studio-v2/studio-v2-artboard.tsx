@@ -49,7 +49,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
     case "frame":
       return <div key={id} data-studio-node={id} style={{
         ...style,
-        overflow: node.clip || node.visual?.corners ? "hidden" : "visible",
+        overflow: node.clip || (node.visual?.corners && Object.values(node.visual.corners).some(r=>r>0)) ? "hidden" : "visible",
       }}>{node.children.map(child => renderNode(document, child,options))}</div>;
     case "text":
       return <div key={id} data-studio-node={id} style={{
@@ -74,7 +74,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       return <div key={id} data-studio-node={id} style={{...style,overflow:"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls}/></div>;
     case "shape":
       return <div key={id} data-studio-node={id} style={{
-        ...style, transform:`rotate(${node.rotation}deg) ${contentTransform(node)}`,
+        ...style, ...(node.visual?.stroke===undefined&&node.stroke?{border:`${node.strokeWidth}px solid ${node.stroke}`,outline:undefined,outlineOffset:undefined}:{}), transform:`rotate(${node.rotation}deg) ${contentTransform(node)}`,
         clipPath: maskCss(node) ?? (node.shape === "triangle" ? "polygon(50% 0,100% 100%,0 100%)"
           : node.shape === "star" ? "polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"
           : node.shape === "heart" ? "polygon(50% 92%,6% 50%,0 28%,5% 11%,22% 3%,40% 12%,50% 26%,60% 12%,78% 3%,95% 11%,100% 28%,94% 50%)"
@@ -87,7 +87,7 @@ export function StudioV2Artboard({ document, rootNodeId, ...options }: { documen
   if (!root || root.type !== "frame") return null;
   return <div className="studio-v2-artboard-content" style={{
     width: root.width, height: root.height, position: "relative", ...appearanceCss(root),
-    overflow: root.clip || root.visual?.corners ? "hidden" : "visible",
+    overflow: root.clip || (root.visual?.corners && Object.values(root.visual.corners).some(r=>r>0)) ? "hidden" : "visible",
   }}>
     {root.children.map(id => renderNode(document, id, options))}
   </div>;
