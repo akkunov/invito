@@ -18,3 +18,8 @@ Customer personalization should be a focused content editor, not a second design
 
 ## Verification
 Chromium browser regression exercises hover dimensions, panning vs Ctrl+wheel canvas zoom (and native default cancellation), visual customer media choices, RU/KY personalization, navigation, mobile switching and all existing Studio tests.
+
+## Public catalogue editor (the actual /{locale}/editor route)
+The existing gallery/catalog still opens the legacy `InvitationEditor`, not Studio v2's local-only Simple Editor. This branch **updates both** surfaces. The public editor keeps its current `InvitationDocument` state engine, local autosave, undo/redo, editable programme, image/music uploads and block reordering, but changes the chrome to a two-pane layout: compact numbered section navigation plus contextual inspector on the left and a larger scrollable real invitation on the right. On narrow screens a distinct Edit/Preview switch replaces the old long three-panel stack; the preview stays mounted for section synchronization. Global override styles are scoped to `.editor-app-modern` so the public invitation rendering remains unchanged.
+
+The full public route is tested with Next's production server and Chromium **before** the Studio-only static export (which intentionally excludes `src/app/[locale]/editor`). GitHub Pages preview continues to cover Studio, not a published customer editor or RSVP API.
