@@ -6,7 +6,7 @@ export type Alignment="left"|"center"|"right"|"top"|"middle"|"bottom";
 export type Axis="x"|"y";
 type Nodes=ProjectDocumentV2["nodes"];
 type Overrides=NonNullable<ProjectDocumentV2["responsiveOverrides"]>;
-export type CanvasClipboard={projectId:string;roots:string[];nodes:Nodes;overrides:Overrides;centers:Record<string,Point>;angles:Record<string,number>};
+export type CanvasClipboard={projectId:string;roots:string[];nodes:Nodes;overrides:Overrides;centers:Record<string,Point>;angles:Record<string,number>;pageOrigins:Record<string,Point>};
 const angle=(m:ReturnType<typeof worldMatrix>)=>Math.atan2(m[1],m[0])*180/Math.PI;
 const normalizeAngle=(v:number)=>((v%360)+540)%360-180;
 const clampCoord=(v:number)=>Math.max(-1e6,Math.min(1e6,v));
@@ -56,22 +56,25 @@ export function rotateSelection(doc:ProjectDocumentV2,ids:readonly string[],degr
  return chosen.map(id=>{const n=doc.nodes[id],c=centerOf(doc,id),x=c.x-center.x,y=c.y-center.y;return {kind:"updateNode",id,changes:{...position(doc,id,{x:center.x+x*Math.cos(a)-y*Math.sin(a),y:center.y+x*Math.sin(a)+y*Math.cos(a)},n.width,n.height),rotation:normalizeAngle(n.rotation+degrees)}};});
 }
 export function copySelection(source:ProjectDocumentV2,resolved:ProjectDocumentV2,ids:readonly string[]):CanvasClipboard{
- const chosen=normalizeSelection(resolved,ids),nodes:Nodes={},centers:Record<string,Point>={},angles:Record<string,number>={},overrides:Overrides={};
+ const chosen=normalizeSelection(resolved,ids),nodes:Nodes={},centers:Record<string,Point>={},angles:Record<string,number>={},overrides:Overrides={},pageOrigins:Record<string,Point>={};
  if(!chosen.length)throw Error("Nothing selected");
  function visit(id:string){const n=source.nodes[id];nodes[id]=structuredClone(n);if(n.type==="frame")n.children.forEach(visit);}
- for(const id of chosen){visit(id);centers[id]=centerOf(resolved,id);angles[id]=angle(worldMatrix(resolved,id));}
+ for(const id of chosen){visit(id);centers[id]=centerOf(resolved,id);angles[id]=angle(worldMatrix(resolved,id));let root=id;while(resolved.nodes[root].parentId)root=resolved.nodes[root].parentId!;pageOrigins[id]=mapPoint(worldMatrix(resolved,root),{x:0,y:0});}
  for(const device of ["desktop","tablet","mobile"] as const){const map=source.responsiveOverrides?.[device];if(map)overrides[device]=Object.fromEntries(Object.entries(map).filter(([id])=>Object.hasOwn(nodes,id)).map(([id,p])=>[id,structuredClone(p)]));}
- return {projectId:source.id,roots:chosen,nodes,overrides,centers,angles};
+ return {projectId:source.id,roots:chosen,nodes,overrides,centers,angles,pageOrigins};
 }
 export function pasteSelection(doc:ProjectDocumentV2,clip:CanvasClipboard,parentId:string,newId:()=>string,offset:Point={x:24,y:24}):{command:StudioCommand;ids:string[]}{
  const target=doc.nodes[parentId];if(doc.id!==clip.projectId||target?.type!=="frame")throw Error("Paste requires a target frame in the same project");
  if(Object.keys(doc.nodes).length+Object.keys(clip.nodes).length>500)throw Error("Node limit exceeded");
+ let pageRoot=parentId;while(doc.nodes[pageRoot].parentId)pageRoot=doc.nodes[pageRoot].parentId!;
+ const pageOrigin=mapPoint(worldMatrix(doc,pageRoot),{x:0,y:0});
  const ids=Object.fromEntries(Object.keys(clip.nodes).map(id=>[id,newId()]));
+ if(new Set(Object.values(ids)).size!==Object.keys(ids).length)throw Error("Duplicate clipboard IDs");
  const nodes:Nodes={},overrides:Overrides={};
  for(const [id,original] of Object.entries(clip.nodes)){
   const n=structuredClone(original),root=clip.roots.includes(id);n.id=ids[id];n.parentId=root?parentId:ids[n.parentId!];
   if(n.type==="frame")n.children=n.children.map(child=>ids[child]);
-  if(root){const c=localPoint(doc,parentId,{x:clip.centers[id].x+offset.x,y:clip.centers[id].y+offset.y});n.x=clampCoord(c.x-n.width/2);n.y=clampCoord(c.y-n.height/2);n.rotation=normalizeAngle(clip.angles[id]-angle(worldMatrix(doc,parentId)));}
+  if(root){const c=localPoint(doc,parentId,{x:clip.centers[id].x-clip.pageOrigins[id].x+pageOrigin.x+offset.x,y:clip.centers[id].y-clip.pageOrigins[id].y+pageOrigin.y+offset.y});n.x=clampCoord(c.x-n.width/2);n.y=clampCoord(c.y-n.height/2);n.rotation=normalizeAngle(clip.angles[id]-angle(worldMatrix(doc,parentId)));}
   nodes[n.id]=n;
  }
  for(const device of ["desktop","tablet","mobile"] as const){const map=clip.overrides[device];if(map)overrides[device]=Object.fromEntries(Object.entries(map).map(([id,p])=>[ids[id],structuredClone(p)]));}
