@@ -178,3 +178,5 @@
 .v2-text-edit [contenteditable]::selection,.v2-text-edit [contenteditable] *::selection{background:#2549d94d}
 .v2-nudge button[aria-pressed=true]{background:#e8edff;color:var(--v2-blue)}
 .v2-layout-field input[type=color]{height:28px;width:58%;padding:2px;border:1px solid var(--v2-border);background:white;border-radius:5px}
+
+.v2-stage.is-text-editing{touch-action:auto;user-select:text}
