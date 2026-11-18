@@ -15,6 +15,7 @@ export type StudioCommand =
   | { kind: "deleteAsset"; id: string }
   | { kind: "putComponent"; component: NonNullable<ProjectDocumentV2["components"]>[string] }
   | { kind: "deleteComponent"; id: string }
+  | { kind: "setGuides"; guides: NonNullable<ProjectDocumentV2["guides"]> }
   | { kind: "pasteNodes"; parentId: string; nodes: ProjectDocumentV2["nodes"]; roots: string[]; overrides: NonNullable<ProjectDocumentV2["responsiveOverrides"]> }
   | { kind: "insertNode"; parentId: string; node: ProjectNodeV2; index?: number }
   | { kind: "updateNode"; id: string; changes: EditableNodeFields }
@@ -105,6 +106,7 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
     case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
     case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
     case "deleteComponent": { assert(doc.components?.[command.id],"Missing component");delete doc.components![command.id];return; }
+    case "setGuides": { doc.guides=clone(command.guides);return; }
     case "pasteNodes": {
       const parent=getFrame(doc,command.parentId);ensureWritable(doc,parent.id);
       const keys=Object.keys(command.nodes),rootSet=new Set(command.roots);
