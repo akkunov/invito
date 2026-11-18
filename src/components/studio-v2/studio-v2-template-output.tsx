@@ -8,16 +8,19 @@ import {bindDocument} from "@/features/studio-v2/core/invitation-behavior.ts";
 import {printImageWarnings,type PreflightIssue} from "@/features/studio-v2/core/template-preflight.ts";
 import {PRINT_DPI,PRINT_PRESETS,printSize,type PrintDpi} from "@/features/studio-v2/core/print-output.ts";
 import {validateTemplateResources,saveGeneratedCover} from "@/features/studio-v2/browser/template-output";
-import {exportPrintPage,generateCover,downloadOutput} from "./studio-v2-print-renderer";
+import {professionalGeometry} from "@/features/studio-v2/core/professional-print.ts";
+import {exportPrintPage,generateCover,downloadOutput,prepareProfessionalPrint,openVectorPrint} from "./studio-v2-print-renderer";
 type Props={record:TemplateRecord;onVariant:(record:TemplateRecord)=>Promise<void>;onCover:()=>void;onBusy:(busy:boolean)=>void};
 export function TemplateOutput({record,onVariant,onCover,onBusy}:Props){
  const source=templateDocument(record),doc=useMemo(()=>layoutDocument(resolveStyleDocument(bindDocument(source))),[source]);
  const [pageId,setPageId]=useState(record.meta.coverPageId),[width,setWidth]=useState("105"),[preset,setPreset]=useState("a6"),[dpi,setDpi]=useState<PrintDpi>(300),[theme,setTheme]=useState("");
+ const [bleed,setBleed]=useState("0");
  const controller=useRef<AbortController|null>(null);
  const [progress,setProgress]=useState<{done:number;total:number}|null>(null);
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState(""),[issues,setIssues]=useState<PreflightIssue[]|null>(null);
  const page=doc.pages.find(p=>p.id===pageId)??doc.pages[0],root=doc.nodes[page.rootNodeId];
  let size:ReturnType<typeof printSize>|null=null;try{size=printSize(root.width,root.height,Number(width),dpi);}catch{/* inline feedback */}
+ let professional:ReturnType<typeof professionalGeometry>|null=null;try{professional=professionalGeometry(root.width,root.height,Number(width),Number(bleed));}catch{/* inline feedback */}
  const warnings=size?printImageWarnings(source,page.id,Number(width),dpi):[];
  async function run(task:()=>Promise<void>){if(busy)return;setBusy(true);onBusy(true);setMessage("");setError("");setProgress(null);try{await task();}catch(e){if(e instanceof DOMException&&e.name==="AbortError")setMessage("Экспорт отменён.");else setError(e instanceof Error?e.message:"Не удалось подготовить файл.");}finally{controller.current=null;setProgress(null);setBusy(false);onBusy(false);}}
  return <div className="v2-template-output">
@@ -40,6 +43,15 @@ export function TemplateOutput({record,onVariant,onCover,onBusy}:Props){
  {warnings.slice(0,8).map((w,i)=><p key={i} className="v2-print-warning">{w.message}</p>)}
  <div className="v2-print-actions">{(["png","pdf"] as const).map(format=><button key={format} className="v2-inspector-button" disabled={!size} onClick={()=>void run(async()=>{const abort=new AbortController();controller.current=abort;setProgress({done:0,total:1});const blob=await exportPrintPage(source,page.id,Number(width),dpi,format,{signal:abort.signal,onProgress:(done,total)=>setProgress({done,total})});abort.signal.throwIfAborted();downloadOutput(blob,record.meta.name+"-"+page.name,format);setMessage(format.toUpperCase()+" подготовлен.");})}><StudioIcon name="download"/> {format.toUpperCase()}</button>)}</div>
  <p className="v2-placeholder">Статический RGB-экспорт. PDF содержит растровую страницу без CMYK, вылетов и редактируемого текста. Анимации и действия не выполняются.</p>
+ <details className="v2-professional-print" open><summary><StudioIcon name="frame"/><strong>Professional Print</strong></summary>
+ <p className="v2-placeholder">Векторный PDF использует печатный HTML, сохраняет текст и поддерживаемую графику без общей растеризации. Некоторые CSS-эффекты браузер может растрировать.</p>
+ <label className="v2-widget-field">Вылеты внутрь макета (мм)<input aria-label="Вылеты печати" type="number" min={0} max={10} step=".5" value={bleed} onChange={e=>setBleed(e.target.value)}/></label>
+ {professional?<div className="v2-print-size">Макет: {professional.widthMm.toFixed(2)} × {professional.heightMm.toFixed(2)} мм<br/>После обрезки: {professional.trimWidthMm.toFixed(2)} × {professional.trimHeightMm.toFixed(2)} мм</div>:<p className="v2-inspector-error">Недопустимый размер обрезки.</p>}
+ <p className="v2-placeholder">Ширина выше — размер всего макета. Вылеты отнимаются с каждой стороны. Не увеличиваем фон автоматически: оставьте безопасное поле для текста и важных деталей.</p>
+ <button className="v2-inspector-button" disabled={!professional} onClick={()=>void run(async()=>{const print=await prepareProfessionalPrint(source,page.id,Number(width),0,record.meta.name+"-"+page.name);await openVectorPrint(print);setMessage("В диалоге печати выберите «Сохранить как PDF», без полей и колонтитулов.");})}><StudioIcon name="download"/> Векторный PDF (печать)</button>
+ <button className="v2-inspector-button" disabled={!professional} onClick={()=>void run(async()=>{const print=await prepareProfessionalPrint(source,page.id,Number(width),Number(bleed),record.meta.name+"-"+page.name);downloadOutput(new Blob([JSON.stringify(print)],{type:"application/json"}),record.meta.name+"-"+page.name,"invito-print.json");setMessage("Печатный пакет подготовлен.");})}><StudioIcon name="download"/> Пакет для CMYK / PDF/X-4</button>
+ <p className="v2-placeholder">Конвертация CMYK и PDF/X-4 — локальной утилитой с ICC-профилем принтера. Вылеты записываются в PDF/X-4 при конвертации, не в браузерном PDF. Для PDF/X-4 обязателен независимый preflight. Автоматического преобразования на GitHub Pages нет.</p>
+ </details>
  <h3>Варианты оформления</h3>
  <label className="v2-widget-field">Тема<select aria-label="Тема нового варианта" value={theme} onChange={e=>setTheme(e.target.value)}><option value="">Базовая</option>{Object.values(source.themes??{}).map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
  <button className="v2-inspector-button" onClick={()=>void run(async()=>{await onVariant(createThemeVariant(record,theme||null,"template-"+crypto.randomUUID(),new Date().toISOString()));setMessage("Вариант создан.");})}><StudioIcon name="copy"/> Создать вариант из темы</button>
