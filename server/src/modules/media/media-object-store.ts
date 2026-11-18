@@ -91,7 +91,7 @@ export class MediaObjectStore {
         Bucket: bucket, Key: key,
         ResponseContentType: mimeType,
         ResponseContentDisposition: "inline",
-      }), {expiresIn: 60});
+      }), {expiresIn: mimeType === "audio/mpeg" ? 1200 : 60});
   }
 
   async removeStaged(key: string) {

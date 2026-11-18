@@ -76,7 +76,7 @@ Set `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and
 1. `POST /api/v1/workspaces/:workspaceId/media/uploads`: editor sends `{name,mimeType,bytes,sha256}`; receives 180-second signed PUT URL and exact Content-Type header. Nothing is READY yet.
 2. Browser sends the **raw Blob** by PUT to the signed R2 URL, without JWT or any other API credentials.
 3. `POST /api/v1/workspaces/:workspaceId/media/:assetId/complete`: server reads private R2 staging bytes with a hard upper bound, recomputes SHA-256 and MIME, decodes raster / parses MP3, copies verified bytes to a server-only immutable key, commits READY metadata in PostgreSQL.
-4. `GET /api/v1/workspaces/:workspaceId/media/:assetId/read-url`: authorized workspace viewer receives a 60-second private GET URL. `GET /api/v1/workspaces/:workspaceId/media` lists only READY metadata, never actual R2 object keys.
+4. `GET /api/v1/workspaces/:workspaceId/media/:assetId/read-url`: authorized workspace viewer receives a 60-second private image GET URL (20 minutes for MP3 playback). `GET /api/v1/workspaces/:workspaceId/media` lists only READY metadata, never actual R2 object keys.
 
 Raster: PNG/JPEG/WebP up to 20 MiB, max side 4096px and max decoded pixels 32 MP. MP3: up to 15 MiB, max duration 15 minutes, valid MPEG audio. SVG and arbitrary codecs are rejected by the **server**, even if the browser supports local SVG rasterization.
 

@@ -15,7 +15,7 @@ A browser can replay a presigned PUT until its expiry, so publishing from the st
 | POST | /workspaces/:workspaceId/media/uploads | EDITOR | reserve pending row, return 180s presigned PUT |
 | POST | /workspaces/:workspaceId/media/:assetId/complete | EDITOR and original uploader | verify staged bytes and commit READY |
 | GET | /workspaces/:workspaceId/media | VIEWER | paginated READY metadata only |
-| GET | /workspaces/:workspaceId/media/:assetId/read-url | VIEWER | 60s signed private GET URL |
+| GET | /workspaces/:workspaceId/media/:assetId/read-url | VIEWER | 60s signed private image GET URL or 20-minute MP3 playback GET URL |
 
 All endpoints run behind the signed OIDC JWT guard and look up membership in PostgreSQL. A resource outside the workspace returns 404; insufficient member role returns 403. Pending uploads cannot be read. Raw S3 keys and secret tokens are never returned to the UI.
 
@@ -77,7 +77,7 @@ A user with a configured real OIDC session opts into Cloud from Studio v2. On cl
 3. swaps `local:...` to `asset:UUID` **only in the cloned remote snapshot**;
 4. creates or revises the server project using #29.3 compare-and-swap. On 409, preserves the local copy and offers explicit conflict choices.
 
-When opening an already-cloud-stored project, the editor resolves image `asset:UUID` through a 60-second signed read URL refreshed approximately every 45 seconds. The raw private R2 keys are never embedded into published or local snapshots.
+When opening an already-cloud-stored project, the editor resolves image `asset:UUID` through a 60-second signed read URL refreshed approximately every 45 seconds; MP3 receives a 20-minute signed URL for uninterrupted playback. The raw private R2 keys are never embedded into published or local snapshots.
 
 MP3 upload is integrated with the Studio v2 music widget when a real OIDC workspace session is configured. The music widget's `block.source` accepts `asset:UUID` (separate from the image-only `ProjectDocumentV2.assets`). The backend rejects audio refs belonging to another tenant or referencing non-MP3 media. The editor resolves the private short-lived read URL for playback; signed URL refresh does not interrupt currently playing audio. Guest publication and permanent publicly playable audio belong to #29.5.
 

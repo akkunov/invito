@@ -161,6 +161,6 @@ export class MediaService {
     });
     if (!asset) throw new NotFoundException("MEDIA_NOT_FOUND");
     const url = await this.store.signRead(asset.storageKey, asset.mimeType);
-    return {url, expiresInSeconds: 60, mimeType: asset.mimeType};
+    return {url, expiresInSeconds: asset.mimeType === "audio/mpeg" ? 1200 : 60, mimeType: asset.mimeType};
   }
 }

@@ -52,7 +52,12 @@ function Music({source,locale,guest}:{source:string;locale:ProjectDocumentV2["lo
  useEffect(()=>()=>{ref.current?.pause();ref.current=null;},[]);
  async function toggle(){
   if(guest.mode==="studio"||!source)return;
-  if(!ref.current){const url=source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+source:source;const audio=new Audio(url);audio.loop=true;ref.current=audio;}
+  const url=source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+source:source;
+  // Never change a playing stream; on resume use a newer signed URL if available.
+  if(ref.current?.paused&&ref.current.src!==new URL(url,window.location.href).href){
+   ref.current.pause();ref.current=null;
+  }
+  if(!ref.current){const audio=new Audio(url);audio.loop=true;ref.current=audio;}
   const audio=ref.current;
   if(!audio.paused){audio.pause();setPlaying(false);return;}
   try{setError(false);await audio.play();setPlaying(true);}catch{setError(true);setPlaying(false);}

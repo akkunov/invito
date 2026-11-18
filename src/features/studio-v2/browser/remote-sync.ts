@@ -147,7 +147,7 @@ export function createStudioRemoteClient(settings: RemoteSyncSettings) {
         "/workspaces/" + workspaceId + "/media/" + encodeURIComponent(assetId) + "/read-url");
       const url = new URL(result.url);
       if (url.protocol !== "https:" || !url.hostname.endsWith(".r2.cloudflarestorage.com") ||
-          result.expiresInSeconds > 60 || result.expiresInSeconds < 1) {
+          result.expiresInSeconds > (result.mimeType === "audio/mpeg" ? 1200 : 60) || result.expiresInSeconds < 1) {
         throw new Error("UNTRUSTED_MEDIA_READ_URL");
       }
       return result;
