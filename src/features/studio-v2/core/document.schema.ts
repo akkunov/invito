@@ -44,7 +44,7 @@ const nodeSchema = z.discriminatedUnion("type", [
     layout: z.enum(["free", "vertical", "horizontal"]),
     gap: z.number().finite().min(0).max(2000),
     padding: paddingSchema,
-    background: colorSchema,
+    background: z.union([colorSchema, z.literal("transparent")]),
     clip: z.boolean(),
   }),
   baseNodeSchema.extend({
