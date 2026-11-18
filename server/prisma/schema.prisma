@@ -1,0 +1,297 @@
+// INVITO #29.1 — PostgreSQL persistence contract (Prisma ORM v7).
+// Append-only snapshots, tenant isolation, and publication releases are
+// enforced by the application transaction boundary (see ADR-029-01).
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum TemplateCategory {
+  WEDDING
+  KYZ_UZATUU
+  BIRTHDAY
+  ANNIVERSARY
+  CORPORATE
+  OTHER
+}
+
+enum TemplateStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ARCHIVED
+}
+
+enum AssetStatus {
+  PENDING
+  READY
+  REJECTED
+  DELETED
+}
+
+enum PublicationStatus {
+  ACTIVE
+  UNPUBLISHED
+}
+
+enum Attendance {
+  YES
+  NO
+  MAYBE
+}
+
+model User {
+  id                String               @id @default(uuid()) @db.Uuid
+  email             String?              @unique @db.VarChar(320)
+  displayName       String               @db.VarChar(120)
+  status            AccountStatus        @default(ACTIVE)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  identities        AuthIdentity[]
+  memberships       WorkspaceMember[]
+  templates         Template[]           @relation("TemplateAuthor")
+  templateVersions  TemplateVersion[]    @relation("TemplateVersionAuthor")
+  projectRevisions  ProjectRevision[]    @relation("ProjectRevisionAuthor")
+  mediaUploads      MediaAsset[]         @relation("MediaUploader")
+  publicationReleases PublicationRelease[] @relation("PublicationReleaseAuthor")
+  auditEntries      AuditEvent[]         @relation("AuditActor")
+}
+
+model AuthIdentity {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  provider   String   @db.VarChar(40)
+  subject    String   @db.VarChar(255)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@index([userId])
+}
+
+model Workspace {
+  id           String           @id @default(uuid()) @db.Uuid
+  slug         String           @unique @db.VarChar(80)
+  name         String           @db.VarChar(120)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  members      WorkspaceMember[]
+  templates    Template[]
+  projects     StudioProject[]
+  assets       MediaAsset[]
+  publications Publication[]
+  auditEntries AuditEvent[]
+  idempotency  IdempotencyRecord[]
+}
+
+model WorkspaceMember {
+  workspaceId String      @db.Uuid
+  userId      String      @db.Uuid
+  role        MemberRole  @default(VIEWER)
+  joinedAt    DateTime    @default(now())
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@index([userId])
+}
+
+model Template {
+  id             String          @id @default(uuid()) @db.Uuid
+  workspaceId    String          @db.Uuid
+  createdById    String          @db.Uuid
+  slug           String          @db.VarChar(80)
+  publicSlug     String?         @unique @db.VarChar(80)
+  name           String          @db.VarChar(100)
+  description    String          @default("") @db.VarChar(1000)
+  category       TemplateCategory @default(WEDDING)
+  tags           String[]        @default([])
+  coverPageId    String          @db.VarChar(80)
+  status         TemplateStatus  @default(DRAFT)
+  latestVersion  Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  createdBy      User            @relation("TemplateAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  versions       TemplateVersion[]
+
+  @@unique([workspaceId, slug])
+  @@index([status, updatedAt])
+  @@index([workspaceId, updatedAt])
+}
+
+model TemplateVersion {
+  id              String        @id @default(uuid()) @db.Uuid
+  templateId      String        @db.Uuid
+  number          Int
+  document        Json
+  personalization Json?
+  sha256          String        @db.Char(64)
+  note            String        @default("") @db.VarChar(300)
+  createdById     String        @db.Uuid
+  createdAt       DateTime      @default(now())
+  template        Template      @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  createdBy       User          @relation("TemplateVersionAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  derivedProjects StudioProject[]
+
+  @@unique([templateId, number])
+  @@index([createdById, createdAt])
+}
+
+model StudioProject {
+  id                      String            @id @default(uuid()) @db.Uuid
+  workspaceId             String            @db.Uuid
+  title                   String            @db.VarChar(120)
+  status                  ProjectStatus     @default(DRAFT)
+  latestRevision          Int               @default(0)
+  sourceTemplateVersionId String?           @db.Uuid
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  workspace               Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  sourceTemplateVersion   TemplateVersion?  @relation(fields: [sourceTemplateVersionId], references: [id], onDelete: SetNull)
+  revisions               ProjectRevision[]
+  publications            Publication[]
+
+  @@index([workspaceId, updatedAt])
+  @@index([sourceTemplateVersionId])
+}
+
+model ProjectRevision {
+  id           String               @id @default(uuid()) @db.Uuid
+  projectId    String               @db.Uuid
+  number       Int
+  document     Json
+  sha256       String               @db.Char(64)
+  createdById  String               @db.Uuid
+  createdAt    DateTime             @default(now())
+  project      StudioProject        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  createdBy    User                 @relation("ProjectRevisionAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  releases     PublicationRelease[]
+
+  @@unique([projectId, number])
+  @@index([projectId, createdAt])
+}
+
+model MediaAsset {
+  id           String       @id @default(uuid()) @db.Uuid
+  workspaceId  String       @db.Uuid
+  uploadedById String       @db.Uuid
+  storageKey   String       @unique @db.VarChar(512)
+  name         String       @db.VarChar(255)
+  mimeType     String       @db.VarChar(80)
+  bytes        BigInt
+  sha256       String       @db.Char(64)
+  width        Int?
+  height       Int?
+  status       AssetStatus  @default(PENDING)
+  createdAt    DateTime     @default(now())
+  deletedAt    DateTime?
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  uploadedBy   User         @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([workspaceId, status, createdAt])
+  @@index([workspaceId, sha256])
+}
+
+model Publication {
+  id            String            @id @default(uuid()) @db.Uuid
+  workspaceId   String            @db.Uuid
+  projectId     String            @db.Uuid
+  slug          String            @unique @db.VarChar(80)
+  status        PublicationStatus @default(UNPUBLISHED)
+  latestRelease Int               @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  project       StudioProject     @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  releases      PublicationRelease[]
+  responses     RsvpResponse[]
+
+  @@index([workspaceId, updatedAt])
+  @@index([projectId])
+}
+
+model PublicationRelease {
+  id                String          @id @default(uuid()) @db.Uuid
+  publicationId     String          @db.Uuid
+  number            Int
+  projectRevisionId String          @db.Uuid
+  // Final, validated, render-ready document; NEVER read a mutable draft at guest request time.
+  snapshot          Json
+  sha256            String          @db.Char(64)
+  createdById       String          @db.Uuid
+  createdAt         DateTime        @default(now())
+  publication       Publication     @relation(fields: [publicationId], references: [id], onDelete: Restrict)
+  projectRevision   ProjectRevision @relation(fields: [projectRevisionId], references: [id], onDelete: Restrict)
+  createdBy         User            @relation("PublicationReleaseAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([publicationId, number])
+  @@index([projectRevisionId])
+}
+
+model RsvpResponse {
+  id            String      @id @default(uuid()) @db.Uuid
+  publicationId String      @db.Uuid
+  guestName     String      @db.VarChar(120)
+  attendance    Attendance
+  guestCount    Int         @default(1)
+  message       String?     @db.VarChar(2000)
+  createdAt     DateTime    @default(now())
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Restrict)
+
+  @@index([publicationId, createdAt])
+}
+
+model AuditEvent {
+  id          String     @id @default(uuid()) @db.Uuid
+  workspaceId String     @db.Uuid
+  actorId     String?    @db.Uuid
+  action      String     @db.VarChar(80)
+  entity      String     @db.VarChar(80)
+  entityId    String     @db.VarChar(80)
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  actor       User?      @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model IdempotencyRecord {
+  id          String     @id @default(uuid()) @db.Uuid
+  workspaceId String     @db.Uuid
+  actorId     String     @db.Uuid
+  route       String     @db.VarChar(120)
+  key         String     @db.VarChar(120)
+  requestHash String     @db.Char(64)
+  response    Json?
+  createdAt   DateTime   @default(now())
+  expiresAt   DateTime
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, actorId, route, key])
+  @@index([expiresAt])
+}
