@@ -2,13 +2,13 @@ import {Body, Controller, Get, Header, Inject, Param, Post, Query, Req} from "@n
 import {z} from "zod";
 import type {AuthenticatedRequest} from "../auth/auth.types.js";
 import {MediaService} from "./media.service.js";
-import {UPLOAD_MIMES, MAX_IMAGE_BYTES} from "./media-policy.js";
+import {UPLOAD_MIMES} from "./media-policy.js";
 import {parseInput, pagingInput} from "../documents/documents-input.js";
 
 const startUploadInput = z.strictObject({
   name: z.string().trim().min(1).max(200).refine(v => !/[\\/<>\u0000-\u001f]/.test(v)),
   mimeType: z.enum(UPLOAD_MIMES),
-  bytes: z.number().int().min(1).max(MAX_IMAGE_BYTES),
+  bytes: z.number().int().positive().safe(),
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
 });
 @Controller("workspaces/:workspaceId/media")
