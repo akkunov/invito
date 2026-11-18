@@ -9,7 +9,7 @@ export async function bootstrap() {
   const allowedOrigins = (process.env.FRONTEND_ORIGINS ?? "http://localhost:3000")
     .split(",").map(origin => origin.trim()).filter(Boolean);
   app.enableCors({
-    origin(origin, callback) {
+    origin(origin: string | undefined, callback: (error: Error | null, allowed?: boolean) => void) {
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("CORS_ORIGIN_DENIED"), false);
     },

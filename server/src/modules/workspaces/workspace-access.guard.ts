@@ -20,7 +20,7 @@ export class WorkspaceAccessGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const workspaceId = request.params.workspaceId;
-    if (!workspaceId || !/^[0-9a-fA-F-]{36}$/.test(workspaceId)) throw new NotFoundException();
+    if (!workspaceId || !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(workspaceId)) throw new NotFoundException();
     const membership = await this.prisma.workspaceMember.findUnique({
       where: {workspaceId_userId: {workspaceId, userId: request.user.id}},
     });
