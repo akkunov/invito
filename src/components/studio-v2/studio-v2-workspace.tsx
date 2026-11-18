@@ -187,7 +187,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   function addText(){
     const target=authoredNode?.type==="frame"?authoredNode:selectedRoot;
-    if(target?.type!=="frame"||target.locked||editing)return;
+    if(target?.type!=="frame"||target.locked||editing||linkedRoot(sourceDocument,target.id))return;
     const id="text-"+crypto.randomUUID();
     const n:TextNode={id,type:"text",parentId:target.id,x:24,y:24,width:Math.min(400,target.width),height:80,rotation:0,opacity:1,visible:true,locked:false,runs:[{text:"Новый текст",style:{fontFamily:"sans",fontSize:48,fontWeight:400,italic:false,underline:false,strike:false,color:"#20242B"}}],textAlign:"left",bindingKey:null,autoHeight:true};
     setSession(s=>dispatchStudioCommand(s,{kind:"insertNode",parentId:target.id,node:n}));setSelectedIds([id]);
@@ -230,7 +230,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   function createFrame(){
     const target=layoutFrame??(selectedRoot?.type==="frame"?sourceDocument.nodes[selectedRoot.id]:null);
-    if(target?.type!=="frame"||target.locked)return;
+    if(target?.type!=="frame"||target.locked||linkedRoot(sourceDocument,target.id))return;
     const id="frame-"+crypto.randomUUID();
     const node={id,parentId:target.id,type:"frame" as const,name:"Новый фрейм",x:24,y:24,width:320,height:240,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free" as const,gap:16,padding:{top:16,right:16,bottom:16,left:16},background:"transparent",clip:false};
     setSession(s=>dispatchStudioCommand(s,{kind:"insertNode",parentId:target.id,node}));setSelectedIds([id]);
@@ -277,11 +277,11 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   function performGroup(){
     const id="group-"+crypto.randomUUID();
-    try{const commands=groupSelection(document,nodeIds,id);setSession(s=>dispatchStudioCommand(s,commands));setSelectedIds([id]);setSelectionError(null);}catch{setSelectionError("Для группы выберите соседние слои одного свободного фрейма.");}
+    try{const commands=groupSelection(document,nodeIds,id);setSession(dispatchStudioCommand(session,commands));setSelectedIds([id]);setSelectionError(null);}catch{setSelectionError("Для группы выберите соседние слои одного свободного фрейма.");}
   }
   function performUngroup(){
     if(!activeNode||activeNode.type!=="frame")return;
-    try{const commands=ungroupSelection(document,activeNode.id);setSession(s=>dispatchStudioCommand(s,commands));setSelectedIds(activeNode.children);setSelectionError(null);}catch{setSelectionError("Разгруппировка недоступна для этого фрейма.");}
+    try{const commands=ungroupSelection(document,activeNode.id);setSession(dispatchStudioCommand(session,commands));setSelectedIds(activeNode.children);setSelectionError(null);}catch{setSelectionError("Разгруппировка недоступна для этого фрейма.");}
   }
   const inset=rulers?RULER_THICKNESS:0;
   const sceneSize={width:Math.max(1,size.width-inset),height:Math.max(1,size.height-inset)};
@@ -689,7 +689,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
           {authoredNode&&<label className="v2-widget-field">Название слоя<input key={authoredNode.id+":"+(authoredNode.layerName??"")} maxLength={100} defaultValue={nodeLabel(sourceDocument,authoredNode.id)} disabled={!!editing} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==nodeLabel(sourceDocument,authoredNode.id))proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{layerName:name}}));}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></label>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
-          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
+          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)proAction(()=>({kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
@@ -722,7 +722,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
             {n.parentId&&parent?.type==="frame"&&parent.layout==="free"&&(["x","y"] as const).map(axis=><label key={axis} className="v2-layout-field">Anchor {axis.toUpperCase()}<select value={n.anchors?.[axis]??"start"} onChange={e=>editLayout(n.id,{anchors:{x:"start",y:"start",...n.anchors,[axis]:e.target.value as "start"|"center"|"end"|"stretch"}})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="stretch">Растянуть</option></select></label>)}
             </>;
           })()}
-          {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>setSession(s=>dispatchStudioCommand(s,{kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))}>{offset<0?"↑ Выше":"↓ Ниже"}</button>)}</div>}
+          {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>proAction(()=>({kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))}>{offset<0?"↑ Выше":"↓ Ниже"}</button>)}</div>}
         </section>
         <InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/>
         <section className="v2-inspector-section">
