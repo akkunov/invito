@@ -1,7 +1,7 @@
 name: INVITO Backend Core
 on:
   push:
-    branches: [main, feat/29-3-templates-projects-api]
+    branches: [main, feat/29-4-media-storage]
     paths:
       - 'tsconfig.json'
       - 'src/features/studio-v2/browser/remote-sync.ts'
