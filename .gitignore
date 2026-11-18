@@ -6,3 +6,7 @@ out/
 *.tsbuildinfo
 .DS_Store
 coverage/
+
+# Backend generated clients and builds
+server/src/generated/
+server/dist/
