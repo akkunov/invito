@@ -381,6 +381,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   },[]);
   useEffect(()=>{
     function down(e:KeyboardEvent){
+      if(!loaded)return;
       const target=e.target as HTMLElement|null;
       if(templateManagerOpen){if(e.key==="Escape"&&!target?.closest("input,textarea,select")){e.preventDefault();}return;}
       if(responsiveOpen){if(e.key==="Escape"){e.preventDefault();setResponsiveOpen(false);return;}if(!target?.closest("input,textarea,select,[contenteditable]")&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();changeHistory(e.shiftKey);}return;}
@@ -413,7 +414,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const blur=()=>{setSpaceHeld(false);setDistanceMarks([]);};
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,hasClipboard,menu,selectedPage,session,document]);
+  },[loaded,nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,hasClipboard,menu,selectedPage,session,document]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
