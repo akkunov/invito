@@ -44,7 +44,8 @@ export function resolveLayout(doc:ProjectDocumentV2):Geometry {
        const next={x:c.x,y:c.y,...measured};
        for(const axis of ["width","height"] as const){
          const pos=coordinate(axis),change=rect[axis]-n[axis],anchor=c.anchors?.[pos]??"start";
-         if(mode(c,axis)==="fill"||anchor==="stretch")next[axis]=limit(c,axis,mode(c,axis)==="fill"?rect[axis]-inset(n,axis):measured[axis]+change);
+         if(mode(c,axis)==="fill"){next[axis]=limit(c,axis,rect[axis]-inset(n,axis));next[pos]=start(n,axis);continue;}
+         if(anchor==="stretch")next[axis]=limit(c,axis,measured[axis]+change);
          if(anchor==="end")next[pos]+=change-(next[axis]-measured[axis]);
          else if(anchor==="center")next[pos]+=(change-(next[axis]-measured[axis]))/2;
        }
