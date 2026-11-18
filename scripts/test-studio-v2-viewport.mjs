@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import {visibleArtboards,pinnedArtboards} from "../src/features/studio-v2/core/render-window.ts";
+import {createFrameCoalescer} from "../src/features/studio-v2/core/frame-coalescer.ts";
 import {
   MIN_ZOOM, MAX_ZOOM, RULER_THICKNESS, screenToWorld, worldToScreen,
   panViewport, zoomAt, viewportWorldBounds, unionRects, fitBounds,
@@ -60,3 +62,18 @@ assert.ok(demo.pages.every(p=>demo.nodes[p.rootNodeId]?.type==="frame"));
 assert.deepEqual(demo.pages.map(p=>p.placement.x),[0,1280,2560,3840,5120]);
 
 console.log("PASS: v2 viewport coordinates, anchor zoom, pan, fitting, thin rulers, minimap and 5-page project");
+
+const large=Array.from({length:30},(_,i)=>({id:"page-"+i,rect:{x:i*1500-1500,y:0,width:1000,height:1900}}));
+const windowSize={width:1000,height:800},camera={x:0,y:0,zoom:1};
+assert.deepEqual([...visibleArtboards(large,camera,windowSize,new Set(["page-29"]),400)],["page-1","page-29"]);
+assert.deepEqual([...visibleArtboards(large,{...camera,x:-1300},windowSize,new Set(),400)],["page-2"]);
+assert.equal(visibleArtboards(large.slice(0,5),camera,windowSize,new Set(),30).size,5);
+assert.equal(visibleArtboards(large.slice(0,5),camera,windowSize,new Set(),201).size,1);
+assert.deepEqual([...pinnedArtboards(demo,"page-1",["details-heading"],"cover-names","page-thanks")].sort(),["page-1","page-details","page-thanks"]);
+const events=[],pending=new Map();let serial=0;
+const queue=createFrameCoalescer(x=>events.push(x),fn=>{pending.set(++serial,fn);return serial;},id=>pending.delete(id));
+queue.queue(1);queue.queue(2);queue.queue(3);assert.equal(pending.size,1);
+const cb=[...pending.values()][0];pending.clear();cb();assert.deepEqual(events,[3]);
+queue.queue(4);queue.queue(5);queue.flush();assert.deepEqual(events,[3,5]);assert.equal(pending.size,0);
+queue.queue(6);queue.clear();assert.equal(pending.size,0);assert.deepEqual(events,[3,5]);
+console.log("PASS: bounded viewport rendering, pinned selections, coalesced drag flush/cancel");

@@ -548,6 +548,68 @@ try{
   await recoveryPage.waitForTimeout(650);
   assert.equal(await checkCorrupt(),true,"Corrupt project without a backup must never be overwritten by demo");
  }catch(e){await recoveryPage.screenshot({path:join(artifacts,"recovery-failure.png")}).catch(()=>{});throw e;}finally{await recoveryContext.close();}
+ // Large canvas: keep authored page shells, mount only nearby artwork and selected pages.
+ const largeContext=await browser.newContext({viewport:{width:1600,height:1000}});
+ const largePage=await visit(largeContext);
+ try{
+  // Seed the committed demo with 20 more complete artboards (valid IDs and parent links).
+  await largePage.evaluate(()=>new Promise((resolve,reject)=>{
+   const open=indexedDB.open("invito-studio-v2-local",3);open.onerror=()=>reject(open.error);
+   open.onsuccess=()=>{
+    const db=open.result,tx=db.transaction("projects","readwrite"),store=tx.objectStore("projects"),req=store.get("studio-v2-demo");
+    req.onsuccess=()=>{
+     const doc=req.result,original=doc.nodes["frame-1"];
+     for(let i=5;i<25;i++){
+      const rootId="perf-root-"+i,pid="perf-page-"+i;
+      const children=original.children.map((id,j)=>"perf-node-"+i+"-"+j);
+      doc.nodes[rootId]={...original,id:rootId,name:"Performance "+i,children};
+      original.children.forEach((id,j)=>{doc.nodes[children[j]]={...doc.nodes[id],id:children[j],parentId:rootId};});
+      doc.pages.push({id:pid,rootNodeId:rootId,name:"Performance "+i,placement:{x:i*1280,y:0}});
+     }
+     store.put(doc,doc.id);
+    };
+    tx.oncomplete=()=>{db.close();resolve(null);};tx.onerror=()=>{db.close();reject(tx.error);};tx.onabort=()=>{db.close();reject(tx.error);};
+   };
+  }));
+  await largePage.reload({waitUntil:"networkidle"});
+  await count(largePage,25);
+  const mounted=largePage.locator('[data-artboard-rendered="true"]');
+  const last=largePage.locator('[data-studio-page="perf-page-24"]');
+  await largePage.waitForFunction(()=>document.querySelectorAll('[data-artboard-rendered="true"]').length<12);
+  assert.equal(await last.locator("[data-motion-root]").count(),0);
+  assert.ok(await mounted.count()>=1);
+  await largePage.locator(".v2-page-item").filter({hasText:"Performance 24"}).click();
+  await last.locator('[data-studio-node="perf-node-24-0"]').waitFor({state:"attached"});
+  assert.equal(await last.getAttribute("data-artboard-rendered"),"true");
+  await largePage.waitForFunction(()=>document.querySelector('[data-studio-page="page-1"]')?.dataset.artboardRendered==="false");
+  assert.equal(await largePage.locator('[data-studio-page="page-1"] [data-motion-root]').count(),0);
+  await largePage.screenshot({path:join(artifacts,"large-canvas.png")});
+  await largePage.locator(".v2-page-item").filter({hasText:"Обложка"}).click();
+  await largePage.locator('[data-studio-page="page-1"] [data-studio-node="cover-photo"]').waitFor({state:"attached"});
+  assert.equal(await last.getAttribute("data-artboard-rendered"),"false");
+  // Returning to a culled page must permit normal editing and undo.
+  await largePage.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).click();
+  await largePage.getByLabel("Радиус",{exact:true}).fill("41");
+  await largePage.getByLabel("Радиус",{exact:true}).blur();
+  await largePage.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]').style.borderTopLeftRadius==="41px");
+  await largePage.getByRole("button",{name:"Отменить",exact:true}).click();
+  await largePage.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]').style.borderTopLeftRadius!=="41px");
+  await count(largePage,25);
+  // Import another asset without remounting or revoking the existing image URL.
+  await largePage.getByRole("button",{name:"Ресурсы",exact:true}).click();
+  const sample=await largePage.evaluate(()=>{const c=document.createElement("canvas");c.width=16;c.height=16;const ctx=c.getContext("2d");ctx.fillStyle="#334455";ctx.fillRect(0,0,16,16);return c.toDataURL("image/png").split(",")[1];});
+  const upload=largePage.locator('.v2-left input[type=file]');
+  const addSample=async(name)=>{await upload.setInputFiles({name,mimeType:"image/png",buffer:Buffer.from(sample,"base64")});const img=largePage.locator(".v2-asset-card").filter({hasText:name}).locator("img");await img.waitFor({state:"attached"});return img;};
+  const imgA=await addSample("performance-a.png"),firstUrl=await imgA.getAttribute("src");
+  assert.ok(firstUrl?.startsWith("blob:"));
+  const imgB=await addSample("performance-b.png"),secondUrl=await imgB.getAttribute("src");
+  assert.ok(secondUrl?.startsWith("blob:"));
+  assert.equal(await imgA.getAttribute("src"),firstUrl);
+  await largePage.getByRole("button",{name:"Удалить performance-b.png",exact:true}).click();
+  await imgB.waitFor({state:"detached"});
+  assert.equal(await imgA.getAttribute("src"),firstUrl);
+  assert.equal(await largePage.evaluate(async u=>{try{return (await fetch(u)).ok;}catch{return false;}},firstUrl),true);
+ }catch(e){await largePage.screenshot({path:join(artifacts,"large-canvas-failure.png")}).catch(()=>{});throw e;}finally{await largeContext.close();}
  assert.deepEqual(errors,[],"Browser runtime errors");
  console.log("PASS: Chromium desktop + mobile, page reorder/delete/undo/redo, corners, reload persistence and preview");
 }finally{await browser.close();}

@@ -5,7 +5,7 @@ import {useStudioMotion,type MotionPlayback} from "./use-studio-motion";
 import {appearanceCss,maskCss,contentTransform} from "@/features/studio-v2/core/appearance.ts";
 import {InvitationBlockView} from "./studio-v2-invitation-block";
 import type {GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
-import { useLayoutEffect, useRef, type CSSProperties } from "react";
+import { memo, useMemo, useLayoutEffect, useRef, type CSSProperties } from "react";
 import type { TextNode, TextStyle } from "@/features/studio-v2/core/rich-text-engine.ts";
 import type { ProjectDocumentV2, ProjectNodeV2 } from "@/features/studio-v2/core/document.schema.ts";
 
@@ -84,11 +84,12 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       }}/>;
   }
 }
-export function StudioV2Artboard({ document, rootNodeId, ...options }: { document: ProjectDocumentV2; rootNodeId: string } & ArtboardTextOptions) {
+export const StudioV2Artboard=memo(function StudioV2Artboard({ document, rootNodeId, ...options }: { document: ProjectDocumentV2; rootNodeId: string } & ArtboardTextOptions) {
   const root = document.nodes[rootNodeId];
   const motionRef=useRef<HTMLDivElement>(null);
-  const pageId=document.pages.find(p=>p.rootNodeId===rootNodeId)?.id;
-  useStudioMotion(motionRef,options.motionPlayback&&pageId?motionTracks(document,pageId):[],options.motionPlayback);
+  const hasMotion=!!options.motionPlayback;
+  const tracks=useMemo(()=>{const pageId=document.pages.find(p=>p.rootNodeId===rootNodeId)?.id;return hasMotion&&pageId?motionTracks(document,pageId):[];},[document,rootNodeId,hasMotion]);
+  useStudioMotion(motionRef,tracks,options.motionPlayback);
   if (!root || root.type !== "frame") return null;
   return <div ref={motionRef} data-motion-root={rootNodeId} className="studio-v2-artboard-content" style={{
     width: root.width, height: root.height, position: "relative", ...appearanceCss(root),
@@ -96,4 +97,4 @@ export function StudioV2Artboard({ document, rootNodeId, ...options }: { documen
   }}>
     {root.children.map(id => renderNode(document, id, options))}
   </div>;
-}
+});
