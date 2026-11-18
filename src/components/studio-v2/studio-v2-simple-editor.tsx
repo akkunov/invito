@@ -54,11 +54,11 @@ export function SimpleEditor({source,contract,name,version,onClose}:Props){
      <div className="se-progress-caption"><span>{t("Шаг","Кадам")} {Math.max(0,index+1)} / {available.length}</span><span>{stepProgress}%</span></div>
      <div className="se-progress-track" role="progressbar" aria-label={t("Прогресс по разделам","Бөлүмдөр боюнча прогресс")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={stepProgress}><span style={{width:stepProgress+"%"}}/></div>
     </div>
-    <nav aria-label={t("Разделы приглашения","Чакыруу бөлүмдөрү")}>{available.map((s,i)=><button key={s.id} aria-current={current?.id===s.id?"step":undefined} data-section={s.id} onClick={()=>choose(s.id)}><span className="se-step-number">{String(i+1).padStart(2,"0")}</span><span className="se-step-name">{s[uiLocale]}</span>{contract.fields.filter(f=>f.section===s.id).some(f=>invalidFields.has(f.id))?<span className="se-nav-dot"/>:<StudioIcon className="se-nav-check" name="check" size={14}/>}</button>)}</nav>
+    <nav aria-label={t("Разделы приглашения","Чакыруу бөлүмдөрү")}>{available.map((s,i)=><button key={s.id} aria-current={current?.id===s.id?"step":undefined} data-section={s.id} aria-label={s[uiLocale]} onClick={()=>choose(s.id)}><span className="se-step-number">{String(i+1).padStart(2,"0")}</span><span className="se-step-name">{s[uiLocale]}</span>{contract.fields.filter(f=>f.section===s.id).some(f=>invalidFields.has(f.id))?<span className="se-nav-dot"/>:<StudioIcon className="se-nav-check" name="check" size={14}/>}</button>)}</nav>
     <div className="se-nav-bottom"><StudioIcon name="lock"/><span>{t("Дизайн защищён автором. Можно менять только разрешённое содержимое.","Дизайн автор тарабынан корголгон. Уруксат берилген маалымат гана өзгөрөт.")}</span></div>
    </aside>
-   <section className="se-form" ref={editorRef} aria-label={t("Настройки приглашения","Чакыруу жөндөөлөрү")}>
-    <div className="se-form-content">
+   <section className="se-form" aria-label={t("Настройки приглашения","Чакыруу жөндөөлөрү")}>
+    <div className="se-form-content" ref={editorRef}>
      <div className="se-form-kicker">{t("РАЗДЕЛ","БӨЛҮМ")} {current?String(index+1).padStart(2,"0")+" / "+String(available.length).padStart(2,"0"):"00 / 00"}</div>
      <h1>{current?current[uiLocale]:t("Готовый дизайн","Даяр дизайн")}</h1><p className="se-description">{current?(uiLocale==="ky"?current.descKy:current.descRu):t("Поля этого шаблона пока недоступны для редактирования.","Бул шаблондун талааларын азырынча өзгөртүү мүмкүн эмес.")}</p>
      <div className="se-inline-status"><StudioIcon name="check" size={14}/>{requiredFields.length?t("Обязательных полей без ошибок: ","Милдеттүү талаалар туура: ")+readyFields+" / "+requiredFields.length:t("Изменения сразу появляются в предпросмотре справа.","Өзгөртүүлөр оң жакта дароо көрүнөт.")}</div>
