@@ -11,6 +11,7 @@ NestJS 12 + Prisma 7.10.1 + PostgreSQL. Source lives in the **same repo** as the
 ## Local setup
 
 ```bash
+npm ci # shared Studio schema dependencies in repository root
 cd server
 docker compose up -d postgres
 cp .env.example .env
@@ -54,6 +55,8 @@ PATCH http://localhost:4000/api/v1/workspaces/:workspaceId
 ## CI and deployment
 
 `.github/workflows/backend-core.yml` builds the API and tests JWT and workspace isolation on a real PostgreSQL service. Backend has its own checked-in `server/package-lock.json`; CI uses reproducible `npm ci` (the root Next.js lockfile remains independent).
+
+The API compiles the shared canonical Studio v2 validators from `../src/features/studio-v2/core`. CI installs root frontend dependencies for that shared build, and you must allow source files outside the Vercel Root Directory when deploying separately. Do not replace them with weaker duplicate schemas.
 
 For Vercel create a separate project from `akkunov/invito`, set Root Directory to `server`, Node.js >=22, and configure production credentials. No credentials are committed.
 

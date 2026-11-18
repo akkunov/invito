@@ -1,14 +1,24 @@
 name: INVITO Backend Core
 on:
   push:
-    branches: [main, feat/29-2-backend-core]
+    branches: [main, feat/29-3-templates-projects-api]
     paths:
       - 'tsconfig.json'
+      - 'src/features/studio-v2/browser/remote-sync.ts'
+      - 'src/components/studio-v2/**'
+      - 'src/app/studio-v2.css'
+      - 'scripts/test-studio-v2-remote-sync.mjs'
+      - 'package.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
   pull_request:
     paths:
       - 'tsconfig.json'
+      - 'src/features/studio-v2/browser/remote-sync.ts'
+      - 'src/components/studio-v2/**'
+      - 'src/app/studio-v2.css'
+      - 'scripts/test-studio-v2-remote-sync.mjs'
+      - 'package.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
 
@@ -50,6 +60,8 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - name: Install isolated API dependencies
         run: npm ci --no-audit --no-fund
+      - name: Install shared Studio v2 schema dependencies
+        run: npm ci --prefix .. --no-audit --no-fund
       - name: Prisma schema validation
         run: npm exec prisma validate -- --config prisma.config.ts
       - name: Compile API and generated Prisma Client
@@ -58,6 +70,23 @@ jobs:
         run: npm run db:migrate:deploy
       - name: E2E integration tests (real PostgreSQL)
         run: npm test
+      - name: Smoke test compiled Node runtime
+        run: |
+          npm start >/tmp/invito-api.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:4000/api/v1/health/ready | grep -q ready; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != "1" ]; then
+            cat /tmp/invito-api.log
+            exit 1
+          fi
  
   frontend-contract:
     runs-on: ubuntu-latest
@@ -76,3 +105,5 @@ jobs:
         run: npm run typecheck
       - name: Verify existing backend-domain contracts
         run: npm run test:backend-contract
+      - name: Verify remote sync conflict and offline behavior
+        run: npm run test:studio-v2-remote-sync
