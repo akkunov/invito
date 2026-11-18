@@ -18,6 +18,9 @@ import {
 
 import { canSelect, normalizeSelection, selectNode, nodeCorners, nodeBounds, selectionBounds, moveSelection, resizeNode, rotateNode, marqueeSelection, snapMove, groupSelection, ungroupSelection, type Handle } from "@/features/studio-v2/core/selection-transform.ts";
 
+import { layoutDocument } from "@/features/studio-v2/core/layout-engine.ts";
+import type { StudioCommand } from "@/features/studio-v2/core/command-engine.ts";
+
 type Tool = "select" | "hand";
 type NodeGesture = { pointer:number; start:Point; document:ProjectDocumentV2; ids:string[]; started:boolean; handle?:Handle; rotate?:boolean; zoom:number; };
 type Marquee = { pointer:number; start:Point; current:Point; pageId:string; additive:boolean };
@@ -117,13 +120,30 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const pinch=useRef<{distance:number;zoom:number;anchorWorld:Point}|null>(null);
   const pageDrag=useRef<{id:string;start:Point;origin:Point;started:boolean;pointer:number}|null>(null);
   const fitted=useRef(false);
-  const document=session.document;
+  const sourceDocument=session.document;
+  const document=useMemo(()=>layoutDocument(sourceDocument),[sourceDocument]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
   const activeTool=spaceHeld?"hand":tool;
   const selected=document.pages.find(p=>p.id===selectedPage)??null;
   const selectedRoot=selected?document.nodes[selected.rootNodeId]:null;
   const nodeIds=normalizeSelection(document,selectedIds);
   const activeNode=nodeIds.length===1?document.nodes[nodeIds[0]]:null;
+  const authoredNode=activeNode?sourceDocument.nodes[activeNode.id]:null;
+  const container=authoredNode?.type==="frame"?authoredNode:!activeNode&&selectedRoot?.type==="frame"?sourceDocument.nodes[selectedRoot.id]:null;
+  const layoutFrame=container?.type==="frame"?container:null;
+  const parent=authoredNode?.parentId?sourceDocument.nodes[authoredNode.parentId]:null;
+  const inStack=parent?.type==="frame"&&parent.layout!=="free";
+  const movable=(ids:string[])=>ids.every(id=>{const p=sourceDocument.nodes[sourceDocument.nodes[id].parentId??""];return p?.type==="frame"&&p.layout==="free";});
+  function editLayout(id:string,changes:Extract<StudioCommand,{kind:"updateNode"}>["changes"]){
+    setSession(s=>{if(s.transaction)return s;try{return dispatchStudioCommand(s,{kind:"updateNode",id,changes});}catch{return s;}});
+  }
+  function createFrame(){
+    const target=layoutFrame??(selectedRoot?.type==="frame"?sourceDocument.nodes[selectedRoot.id]:null);
+    if(target?.type!=="frame"||target.locked)return;
+    const id="frame-"+crypto.randomUUID();
+    const node={id,parentId:target.id,type:"frame" as const,name:"Новый фрейм",x:24,y:24,width:320,height:240,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free" as const,gap:16,padding:{top:16,right:16,bottom:16,left:16},background:"transparent",clip:false};
+    setSession(s=>dispatchStudioCommand(s,{kind:"insertNode",parentId:target.id,node}));setSelectedIds([id]);
+  }
   const selectionRect=nodeIds.length?selectionBounds(document,nodeIds):null;
   const selectionPolygon=activeNode?nodeCorners(document,activeNode.id):selectionRect?[{x:selectionRect.x,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y+selectionRect.height},{x:selectionRect.x,y:selectionRect.y+selectionRect.height}]:[];
   const selectionScreen=selectionPolygon.map(p=>worldToScreen(p,viewport));
@@ -172,7 +192,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
         e.preventDefault();const step=e.shiftKey?10:1;
         const delta={x:e.key==="ArrowLeft"?-step:e.key==="ArrowRight"?step:0,y:e.key==="ArrowUp"?-step:e.key==="ArrowDown"?step:0};
-        setSession(s=>dispatchStudioCommand(s,moveSelection(s.document,nodeIds,delta)));return;
+        if(movable(nodeIds))setSession(s=>dispatchStudioCommand(s,moveSelection(layoutDocument(s.document),nodeIds,delta)));return;
       }
       if(nodeIds.length&&(e.key==="Delete"||e.key==="Backspace")){
         e.preventDefault();setSession(s=>dispatchStudioCommand(s,nodeIds.map(id=>({kind:"deleteNode" as const,id}))));setSelectedIds([]);return;
@@ -245,6 +265,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   function distance(a:Point,b:Point){return Math.hypot(a.x-b.x,a.y-b.y)}
   function middle(a:Point,b:Point){return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
   function startNodeGesture(e:ReactPointerEvent<HTMLElement>,ids:string[],handle?:Handle,rotate=false){
+    if(!rotate&&!handle&&!movable(ids))return;
+    if(handle&&ids.some(id=>{const n=sourceDocument.nodes[id];return n.sizing?.width==="hug"||n.sizing?.height==="hug"||n.sizing?.width==="fill"||n.sizing?.height==="fill"||!movable([id]);}))return;
     nodeGesture.current={pointer:e.pointerId,start:localPoint(e),document,ids,started:false,handle,rotate,zoom:viewport.zoom};
     stageRef.current?.setPointerCapture(e.pointerId);
   }
@@ -261,7 +283,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         if(pageId)setSelectedPage(pageId);
         const ids=e.shiftKey?selectNode(document,nodeIds,id,true):nodeIds.includes(id)?nodeIds:[id];
         setSelectionError(null);setSelectedIds(ids);
-        if(ids.includes(id))startNodeGesture(e,ids);
+        if(ids.includes(id)&&movable(ids))startNodeGesture(e,ids);
         return;
       }
       if(pageId){
@@ -396,7 +418,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       <div className="v2-top-actions">
         <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>setSession(s=>s.transaction?s:undoStudio(s))}><Undo2 size={18}/></button>
         <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>setSession(s=>s.transaction?s:redoStudio(s))}><Redo2 size={18}/></button>
-        <button className="v2-export" onClick={()=>downloadDocument(document)}><Download size={16}/> JSON</button>
+        <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><Download size={16}/> JSON</button>
         <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
       </div>
     </header>
@@ -488,10 +510,33 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <h3>Выделение</h3>
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
-          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
+          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>setSelectedIds([])}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
+        </section>
+        <section className="v2-inspector-section">
+          <h3>Auto Layout</h3>
+          <button className="v2-inspector-button" onClick={createFrame}>+ Создать фрейм</button>
+          {layoutFrame&&<>
+            <label className="v2-layout-field">Расположение<select value={layoutFrame.layout} onChange={e=>editLayout(layoutFrame.id,{layout:e.target.value as "free"|"vertical"|"horizontal"})}><option value="free">Свободное</option><option value="vertical">Вертикальное</option><option value="horizontal">Горизонтальное</option></select></label>
+            {layoutFrame.layout!=="free"&&<>
+              <label className="v2-layout-field">Gap<input type="number" min={0} max={2000} value={layoutFrame.gap} onChange={e=>editLayout(layoutFrame.id,{gap:Number(e.target.value)})}/></label>
+              <div className="v2-inspector-grid">{(["top","right","bottom","left"] as const).map(side=><label key={side}>{({top:"↑",right:"→",bottom:"↓",left:"←"})[side]}<input aria-label={"Padding "+side} type="number" min={0} max={2000} value={layoutFrame.padding[side]} onChange={e=>editLayout(layoutFrame.id,{padding:{...layoutFrame.padding,[side]:Number(e.target.value)}})}/></label>)}</div>
+              <label className="v2-layout-field">Выравнивание<select value={layoutFrame.alignment??"start"} onChange={e=>editLayout(layoutFrame.id,{alignment:e.target.value as "start"|"center"|"end"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option></select></label>
+              <label className="v2-layout-field">Распределение<select value={layoutFrame.distribution??"start"} onChange={e=>editLayout(layoutFrame.id,{distribution:e.target.value as "start"|"center"|"end"|"space-between"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="space-between">Между элементами</option></select></label>
+            </>}
+            <label className="v2-layout-field">Обрезать содержимое<input type="checkbox" checked={layoutFrame.clip} onChange={e=>editLayout(layoutFrame.id,{clip:e.target.checked})}/></label>
+          </>}
+          {(authoredNode??layoutFrame)&&(()=>{
+            const n=(authoredNode??layoutFrame)!;
+            const sizing:NonNullable<typeof n.sizing>=n.sizing??{width:"fixed",height:"fixed"};
+            return <>{(["width","height"] as const).map(axis=><label key={axis} className="v2-layout-field">{axis==="width"?"Ширина":"Высота"}<select value={sizing[axis]} onChange={e=>editLayout(n.id,{sizing:{...sizing,[axis]:e.target.value as "fixed"|"fill"|"hug"}})}><option value="fixed">Fixed</option>{n.parentId&&<option value="fill">Fill</option>}{n.type==="frame"&&n.layout!=="free"&&<option value="hug">Hug</option>}</select></label>)}
+            <div className="v2-inspector-grid">{(["minWidth","maxWidth","minHeight","maxHeight"] as const).map(key=><label key={key}>{({minWidth:"min W",maxWidth:"max W",minHeight:"min H",maxHeight:"max H"})[key]}<input type="number" min={1} max={20000} value={sizing[key]??""} placeholder={key.startsWith("min")?"1":"20000"} onChange={e=>editLayout(n.id,{sizing:{...sizing,[key]:e.target.value===""?undefined:Number(e.target.value)}})}/></label>)}</div>
+            {n.parentId&&parent?.type==="frame"&&parent.layout==="free"&&(["x","y"] as const).map(axis=><label key={axis} className="v2-layout-field">Anchor {axis.toUpperCase()}<select value={n.anchors?.[axis]??"start"} onChange={e=>editLayout(n.id,{anchors:{x:"start",y:"start",...n.anchors,[axis]:e.target.value as "start"|"center"|"end"|"stretch"}})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="stretch">Растянуть</option></select></label>)}
+            </>;
+          })()}
+          {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>setSession(s=>dispatchStudioCommand(s,{kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))}>{offset<0?"↑ Выше":"↓ Ниже"}</button>)}</div>}
         </section>
         <section className="v2-inspector-section">
           <h3>Страница</h3>
@@ -517,7 +562,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #23 · Transform</h3>
+          <h3>Этап #24 · Auto Layout</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Это демонстрационный документ: изменения не публикуются и не сохраняются на сервере.</p>
         </section>
