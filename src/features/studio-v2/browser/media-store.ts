@@ -21,7 +21,7 @@ export type LocalProjectLoad={kind:"ready";document:ProjectDocumentV2}|{kind:"mi
 let projectWriteQueue:Promise<unknown>=Promise.resolve();
 function serializeProjectWrite<T>(write:()=>Promise<T>):Promise<T>{const next=projectWriteQueue.then(write);projectWriteQueue=next.catch(()=>undefined);return next;}
 function validProject(value:unknown,id:string):ProjectDocumentV2|null{try{const doc=parseProjectV2(value);return doc.id===id?doc:null;}catch{return null;}}
-export function saveLocalProject(doc:ProjectDocumentV2,{allowRecovery=false}:{allowRecovery?:boolean}={}):Promise<void>{
+export async function saveLocalProject(doc:ProjectDocumentV2,{allowRecovery=false}:{allowRecovery?:boolean}={}):Promise<void>{
  const parsed=parseProjectV2(doc);
  return serializeProjectWrite(async()=>{
   const db=await database();
@@ -34,6 +34,7 @@ export function saveLocalProject(doc:ProjectDocumentV2,{allowRecovery=false}:{al
     const previous=validProject(req.result,parsed.id);
     if(req.result!==undefined&&!previous&&!allowRecovery){conflict=Error("Project requires recovery");tx.abort();return;}
     if(previous&&JSON.stringify(previous)===JSON.stringify(parsed))return;
+    if(previous&&allowRecovery){conflict=Error("Project changed in another tab; reload before restoring");tx.abort();return;}
     if(previous)backup.put({document:previous,savedAt:Date.now()} satisfies RecoveryRecord,parsed.id);
     projects.put(parsed,parsed.id);
    };
