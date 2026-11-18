@@ -1,4 +1,4 @@
-import {boundedSize,detectImage,MAX_UPLOAD_BYTES,SVG_ELEMENTS,SVG_ATTRIBUTES,safeSvgAttribute,validateSvgSource} from "../core/media-policy.ts";
+import {boundedSize,detectImage,rasterDimensions,MAX_UPLOAD_BYTES,SVG_ELEMENTS,SVG_ATTRIBUTES,safeSvgAttribute,validateSvgSource} from "../core/media-policy.ts";
 import {parseProjectV2,type ProjectDocumentV2} from "../core/document.schema.ts";
 import type {Asset} from "../core/component-engine.ts";
 const DB="invito-studio-v2-local";
@@ -38,6 +38,7 @@ export async function importImage(file:File,folder=""):Promise<Asset>{
  if(!file.size||file.size>MAX_UPLOAD_BYTES)throw Error("Файл должен быть не больше 20 МБ");
  const bytes=new Uint8Array(await file.arrayBuffer()),mime=detectImage(bytes);
  if(!mime)throw Error("Поддерживаются PNG, JPEG, WebP и безопасный SVG");
+ if(mime!=="image/svg+xml"){const size=rasterDimensions(bytes,mime);boundedSize(size.width,size.height);}
  const blob=mime==="image/svg+xml"?new Blob([sanitizeSvg(new TextDecoder().decode(bytes))],{type:mime}):new Blob([bytes],{type:mime});
  const bitmap=await createImageBitmap(blob);
  try{
