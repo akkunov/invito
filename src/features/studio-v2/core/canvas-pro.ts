@@ -1,3 +1,4 @@
+import {stripLink} from "./linked-components.ts";
 import type {ProjectDocumentV2,ProjectNodeV2} from "./document.schema.ts";
 import type {StudioCommand} from "./command-engine.ts";
 import {canSelect,normalizeSelection,nodeBounds,selectionBounds,worldMatrix,mapPoint,moveSelection,type Handle} from "./selection-transform.ts";
@@ -60,6 +61,7 @@ export function copySelection(source:ProjectDocumentV2,resolved:ProjectDocumentV
  if(!chosen.length)throw Error("Nothing selected");
  function visit(id:string){const n=source.nodes[id];nodes[id]=structuredClone(n);if(n.type==="frame")n.children.forEach(visit);}
  for(const id of chosen){visit(id);centers[id]=centerOf(resolved,id);angles[id]=angle(worldMatrix(resolved,id));let root=id;while(resolved.nodes[root].parentId)root=resolved.nodes[root].parentId!;pageOrigins[id]=mapPoint(worldMatrix(resolved,root),{x:0,y:0});}
+ for(const root of chosen){if(nodes[root].componentSourceId&&!nodes[root].componentRef){const pending=[root];while(pending.length){const n=nodes[pending.pop()!];stripLink(n);if(n.type==="frame")pending.push(...n.children);}}}
  for(const device of ["desktop","tablet","mobile"] as const){const map=source.responsiveOverrides?.[device];if(map)overrides[device]=Object.fromEntries(Object.entries(map).filter(([id])=>Object.hasOwn(nodes,id)).map(([id,p])=>[id,structuredClone(p)]));}
  return {projectId:source.id,roots:chosen,nodes,overrides,centers,angles,pageOrigins};
 }
