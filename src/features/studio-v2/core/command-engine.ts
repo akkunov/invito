@@ -6,6 +6,10 @@ type Position = { x: number; y: number };
 type EditableNodeFields = ProjectNodeV2 extends infer N ? N extends ProjectNodeV2 ? Partial<Omit<N, "id" | "type" | "parentId" | "children">> : never : never;
 
 export type StudioCommand =
+  | { kind: "putAsset"; asset: ProjectDocumentV2["assets"][string] }
+  | { kind: "deleteAsset"; id: string }
+  | { kind: "putComponent"; component: NonNullable<ProjectDocumentV2["components"]>[string] }
+  | { kind: "deleteComponent"; id: string }
   | { kind: "insertNode"; parentId: string; node: ProjectNodeV2; index?: number }
   | { kind: "updateNode"; id: string; changes: EditableNodeFields }
   | { kind: "moveNodes"; positions: Record<string, Position> }
@@ -87,6 +91,10 @@ function removeSubtree(doc: ProjectDocumentV2, id: string) {
 }
 function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
   switch (command.kind) {
+    case "putAsset": { doc.assets[command.asset.id]=clone(command.asset); return; }
+    case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
+    case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
+    case "deleteComponent": { assert(doc.components?.[command.id],"Missing component");delete doc.components![command.id];return; }
     case "insertNode": {
       const parent = getFrame(doc, command.parentId);
       ensureWritable(doc, command.parentId);

@@ -1,0 +1,9 @@
+# ADR-007 — Assets and component library (#26)
+
+Asset records contain storage keys and dimensions, not base64 or markup. Built-in paths are restricted to /images; local content is stored as PNG Blob in IndexedDB. Upload checks signatures, 20 MiB input, raster pixel limits before decoding, and a conservative SVG allowlist (no scripts, foreignObject, external resources, event handlers, CSS, DTD). SVG is rasterized; unsupported SVG features are rejected rather than silently removed. Maximum output side is 4096px. Object URLs are view state and revoked on cleanup.
+
+The Resources tab provides import, search, folder assignment, insert, replace, deletion of unreferenced assets, and basic shapes. Image inspector has cover/contain and X/Y focal controls. Local project metadata auto-saves after committed revisions; reload restores it on the same origin/browser. No cloud sync, backend, or publication. JSON alone does not contain uploaded binaries. IndexedDB is not a backup; deletion retains bytes for undo/redo history. Browser quota errors are surfaced.
+
+Components are validated snapshots of a node subtree, with named variants. Insert creates new graph IDs atomically through commands and records the source component/variant on the root; local edits are independent overrides. Detach clears identity. Live master propagation, cross-project component sharing, and variant switching on existing instances are not implemented; these require an explicit override/reconciliation contract. No recursive instance graph is introduced. Legacy invitations are unchanged.
+
+Core regression suite: npm run test:studio-v2-assets. Browser QA must include invalid SVG, real import/reload, crop, quota, multi-tab behavior, and component variants. Local demo persistence only; server permissions and asset processing must be independently implemented in #29.

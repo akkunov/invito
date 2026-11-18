@@ -17,6 +17,7 @@ const baseNodeSchema = z.strictObject({
   visible: z.boolean(),
   locked: z.boolean(),
   sizing: z.strictObject({ width: z.enum(["fixed","fill","hug"]), height: z.enum(["fixed","fill","hug"]), minWidth: sizeSchema.optional(), maxWidth: sizeSchema.optional(), minHeight: sizeSchema.optional(), maxHeight: sizeSchema.optional() }).optional(),
+  componentRef: z.strictObject({componentId:idSchema,variantId:idSchema}).optional(),
   anchors: z.strictObject({ x: z.enum(["start","center","end","stretch"]), y: z.enum(["start","center","end","stretch"]) }).optional(),
 });
 const paddingSchema = z.strictObject({
@@ -86,8 +87,12 @@ export const mediaAssetRefSchema = z.strictObject({
   mimeType: z.enum(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]),
   name: z.string().min(1).max(200),
   sizeBytes: z.number().int().min(0).max(50_000_000),
-  storageKey: z.string().min(1).max(400),
+  storageKey: z.string().min(1).max(400).regex(/^(?:\/images\/[a-zA-Z0-9_./-]+|local:[a-zA-Z0-9_-]+)$/).refine(key=>!key.includes(".."),"Unsafe asset path"),
+  folder: z.string().max(80).optional(),
+  pixelWidth: z.number().int().min(1).max(4096).optional(),
+  pixelHeight: z.number().int().min(1).max(4096).optional(),
 });
+export const componentSchema = z.strictObject({id:idSchema,name:z.string().min(1).max(100),variants:z.array(z.strictObject({id:idSchema,name:z.string().min(1).max(100),rootId:idSchema,nodes:z.record(idSchema,nodeSchema)})).min(1).max(20)});
 const variableSchema = z.strictObject({
   type: z.enum(["text", "date", "number", "boolean"]),
   label: z.strictObject({ ru: z.string().max(100), ky: z.string().max(100) }),
@@ -100,6 +105,7 @@ export const projectDocumentSchema = z.strictObject({
   pages: z.array(projectPageSchema).min(1).max(30),
   nodes: z.record(idSchema, nodeSchema).refine(value => Object.keys(value).length <= 500, "Maximum 500 nodes"),
   assets: z.record(idSchema, mediaAssetRefSchema).refine(value => Object.keys(value).length <= 200, "Maximum 200 assets"),
+  components: z.record(idSchema,componentSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 components").optional(),
   variables: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/), variableSchema),
 }).superRefine((doc, ctx) => {
   const issue = (path: (string | number)[], message: string) =>
@@ -125,6 +131,7 @@ export const projectDocumentSchema = z.strictObject({
       if (node.type === "frame" && node.layout === "free" && (s.width === "hug" || s.height === "hug")) issue(["nodes", key, "sizing"], "Hug requires auto layout");
       if (node.parentId === null && (s.width === "fill" || s.height === "fill")) issue(["nodes", key, "sizing"], "Page roots cannot fill");
     }
+    if(node.componentRef&&!doc.components?.[node.componentRef.componentId]?.variants.some(v=>v.id===node.componentRef!.variantId))issue(["nodes",key,"componentRef"],"Missing component variant");
     if (key !== node.id) issue(["nodes", key, "id"], "Node key and ID differ");
     if (rootIds.has(key) && node.parentId !== null)
       issue(["nodes", key, "parentId"], "Root frame must have no parent");
@@ -166,6 +173,32 @@ export const projectDocumentSchema = z.strictObject({
   }
   if (visited.size !== Object.keys(doc.nodes).length)
     issue(["nodes"], "All nodes must be reachable from a page root");
+  for(const [key,component] of Object.entries(doc.components??{})){
+    if(key!==component.id)issue(["components",key],"Component ID mismatch");
+    const variants=new Set<string>();
+    for(const variant of component.variants){
+      const path=["components",key,"variants",variant.id];
+      if(variants.has(variant.id))issue(path,"Duplicate variant");
+      variants.add(variant.id);
+      const root=variant.nodes[variant.rootId];
+      if(!root||root.parentId!==null||Object.keys(variant.nodes).length>500)issue(path,"Invalid component root or size");
+      const visited=new Set<string>(),queue=[variant.rootId];
+      while(queue.length){
+        const id=queue.pop()!,n=variant.nodes[id];
+        if(!n||visited.has(id)){issue(path,"Broken or cyclic component tree");continue;}
+        visited.add(id);
+        if(n.id!==id)issue(path,"Node ID mismatch");
+        if(n.componentRef)issue(path,"Component definitions must be detached snapshots");
+        if(n.type==="image"&&!doc.assets[n.assetId])issue(path,"Missing component asset");
+        if(n.type==="text"&&n.bindingKey&&!doc.variables[n.bindingKey])issue(path,"Missing component variable");
+        if(n.type==="frame")for(const child of n.children){
+          if(variant.nodes[child]?.parentId!==id)issue(path,"Component parent mismatch");
+          queue.push(child);
+        }
+      }
+      if(visited.size!==Object.keys(variant.nodes).length)issue(path,"Disconnected component nodes");
+    }
+  }
   for (const [key, asset] of Object.entries(doc.assets)) {
     if (key !== asset.id) issue(["assets", key, "id"], "Asset key and ID differ");
   }

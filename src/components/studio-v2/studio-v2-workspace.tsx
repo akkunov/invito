@@ -7,6 +7,9 @@ import {
   Minus, MousePointer2, Move, Plus, Ruler, Undo2, Redo2, Smartphone, PanelLeftClose, PanelRightClose, Map as MapIcon,
 } from "lucide-react";
 import type { Locale } from "@/i18n/locales";
+import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
+import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
+import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
 import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
@@ -99,6 +102,9 @@ function MiniMap({frames, viewport, size, onCenter}:{
 }
 export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
+  const [libraryOpen,setLibraryOpen]=useState(false);
+  const [storageStatus,setStorageStatus]=useState("Загрузка локального проекта");
+  const [loaded,setLoaded]=useState(false);
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
   const [selectedIds,setSelectedIds]=useState<string[]>([]);
   const [editing,setEditing]=useState<TextEditingSession|null>(null);
@@ -126,6 +132,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const pageDrag=useRef<{id:string;start:Point;origin:Point;started:boolean;pointer:number}|null>(null);
   const fitted=useRef(false);
   const sourceDocument=session.document;
+  const mediaUrls=useMediaUrls(sourceDocument.assets);
+  useEffect(()=>{let active=true;void loadLocalProject("studio-v2-demo").then(doc=>{if(active&&doc)setSession(createEditorSession(doc));if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
+  useEffect(()=>{if(!loaded||session.transaction)return;const timer=window.setTimeout(()=>{void saveLocalProject(sourceDocument).then(()=>setStorageStatus("Сохранено локально")).catch(()=>setStorageStatus("Не удалось сохранить"));},250);return()=>window.clearTimeout(timer);},[loaded,session.transaction,sourceDocument]);
   const document=useMemo(()=>layoutDocument(sourceDocument,textMeasurements),[sourceDocument,textMeasurements]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
   const activeTool=spaceHeld?"hand":tool;
@@ -160,6 +169,17 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   const container=authoredNode?.type==="frame"?authoredNode:!activeNode&&selectedRoot?.type==="frame"?sourceDocument.nodes[selectedRoot.id]:null;
   const layoutFrame=container?.type==="frame"?container:null;
+  const targetFrame=authoredNode?.type==="frame"?authoredNode:selectedRoot?.type==="frame"?selectedRoot:null;
+  const canInsert=!!targetFrame&&!targetFrame.locked&&!editing;
+  function libraryCommands(commands:StudioCommand|readonly StudioCommand[]){setSession(s=>{if(s.transaction)return s;try{return dispatchStudioCommand(s,commands);}catch{return s;}});}
+  function addAsset(a:Asset){libraryCommands({kind:"putAsset",asset:a});}
+  function insertAsset(a:Asset){if(!targetFrame||!canInsert)return;const id="image-"+crypto.randomUUID();libraryCommands({kind:"insertNode",parentId:targetFrame.id,node:imageNode(a,targetFrame.id,id)});setSelectedIds([id]);}
+  function replaceAsset(a:Asset){if(authoredNode?.type!=="image"||editing){setSelectionError("Выберите изображение для замены.");return;}libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{assetId:a.id}});}
+  function deleteAsset(a:Asset){if(Object.values(sourceDocument.nodes).some(n=>n.type==="image"&&n.assetId===a.id)||Object.values(sourceDocument.components??{}).some(c=>c.variants.some(v=>Object.values(v.nodes).some(n=>n.type==="image"&&n.assetId===a.id)))){setSelectionError("Ресурс используется в документе или библиотеке.");return;}libraryCommands({kind:"deleteAsset",id:a.id});}
+  function createComponent(name:string){if(!authoredNode||editing)return;const id="component-"+crypto.randomUUID();libraryCommands({kind:"putComponent",component:{id,name,variants:[snapshotVariant(sourceDocument,authoredNode.id,"variant-default","Основной")]}});}
+  function addVariant(c:Component,name:string){if(!authoredNode||editing)return;libraryCommands({kind:"putComponent",component:{...c,variants:[...c.variants,snapshotVariant(sourceDocument,authoredNode.id,"variant-"+crypto.randomUUID(),name)]}});}
+  function insertComponent(c:Component,variantId:string){if(!targetFrame||!canInsert)return;const commands=instantiateComponent(c,variantId,targetFrame.id,()=>"node-"+crypto.randomUUID());libraryCommands(commands);const first=commands[0];if(first?.kind==="insertNode")setSelectedIds([first.node.id]);}
+  function insertShape(shape:"rectangle"|"circle"|"ellipse"|"triangle"|"star"|"heart"){if(!targetFrame||!canInsert)return;const id="shape-"+crypto.randomUUID();libraryCommands({kind:"insertNode",parentId:targetFrame.id,node:{id,type:"shape",parentId:targetFrame.id,x:24,y:24,width:160,height:160,rotation:0,opacity:1,visible:true,locked:false,shape,fill:"#707A5C",stroke:null,strokeWidth:0}});setSelectedIds([id]);}
   const parent=authoredNode?.parentId?sourceDocument.nodes[authoredNode.parentId]:null;
   const inStack=parent?.type==="frame"&&parent.layout!=="free";
   const movable=(ids:string[])=>ids.every(id=>{const p=sourceDocument.nodes[sourceDocument.nodes[id].parentId??""];return p?.type==="frame"&&p.layout==="free";});
@@ -444,7 +464,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <Link href={`/${locale}`} aria-label="На главную"><ArrowLeft size={16}/></Link>
         <strong>INVITO <span>Studio 2.0</span></strong>
         <span className="v2-project-title">Свадебная коллекция <ChevronDown size={13}/></span>
-        <span className="v2-draft-state">Демо · без сохранения</span>
+        <span className="v2-draft-state">{storageStatus}</span>
       </div>
       <div className="v2-tools" role="toolbar" aria-label="Инструменты холста">
         <button aria-label="Выделение (V)" title="Выделение (V)" aria-pressed={activeTool==="select"} onClick={()=>setTool("select")}><MousePointer2 size={19}/></button>
@@ -462,7 +482,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     </header>
     <div className="v2-body">
       <aside className={`v2-left ${leftOpen?"is-open":""}`} aria-label="Страницы и библиотека">
-        <div className="v2-sidebar-tabs"><strong>Страницы</strong><span>Слои</span><span>Ресурсы</span></div>
+        <div className="v2-sidebar-tabs"><button aria-pressed={!libraryOpen} onClick={()=>setLibraryOpen(false)}>Страницы / слои</button><button aria-pressed={libraryOpen} onClick={()=>setLibraryOpen(true)}>Ресурсы</button></div>
+        {libraryOpen?<><AssetLibrary document={sourceDocument} urls={mediaUrls} onUpload={addAsset} onInsert={insertAsset} onReplace={replaceAsset} onFolder={(a,folder)=>libraryCommands({kind:"putAsset",asset:{...a,folder}})} onDelete={deleteAsset} onCreateComponent={createComponent} onAddVariant={addVariant} onInsertComponent={insertComponent} canCreate={!!authoredNode&&!editing} canInsert={canInsert} onError={setSelectionError}/><div className="v2-sidebar-section"><div className="v2-sidebar-heading"><strong>Фигуры</strong></div><div className="v2-nudge">{(["rectangle","circle","triangle","star","heart"] as const).map((shape,i)=><button key={shape} title={shape} disabled={!canInsert} onClick={()=>insertShape(shape)}>{["□","○","△","☆","♡"][i]}</button>)}</div></div></>:<>
         <div className="v2-sidebar-heading"><strong>Страницы <small>{document.pages.length}</small></strong>
           <button title="Добавить страницу" aria-label="Добавить страницу" onClick={addPage} disabled={document.pages.length>=30}><Plus size={18}/></button>
         </div>
@@ -480,7 +501,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <div className="v2-sidebar-heading"><strong>Слои {selected?.name}</strong></div>
           {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode}/>}
         </div>
-        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте название страницы над фреймом, чтобы изменить расположение.</span></div>
+        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте название страницы над фреймом, чтобы изменить расположение.</span></div></>}
       </aside>
       <section className="v2-workspace" aria-label="Бесконечная рабочая область">
         <div className="v2-mobile-panel-controls">
@@ -500,7 +521,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
                 return <div key={page.id} data-studio-page={page.id} className={`v2-frame ${selectedPage===page.id?"is-selected":""}`}
                   style={{left:page.placement.x,top:page.placement.y,width:root.width,height:root.height}}
                   >
-                  <StudioV2Artboard document={document} rootNodeId={page.rootNodeId} editingId={editing?.id} onMeasure={measureText} renderEditor={node=>editing?.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null}/>
+                  <StudioV2Artboard document={document} mediaUrls={mediaUrls} rootNodeId={page.rootNodeId} editingId={editing?.id} onMeasure={measureText} renderEditor={node=>editing?.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null}/>
                 </div>;
               })}
             </div>
@@ -553,6 +574,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
         </section>
+        {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:patch})}/>}
+        {authoredNode?.componentRef&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">{sourceDocument.components?.[authoredNode.componentRef.componentId]?.name} · редактируемая копия</p><button className="v2-inspector-button" onClick={()=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{componentRef:undefined}})}>Отсоединить</button></section>}
         {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}))} onFinish={()=>finishText()}/>}
         <section className="v2-inspector-section">
           <h3>Auto Layout</h3>
@@ -603,9 +626,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #25 · Rich Text</h3>
+          <h3>Этап #26 · Ресурсы</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
-          <p>Это демонстрационный документ: изменения не публикуются и не сохраняются на сервере.</p>
+          <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
       </aside>
     </div>
