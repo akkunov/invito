@@ -582,3 +582,13 @@
 .v2-recovery-card .v2-inspector-button{margin:0;min-height:40px}
 .v2-recovery-card button:first-of-type{background:var(--v2-blue);color:white;border-color:var(--v2-blue)!important}
 .v2-recovery-card button:first-of-type:hover{filter:brightness(.95)}
+
+/* Cloud sync is opt-in and does not override existing canvas sizing. */
+.v2-cloud-panel{max-width:760px;width:min(100% - 32px,760px);margin:36px auto;padding:28px;border-radius:16px;background:#fff;color:#222;box-shadow:0 20px 90px #0002;display:grid;gap:14px}
+.v2-cloud-panel h2{font-size:20px;overflow-wrap:anywhere;margin:0}.v2-cloud-panel p{margin:0;line-height:1.55}
+.v2-cloud-actions{display:flex;gap:10px;flex-wrap:wrap}
+.v2-cloud-actions button{min-height:36px;padding:8px 13px;border:1px solid #d4d5d7;border-radius:8px;background:#f7f7f7;color:#111;cursor:pointer}
+.v2-cloud-actions button:first-child{background:#242424;color:#fff;border-color:#242424}
+.v2-cloud-actions button:disabled{opacity:.5;cursor:not-allowed}
+.v2-cloud-conflict{padding:16px;background:#fff5ec;border:1px solid #e0b990;border-radius:10px;display:grid;gap:14px}
+.v2-cloud-conflict h3{margin:0;font-size:17px}.v2-cloud-hint{font-size:12px;color:#5f6267}
