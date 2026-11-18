@@ -16,7 +16,7 @@ export function useMediaUrls(assets:ProjectDocumentV2["assets"]){
  },[key]);return urls;
 }
 function assetUrl(a:Asset,urls:Record<string,string>){return a.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+a.storageKey:urls[a.storageKey];}
-export function AssetLibrary({document,urls,onUpload,onInsert,onReplace,onFolder,onDelete,onCreateComponent,onAddVariant,onInsertComponent,canCreate,canInsert,onError}:{document:ProjectDocumentV2;urls:Record<string,string>;onUpload:(asset:Asset)=>void;onInsert:(a:Asset)=>void;onReplace:(a:Asset)=>void;onFolder:(a:Asset,folder:string)=>void;onDelete:(a:Asset)=>void;onCreateComponent:(name:string)=>void;onAddVariant:(component:Component,name:string)=>void;onInsertComponent:(component:Component,variantId:string)=>void;canCreate:boolean;canInsert:boolean;onError:(message:string)=>void}){
+export function AssetLibrary({document,urls,onUpload,onInsert,onReplace,onFolder,onDelete,onCreateComponent,onAddVariant,onUpdateVariant,onInsertComponent,canCreate,canInsert,onError}:{document:ProjectDocumentV2;urls:Record<string,string>;onUpload:(asset:Asset)=>void;onInsert:(a:Asset)=>void;onReplace:(a:Asset)=>void;onFolder:(a:Asset,folder:string)=>void;onDelete:(a:Asset)=>void;onCreateComponent:(name:string)=>void;onAddVariant:(component:Component,name:string)=>void;onUpdateVariant:(component:Component,variantId:string)=>void;onInsertComponent:(component:Component,variantId:string)=>void;canCreate:boolean;canInsert:boolean;onError:(message:string)=>void}){
  const input=useRef<HTMLInputElement>(null);
  const [search,setSearch]=useState(""),[folder,setFolder]=useState(""),[filter,setFilter]=useState(""),[busy,setBusy]=useState(false),[name,setName]=useState("");
  const folders=[...new Set(Object.values(document.assets).map(a=>a.folder).filter(Boolean))] as string[];
@@ -42,7 +42,7 @@ export function AssetLibrary({document,urls,onUpload,onInsert,onReplace,onFolder
   <input className="v2-library-input" placeholder="Название компонента / варианта" maxLength={100} value={name} onChange={e=>setName(e.target.value)}/>
   <button className="v2-inspector-button" disabled={!canCreate||!name.trim()} onClick={()=>onCreateComponent(name.trim())}>Создать из выделения</button>
   {Object.values(document.components??{}).map(c=><div key={c.id} className="v2-component-item"><strong>{c.name}</strong>
-    {c.variants.map(v=><button key={v.id} className="v2-inspector-button" disabled={!canInsert} onClick={()=>onInsertComponent(c,v.id)}>+ {v.name}</button>)}
+    {c.variants.map(v=><div key={v.id} className="v2-component-variant"><button className="v2-inspector-button" disabled={!canInsert} onClick={()=>onInsertComponent(c,v.id)}>+ {v.name}</button><button className="v2-inspector-button" disabled={!canCreate} aria-label={"Обновить мастер "+c.name+" / "+v.name} onClick={()=>onUpdateVariant(c,v.id)}>Обновить мастер из выделения</button></div>)}
     <button className="v2-inspector-button" disabled={!canCreate||!name.trim()} onClick={()=>onAddVariant(c,name.trim())}>Добавить вариант из выделения</button>
   </div>)}
  </div>;
