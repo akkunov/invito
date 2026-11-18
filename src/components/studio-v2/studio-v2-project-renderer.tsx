@@ -1,5 +1,6 @@
 "use client";
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
+import {resolveStyleDocument} from "@/features/studio-v2/core/style-tokens.ts";
 import {bindDocument,type GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
 import {StudioV2Artboard} from "./studio-v2-artboard";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
@@ -14,7 +15,7 @@ export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",guest=
  const actual=device==="auto"?deviceForWidth(width):device;
  useEffect(()=>{const el=container.current;if(!el)return;const update=()=>setWidth(Math.max(1,el.clientWidth));update();const observer=new ResizeObserver(update);observer.observe(el);return()=>observer.disconnect();},[]);
  const measure=useCallback((id:string,height:number)=>setMeasured(old=>old[actual]?.[id]===height?old:{...old,[actual]:{...old[actual],[id]:height}}),[actual]);
- const resolved=useMemo(()=>responsiveDocument(bindDocument(document),actual,measured[actual]??{}),[document,actual,measured]);
+ const resolved=useMemo(()=>responsiveDocument(resolveStyleDocument(bindDocument(document)),actual,measured[actual]??{}),[document,actual,measured]);
  const available=device==="auto"?width:Math.min(width,DEVICE_WIDTH[actual]);
  return <div ref={container} className="v2-project-renderer" lang={document.locale} style={{width:"100%",minWidth:0}}>
   <div style={{width:"100%",maxWidth:available,margin:"0 auto"}}>

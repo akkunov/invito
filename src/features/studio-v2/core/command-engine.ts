@@ -1,3 +1,6 @@
+import {unlinkStyle,styleUsage} from "./style-tokens.ts";
+import type {StyleToken,StyleTheme,TokenSlot} from "./style-tokens.schema.ts";
+import {compatibleToken} from "./style-tokens.schema.ts";
 import {linkedRoot,stripLink,updateComponentDefinition,reconcileInstance,resetNodeOverrides,detachInstance,noteOverrides} from "./linked-components.ts";
 import type {Device,PageProfile,NodeOverride} from "./responsive-engine.ts";
 import { resolveLayout } from "./layout-engine.ts";
@@ -8,6 +11,12 @@ type Position = { x: number; y: number };
 type EditableNodeFields = ProjectNodeV2 extends infer N ? N extends ProjectNodeV2 ? Partial<Omit<N, "id" | "type" | "parentId" | "children">> : never : never;
 
 export type StudioCommand =
+  | {kind:"putStyleToken";token:StyleToken}
+  | {kind:"deleteStyleToken";id:string}
+  | {kind:"putStyleTheme";theme:StyleTheme}
+  | {kind:"deleteStyleTheme";id:string}
+  | {kind:"activateStyleTheme";id:string|null}
+  | {kind:"bindStyle";id:string;slot:TokenSlot;tokenId:string|null}
   | { kind: "putVariable"; key: string; variable: ProjectDocumentV2["variables"][string]; value: NonNullable<ProjectDocumentV2["values"]>[string] }
   | { kind: "setVariableValue"; key: string; value: NonNullable<ProjectDocumentV2["values"]>[string] }
   | { kind: "setPageProfile"; id: string; device: Device; profile: PageProfile | null }
@@ -104,6 +113,23 @@ function removeSubtree(doc: ProjectDocumentV2, id: string) {
 }
 function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
   switch (command.kind) {
+    case "putStyleToken": {
+      const old=doc.tokens?.[command.token.id];assert(!old||old.kind===command.token.kind,"Cannot change style type");
+      doc.tokens??={};doc.tokens[command.token.id]=clone(command.token);return;
+    }
+    case "deleteStyleToken": {
+      assert(doc.tokens?.[command.id],"Missing style");assert(!styleUsage(doc,command.id),"Style is in use");
+      delete doc.tokens![command.id];for(const theme of Object.values(doc.themes??{}))delete theme.overrides[command.id];return;
+    }
+    case "putStyleTheme": {doc.themes??={};doc.themes[command.theme.id]=clone(command.theme);return;}
+    case "deleteStyleTheme": {assert(doc.themes?.[command.id],"Missing theme");delete doc.themes![command.id];if(doc.activeThemeId===command.id)doc.activeThemeId=null;return;}
+    case "activateStyleTheme": {assert(command.id===null||doc.themes?.[command.id],"Missing theme");doc.activeThemeId=command.id;return;}
+    case "bindStyle": {
+      const n=getNode(doc,command.id);ensureWritable(doc,n.id);
+      if(command.tokenId===null){doc.nodes[n.id]=unlinkStyle(doc,n,command.slot);return;}
+      const token=doc.tokens?.[command.tokenId];assert(token&&compatibleToken(command.slot,token),"Incompatible style");
+      n.tokenRefs={...n.tokenRefs,[command.slot]:command.tokenId};return;
+    }
     case "putVariable": { assert(!doc.variables[command.key],"Variable already exists");doc.variables[command.key]=clone(command.variable);doc.values??={};doc.values[command.key]=clone(command.value);return; }
     case "setVariableValue": { assert(doc.variables[command.key],"Unknown variable");doc.values??={};doc.values[command.key]=clone(command.value);return; }
     case "setPageProfile": { const page=doc.pages.find(p=>p.id===command.id);assert(page,"Missing page");ensureWritable(doc,page.rootNodeId);page.responsive??={};if(command.profile)page.responsive[command.device]=clone(command.profile);else delete page.responsive[command.device];return; }
@@ -290,7 +316,7 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
 export function applyStudioCommand(document: ProjectDocumentV2, command: StudioCommand): ProjectDocumentV2 {
   const next = clone(document);
   executeUnsafe(next, command);
-  if(command.kind==="updateNode"||command.kind==="moveNodes"||command.kind==="setLayerState")noteOverrides(document,next);
+  if(command.kind==="updateNode"||command.kind==="moveNodes"||command.kind==="setLayerState"||command.kind==="bindStyle")noteOverrides(document,next);
   return parseProjectV2(next);
 }
 export function applyStudioBatch(document: ProjectDocumentV2, commands: readonly StudioCommand[]): ProjectDocumentV2 {

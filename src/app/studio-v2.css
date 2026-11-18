@@ -260,3 +260,5 @@
 .v2-appearance-fieldset button[aria-pressed=true]{background:#e8edff;color:var(--v2-blue)}
 
 .v2-component-variant{display:grid;gap:3px;padding:4px 0;border-bottom:1px solid var(--v2-border)}.v2-component-variant button:last-child{font-size:10px;color:#6543a3}.v2-linked-inspector h3{color:#7046b9}.v2-linked-inspector strong{font-size:12px}
+
+.v2-style-library .v2-component-item{margin-top:8px}.v2-style-sample{height:42px;border:1px solid var(--v2-border);border-radius:4px;margin:6px 0}.v2-style-type-sample{font-size:21px;padding:8px 0;color:var(--v2-ink);font-style:normal}.v2-style-library .v2-pro-actions .v2-widget-field{flex:1;min-width:0}.v2-style-bindings h3{color:#7046b9}

@@ -16,6 +16,9 @@ import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PagePro
 import { InvitationControls } from "./studio-v2-invitation-controls";
 import { BLOCK_NAMES, bindDocument, createWidget, type BlockKind } from "@/features/studio-v2/core/invitation-behavior.ts";
 import { alignSelection, distributeSelection, scaleSelection, rotateSelection, copySelection, pasteSelection, reparentPreserveWorld, distanceGuides, freeSelection, canResizeSelection, type CanvasClipboard, type DistanceGuide } from "@/features/studio-v2/core/canvas-pro.ts";
+import { StyleLibrary, StyleBindings } from "./studio-v2-style-library";
+import { resolveStyleDocument, resolveStyleNode } from "@/features/studio-v2/core/style-tokens.ts";
+import type {VisualProperties} from "@/features/studio-v2/core/appearance.schema.ts";
 import { AdvancedProperties } from "./studio-v2-advanced-properties";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
@@ -154,7 +157,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const mediaUrls=useMediaUrls(sourceDocument.assets);
   useEffect(()=>{let active=true;void loadLocalProject("studio-v2-demo").then(doc=>{if(active&&doc)setSession(createEditorSession(doc));if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
   useEffect(()=>{if(!loaded||session.transaction)return;const timer=window.setTimeout(()=>{void saveLocalProject(sourceDocument).then(()=>setStorageStatus("Сохранено локально")).catch(()=>setStorageStatus("Не удалось сохранить"));},250);return()=>window.clearTimeout(timer);},[loaded,session.transaction,sourceDocument]);
-  const document=useMemo(()=>{const bound=bindDocument({...sourceDocument,locale});if(editing&&sourceDocument.nodes[editing.id])bound.nodes[editing.id]=sourceDocument.nodes[editing.id];return layoutDocument(bound,textMeasurements);},[sourceDocument,textMeasurements,editing?.id,locale]);
+  const document=useMemo(()=>{const bound=bindDocument({...sourceDocument,locale});if(editing&&sourceDocument.nodes[editing.id])bound.nodes[editing.id]=sourceDocument.nodes[editing.id];return layoutDocument(resolveStyleDocument(bound),textMeasurements);},[sourceDocument,textMeasurements,editing?.id,locale]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
   const activeTool=spaceHeld?"hand":tool;
   const selected=document.pages.find(p=>p.id===selectedPage)??null;
@@ -181,6 +184,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   function editTextRuns(id:string,runs:TextRun[]){setSession(s=>{try{return dispatchStudioCommand(s,{kind:"updateNode",id,changes:{runs}});}catch{return s;}});}
   function updateTextRange(range:TextRange){setEditing(old=>old?{...old,range,typingStyle:old.range.start===range.start&&old.range.end===range.end?old.typingStyle:null}:null);}
   function styleText(node:TextNode,patch:Partial<TextStyle>){
+    if(node.tokenRefs?.textColor&&"color" in patch||node.tokenRefs?.typography&&(["fontFamily","fontSize","fontWeight"] as const).some(k=>k in patch)){setSelectionError("Сначала отсоедините соответствующий связанный стиль текста.");return;}
     const range=editing?.id===node.id?editing.range:{start:0,end:plainText(node.runs).length};
     if(editing?.id===node.id&&range.start===range.end){setEditing(old=>old?{...old,typingStyle:{...(old.typingStyle??rangeStyle(node.runs,range)),...patch}}:null);if(!plainText(node.runs))editTextRuns(node.id,formatRange(node.runs,range,patch));return;}
     try{editTextRuns(node.id,formatRange(node.runs,range,patch));}catch{/* Keep valid runs. */}
@@ -234,6 +238,16 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const id="frame-"+crypto.randomUUID();
     const node={id,parentId:target.id,type:"frame" as const,name:"Новый фрейм",x:24,y:24,width:320,height:240,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free" as const,gap:16,padding:{top:16,right:16,bottom:16,left:16},background:"transparent",clip:false};
     setSession(s=>dispatchStudioCommand(s,{kind:"insertNode",parentId:target.id,node}));setSelectedIds([id]);
+  }
+  function changeVisual(node:ProjectDocumentV2["nodes"][string],resolved:ProjectDocumentV2["nodes"][string],visual:VisualProperties){
+    const next={...node.visual} as Record<string,unknown>,effective=resolved.visual??{},incoming=visual as Record<string,unknown>,old=effective as Record<string,unknown>;
+    const controlled:Record<string,boolean>={fill:!!node.tokenRefs?.fill,stroke:!!node.tokenRefs?.stroke,shadow:!!node.tokenRefs?.effect,blur:!!node.tokenRefs?.effect,corners:!!node.tokenRefs?.corners};
+    for(const key of new Set([...Object.keys(old),...Object.keys(incoming)])){
+      if(JSON.stringify(old[key])===JSON.stringify(incoming[key]))continue;
+      if(controlled[key]){setSelectionError("Сначала отсоедините соответствующий связанный стиль.");return;}
+      if(Object.hasOwn(incoming,key))next[key]=incoming[key];else delete next[key];
+    }
+    proAction(()=>({kind:"updateNode",id:node.id,changes:{visual:next as VisualProperties}}));
   }
   function proAction(make:()=>StudioCommand|StudioCommand[]){
     if(editing||session.transaction)return;
@@ -694,11 +708,12 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
         </section>
-        {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]);return <AdvancedProperties key={n.id} document={sourceDocument} node={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>proAction(()=>({kind:"updateNode",id:n.id,changes:{visual}}))}/>;})()}
+        <StyleLibrary document={sourceDocument} disabled={!!editing} onCommand={command=>proAction(()=>command)}/>
+        {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)}/></>;})()}
         {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/>}
         {authoredNode&&selectedInstance&&instanceComponent&&<section className="v2-inspector-section v2-linked-inspector"><h3>Связанный компонент</h3><strong>{instanceComponent.name}</strong><p className="v2-placeholder">{authoredNode.id===selectedInstance.id?"Экземпляр":"Вложенный слой"} · {(authoredNode.componentOverrides??[]).length} изменённых свойств</p><label className="v2-widget-field">Вариант<select aria-label="Вариант компонента" disabled={!!editing} value={selectedInstance.componentRef!.variantId} onChange={e=>proAction(()=>({kind:"switchComponentVariant",id:selectedInstance.id,variantId:e.target.value}))}>{instanceComponent.variants.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button className="v2-inspector-button" disabled={!!editing||!authoredNode.componentOverrides?.length} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:authoredNode.id,scope:"layer"}))}>Сбросить свойства слоя</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:selectedInstance.id,scope:"instance"}))}>Сбросить экземпляр</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"detachComponent",id:selectedInstance.id}))}>Отсоединить экземпляр</button><p className="v2-placeholder">Для изменения структуры отсоедините экземпляр или обновите мастер в библиотеке.</p></section>}
         {authoredNode?.componentRef&&!selectedInstance&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">Старая независимая копия. Создайте новый связанный экземпляр из библиотеки.</p><button className="v2-inspector-button" onClick={()=>proAction(()=>({kind:"detachComponent",id:authoredNode.id}))}>Отсоединить</button></section>}
-        {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}))} onFinish={()=>finishText()}/>}
+        {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>{if(authoredNode.tokenRefs?.typography&&("lineHeight" in patch||"letterSpacing" in patch)){setSelectionError("Сначала отсоедините стиль текста.");return;}setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}));}} onFinish={()=>finishText()}/>}
         <section className="v2-inspector-section">
           <h3>Auto Layout</h3>
           <button className="v2-inspector-button" disabled={!!editing} onClick={addText}>+ Текст (T)</button>
@@ -769,7 +784,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28.3 · Linked Components</h3>
+          <h3>Этап #28.4 · Design Tokens</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>

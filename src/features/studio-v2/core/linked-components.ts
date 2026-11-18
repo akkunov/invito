@@ -3,7 +3,7 @@ import type {Component} from "./component-engine.ts";
 type Variant=Component["variants"][number];
 type Node=ProjectNodeV2;
 type Nodes=ProjectDocumentV2["nodes"];
-export const OVERRIDE_FIELDS=["x","y","width","height","rotation","opacity","visible","locked","sizing","anchors","layerName","visual","name","layout","gap","alignment","distribution","padding","background","clip","runs","textAlign","lineHeight","letterSpacing","autoHeight","bindingKey","assetId","fit","focalX","focalY","block","appearance","shape","fill","stroke","strokeWidth"] as const;
+export const OVERRIDE_FIELDS=["x","y","width","height","rotation","opacity","visible","locked","sizing","anchors","layerName","visual","tokenRefs","name","layout","gap","alignment","distribution","padding","background","clip","runs","textAlign","lineHeight","letterSpacing","autoHeight","bindingKey","assetId","fit","focalX","focalY","block","appearance","shape","fill","stroke","strokeWidth"] as const;
 export type OverrideField=typeof OVERRIDE_FIELDS[number];
 const excluded=(root:boolean,key:string)=>root&&["x","y","rotation"].includes(key);
 const record=(n:Node)=>n as unknown as Record<string,unknown>;

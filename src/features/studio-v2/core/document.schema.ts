@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {OVERRIDE_FIELDS} from "./linked-components.ts";
+import {tokenSchema,tokenRefsSchema,themeSchema,compatibleToken,tokenSlots} from "./style-tokens.schema.ts";
 import {visualSchema} from "./appearance.schema.ts";
 import {bindingKeySchema,bindingValueSchema,invitationBlockSchema,blockAppearanceSchema} from "./invitation.schema.ts";
 
@@ -14,6 +15,7 @@ const baseNodeSchema = z.strictObject({
   id: idSchema,
   layerName: z.string().min(1).max(100).optional(),
   visual: visualSchema.optional(),
+  tokenRefs: tokenRefsSchema.optional(),
   parentId: idSchema.nullable(),
   x: coordinateSchema,
   y: coordinateSchema,
@@ -121,6 +123,9 @@ export const projectDocumentSchema = z.strictObject({
   nodes: z.record(idSchema, nodeSchema).refine(value => Object.keys(value).length <= 500, "Maximum 500 nodes"),
   assets: z.record(idSchema, mediaAssetRefSchema).refine(value => Object.keys(value).length <= 200, "Maximum 200 assets"),
   responsiveOverrides: z.strictObject({desktop:z.record(idSchema,responsivePatchSchema).optional(),tablet:z.record(idSchema,responsivePatchSchema).optional(),mobile:z.record(idSchema,responsivePatchSchema).optional()}).optional(),
+  tokens: z.record(idSchema,tokenSchema).refine(v=>Object.keys(v).length<=200,"Maximum 200 styles").optional(),
+  themes: z.record(idSchema,themeSchema).refine(v=>Object.keys(v).length<=20,"Maximum 20 themes").optional(),
+  activeThemeId: idSchema.nullable().optional(),
   components: z.record(idSchema,componentSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 components").optional(),
   guides: z.array(z.strictObject({id:idSchema,axis:z.enum(["x","y"]),position:coordinateSchema})).max(100).refine(v=>new Set(v.map(g=>g.id)).size===v.length,"Duplicate guide ID").optional(),
   values: z.record(bindingKeySchema,bindingValueSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 values").optional(),
@@ -149,9 +154,25 @@ export const projectDocumentSchema = z.strictObject({
     if(b.kind==="countdown"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Countdown requires date variable");
     if(b.kind==="location"&&b.addressKey&&doc.variables[b.addressKey]?.type!=="text")issue(path,"Location requires text variable");
   };
+  for(const [id,token] of Object.entries(doc.tokens??{}))if(id!==token.id)issue(["tokens",id],"Style key mismatch");
+  for(const [id,theme] of Object.entries(doc.themes??{})){
+    if(id!==theme.id)issue(["themes",id],"Theme key mismatch");
+    for(const [key,override] of Object.entries(theme.overrides)){
+      const base=doc.tokens?.[key];if(!base||override.id!==key||base.kind!==override.kind)issue(["themes",id,"overrides",key],"Theme override must match a base style");
+    }
+  }
+  if(doc.activeThemeId&&!doc.themes?.[doc.activeThemeId])issue(["activeThemeId"],"Missing theme");
+  const validateTokens=(node:z.infer<typeof nodeSchema>,path:(string|number)[])=>{
+    for(const slot of tokenSlots){
+      const id=node.tokenRefs?.[slot];if(!id)continue;
+      const token=doc.tokens?.[id];if(!token||!compatibleToken(slot,token))issue([...path,"tokenRefs",slot],"Missing or incompatible style");
+      if((slot==="typography"||slot==="textColor")&&node.type!=="text")issue([...path,"tokenRefs",slot],"Text styles require a text layer");
+    }
+  };
   const membership = new Map<string, number>();
   for (const [key, node] of Object.entries(doc.nodes)) {
     validateWidget(node,["nodes",key,"block"]);
+    validateTokens(node,["nodes",key]);
     if (node.sizing) {
       const s = node.sizing;
       if ((s.minWidth ?? 1) > (s.maxWidth ?? 20000) || (s.minHeight ?? 1) > (s.maxHeight ?? 20000)) issue(["nodes", key, "sizing"], "Minimum exceeds maximum");
@@ -217,6 +238,7 @@ export const projectDocumentSchema = z.strictObject({
         visited.add(id);
         if(n.id!==id)issue(path,"Node ID mismatch");
         validateWidget(n,path);
+        validateTokens(n,path);
         if(n.componentRef||n.componentSourceId||n.componentOverrides)issue(path,"Component definitions must be detached snapshots");
         if(n.type==="image"&&!doc.assets[n.assetId])issue(path,"Missing component asset");
         if(n.type==="text"&&n.bindingKey&&!doc.variables[n.bindingKey])issue(path,"Missing component variable");

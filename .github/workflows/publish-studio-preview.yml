@@ -57,6 +57,7 @@ jobs:
           npm run test:studio-v2-canvas-pro
           npm run test:studio-v2-appearance
           npm run test:studio-v2-linked-components
+          npm run test:studio-v2-style-tokens
           npm run typecheck
       - name: Export only Studio as a static Pages site
         run: bash scripts/build-studio-pages.sh
