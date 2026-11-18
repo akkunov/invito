@@ -1,3 +1,4 @@
+import type {Device,PageProfile,NodeOverride} from "./responsive-engine.ts";
 import { resolveLayout } from "./layout-engine.ts";
 import { parseProjectV2, type ProjectDocumentV2, type ProjectNodeV2, type StudioPageV2 } from "./document.schema.ts";
 
@@ -6,6 +7,8 @@ type Position = { x: number; y: number };
 type EditableNodeFields = ProjectNodeV2 extends infer N ? N extends ProjectNodeV2 ? Partial<Omit<N, "id" | "type" | "parentId" | "children">> : never : never;
 
 export type StudioCommand =
+  | { kind: "setPageProfile"; id: string; device: Device; profile: PageProfile | null }
+  | { kind: "setResponsiveOverride"; id: string; device: Device; patch: NodeOverride | null }
   | { kind: "putAsset"; asset: ProjectDocumentV2["assets"][string] }
   | { kind: "deleteAsset"; id: string }
   | { kind: "putComponent"; component: NonNullable<ProjectDocumentV2["components"]>[string] }
@@ -87,10 +90,12 @@ function removeSubtree(doc: ProjectDocumentV2, id: string) {
     const parent = getFrame(doc, node.parentId);
     parent.children = parent.children.filter(value => value !== id);
   }
-  for (const nodeId of subtreeIds(doc, id)) delete doc.nodes[nodeId];
+  for (const nodeId of subtreeIds(doc, id)) {delete doc.nodes[nodeId];for(const map of Object.values(doc.responsiveOverrides??{}))if(map)delete map[nodeId];}
 }
 function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
   switch (command.kind) {
+    case "setPageProfile": { const page=doc.pages.find(p=>p.id===command.id);assert(page,"Missing page");ensureWritable(doc,page.rootNodeId);page.responsive??={};if(command.profile)page.responsive[command.device]=clone(command.profile);else delete page.responsive[command.device];return; }
+    case "setResponsiveOverride": { const n=getNode(doc,command.id);ensureWritable(doc,n.id);assert(n.parentId!==null,"Use page profile for root");doc.responsiveOverrides??={};const map=doc.responsiveOverrides[command.device]??={};doc.responsiveOverrides[command.device]=map;if(command.patch)map[n.id]=clone(command.patch);else delete map[n.id];return; }
     case "putAsset": { doc.assets[command.asset.id]=clone(command.asset); return; }
     case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
     case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
