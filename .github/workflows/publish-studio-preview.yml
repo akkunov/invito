@@ -49,6 +49,7 @@ jobs:
           npm run test:studio-v2-layout
           npm run test:studio-v2-rich-text
           npm run test:studio-v2-assets
+          npm run test:studio-v2-responsive
           npm run typecheck
       - name: Export only Studio as a static Pages site
         shell: bash
