@@ -46,7 +46,7 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
   return;
  }
  switch(f.kind){
-  case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??0)<f.minWidth||(a.pixelHeight??0)<f.minHeight)reject("Недостаточное разрешение фото");break;}
+  case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
   case "gallery":if(v.kind!=="gallery")return reject("Неверный тип");if(v.assetIds.length>f.maxPhotos||complete&&f.required&&!v.assetIds.length)reject("Недопустимое количество фото");v.assetIds.forEach(asset);break;
   case "schedule":if(v.kind!=="schedule")return reject("Неверный тип");if(v.items.length>f.maxItems||complete&&f.required&&!v.items.length)reject("Недопустимое количество событий");for(const item of v.items)requiredText(item.label);break;
   case "music":if(v.kind!=="music")return reject("Неверный тип");if(v.source&&!f.sources.includes(v.source)||complete&&f.required&&!v.source)reject("Музыка не входит в разрешённый список");break;
@@ -123,3 +123,6 @@ export function editableCandidates(doc:ProjectDocumentV2):EditableField[]{
  return fields;
 }
 export function fieldTarget(f:EditableField){return "key" in f?"binding:"+f.key:"nodeId" in f?"node:"+f.nodeId:"theme";}
+
+/** Revalidate the derived snapshot before publish; draft editing permits incomplete required fields. */
+export function finalizePersonalization(source:ProjectDocumentV2,contract:PersonalizationContract,patch:unknown,assets:readonly Asset[]=[]){const doc=personalizeDocument(source,contract,patch,assets);const issues=personalizationIssues(doc,contract);if(issues.length)throw Error(issues.map(i=>i.message).join("; "));return doc;}
