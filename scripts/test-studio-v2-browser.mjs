@@ -80,6 +80,7 @@ try{
   assert.equal(suppressed,true,"Canvas must have a non-passive wheel handler");
   await page.getByRole("button",{name:"Показать все страницы",exact:true}).click();
   await page.locator(".v2-page-item").first().click();
+  await page.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).click();
 
   const radius=page.getByLabel("Радиус",{exact:true});
   await radius.fill("32");
