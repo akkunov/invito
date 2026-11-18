@@ -12,6 +12,8 @@ import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
 import { StudioV2ProjectRenderer } from "./studio-v2-project-renderer";
 import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PageProfile } from "@/features/studio-v2/core/responsive-engine.ts";
+import { InvitationControls } from "./studio-v2-invitation-controls";
+import { BLOCK_NAMES, bindDocument, createWidget, type BlockKind } from "@/features/studio-v2/core/invitation-behavior.ts";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
 import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
@@ -37,6 +39,7 @@ function nodeLabel(doc:ProjectDocumentV2,id:string){
  if(node.type==="frame")return node.name;
  if(node.type==="text")return node.runs.map(r=>r.text).join("").slice(0,40)||"Текст";
  if(node.type==="image")return doc.assets[node.assetId]?.name??"Фото";
+ if(node.type==="widget")return BLOCK_NAMES[node.block.kind][doc.locale];
  return "Фигура";
 }
 function LayerRows({document,ids,selected,onSelect,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;depth?:number}){
@@ -139,7 +142,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const mediaUrls=useMediaUrls(sourceDocument.assets);
   useEffect(()=>{let active=true;void loadLocalProject("studio-v2-demo").then(doc=>{if(active&&doc)setSession(createEditorSession(doc));if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
   useEffect(()=>{if(!loaded||session.transaction)return;const timer=window.setTimeout(()=>{void saveLocalProject(sourceDocument).then(()=>setStorageStatus("Сохранено локально")).catch(()=>setStorageStatus("Не удалось сохранить"));},250);return()=>window.clearTimeout(timer);},[loaded,session.transaction,sourceDocument]);
-  const document=useMemo(()=>layoutDocument(sourceDocument,textMeasurements),[sourceDocument,textMeasurements]);
+  const document=useMemo(()=>{const bound=bindDocument({...sourceDocument,locale});if(editing&&sourceDocument.nodes[editing.id])bound.nodes[editing.id]=sourceDocument.nodes[editing.id];return layoutDocument(bound,textMeasurements);},[sourceDocument,textMeasurements,editing?.id,locale]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
   const activeTool=spaceHeld?"hand":tool;
   const selected=document.pages.find(p=>p.id===selectedPage)??null;
@@ -180,10 +183,11 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const targetFrame=authoredNode?.type==="frame"?authoredNode:selectedRoot?.type==="frame"?selectedRoot:null;
   const canInsert=!!targetFrame&&!targetFrame.locked&&!editing;
   function libraryCommands(commands:StudioCommand|readonly StudioCommand[]){setSession(s=>{if(s.transaction)return s;try{return dispatchStudioCommand(s,commands);}catch{return s;}});}
+  function insertWidget(kind:BlockKind){if(!targetFrame||!canInsert)return;const id="widget-"+crypto.randomUUID();const width=Math.max(1,Math.min(900,targetFrame.width-48));libraryCommands({kind:"insertNode",parentId:targetFrame.id,node:createWidget(kind,id,targetFrame.id,width)});setSelectedIds([id]);}
   function addAsset(a:Asset){libraryCommands({kind:"putAsset",asset:a});}
   function insertAsset(a:Asset){if(!targetFrame||!canInsert)return;const id="image-"+crypto.randomUUID();libraryCommands({kind:"insertNode",parentId:targetFrame.id,node:imageNode(a,targetFrame.id,id)});setSelectedIds([id]);}
   function replaceAsset(a:Asset){if(authoredNode?.type!=="image"||editing){setSelectionError("Выберите изображение для замены.");return;}libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{assetId:a.id}});}
-  function deleteAsset(a:Asset){if(Object.values(sourceDocument.nodes).some(n=>n.type==="image"&&n.assetId===a.id)||Object.values(sourceDocument.components??{}).some(c=>c.variants.some(v=>Object.values(v.nodes).some(n=>n.type==="image"&&n.assetId===a.id)))){setSelectionError("Ресурс используется в документе или библиотеке.");return;}libraryCommands({kind:"deleteAsset",id:a.id});}
+  function deleteAsset(a:Asset){const used=(n:ProjectDocumentV2["nodes"][string])=>n.type==="image"&&n.assetId===a.id||n.type==="widget"&&n.block.kind==="gallery"&&n.block.assetIds.includes(a.id);if(Object.values(sourceDocument.nodes).some(used)||Object.values(sourceDocument.components??{}).some(c=>c.variants.some(v=>Object.values(v.nodes).some(used)))){setSelectionError("Ресурс используется в документе или библиотеке.");return;}libraryCommands({kind:"deleteAsset",id:a.id});}
   function createComponent(name:string){if(!authoredNode||editing)return;const id="component-"+crypto.randomUUID();libraryCommands({kind:"putComponent",component:{id,name,variants:[snapshotVariant(sourceDocument,authoredNode.id,"variant-default","Основной")]}});}
   function addVariant(c:Component,name:string){if(!authoredNode||editing)return;libraryCommands({kind:"putComponent",component:{...c,variants:[...c.variants,snapshotVariant(sourceDocument,authoredNode.id,"variant-"+crypto.randomUUID(),name)]}});}
   function insertComponent(c:Component,variantId:string){if(!targetFrame||!canInsert)return;const commands=instantiateComponent(c,variantId,targetFrame.id,()=>"node-"+crypto.randomUUID());libraryCommands(commands);const first=commands[0];if(first?.kind==="insertNode")setSelectedIds([first.node.id]);}
@@ -612,6 +616,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           })()}
           {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>setSession(s=>dispatchStudioCommand(s,{kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))}>{offset<0?"↑ Выше":"↓ Ниже"}</button>)}</div>}
         </section>
+        <InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/>
         <section className="v2-inspector-section">
           <h3>Адаптивность</h3>
           <div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div>
@@ -652,7 +657,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #27 · Responsive</h3>
+          <h3>Этап #28 · Блоки приглашения</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>

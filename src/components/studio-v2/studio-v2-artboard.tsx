@@ -1,5 +1,7 @@
 "use client";
 import Image from "next/image";
+import {InvitationBlockView} from "./studio-v2-invitation-block";
+import type {GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import type { TextNode, TextStyle } from "@/features/studio-v2/core/rich-text-engine.ts";
 import type { ProjectDocumentV2, ProjectNodeV2 } from "@/features/studio-v2/core/document.schema.ts";
@@ -24,7 +26,7 @@ function TextContent({node,onMeasure}:{node:TextNode;onMeasure?:(id:string,heigh
  },[node.id,node.autoHeight,onMeasure]);
  return <div ref={ref} style={{width:"100%",whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node}/></div>;
 }
-export type ArtboardTextOptions={mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
+export type ArtboardTextOptions={guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
   const base: CSSProperties = {
     position: "absolute",
@@ -67,6 +69,8 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
           style={{ objectFit: node.fit, objectPosition: `${node.focalX * 100}% ${node.focalY * 100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
       </div>;
     }
+    case "widget":
+      return <div key={id} data-studio-node={id} style={{...style,overflow:"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls}/></div>;
     case "shape":
       return <div key={id} data-studio-node={id} style={{
         ...style, background: node.fill,

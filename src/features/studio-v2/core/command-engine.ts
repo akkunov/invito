@@ -7,6 +7,8 @@ type Position = { x: number; y: number };
 type EditableNodeFields = ProjectNodeV2 extends infer N ? N extends ProjectNodeV2 ? Partial<Omit<N, "id" | "type" | "parentId" | "children">> : never : never;
 
 export type StudioCommand =
+  | { kind: "putVariable"; key: string; variable: ProjectDocumentV2["variables"][string]; value: NonNullable<ProjectDocumentV2["values"]>[string] }
+  | { kind: "setVariableValue"; key: string; value: NonNullable<ProjectDocumentV2["values"]>[string] }
   | { kind: "setPageProfile"; id: string; device: Device; profile: PageProfile | null }
   | { kind: "setResponsiveOverride"; id: string; device: Device; patch: NodeOverride | null }
   | { kind: "putAsset"; asset: ProjectDocumentV2["assets"][string] }
@@ -94,6 +96,8 @@ function removeSubtree(doc: ProjectDocumentV2, id: string) {
 }
 function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
   switch (command.kind) {
+    case "putVariable": { assert(!doc.variables[command.key],"Variable already exists");doc.variables[command.key]=clone(command.variable);doc.values??={};doc.values[command.key]=clone(command.value);return; }
+    case "setVariableValue": { assert(doc.variables[command.key],"Unknown variable");doc.values??={};doc.values[command.key]=clone(command.value);return; }
     case "setPageProfile": { const page=doc.pages.find(p=>p.id===command.id);assert(page,"Missing page");ensureWritable(doc,page.rootNodeId);page.responsive??={};if(command.profile)page.responsive[command.device]=clone(command.profile);else delete page.responsive[command.device];return; }
     case "setResponsiveOverride": { const n=getNode(doc,command.id);ensureWritable(doc,n.id);assert(n.parentId!==null,"Use page profile for root");doc.responsiveOverrides??={};const map=doc.responsiveOverrides[command.device]??={};doc.responsiveOverrides[command.device]=map;if(command.patch){const clean=Object.fromEntries(Object.entries(command.patch).filter(([,value])=>value!==undefined));if(Object.keys(clean).length)map[n.id]=clone(clean);else delete map[n.id];}else delete map[n.id];return; }
     case "putAsset": { doc.assets[command.asset.id]=clone(command.asset); return; }

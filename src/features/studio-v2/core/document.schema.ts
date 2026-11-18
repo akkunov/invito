@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {bindingKeySchema,bindingValueSchema,invitationBlockSchema,blockAppearanceSchema} from "./invitation.schema.ts";
 
 /** Studio v2 project contract. Independent of React, Next and the legacy InvitationDocument. */
 const idSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,79}$/);
@@ -71,6 +72,11 @@ const nodeSchema = z.discriminatedUnion("type", [
     focalY: z.number().finite().min(0).max(1),
   }),
   baseNodeSchema.extend({
+    type: z.literal("widget"),
+    block: invitationBlockSchema,
+    appearance: blockAppearanceSchema,
+  }),
+  baseNodeSchema.extend({
     type: z.literal("shape"),
     shape: z.enum(["rectangle", "circle", "ellipse", "triangle", "star", "heart"]),
     fill: colorSchema,
@@ -110,6 +116,7 @@ export const projectDocumentSchema = z.strictObject({
   assets: z.record(idSchema, mediaAssetRefSchema).refine(value => Object.keys(value).length <= 200, "Maximum 200 assets"),
   responsiveOverrides: z.strictObject({desktop:z.record(idSchema,responsivePatchSchema).optional(),tablet:z.record(idSchema,responsivePatchSchema).optional(),mobile:z.record(idSchema,responsivePatchSchema).optional()}).optional(),
   components: z.record(idSchema,componentSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 components").optional(),
+  values: z.record(bindingKeySchema,bindingValueSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 values").optional(),
   variables: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/), variableSchema),
 }).superRefine((doc, ctx) => {
   const issue = (path: (string | number)[], message: string) =>
@@ -127,8 +134,17 @@ export const projectDocumentSchema = z.strictObject({
       issue(["pages", index, "rootNodeId"], "Page must reference an existing top-level frame");
   }
   for(const [device,overrides] of Object.entries(doc.responsiveOverrides??{}))for(const id of Object.keys(overrides??{}))if(!doc.nodes[id]||rootIds.has(id))issue(["responsiveOverrides",device,id],"Override must reference a non-root node");
+  for(const [key,value] of Object.entries(doc.values??{}))if(doc.variables[key]?.type!==value.type)issue(["values",key],"Variable type mismatch or missing declaration");
+  const validateWidget=(node:z.infer<typeof nodeSchema>,path:(string|number)[])=>{
+    if(node.type!=="widget")return;
+    const b=node.block;
+    if(b.kind==="gallery")for(const id of b.assetIds)if(!doc.assets[id])issue(path,"Missing gallery asset");
+    if(b.kind==="countdown"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Countdown requires date variable");
+    if(b.kind==="location"&&b.addressKey&&doc.variables[b.addressKey]?.type!=="text")issue(path,"Location requires text variable");
+  };
   const membership = new Map<string, number>();
   for (const [key, node] of Object.entries(doc.nodes)) {
+    validateWidget(node,["nodes",key,"block"]);
     if (node.sizing) {
       const s = node.sizing;
       if ((s.minWidth ?? 1) > (s.maxWidth ?? 20000) || (s.minHeight ?? 1) > (s.maxHeight ?? 20000)) issue(["nodes", key, "sizing"], "Minimum exceeds maximum");
@@ -193,6 +209,7 @@ export const projectDocumentSchema = z.strictObject({
         if(!n||visited.has(id)){issue(path,"Broken or cyclic component tree");continue;}
         visited.add(id);
         if(n.id!==id)issue(path,"Node ID mismatch");
+        validateWidget(n,path);
         if(n.componentRef)issue(path,"Component definitions must be detached snapshots");
         if(n.type==="image"&&!doc.assets[n.assetId])issue(path,"Missing component asset");
         if(n.type==="text"&&n.bindingKey&&!doc.variables[n.bindingKey])issue(path,"Missing component variable");

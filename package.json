@@ -23,7 +23,8 @@
     "test:studio-v2-layout": "node --experimental-strip-types scripts/test-studio-v2-layout.mjs",
     "test:studio-v2-rich-text": "node --experimental-strip-types scripts/test-studio-v2-rich-text.mjs",
     "test:studio-v2-assets": "node --experimental-strip-types scripts/test-studio-v2-assets.mjs",
-    "test:studio-v2-responsive": "node --experimental-strip-types scripts/test-studio-v2-responsive.mjs"
+    "test:studio-v2-responsive": "node --experimental-strip-types scripts/test-studio-v2-responsive.mjs",
+    "test:studio-v2-invitation": "node --experimental-strip-types scripts/test-studio-v2-invitation.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
