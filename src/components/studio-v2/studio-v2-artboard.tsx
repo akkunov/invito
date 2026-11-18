@@ -24,7 +24,7 @@ function TextContent({node,onMeasure}:{node:TextNode;onMeasure?:(id:string,heigh
  },[node.id,node.autoHeight,onMeasure]);
  return <div ref={ref} style={{width:"100%",whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node}/></div>;
 }
-export type ArtboardTextOptions={editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
+export type ArtboardTextOptions={mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
   const base: CSSProperties = {
     position: "absolute",
@@ -59,12 +59,12 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       </div>;
     case "image": {
       const asset = document.assets[node.assetId];
-      if (!asset || !asset.storageKey.startsWith("/images/")) return null;
-      const path = `${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${asset.storageKey}`;
+      if (!asset) return null;
+      const path = asset.storageKey.startsWith("/images/") ? `${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${asset.storageKey}` : options.mediaUrls?.[asset.storageKey];
       return <div key={id} data-studio-node={id} style={{ ...style, overflow: "hidden" }}>
-        <Image unoptimized draggable={false} src={path} alt={asset.name}
+        {path?<Image unoptimized draggable={false} src={path} alt={asset.name}
           fill sizes="(max-width: 900px) 300px, 500px"
-          style={{ objectFit: node.fit, objectPosition: `${node.focalX * 100}% ${node.focalY * 100}%` }}/>
+          style={{ objectFit: node.fit, objectPosition: `${node.focalX * 100}% ${node.focalY * 100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
       </div>;
     }
     case "shape":
