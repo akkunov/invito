@@ -331,6 +331,35 @@ try{
   const rgbStart=pdfText.indexOf("stream\n",pdfText.indexOf("4 0 obj"))+7,rgbEnd=pdfText.indexOf("\nendstream",rgbStart);
   const {inflateSync}=await import("node:zlib");
   assert.equal(inflateSync(printPdf.subarray(rgbStart,rgbEnd)).length,1240*printHeight*3);
+  // Exercise the striped path at real high DPI, comparing the decoded PNG to the original artwork.
+  await output.getByLabel("Ширина печати").fill("50");
+  await output.getByLabel("DPI печати").selectOption("1200");
+  const highPending=page.waitForEvent("download",{timeout:120000});
+  await output.getByRole("button",{name:"PNG",exact:true}).click();
+  const highDownload=await highPending,highPath=join(artifacts,"print-1200dpi.png");
+  await highDownload.saveAs(highPath);
+  const highPng=await fs.readFile(highPath);
+  assert.equal(highPng.readUInt32BE(16),2362);
+  assert.equal(highPng.readUInt32BE(highPng.indexOf("pHYs")+4),47244);
+  const compare=await page.evaluate(async ([base,high])=>{
+   async function pixels(s){
+    const im=new Image();im.src="data:image/png;base64,"+s;await im.decode();
+    const canvas=document.createElement("canvas");canvas.width=48;canvas.height=80;const cx=canvas.getContext("2d");cx.drawImage(im,0,0,48,80);return cx.getImageData(0,0,48,80).data;
+   }
+   const a=await pixels(base),b=await pixels(high);let sum=0;for(let i=0;i<a.length;i++)sum+=Math.abs(a[i]-b[i]);return sum/a.length;
+  },[printPng.toString("base64"),highPng.toString("base64")]);
+  assert.ok(compare<35,"Striped output must match normal artwork, mean pixel delta "+compare);
+  await output.getByLabel("Ширина печати").fill("25");
+  await output.getByLabel("DPI печати").selectOption("2400");
+  const ultraPending=page.waitForEvent("download",{timeout:120000});
+  await output.getByRole("button",{name:"PDF",exact:true}).click();
+  const ultraDownload=await ultraPending,ultraPath=join(artifacts,"print-2400dpi.pdf");
+  await ultraDownload.saveAs(ultraPath);
+  const ultraPdf=(await fs.readFile(ultraPath)).toString("latin1");
+  assert.match(ultraPdf,/\/MediaBox \[0 0 70\.86614 /);
+  const bands=[...ultraPdf.matchAll(/\/Subtype \/Image \/Width 2362 \/Height (\d+)/g)];
+  assert.ok(bands.length>1);
+  assert.equal(bands.reduce((sum,b)=>sum+Number(b[1]),0),highPng.readUInt32BE(20));
   await output.getByRole("button",{name:"Создать вариант из темы"}).click();
   await manager.getByRole("button",{name:/Базовая.*v1/}).waitFor();
   assert.equal(await manager.locator(".v2-template-card").count(),4);
