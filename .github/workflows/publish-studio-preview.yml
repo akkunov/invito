@@ -63,6 +63,7 @@ jobs:
           npm run test:studio-v2-color-math
           npm run test:studio-v2-template-registry
           npm run test:studio-v2-template-output
+          npm run test:studio-v2-professional-print
           npm run typecheck
       - name: Export only Studio as a static Pages site
         run: bash scripts/build-studio-pages.sh
