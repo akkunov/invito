@@ -30,7 +30,8 @@
     "test:studio-v2-linked-components": "node --experimental-strip-types scripts/test-studio-v2-linked-components.mjs",
     "test:studio-v2-style-tokens": "node --experimental-strip-types scripts/test-studio-v2-style-tokens.mjs",
     "test:studio-v2-motion": "node --experimental-strip-types scripts/test-studio-v2-motion.mjs",
-    "test:studio-v2-responsive-pro": "node --experimental-strip-types scripts/test-studio-v2-responsive-pro.mjs"
+    "test:studio-v2-responsive-pro": "node --experimental-strip-types scripts/test-studio-v2-responsive-pro.mjs",
+    "test:studio-v2-color-math": "node --experimental-strip-types scripts/test-studio-v2-color-math.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
