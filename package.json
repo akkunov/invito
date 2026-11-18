@@ -35,7 +35,8 @@
     "test:studio-v2-template-registry": "node --experimental-strip-types scripts/test-studio-v2-template-registry.mjs",
     "test:studio-v2-template-output": "node --experimental-strip-types scripts/test-studio-v2-template-output.mjs",
     "print:professional": "node scripts/print-professional.mjs",
-    "test:studio-v2-professional-print": "node --experimental-strip-types scripts/test-studio-v2-professional-print.mjs"
+    "test:studio-v2-professional-print": "node --experimental-strip-types scripts/test-studio-v2-professional-print.mjs",
+    "test:studio-v2-personalization": "node --experimental-strip-types scripts/test-studio-v2-personalization.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
