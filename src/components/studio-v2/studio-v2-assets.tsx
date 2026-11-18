@@ -15,7 +15,8 @@ export function useMediaUrls(assets:ProjectDocumentV2["assets"]){
   return()=>{state.active=false;for(const url of state.urls.values())URL.revokeObjectURL(url);state.urls.clear();if(pool.current===state)pool.current=null;};
  },[]);
  useEffect(()=>{
-  const state=pool.current;if(!state)return;
+  const current=pool.current;if(!current)return;
+  const state:MediaPool=current;
   state.wanted=new Set(JSON.parse(key) as string[]);
   for(const [k,url] of state.urls)if(!state.wanted.has(k)){URL.revokeObjectURL(url);state.urls.delete(k);}
   // Retain unchanged object URLs. Retry previously missing files only on a key-set change.
