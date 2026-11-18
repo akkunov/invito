@@ -37,6 +37,14 @@ try{
   await page.waitForFunction(label=>document.querySelector(".v2-page-item")?.textContent?.includes(label),"Обложка");
   assert.equal(await rows.count(),initial.length);
   await rows.first().click();
+  const canvasPage=page.locator('[data-studio-page="page-1"]');
+  const before=await canvasPage.evaluate(el=>({x:el.style.left,y:el.style.top}));
+  const label=page.locator(".v2-frame-label").filter({hasText:"Обложка"});
+  const box=await label.boundingBox();assert.ok(box,"Visible page drag handle");
+  await page.mouse.move(box.x+Math.min(45,box.width/2),box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+Math.min(45,box.width/2)+64,box.y+box.height/2+35,{steps:10});await page.mouse.up();
+  await page.waitForFunction(before=>{const el=document.querySelector('[data-studio-page="page-1"]');return el&&el.style.left!==before.x&&el.style.top!==before.y;},before);
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction(before=>{const el=document.querySelector('[data-studio-page="page-1"]');return el&&el.style.left===before.x&&el.style.top===before.y;},before);
   await page.getByRole("button",{name:"Удалить страницу Детали",exact:true}).click();
   await count(page,4);
   await page.keyboard.press("Control+z");
@@ -50,7 +58,7 @@ try{
   const photo=page.locator('[data-studio-node="cover-photo"]');
   const radius=page.getByLabel("Радиус",{exact:true});
   await radius.fill("32");
-  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderRadius==="32px");
+  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderTopLeftRadius==="32px");
   await radius.blur();
   await page.getByRole("button",{name:"4 угла",exact:true}).click();
   await page.getByLabel("↖",{exact:true}).fill("12");
