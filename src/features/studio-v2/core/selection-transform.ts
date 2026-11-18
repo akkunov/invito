@@ -101,10 +101,25 @@ export function groupSelection(doc:ProjectDocumentV2,ids:readonly string[],group
  if(ordered.some((id,i)=>parent.children[index+i]!==id))throw new Error("Group requires adjacent layers to preserve stacking");
  if(ordered.some(id=>doc.nodes[id].rotation!==0))throw new Error("Grouping rotated layers is not supported yet");
  const bounds=unionRects(ordered.map(id=>doc.nodes[id]));
- const group:ProjectNodeV2={id:groupId,parentId,type:"frame",name:"Группа",...bounds,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free",gap:0,padding:{top:0,right:0,bottom:0,left:0},background:"#FFFFFF",clip:false};
- // Frame schema has no transparent background yet: group is a structural prototype.
+ const group:ProjectNodeV2={id:groupId,parentId,type:"frame",name:"Группа",...bounds,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free",gap:0,padding:{top:0,right:0,bottom:0,left:0},background:"transparent",clip:false};
  return [{kind:"insertNode",parentId,node:group,index},...ordered.flatMap(id=>[
  {kind:"reparentNode" as const,id,parentId:groupId},
  {kind:"updateNode" as const,id,changes:{x:doc.nodes[id].x-bounds.x,y:doc.nodes[id].y-bounds.y}}
  ])];
+}
+
+export function rotateNode(doc:ProjectDocumentV2,id:string,angle:number):StudioCommand {
+ if(!canSelect(doc,id)||!Number.isFinite(angle))throw new Error("Invalid rotation");
+ return {kind:"updateNode",id,changes:{rotation:((angle%360)+540)%360-180}};
+}
+export function ungroupSelection(doc:ProjectDocumentV2,id:string):StudioCommand[]{
+ const n=doc.nodes[id];
+ if(!canSelect(doc,id)||n.type!=="frame"||n.background!=="transparent"||n.clip||n.layout!=="free"||n.rotation!==0||n.opacity!==1)throw new Error("Only untransformed transparent groups can be ungrouped");
+ const parent=doc.nodes[n.parentId!];if(parent.type!=="frame")throw new Error("Invalid parent");
+ if(n.children.some(child=>!canSelect(doc,child)))throw new Error("Unlock and show group children first");
+ const index=parent.children.indexOf(id);
+ return [...n.children.flatMap((child,i)=>[
+ {kind:"reparentNode" as const,id:child,parentId:parent.id,index:index+i},
+ {kind:"updateNode" as const,id:child,changes:{x:doc.nodes[child].x+n.x,y:doc.nodes[child].y+n.y}}
+ ]),{kind:"deleteNode",id}];
 }
