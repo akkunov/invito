@@ -17,6 +17,7 @@ const baseNodeSchema = z.strictObject({
   visible: z.boolean(),
   locked: z.boolean(),
   sizing: z.strictObject({ width: z.enum(["fixed","fill","hug"]), height: z.enum(["fixed","fill","hug"]), minWidth: sizeSchema.optional(), maxWidth: sizeSchema.optional(), minHeight: sizeSchema.optional(), maxHeight: sizeSchema.optional() }).optional(),
+  componentRef: z.strictObject({componentId:idSchema,variantId:idSchema}).optional(),
   anchors: z.strictObject({ x: z.enum(["start","center","end","stretch"]), y: z.enum(["start","center","end","stretch"]) }).optional(),
 });
 const paddingSchema = z.strictObject({
@@ -130,6 +131,7 @@ export const projectDocumentSchema = z.strictObject({
       if (node.type === "frame" && node.layout === "free" && (s.width === "hug" || s.height === "hug")) issue(["nodes", key, "sizing"], "Hug requires auto layout");
       if (node.parentId === null && (s.width === "fill" || s.height === "fill")) issue(["nodes", key, "sizing"], "Page roots cannot fill");
     }
+    if(node.componentRef&&!doc.components?.[node.componentRef.componentId]?.variants.some(v=>v.id===node.componentRef!.variantId))issue(["nodes",key,"componentRef"],"Missing component variant");
     if (key !== node.id) issue(["nodes", key, "id"], "Node key and ID differ");
     if (rootIds.has(key) && node.parentId !== null)
       issue(["nodes", key, "parentId"], "Root frame must have no parent");
@@ -186,6 +188,7 @@ export const projectDocumentSchema = z.strictObject({
         if(!n||visited.has(id)){issue(path,"Broken or cyclic component tree");continue;}
         visited.add(id);
         if(n.id!==id)issue(path,"Node ID mismatch");
+        if(n.componentRef)issue(path,"Component definitions must be detached snapshots");
         if(n.type==="image"&&!doc.assets[n.assetId])issue(path,"Missing component asset");
         if(n.type==="text"&&n.bindingKey&&!doc.variables[n.bindingKey])issue(path,"Missing component variable");
         if(n.type==="frame")for(const child of n.children){
