@@ -73,7 +73,7 @@ export function resizeNode(doc:ProjectDocumentV2,id:string,handle:Handle,delta:P
  let width=Math.max(1,Math.min(20000,n.width+sx*dx)),height=Math.max(1,Math.min(20000,n.height+sy*dy));
  if(proportional){const k=Math.max(1/Math.min(n.width,n.height),Math.min(20000/Math.max(n.width,n.height),Math.abs(width/n.width-1)>Math.abs(height/n.height-1)?width/n.width:height/n.height));width=n.width*k;height=n.height*k;}
  const v=mapPoint(rotation(n.rotation),{x:sx*(width-n.width)/2,y:sy*(height-n.height)/2});
- return {kind:"updateNode",id,changes:{width,height,x:n.x+v.x+(n.width-width)/2,y:n.y+v.y+(n.height-height)/2}};
+ return {kind:"updateNode",id,changes:{width,height,x:Math.max(-1e6,Math.min(1e6,n.x+v.x+(n.width-width)/2)),y:Math.max(-1e6,Math.min(1e6,n.y+v.y+(n.height-height)/2))}};
 }
 export function marqueeSelection(doc:ProjectDocumentV2,rootId:string,rect:Rect):string[]{
  const root=doc.nodes[rootId];if(root?.type!=="frame")return [];
@@ -99,8 +99,11 @@ export function groupSelection(doc:ProjectDocumentV2,ids:readonly string[],group
  if(parent.type!=="frame"||parent.layout!=="free"||chosen.some(id=>doc.nodes[id].parentId!==parentId))throw new Error("Group requires siblings in a free frame");
  const ordered=parent.children.filter(id=>chosen.includes(id)),index=parent.children.indexOf(ordered[0]);
  if(ordered.some((id,i)=>parent.children[index+i]!==id))throw new Error("Group requires adjacent layers to preserve stacking");
- if(ordered.some(id=>doc.nodes[id].rotation!==0))throw new Error("Grouping rotated layers is not supported yet");
- const bounds=unionRects(ordered.map(id=>doc.nodes[id]));
+ const bounds=unionRects(ordered.flatMap(id=>{
+  const n=doc.nodes[id],m=nodeMatrix(n);
+  return [{x:0,y:0},{x:n.width,y:0},{x:n.width,y:n.height},{x:0,y:n.height}].map(p=>({...mapPoint(m,p),width:0,height:0}));
+ }));
+ if(bounds.width>20000||bounds.height>20000||Math.abs(bounds.x)>1e6||Math.abs(bounds.y)>1e6)throw new Error("Group bounds exceed document limits");
  const group:ProjectNodeV2={id:groupId,parentId,type:"frame",name:"Группа",...bounds,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free",gap:0,padding:{top:0,right:0,bottom:0,left:0},background:"transparent",clip:false};
  return [{kind:"insertNode",parentId,node:group,index},...ordered.flatMap(id=>[
  {kind:"reparentNode" as const,id,parentId:groupId},
@@ -114,12 +117,16 @@ export function rotateNode(doc:ProjectDocumentV2,id:string,angle:number):StudioC
 }
 export function ungroupSelection(doc:ProjectDocumentV2,id:string):StudioCommand[]{
  const n=doc.nodes[id];
- if(!canSelect(doc,id)||n.type!=="frame"||n.background!=="transparent"||n.clip||n.layout!=="free"||n.rotation!==0||n.opacity!==1)throw new Error("Only untransformed transparent groups can be ungrouped");
+ if(!canSelect(doc,id)||n.type!=="frame"||n.background!=="transparent"||n.clip||n.layout!=="free"||n.opacity!==1)throw new Error("Only opaque transparent group containers can be ungrouped");
  const parent=doc.nodes[n.parentId!];if(parent.type!=="frame")throw new Error("Invalid parent");
  if(n.children.some(child=>!canSelect(doc,child)))throw new Error("Unlock and show group children first");
  const index=parent.children.indexOf(id);
- return [...n.children.flatMap((child,i)=>[
+ const m=nodeMatrix(n);
+ return [...n.children.flatMap((child,i)=>{
+ const c=doc.nodes[child],center=mapPoint(m,{x:c.x+c.width/2,y:c.y+c.height/2});
+ return [
  {kind:"reparentNode" as const,id:child,parentId:parent.id,index:index+i},
- {kind:"updateNode" as const,id:child,changes:{x:doc.nodes[child].x+n.x,y:doc.nodes[child].y+n.y}}
- ]),{kind:"deleteNode",id}];
+ {kind:"updateNode" as const,id:child,changes:{x:center.x-c.width/2,y:center.y-c.height/2,rotation:((c.rotation+n.rotation)%360+540)%360-180}}
+ ];
+ }),{kind:"deleteNode",id}];
 }
