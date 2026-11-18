@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=(p)=>readFileSync(p,"utf8");
+const workspace=read("src/components/studio-v2/studio-v2-workspace.tsx");
+const artboard=read("src/components/studio-v2/studio-v2-artboard.tsx");
+const style=read("src/app/studio-v2.css");
+for(const name of ["ResizeObserver","stagePointerDown","stagePointerMove","stageWheel","minimapProjection","Rulers","addPage","beginStudioTransaction","fitAll","StudioV2Artboard"])assert.ok(workspace.includes(name),name);
+assert.match(artboard,/StudioV2Artboard/);
+assert.match(style,/v2-ruler-top/);
+assert.match(read("src/app/[locale]/admin/studio-v2/page.tsx"),/index: false/);
+console.log("PASS: isolated Studio v2 UI entrypoint and viewport hooks present (not browser UX QA)");
