@@ -56,7 +56,7 @@ async function memory(){
  }catch{return {jsHeapMb:null,domNodes:null,documents:null,domListeners:null};}
 }
 async function settled(){
- await page.waitForFunction(()=>document.querySelector(".v2-draft-state")?.textContent==="Сохранено локально",{timeout:60000});
+ await page.waitForFunction(()=>document.querySelector(".v2-draft-state")?.textContent==="Сохранено локально",null,{timeout:60000});
 }
 async function navigate(index){
  const id="stress-page-"+index,button=page.locator(".v2-page-item").filter({hasText:"Stress "+String(index+1).padStart(2,"0")});
