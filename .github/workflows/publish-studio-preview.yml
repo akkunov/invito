@@ -9,6 +9,9 @@ on:
       - "src/features/studio-v2/**"
       - "src/components/studio-v2/**"
       - "src/app/studio-v2.css"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
       - "src/app/[locale]/admin/studio-v2/**"
   workflow_dispatch:
 
@@ -24,7 +27,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -55,34 +58,7 @@ jobs:
           npm run test:studio-v2-appearance
           npm run typecheck
       - name: Export only Studio as a static Pages site
-        shell: bash
-        env:
-          NEXT_PUBLIC_PAGES_BASE_PATH: /invito
-        run: |
-          set -euo pipefail
-          rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor'
-          rm 'src/app/[locale]/page.tsx'
-          rm -f src/app/robots.ts src/app/sitemap.ts
-          cat > next.config.ts <<'CONFIG'
-          import type { NextConfig } from "next";
-          const config: NextConfig = {
-            output: "export",
-            basePath: "/invito",
-            images: { unoptimized: true },
-            trailingSlash: true,
-          };
-          export default config;
-          CONFIG
-          npm run build
-          test -f out/ru/admin/studio/index.html
-          test -f out/ru/admin/studio-v2/index.html
-          touch out/.nojekyll
-          cat > out/index.html <<'HTML'
-          <!doctype html>
-          <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-          <meta http-equiv="refresh" content="0;url=/invito/ru/admin/studio-v2/">
-          <title>INVITO Studio</title></head><body><a href="/invito/ru/admin/studio-v2/">Открыть INVITO Studio</a></body></html>
-          HTML
+        run: bash scripts/build-studio-pages.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -90,3 +66,17 @@ jobs:
       - name: Deploy
         id: deploy
         uses: actions/deploy-pages@v4
+      - name: Install Chromium
+        run: bash scripts/install-studio-browser.sh
+      - name: Verify deployed commit and browser behavior on GitHub Pages
+        env:
+          STUDIO_TEST_URL: https://akkunov.github.io/invito
+          STUDIO_EXPECT_SHA: ${{ github.sha }}
+        run: node scripts/test-studio-v2-browser.mjs
+      - name: Upload deployed browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-browser-pages
+          path: studio-browser-artifacts/
+          if-no-files-found: ignore
