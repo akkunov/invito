@@ -35,6 +35,7 @@ jobs:
       - run: npm run test:studio-v2-appearance
       - run: npm run test:studio-v2-linked-components
       - run: npm run test:studio-v2-style-tokens
+      - run: npm run test:studio-v2-motion
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build
