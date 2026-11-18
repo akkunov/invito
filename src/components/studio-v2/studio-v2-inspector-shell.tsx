@@ -1,5 +1,5 @@
 "use client";
-import type {ReactNode} from "react";
+import {useState,type ReactNode} from "react";
 import {StudioIcon,type StudioIconName} from "./studio-icon";
 export type InspectorTab="design"|"animation"|"responsive"|"canvas";
 const tabs:readonly {id:InspectorTab;label:string;icon:StudioIconName}[]=[{id:"design",label:"Дизайн",icon:"shape"},{id:"animation",label:"Анимация",icon:"animation"},{id:"responsive",label:"Адаптив",icon:"responsive"},{id:"canvas",label:"Холст",icon:"frame"}];
@@ -10,5 +10,6 @@ export function InspectorPanel({active,children,label}:{active:boolean;children:
  return <div className="v2-inspector-panel" hidden={!active} aria-label={label}>{children}</div>;
 }
 export function InspectorGroup({title,children,defaultOpen=false,icon}:{title:string;children:ReactNode;defaultOpen?:boolean;icon?:StudioIconName}){
- return <details className="v2-inspector-group" open={defaultOpen||undefined}><summary>{icon&&<StudioIcon name={icon}/>}<span>{title}</span><StudioIcon className="v2-group-chevron" name="chevron" size={14}/></summary><div className="v2-group-body">{children}</div></details>;
+ const [open,setOpen]=useState(defaultOpen);
+ return <details className="v2-inspector-group" open={open} onToggle={e=>setOpen(e.currentTarget.open)}><summary>{icon&&<StudioIcon name={icon}/>}<span>{title}</span><StudioIcon className="v2-group-chevron" name="chevron" size={14}/></summary><div className="v2-group-body">{children}</div></details>;
 }
