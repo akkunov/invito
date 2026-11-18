@@ -17,7 +17,7 @@ export function createStudioStressProject(){
   pages.push({id:"stress-page-"+i,name,rootNodeId:id,placement:{x:i*1280,y:0}});
  }
  const common=(id,parentId,slot)=>({
-  id,parentId,x:30+(slot%4)*255,y:130+Math.floor(slot/4)*375,
+  id,parentId,layerName:"Stress node "+id.slice("stress-node-".length),x:30+(slot%4)*255,y:130+Math.floor(slot/4)*375,
   width:220,height:140,rotation:0,opacity:1,visible:true,locked:false
  });
  for(let i=0;i<STRESS_LIMITS.nodes-STRESS_LIMITS.pages;i++){
