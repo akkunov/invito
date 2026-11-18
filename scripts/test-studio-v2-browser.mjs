@@ -458,7 +458,7 @@ try{
   assert.ok(replacement);
   assert.equal(await simple.locator(".se-editor-panel").count(),1);
   assert.equal(await simple.getByRole("progressbar",{name:"Прогресс по разделам"}).count(),1);
-  await simple.getByRole("radiogroup",{name:"Фотографии"}).getByRole("radio",{name:replacement.name}).check();
+  await simple.getByRole("radiogroup",{name:imageField.label.ru}).getByRole("radio",{name:replacement.name}).check();
   assert.equal(await simple.locator('.se-media-option[data-selected="true"]').count(),1);
   await simple.locator('.se-artwork [data-studio-node="'+imageNode.id+'"] img').waitFor();
   await page.waitForFunction(({id,alt})=>document.querySelector('.se-artwork [data-studio-node="'+id+'"] img')?.getAttribute("alt")===alt,{id:imageNode.id,alt:replacement.name});
