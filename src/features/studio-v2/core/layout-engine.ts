@@ -14,7 +14,8 @@ const align=(available:number,content:number,value:string)=>value==="center"?(av
 /** Intrinsic size is bottom-up; fill children contribute their minimum to hug parents.
  * No feedback cycle between child fill and parent hug. Geometry is in parent-local units. */
 export type TextMeasurements = Readonly<Record<string,number>>;
-export function resolveLayout(doc:ProjectDocumentV2,textMeasurements:TextMeasurements={}):Geometry {
+export type RootSizes=Readonly<Record<string,{width:number;height:number}>>;
+export function resolveLayout(doc:ProjectDocumentV2,textMeasurements:TextMeasurements={},rootSizes:RootSizes={}):Geometry {
  const intrinsic=new Map<string,{width:number;height:number}>();
  function measure(n:ProjectNodeV2):{width:number;height:number}{
    const cached=intrinsic.get(n.id);if(cached)return cached;
@@ -82,11 +83,11 @@ export function resolveLayout(doc:ProjectDocumentV2,textMeasurements:TextMeasure
      arrange(c,next);cursor+=length+n.gap+distributed;
    }
  }
- for(const page of doc.pages){const node=doc.nodes[page.rootNodeId];arrange(node,{x:node.x,y:node.y,...measure(node)});}
+ for(const page of doc.pages){const node=doc.nodes[page.rootNodeId];const measured=measure(node),size=rootSizes[node.id];arrange(node,{x:node.x,y:node.y,width:size?limit(node,"width",size.width):measured.width,height:size&&mode(node,"height")!=="hug"?limit(node,"height",size.height):measured.height});}
  return result;
 }
 /** Derived render-only document. Never write solved coordinates back into the source. */
-export function layoutDocument(doc:ProjectDocumentV2,textMeasurements:TextMeasurements={}):ProjectDocumentV2 {
- const geometry=resolveLayout(doc,textMeasurements);
+export function layoutDocument(doc:ProjectDocumentV2,textMeasurements:TextMeasurements={},rootSizes:RootSizes={}):ProjectDocumentV2 {
+ const geometry=resolveLayout(doc,textMeasurements,rootSizes);
  return {...doc,nodes:Object.fromEntries(Object.entries(doc.nodes).map(([id,n])=>[id,geometry[id]?{...n,...geometry[id]}:n]))};
 }
