@@ -1,0 +1,36 @@
+import assert from "node:assert/strict";
+import {createEmptyProjectV2,parseProjectV2} from "../src/features/studio-v2/core/document.schema.ts";
+import {applyStudioCommand,createEditorSession,dispatchStudioCommand,undoStudio} from "../src/features/studio-v2/core/command-engine.ts";
+import {deviceForWidth,pageProfile,responsiveDocument,presentationSize,DEVICE_WIDTH} from "../src/features/studio-v2/core/responsive-engine.ts";
+import {layoutDocument} from "../src/features/studio-v2/core/layout-engine.ts";
+const fresh=createEmptyProjectV2("responsive-test","ky");
+const shape={id:"box",parentId:"frame-1",type:"shape",x:100,y:100,width:200,height:100,rotation:0,opacity:1,visible:true,locked:false,shape:"rectangle",fill:"#FF0000",stroke:null,strokeWidth:0,anchors:{x:"stretch",y:"start"}};
+let doc=applyStudioCommand(fresh,{kind:"insertNode",parentId:"frame-1",node:shape});
+assert.equal(deviceForWidth(390),"mobile");assert.equal(deviceForWidth(768),"tablet");assert.equal(deviceForWidth(1440),"desktop");
+assert.deepEqual(responsiveDocument(doc,"mobile"),layoutDocument(doc),"legacy coordinates remain intact");
+for(const device of ["desktop","tablet","mobile"]){
+ const resolved=responsiveDocument(doc,device),size=presentationSize(doc,resolved,doc.pages[0],device);
+ assert.equal(size.width,DEVICE_WIDTH[device]);
+ assert.ok(Math.abs(size.height-1920*DEVICE_WIDTH[device]/1080)<1e-8);
+}
+doc=applyStudioCommand(doc,{kind:"setPageProfile",id:"page-1",device:"mobile",profile:{width:900,height:1000,mode:"reflow"}});
+let resolved=responsiveDocument(doc,"mobile");
+assert.equal(resolved.nodes["frame-1"].width,900);
+assert.equal(resolved.nodes.box.width,20,"stretch uses source root dimensions");
+assert.equal(doc.nodes.box.width,200);
+doc=applyStudioCommand(doc,{kind:"setResponsiveOverride",id:"box",device:"tablet",patch:{x:25,width:450,visible:false}});
+assert.equal(responsiveDocument(doc,"tablet").nodes.box.visible,false);
+assert.equal(responsiveDocument(doc,"tablet").nodes.box.width,450);
+assert.equal(responsiveDocument(doc,"desktop").nodes.box.width,200);
+assert.equal(doc.locale,"ky");
+const serialized=JSON.parse(JSON.stringify(doc));
+assert.deepEqual(parseProjectV2(serialized),doc);
+assert.throws(()=>applyStudioCommand(doc,{kind:"setResponsiveOverride",id:"frame-1",device:"mobile",patch:{width:300}}));
+assert.throws(()=>applyStudioCommand(doc,{kind:"setPageProfile",id:"page-1",device:"mobile",profile:{width:0,height:100,mode:"reflow"}}));
+let session=createEditorSession(doc);
+session=dispatchStudioCommand(session,{kind:"setResponsiveOverride",id:"box",device:"mobile",patch:{x:42}});
+assert.equal(session.document.responsiveOverrides.mobile.box.x,42);
+assert.deepEqual(undoStudio(session).document.responsiveOverrides,doc.responsiveOverrides);
+const deleted=applyStudioCommand(doc,{kind:"deleteNode",id:"box"});
+assert.equal(deleted.responsiveOverrides.tablet.box,undefined);
+console.log("PASS: device selection, legacy scale parity, responsive constraints, isolated overrides, serialization and undo");
