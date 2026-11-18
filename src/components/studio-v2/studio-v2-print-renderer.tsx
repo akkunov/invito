@@ -7,7 +7,7 @@ import {bindDocument} from "@/features/studio-v2/core/invitation-behavior.ts";
 import {resolveStyleDocument} from "@/features/studio-v2/core/style-tokens.ts";
 import {layoutDocument} from "@/features/studio-v2/core/layout-engine.ts";
 import {readMedia} from "@/features/studio-v2/browser/media-store.ts";
-import {printSize,pngWithDpi,rasterPdf,type PrintDpi} from "@/features/studio-v2/core/print-output.ts";
+import {printSize,pngWithDpi,rasterPdf,printStrips,pngHeader,pngIdat,pngEnd,pngStripRows,stripedPdfParts,type PrintDpi,type PrintSize,type CompressedPrintStrip} from "@/features/studio-v2/core/print-output.ts";
 
 function dataUrl(blob:Blob):Promise<string>{return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});}
 function toBlob(canvas:HTMLCanvasElement):Promise<Blob>{return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error("Не удалось закодировать PNG")),"image/png"));}
@@ -37,7 +37,7 @@ function inlineTree(source:HTMLElement,clone:HTMLElement){
   if(a instanceof HTMLSelectElement)Array.from(c.querySelectorAll("option")).forEach((o,j)=>{if(j===a.selectedIndex)o.setAttribute("selected","");else o.removeAttribute("selected");});
  }
 }
-async function renderPrintCanvas<T extends {pixelWidth:number;pixelHeight:number}>(source:ProjectDocumentV2,pageId:string,dimensions:(width:number,height:number)=>T):Promise<{canvas:HTMLCanvasElement;size:T}>{
+async function preparePrintArtwork(source:ProjectDocumentV2,pageId:string):Promise<{markup:string;width:number;height:number}>{
  const page=source.pages.find(p=>p.id===pageId);if(!page)throw Error("Страница не найдена");
  const host=document.createElement("div");host.className="v2-print-capture";
  Object.assign(host.style,{position:"fixed",left:"-100000px",top:"0",pointerEvents:"none",zIndex:"-1",overflow:"visible"});
@@ -56,34 +56,71 @@ async function renderPrintCanvas<T extends {pixelWidth:number;pixelHeight:number
   }
   rendered=host.querySelector<HTMLElement>(".studio-v2-artboard-content");if(!rendered)throw Error("Не удалось отобразить страницу");
   const width=rendered.offsetWidth,height=rendered.offsetHeight;if(!width||!height)throw Error("Пустой артборд");
-  const size=dimensions(width,height),{pixelWidth,pixelHeight}=size;
-  if(!Number.isInteger(pixelWidth)||!Number.isInteger(pixelHeight)||pixelWidth<1||pixelHeight<1||pixelWidth>10000||pixelHeight>10000||pixelWidth*pixelHeight>32_000_000)throw Error("Недопустимый размер экспорта");
   for(const img of Array.from(rendered.querySelectorAll("img"))){img.loading="eager";await img.decode();if(!img.naturalWidth)throw Error("Изображение не загрузилось: "+img.alt);}
   const clone=rendered.cloneNode(true) as HTMLElement;inlineTree(rendered,clone);await embedImages(rendered,clone);
   clone.setAttribute("xmlns","http://www.w3.org/1999/xhtml");clone.style.margin="0";clone.style.overflow="hidden";
   const markup=new XMLSerializer().serializeToString(clone);
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+pixelWidth+'" height="'+pixelHeight+'" viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none"><foreignObject x="0" y="0" width="'+width+'" height="'+height+'">'+markup+'</foreignObject></svg>';
-  const img=new window.Image();img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);await img.decode();
-  const canvas=document.createElement("canvas");canvas.width=pixelWidth;canvas.height=pixelHeight;
-  const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)throw Error("Canvas недоступен");
-  ctx.fillStyle="#FFFFFF";ctx.fillRect(0,0,pixelWidth,pixelHeight);ctx.drawImage(img,0,0,pixelWidth,pixelHeight);
-  // Reject a tainted surface before handing it to either export path.
-  ctx.getImageData(0,0,1,1);return {canvas,size};
+  return {markup,width,height};
  }finally{reactRoot.unmount();host.remove();Object.values(urls).forEach(URL.revokeObjectURL);}
 }
-export async function exportPrintPage(source:ProjectDocumentV2,pageId:string,widthMm:number,dpi:PrintDpi,format:"png"|"pdf"){
- const {canvas,size}=await renderPrintCanvas(source,pageId,(width,height)=>printSize(width,height,widthMm,dpi));
+type Artwork=Awaited<ReturnType<typeof preparePrintArtwork>>;
+async function rasterBand(art:Artwork,size:{pixelWidth:number;pixelHeight:number},y:number,height:number){
+ const {markup,width,height:designHeight}=art,{pixelWidth,pixelHeight}=size;
+ // Every band uses the same full-page coordinates and pixel grid, not a resized crop.
+ const top=y*designHeight/pixelHeight,span=height*designHeight/pixelHeight;
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+pixelWidth+'" height="'+height+'" viewBox="0 '+top+' '+width+' '+span+'" preserveAspectRatio="none"><foreignObject x="0" y="0" width="'+width+'" height="'+designHeight+'">'+markup+'</foreignObject></svg>';
+ const img=new window.Image();img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);await img.decode();
+ const canvas=document.createElement("canvas");canvas.width=pixelWidth;canvas.height=height;
+ const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)throw Error("Canvas недоступен");
+ try{ctx.fillStyle="#FFFFFF";ctx.fillRect(0,0,pixelWidth,height);ctx.drawImage(img,0,0,pixelWidth,height);ctx.getImageData(0,0,1,1);return canvas;}
+ catch(e){canvas.width=0;canvas.height=0;throw e;}
+}
+function pixels(canvas:HTMLCanvasElement){const ctx=canvas.getContext("2d");if(!ctx)throw Error("Canvas недоступен");return ctx.getImageData(0,0,canvas.width,canvas.height).data;}
+function rgbPixels(rgba:Uint8ClampedArray){const rgb=new Uint8Array(rgba.length/4*3);for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2];}return rgb;}
+async function deflate(rgb:Uint8Array){return new Uint8Array(await new Response(new Blob([rgb.slice().buffer]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer());}
+type PrintOptions={signal?:AbortSignal;onProgress?:(done:number,total:number)=>void};
+const MAX_COMPRESSED_BYTES=256_000_000;
+async function exportLargePage(art:Artwork,size:PrintSize,format:"png"|"pdf",options:PrintOptions):Promise<Blob>{
+ const bands=printStrips(size);
+ const check=()=>options.signal?.throwIfAborted();
+ options.onProgress?.(0,bands.length);
+ if(format==="pdf"){
+  const compressed:CompressedPrintStrip[]=[];let bytes=0;
+  for(const [index,band] of bands.entries()){
+   check();const canvas=await rasterBand(art,size,band.y,band.height);
+   try{check();const data=await deflate(rgbPixels(pixels(canvas)));bytes+=data.length;if(bytes>MAX_COMPRESSED_BYTES)throw Error("PDF слишком большой для браузерного экспорта.");compressed.push({...band,data});}finally{canvas.width=0;canvas.height=0;}
+   check();options.onProgress?.(index+1,bands.length);await nextFrame();
+  }
+  return new Blob(stripedPdfParts(compressed,size).map(p=>p.slice().buffer),{type:"application/pdf"});
+ }
+ const stream=new CompressionStream("deflate"),writer=stream.writable.getWriter(),reader=stream.readable.getReader();
+ const parts:BlobPart[]=[pngHeader(size).slice().buffer];let bytes=0;
+ const collect=(async()=>{try{while(true){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>MAX_COMPRESSED_BYTES)throw Error("PNG слишком большой для браузерного экспорта.");parts.push(pngIdat(value).slice().buffer);}}catch(e){await reader.cancel(e).catch(()=>{});throw e;}})();
+ // Attach rejection handler immediately; errors propagate through the writer or await below.
+ void collect.catch(()=>{});
  try{
+  for(const [index,band] of bands.entries()){
+   check();const canvas=await rasterBand(art,size,band.y,band.height);
+   try{check();await writer.write(pngStripRows(pixels(canvas),size.pixelWidth,band.height));}finally{canvas.width=0;canvas.height=0;}
+   check();options.onProgress?.(index+1,bands.length);await nextFrame();
+  }
+  await writer.close();await collect;parts.push(pngEnd().slice().buffer);return new Blob(parts,{type:"image/png"});
+ }catch(e){await writer.abort(e).catch(()=>{});await collect.catch(()=>{});throw e;}
+ finally{writer.releaseLock();reader.releaseLock();}
+}
+export async function exportPrintPage(source:ProjectDocumentV2,pageId:string,widthMm:number,dpi:PrintDpi,format:"png"|"pdf",options:PrintOptions={}){
+ options.signal?.throwIfAborted();const art=await preparePrintArtwork(source,pageId),size=printSize(art.width,art.height,widthMm,dpi);options.signal?.throwIfAborted();
+ if(size.pixelWidth*size.pixelHeight>8_000_000||size.pixelWidth>8192||size.pixelHeight>8192)return exportLargePage(art,size,format,options);
+ const canvas=await rasterBand(art,size,0,size.pixelHeight);
+ try{
+  options.signal?.throwIfAborted();
   if(format==="png"){const png=new Uint8Array(await (await toBlob(canvas)).arrayBuffer());return new Blob([pngWithDpi(png,dpi).slice().buffer],{type:"image/png"});}
-  const ctx=canvas.getContext("2d");if(!ctx)throw Error("Canvas недоступен");
-  const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data,rgb=new Uint8Array(canvas.width*canvas.height*3);
-  for(let i=0,j=0;i<rgba.length;i+=4){rgb[j++]=rgba[i];rgb[j++]=rgba[i+1];rgb[j++]=rgba[i+2];}
-  const deflated=new Uint8Array(await new Response(new Blob([rgb]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer());
-  return new Blob([rasterPdf(deflated,size).slice().buffer],{type:"application/pdf"});
+  return new Blob([rasterPdf(await deflate(rgbPixels(pixels(canvas))),size).slice().buffer],{type:"application/pdf"});
  }finally{canvas.width=0;canvas.height=0;}
 }
 export async function generateCover(source:ProjectDocumentV2,pageId:string){
- const {canvas}=await renderPrintCanvas(source,pageId,(width,height)=>{const scale=Math.min(800/width,1200/height);return {pixelWidth:Math.max(1,Math.round(width*scale)),pixelHeight:Math.max(1,Math.round(height*scale))};});
+ const art=await preparePrintArtwork(source,pageId),scale=Math.min(800/art.width,1200/art.height);
+ const size={pixelWidth:Math.max(1,Math.round(art.width*scale)),pixelHeight:Math.max(1,Math.round(art.height*scale))},canvas=await rasterBand(art,size,0,size.pixelHeight);
  try{return await toBlob(canvas);}finally{canvas.width=0;canvas.height=0;}
 }
 export function downloadOutput(blob:Blob,name:string,extension:string){
