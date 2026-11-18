@@ -179,7 +179,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
   const sourceDocument=session.document;
   const palette=useMemo(()=>projectPalette(sourceDocument),[sourceDocument]);
   const localMediaUrls=useMediaUrls(sourceDocument.assets);
-  const cloudMediaUrls=useCloudAssetUrls(sourceDocument.assets,remoteSettings);
+  const cloudMediaUrls=useCloudAssetUrls(sourceDocument,remoteSettings);
   const mediaUrls=useMemo(()=>({...localMediaUrls,...cloudMediaUrls}),[localMediaUrls,cloudMediaUrls]);
   useEffect(()=>{
     let active=true;let id="studio-v2-demo";
@@ -868,7 +868,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
         </section></InspectorGroup>}
         {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><InspectorGroup title="Связанные стили" icon="styles"><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></InspectorGroup><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} palette={palette} authoredNode={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)} onUnlink={slot=>proAction(()=>({kind:"bindStyle",id:n.id,slot,tokenId:null}))}/></>;})()}
         {authoredNode?.type==="image"&&<InspectorGroup title="Изображение" icon="image"><ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/></InspectorGroup>}
-        <InspectorGroup key={authoredNode?.type==="widget"?"widget":"other"} title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
+        <InspectorGroup key={authoredNode?.type==="widget"?"widget":"other"} title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls remoteSettings={remoteSettings} document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
         </InspectorPanel>
         <InspectorPanel active={inspectorTab==="animation"} label="Анимация"><MotionControls document={sourceDocument} node={authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null)} ids={nodeIds} disabled={!!editing||!!session.transaction} onCommand={command=>proAction(()=>command)} onPreview={()=>{setTimelineTime(0);setTimelineOpen(true);setPreviewOpen(true);}}/></InspectorPanel>
         <InspectorPanel active={inspectorTab==="responsive"} label="Адаптив"><section className="v2-inspector-section">
