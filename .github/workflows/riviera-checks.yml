@@ -44,6 +44,9 @@ jobs:
       - run: npm run test:studio-v2-professional-print
       - run: npm run test:studio-v2-personalization
       - run: npm run test:editor-navigation
+      - run: npm run test:backend-contract
+      - name: Validate Prisma v7 schema (no database connection)
+        run: npx --yes prisma@7.10.1 validate --schema server/prisma/schema.prisma
       - run: npm run typecheck
       - run: npm run build
       - run: npm run test:public-routes

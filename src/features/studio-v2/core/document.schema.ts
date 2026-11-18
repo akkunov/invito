@@ -110,7 +110,7 @@ export const mediaAssetRefSchema = z.strictObject({
   mimeType: z.enum(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]),
   name: z.string().min(1).max(200),
   sizeBytes: z.number().int().min(0).max(50_000_000),
-  storageKey: z.string().min(1).max(400).regex(/^(?:\/images\/[a-zA-Z0-9_./-]+|local:[a-zA-Z0-9_-]+)$/).refine(key=>!key.includes(".."),"Unsafe asset path"),
+  storageKey: z.string().min(1).max(400).regex(/^(?:\/images\/[a-zA-Z0-9_./-]+|local:[a-zA-Z0-9_-]+|asset:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/).refine(key=>!key.includes(".."),"Unsafe asset path"),
   folder: z.string().max(80).optional(),
   pixelWidth: z.number().int().min(1).max(4096).optional(),
   pixelHeight: z.number().int().min(1).max(4096).optional(),
