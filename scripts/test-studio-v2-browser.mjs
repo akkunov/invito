@@ -62,8 +62,10 @@ try{
   assert.match(await page.locator(".v2-hover-measure").textContent(),/908\s*×\s*640\s*px/);
   const stageCanvas=page.locator(".v2-stage");
   const panBefore=await page.locator(".v2-world").evaluate(el=>el.style.transform);
+  const unmodifiedZoom=await page.locator(".v2-canvas-actions").textContent();
   await page.mouse.wheel(0,120);
   await page.waitForFunction(value=>document.querySelector(".v2-world")?.style.transform!==value,panBefore);
+  assert.equal(await page.locator(".v2-canvas-actions").textContent(),unmodifiedZoom,"Ordinary wheel only pans the canvas");
   const zoomStart=await page.locator(".v2-canvas-actions").textContent();
   const browserDpr=await page.evaluate(()=>window.devicePixelRatio);
   await page.keyboard.down("Control");
