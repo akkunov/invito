@@ -58,7 +58,7 @@ function nodeLabel(doc:ProjectDocumentV2,id:string){
 function LayerRows({document,ids,selected,onSelect,onDropLayer,onState,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;onDropLayer:(id:string,target:string)=>void;onState:(id:string,patch:{locked?:boolean;visible?:boolean})=>void;depth?:number}){
  return <>{[...ids].reverse().map(id=>{
   const n=document.nodes[id];if(!n)return null;
-  return <div key={id}><div className="v2-layer-with-actions"><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span><StudioIcon name={n.componentRef?"component":n.type==="widget"?"component":n.type}/></span><span>{nodeLabel(document,id)}</span></button><button className="v2-layer-state" aria-label={(n.visible?"Скрыть ":"Показать ")+nodeLabel(document,id)} aria-pressed={!n.visible} onClick={()=>onState(id,{visible:!n.visible})}><StudioIcon name="eye" style={{opacity:n.visible?1:.35}}/></button><button className="v2-layer-state" aria-label={(n.locked?"Разблокировать ":"Заблокировать ")+nodeLabel(document,id)} aria-pressed={n.locked} onClick={()=>onState(id,{locked:!n.locked})}><StudioIcon name="lock" style={{opacity:n.locked?1:.35}}/></button></div>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} onState={onState} depth={depth+1}/>}</div>
+  return <div key={id}><div className="v2-layer-with-actions"><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" title={nodeLabel(document,id)} style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span><StudioIcon name={n.componentRef?"component":n.type==="widget"?"component":n.type}/></span><span>{nodeLabel(document,id)}</span></button><button className="v2-layer-state" aria-label={(n.visible?"Скрыть ":"Показать ")+nodeLabel(document,id)} aria-pressed={!n.visible} onClick={()=>onState(id,{visible:!n.visible})}><StudioIcon name="eye" style={{opacity:n.visible?1:.35}}/></button><button className="v2-layer-state" aria-label={(n.locked?"Разблокировать ":"Заблокировать ")+nodeLabel(document,id)} aria-pressed={n.locked} onClick={()=>onState(id,{locked:!n.locked})}><StudioIcon name="lock" style={{opacity:n.locked?1:.35}}/></button></div>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} onState={onState} depth={depth+1}/>}</div>
  })}</>;
 }
 const clampZoom = (zoom: number) => clamp(zoom, 0.025, 3);
@@ -124,6 +124,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [responsiveOpen,setResponsiveOpen]=useState(false);
   const [timelineOpen,setTimelineOpen]=useState(false);
   const [timelineTime,setTimelineTime]=useState(0);
+  const [canvasTimelineTime,setCanvasTimelineTime]=useState(0);
+  const [canvasPlayback,setCanvasPlayback]=useState(false);
   const [previewRun,setPreviewRun]=useState(0);
   const [device,setDevice]=useState<Device>("mobile");
   const [libraryOpen,setLibraryOpen]=useState(false);
@@ -607,8 +609,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       <div className="v2-tools" role="toolbar" aria-label="Инструменты холста">
         <button aria-label="Выделение (V)" title="Выделение (V)" aria-pressed={activeTool==="select"} onClick={()=>setTool("select")}><StudioIcon name="select" size={20}/></button>
         <button aria-label="Рука (H или пробел)" title="Рука (H или пробел)" aria-pressed={activeTool==="hand"} onClick={()=>setTool("hand")}><StudioIcon name="hand" size={20}/></button>
-        <button aria-label="Создать фрейм" title="Создать фрейм" onClick={createFrame} disabled={!!editing}><StudioIcon name="frame" size={20}/></button>
-        <button aria-label="Добавить текст (T)" title="Добавить текст (T)" onClick={addText} disabled={!!editing}><StudioIcon name="text" size={20}/></button>
+        <button aria-label="Создать фрейм" title="Создать фрейм" onClick={createFrame} disabled={!canInsert}><StudioIcon name="frame" size={20}/></button>
+        <button aria-label="Добавить текст (T)" title="Добавить текст (T)" onClick={addText} disabled={!canInsert}><StudioIcon name="text" size={20}/></button>
         <span className="v2-top-divider"/>
         <button title="Показать или скрыть сетку" aria-label="Сетка" aria-pressed={grid} onClick={()=>setGrid(v=>!v)}><Grid2X2 size={18}/></button>
         <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><Ruler size={18}/></button>
@@ -619,7 +621,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}>Responsive</button>
         <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><Smartphone size={18}/></button>
         <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><Download size={16}/> JSON</button>
-        <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
+        <span className="v2-stage-tag"><Check size={13}/> Studio</span>
       </div>
     </header>
     <div className="v2-body">
@@ -664,7 +666,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
                 return <div key={page.id} data-studio-page={page.id} className={`v2-frame ${selectedPage===page.id?"is-selected":""}`}
                   style={{left:page.placement.x,top:page.placement.y,width:root.width,height:root.height}}
                   >
-                  <StudioV2Artboard document={document} mediaUrls={mediaUrls} rootNodeId={page.rootNodeId} editingId={editing?.id} onMeasure={measureText} renderEditor={node=>editing?.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null}/>
+                  <StudioV2Artboard document={document} mediaUrls={mediaUrls} rootNodeId={page.rootNodeId} motionPlayback={inspectorTab==="animation"&&canvasPlayback&&!editing?{mode:"timeline",timeMs:canvasTimelineTime}:undefined} editingId={editing?.id} onMeasure={measureText} renderEditor={node=>editing?.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null}/>
                 </div>;
               })}
             </div>
@@ -701,9 +703,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <button className="v2-minimap-toggle" onClick={()=>setMinimapOpen(v=>!v)} aria-label="Показать или скрыть мини-карту" aria-expanded={minimapOpen}><MapIcon size={17}/></button>
           {minimapOpen&&<MiniMap frames={frames} viewport={viewport} size={sceneSize} onCenter={center}/>}
         </div>
+        {inspectorTab==="animation"&&<div className="v2-canvas-timeline">
+          <div className="v2-canvas-timeline-heading"><strong><StudioIcon name="animation"/> Шкала анимации</strong><button type="button" disabled={!!editing||!motionTracks(sourceDocument).length} aria-pressed={canvasPlayback} onClick={()=>{setCanvasPlayback(v=>!v);setCanvasTimelineTime(0);}}>{canvasPlayback?"Вернуть исходный вид":"Показать анимацию на холсте"}</button></div>
+          {canvasPlayback?<MotionTimeline document={sourceDocument} time={canvasTimelineTime} onTime={setCanvasTimelineTime}/>:<p>Включите просмотр, чтобы проверить анимации. Геометрия слоёв и история изменений остаются неизменными.</p>}
+        </div>}
       </section>
       <aside className={`v2-right ${rightOpen?"is-open":""}`} aria-label="Свойства выбранной страницы">
-        <InspectorTabs value={inspectorTab} onChange={setInspectorTab}/>
+        <InspectorTabs value={inspectorTab} onChange={tab=>{setInspectorTab(tab);setCanvasPlayback(false);setCanvasTimelineTime(0);}}/>
         <div className="v2-inspector-selection"><StudioIcon name={authoredNode?.componentRef?"component":authoredNode?.type==="text"?"text":authoredNode?.type==="image"?"image":authoredNode?.type==="shape"?"shape":"frame"}/><strong>{authoredNode?nodeLabel(sourceDocument,authoredNode.id):nodeIds.length>1?nodeIds.length+" слоёв":selected?.name??"Нет выделения"}</strong></div>
         {selectionError&&<p role="alert" className="v2-inspector-error">{selectionError}</p>}
         <InspectorPanel active={inspectorTab==="design"} label="Дизайн">
@@ -772,7 +778,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           })()}
           {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>proAction(()=>({kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))} aria-label={offset<0?"Выше":"Ниже"}><StudioIcon name={offset<0?"top":"bottom"}/></button>)}</div>}
         </section></InspectorGroup>}
-        {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><InspectorGroup title="Связанные стили" icon="styles"><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></InspectorGroup><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} palette={palette} authoredNode={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)} onUnlink={slot=>proAction(()=>({kind:"bindStyle",id:n.id,slot,tokenId:null}))}/></>;})()}
+        {(authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><InspectorGroup title="Связанные стили" icon="styles"><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></InspectorGroup><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} palette={palette} authoredNode={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)} onUnlink={slot=>proAction(()=>({kind:"bindStyle",id:n.id,slot,tokenId:null}))}/></>;})()}
         {authoredNode?.type==="image"&&<InspectorGroup title="Изображение" icon="image"><ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/></InspectorGroup>}
         <InspectorGroup title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
         </InspectorPanel>
