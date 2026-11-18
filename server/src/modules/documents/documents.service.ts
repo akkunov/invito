@@ -182,7 +182,7 @@ export class StudioDocumentsService {
       select: {
         id: true, workspaceId: true, title: true, latestRevision: true, status: true, sourceTemplateVersionId: true,
         createdAt: true, updatedAt: true,
-        revisions: {where: {number: scope.latestRevision}, take: 1,
+        revisions: {orderBy: {number: "desc"}, take: 1,
           select: {id: true, number: true, document: true, sha256: true, createdAt: true}},
       },
     });
