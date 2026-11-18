@@ -645,7 +645,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     backgroundPosition:`${viewport.x}px ${viewport.y}px`,
   };
   return <main className="studio-v2" lang={locale}>
-    <header className="v2-topbar">
+    <header className="v2-topbar" inert={!loaded}>
       <div className="v2-brand">
         <Link href={`/${locale}`} aria-label="На главную"><StudioIcon name="back" size={16}/></Link>
         <strong>INVITO <span>Studio 2.0</span></strong>
@@ -671,7 +671,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <span className="v2-stage-tag"><StudioIcon name="check" size={13}/> Функциональный прототип</span>
       </div>
     </header>
-    <div className="v2-body">
+    <div className="v2-body" inert={!loaded}>
       <aside className={`v2-left ${leftOpen?"is-open":""}`} aria-label="Страницы и библиотека">
         <div className="v2-sidebar-tabs"><button aria-pressed={!libraryOpen&&!stylesOpen} onClick={()=>{setLibraryOpen(false);setStylesOpen(false);}}>Страницы / слои</button><button aria-pressed={libraryOpen&&!stylesOpen} onClick={()=>{setLibraryOpen(true);setStylesOpen(false);}}>Ресурсы</button><button aria-pressed={stylesOpen} onClick={()=>setStylesOpen(true)}><StudioIcon name="styles"/> Стили</button></div>
         <div hidden={!stylesOpen}><StyleLibrary document={sourceDocument} palette={palette} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></div>
