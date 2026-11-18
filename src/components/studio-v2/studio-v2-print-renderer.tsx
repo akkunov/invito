@@ -1,4 +1,5 @@
 "use client";
+import {professionalPrintSource,type PrintSource} from "@/features/studio-v2/core/professional-print.ts";
 import {createRoot} from "react-dom/client";
 import {flushSync} from "react-dom";
 import {StudioV2Artboard} from "./studio-v2-artboard";
@@ -125,4 +126,19 @@ export async function generateCover(source:ProjectDocumentV2,pageId:string){
 }
 export function downloadOutput(blob:Blob,name:string,extension:string){
  const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=(name.replace(/[\\/:*?"<>|]/g,"-").slice(0,100)||"invito")+"."+extension;link.click();window.setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+export async function prepareProfessionalPrint(source:ProjectDocumentV2,pageId:string,widthMm:number,bleedMm:number,title:string):Promise<PrintSource>{
+ const artwork=await preparePrintArtwork(source,pageId);
+ return professionalPrintSource(artwork,widthMm,bleedMm,title);
+}
+export async function openVectorPrint(source:PrintSource){
+ const frame=document.createElement("iframe");frame.setAttribute("sandbox","allow-same-origin allow-modals");frame.setAttribute("title","Печать INVITO");Object.assign(frame.style,{position:"fixed",left:"-100000px",top:"0",width:source.geometry.widthMm+"mm",height:source.geometry.heightMm+"mm",border:"0"});
+ const loaded=new Promise<void>((resolve,reject)=>{frame.onload=()=>resolve();frame.onerror=()=>reject(Error("Не удалось открыть печать"));});
+ frame.srcdoc=source.html;document.body.append(frame);
+ try{await loaded;const win=frame.contentWindow,doc=frame.contentDocument;if(!win||!doc)throw Error("Печать недоступна");
+  await doc.fonts.ready;await Promise.all(Array.from(doc.images).map(img=>img.decode()));win.focus();
+  // Keep the source alive until the print dialog closes, including engines where print is non-blocking.
+  const dispose=()=>frame.remove();win.addEventListener("afterprint",dispose,{once:true});window.setTimeout(dispose,120000);win.print();
+ }catch(e){frame.remove();throw e;}
 }

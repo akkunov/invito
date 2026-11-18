@@ -33,7 +33,9 @@
     "test:studio-v2-responsive-pro": "node --experimental-strip-types scripts/test-studio-v2-responsive-pro.mjs",
     "test:studio-v2-color-math": "node --experimental-strip-types scripts/test-studio-v2-color-math.mjs",
     "test:studio-v2-template-registry": "node --experimental-strip-types scripts/test-studio-v2-template-registry.mjs",
-    "test:studio-v2-template-output": "node --experimental-strip-types scripts/test-studio-v2-template-output.mjs"
+    "test:studio-v2-template-output": "node --experimental-strip-types scripts/test-studio-v2-template-output.mjs",
+    "print:professional": "node scripts/print-professional.mjs",
+    "test:studio-v2-professional-print": "node --experimental-strip-types scripts/test-studio-v2-professional-print.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
