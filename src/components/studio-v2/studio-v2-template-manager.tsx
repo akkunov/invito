@@ -10,6 +10,7 @@ import {layoutDocument} from "@/features/studio-v2/core/layout-engine.ts";
 import {useMediaUrls} from "./studio-v2-assets";
 import {StudioV2Artboard} from "./studio-v2-artboard";
 import {StudioIcon} from "./studio-icon";
+import {PersonalizationConfig} from "./studio-v2-personalization-config";
 import {TemplateOutput} from "./studio-v2-template-output";
 import {coverStorageKey,validateTemplateResources} from "@/features/studio-v2/browser/template-output";
 import {readMedia} from "@/features/studio-v2/browser/media-store";
@@ -73,6 +74,7 @@ export function TemplateManager({document,onOpen,onClose}:Props){
  <button className="v2-inspector-button v2-danger" onClick={()=>{if(window.confirm("Удалить шаблон и его версии? Открытые проекты останутся."))void action(async()=>{await deleteLocalTemplate(record.id);setRecords(old=>old.filter(t=>t.id!==record.id));setSelected("");setMeta(null);});}}>Удалить шаблон</button>
  <p className="v2-placeholder">Статус «Готов» — локальная отметка, не публичная публикация. Экспорт содержит последнюю версию и все её изображения.</p>
  </fieldset>:<p className="v2-placeholder">Выберите шаблон для настройки и управления версиями.</p>}
+ {record&&<PersonalizationConfig key={record.id+"-"+record.versions.length} record={record} disabled={busy||outputBusy} onSave={async t=>{await persist(t);setMessage("Поля клиента сохранены новой версией.");}}/>}
  {record&&<TemplateOutput key={record.id+"-"+record.versions.length+"-"+record.meta.coverPageId} record={record} onBusy={setOutputBusy} onCover={()=>setCoverRevision(v=>v+1)} onVariant={persist}/>}
  </aside></div></div>;
 }
