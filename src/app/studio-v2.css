@@ -172,3 +172,9 @@
 .v2-layout-field{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;color:var(--v2-secondary);font-size:11px}
 .v2-layout-field select,.v2-layout-field input[type=number]{min-width:0;width:58%;background:#fff;color:var(--v2-ink);border:1px solid var(--v2-border);border-radius:5px;padding:6px 7px;font:inherit}
 .v2-layout-field input[type=checkbox]{accent-color:var(--v2-blue)}
+
+.v2-text-edit{position:absolute;inset:0;display:flex;align-items:center;pointer-events:auto;user-select:text;touch-action:auto;cursor:text;outline:2px solid var(--v2-blue);z-index:1}
+.v2-text-edit [contenteditable]{user-select:text;touch-action:auto;cursor:text;min-width:0}
+.v2-text-edit [contenteditable]::selection,.v2-text-edit [contenteditable] *::selection{background:#2549d94d}
+.v2-nudge button[aria-pressed=true]{background:#e8edff;color:var(--v2-blue)}
+.v2-layout-field input[type=color]{height:28px;width:58%;padding:2px;border:1px solid var(--v2-border);background:white;border-radius:5px}
