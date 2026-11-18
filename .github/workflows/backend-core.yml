@@ -1,7 +1,7 @@
 name: INVITO Backend Core
 on:
   push:
-    branches: [main, feat/29-2-backend-core]
+    branches: [main, feat/29-3-templates-projects-api]
     paths:
       - 'tsconfig.json'
       - 'server/**'
@@ -50,6 +50,8 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - name: Install isolated API dependencies
         run: npm ci --no-audit --no-fund
+      - name: Install shared Studio v2 schema dependencies
+        run: npm ci --prefix .. --no-audit --no-fund
       - name: Prisma schema validation
         run: npm exec prisma validate -- --config prisma.config.ts
       - name: Compile API and generated Prisma Client
