@@ -1,5 +1,17 @@
 import type {SVGProps} from "react";
 const paths={
+ grid:<><rect x="3" y="3" width="14" height="14" rx="1"/><path d="M10 3v14M3 10h14"/></>,
+ ruler:<><rect x="2" y="6" width="16" height="8" rx="1"/><path d="M5 6v4M8 6v2M11 6v4M14 6v2"/></>,
+ undo:<path d="M7 4L3 8l4 4M3 8h9a5 5 0 010 10"/>,
+ redo:<path d="M13 4l4 4-4 4M17 8H8a5 5 0 000 10"/>,
+ download:<><path d="M10 3v10M6 9l4 4 4-4M3 14v3h14v-3"/></>,
+ phone:<><rect x="6" y="2" width="8" height="16" rx="2"/><path d="M9 15h2"/></>,
+ layers:<><path d="M10 2l8 4-8 4-8-4zM2 10l8 4 8-4M2 14l8 4 8-4"/></>,
+ fit:<path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5"/>,
+ map:<><rect x="2" y="3" width="16" height="14" rx="2"/><rect x="5" y="6" width="6" height="5" rx="1"/><path d="M14 7h2M14 10h2M5 14h11"/></>,
+ move:<path d="M10 2v16M2 10h16M7 5l3-3 3 3M7 15l3 3 3-3M5 7l-3 3 3 3M15 7l3 3-3 3"/>,
+ back:<path d="M12 4l-6 6 6 6M6 10h12"/>,
+ check:<path d="M4 10l4 4 8-9"/>,
  select:<path d="M4 3l11 8-5 1.5L8 18 4 3z"/>,
  hand:<path d="M6 11V5a1.5 1.5 0 013 0v5-7a1.5 1.5 0 013 0v7-5a1.5 1.5 0 013 0v6-3a1.5 1.5 0 013 0v5c0 4-2 7-6 7H9c-2 0-3-1-4-3l-3-5a1.6 1.6 0 012.5-2L6 11z"/>,
  frame:<path d="M7 3v14M13 3v14M3 7h14M3 13h14"/>,
