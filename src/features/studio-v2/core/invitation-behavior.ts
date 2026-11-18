@@ -56,5 +56,5 @@ export function createWidget(kind:BlockKind,id:string,parentId:string,width:numb
  music:{kind:"music",title,source:""},
  schedule:{kind:"schedule",title,items:[{time:"16:00",label:{ru:"Сбор гостей",ky:"Конокторду тосуу"}},{time:"17:00",label:{ru:"Начало торжества",ky:"Тойдун башталышы"}}]},
  };
- return {type:"widget",id,parentId,x:24,y:24,width,height:kind==="rsvp"?440:kind==="gallery"?420:kind==="schedule"?360:240,rotation:0,opacity:1,visible:true,locked:false,block:blocks[kind],appearance:{fontFamily:"sans",fontSize:Math.max(18,Math.min(36,Math.round(width/20))),color:"#263329",background:"transparent",accent:"#263329"}};
+ return {type:"widget",id,parentId,x:24,y:24,width,height:kind==="rsvp"?760:kind==="gallery"?560:kind==="schedule"?440:240,rotation:0,opacity:1,visible:true,locked:false,block:blocks[kind],appearance:{fontFamily:"sans",fontSize:Math.max(18,Math.min(48,Math.round(width/18))),color:"#263329",background:"transparent",accent:"#263329"}};
 }
