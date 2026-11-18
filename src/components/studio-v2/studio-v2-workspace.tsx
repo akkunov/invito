@@ -11,6 +11,9 @@ import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
 import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
 import { linkedRoot, alignedSnapshot } from "@/features/studio-v2/core/linked-components.ts";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
+import { InspectorTabs, InspectorPanel, InspectorGroup, type InspectorTab } from "./studio-v2-inspector-shell";
+import { StudioIcon } from "./studio-icon";
+import { projectPalette } from "./studio-v2-color-picker";
 import { ResponsiveEditor } from "./studio-v2-responsive-editor";
 import { MotionControls, MotionTimeline } from "./studio-v2-motion-controls";
 import { motionTracks } from "@/features/studio-v2/core/motion-engine.ts";
@@ -55,7 +58,7 @@ function nodeLabel(doc:ProjectDocumentV2,id:string){
 function LayerRows({document,ids,selected,onSelect,onDropLayer,onState,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;onDropLayer:(id:string,target:string)=>void;onState:(id:string,patch:{locked?:boolean;visible?:boolean})=>void;depth?:number}){
  return <>{[...ids].reverse().map(id=>{
   const n=document.nodes[id];if(!n)return null;
-  return <div key={id}><div className="v2-layer-with-actions"><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span>{n.type==="frame"?"▣":n.type==="text"?"T":n.type==="image"?"▧":"◇"}</span><span>{nodeLabel(document,id)}</span></button><button className="v2-layer-state" aria-label={(n.visible?"Скрыть ":"Показать ")+nodeLabel(document,id)} aria-pressed={!n.visible} onClick={()=>onState(id,{visible:!n.visible})}>{n.visible?"◉":"○"}</button><button className="v2-layer-state" aria-label={(n.locked?"Разблокировать ":"Заблокировать ")+nodeLabel(document,id)} aria-pressed={n.locked} onClick={()=>onState(id,{locked:!n.locked})}>{n.locked?"🔒":"♙"}</button></div>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} onState={onState} depth={depth+1}/>}</div>
+  return <div key={id}><div className="v2-layer-with-actions"><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span><StudioIcon name={n.componentRef?"component":n.type==="widget"?"component":n.type}/></span><span>{nodeLabel(document,id)}</span></button><button className="v2-layer-state" aria-label={(n.visible?"Скрыть ":"Показать ")+nodeLabel(document,id)} aria-pressed={!n.visible} onClick={()=>onState(id,{visible:!n.visible})}><StudioIcon name="eye" style={{opacity:n.visible?1:.35}}/></button><button className="v2-layer-state" aria-label={(n.locked?"Разблокировать ":"Заблокировать ")+nodeLabel(document,id)} aria-pressed={n.locked} onClick={()=>onState(id,{locked:!n.locked})}><StudioIcon name="lock" style={{opacity:n.locked?1:.35}}/></button></div>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} onState={onState} depth={depth+1}/>}</div>
  })}</>;
 }
 const clampZoom = (zoom: number) => clamp(zoom, 0.025, 3);
@@ -124,6 +127,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [previewRun,setPreviewRun]=useState(0);
   const [device,setDevice]=useState<Device>("mobile");
   const [libraryOpen,setLibraryOpen]=useState(false);
+  const [stylesOpen,setStylesOpen]=useState(false);
+  const [inspectorTab,setInspectorTab]=useState<InspectorTab>("design");
   const [storageStatus,setStorageStatus]=useState("Загрузка локального проекта");
   const [loaded,setLoaded]=useState(false);
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
@@ -161,6 +166,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const pageDrag=useRef<{id:string;start:Point;origin:Point;started:boolean;pointer:number}|null>(null);
   const fitted=useRef(false);
   const sourceDocument=session.document;
+  const palette=useMemo(()=>projectPalette(sourceDocument),[sourceDocument]);
   const mediaUrls=useMediaUrls(sourceDocument.assets);
   useEffect(()=>{let active=true;void loadLocalProject("studio-v2-demo").then(doc=>{if(active&&doc)setSession(createEditorSession(doc));if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
   useEffect(()=>{if(!loaded||session.transaction)return;const timer=window.setTimeout(()=>{void saveLocalProject(sourceDocument).then(()=>setStorageStatus("Сохранено локально")).catch(()=>setStorageStatus("Не удалось сохранить"));},250);return()=>window.clearTimeout(timer);},[loaded,session.transaction,sourceDocument]);
@@ -599,8 +605,10 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <span className="v2-draft-state">{storageStatus}</span>
       </div>
       <div className="v2-tools" role="toolbar" aria-label="Инструменты холста">
-        <button aria-label="Выделение (V)" title="Выделение (V)" aria-pressed={activeTool==="select"} onClick={()=>setTool("select")}><MousePointer2 size={19}/></button>
-        <button aria-label="Рука (H или пробел)" title="Рука (H или пробел)" aria-pressed={activeTool==="hand"} onClick={()=>setTool("hand")}><Hand size={19}/></button>
+        <button aria-label="Выделение (V)" title="Выделение (V)" aria-pressed={activeTool==="select"} onClick={()=>setTool("select")}><StudioIcon name="select" size={20}/></button>
+        <button aria-label="Рука (H или пробел)" title="Рука (H или пробел)" aria-pressed={activeTool==="hand"} onClick={()=>setTool("hand")}><StudioIcon name="hand" size={20}/></button>
+        <button aria-label="Создать фрейм" title="Создать фрейм" onClick={createFrame} disabled={!!editing}><StudioIcon name="frame" size={20}/></button>
+        <button aria-label="Добавить текст (T)" title="Добавить текст (T)" onClick={addText} disabled={!!editing}><StudioIcon name="text" size={20}/></button>
         <span className="v2-top-divider"/>
         <button title="Показать или скрыть сетку" aria-label="Сетка" aria-pressed={grid} onClick={()=>setGrid(v=>!v)}><Grid2X2 size={18}/></button>
         <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><Ruler size={18}/></button>
@@ -616,8 +624,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     </header>
     <div className="v2-body">
       <aside className={`v2-left ${leftOpen?"is-open":""}`} aria-label="Страницы и библиотека">
-        <div className="v2-sidebar-tabs"><button aria-pressed={!libraryOpen} onClick={()=>setLibraryOpen(false)}>Страницы / слои</button><button aria-pressed={libraryOpen} onClick={()=>setLibraryOpen(true)}>Ресурсы</button></div>
-        {libraryOpen?<><AssetLibrary document={sourceDocument} urls={mediaUrls} onUpload={addAsset} onInsert={insertAsset} onReplace={replaceAsset} onFolder={(a,folder)=>libraryCommands({kind:"putAsset",asset:{...a,folder}})} onDelete={deleteAsset} onCreateComponent={createComponent} onAddVariant={addVariant} onUpdateVariant={updateMaster} onInsertComponent={insertComponent} canCreate={!!authoredNode&&!editing} canInsert={canInsert} onError={setSelectionError}/><div className="v2-sidebar-section"><div className="v2-sidebar-heading"><strong>Фигуры</strong></div><div className="v2-nudge">{(["rectangle","circle","triangle","star","heart"] as const).map((shape,i)=><button key={shape} title={shape} disabled={!canInsert} onClick={()=>insertShape(shape)}>{["□","○","△","☆","♡"][i]}</button>)}</div></div></>:<>
+        <div className="v2-sidebar-tabs"><button aria-pressed={!libraryOpen&&!stylesOpen} onClick={()=>{setLibraryOpen(false);setStylesOpen(false);}}>Страницы / слои</button><button aria-pressed={libraryOpen&&!stylesOpen} onClick={()=>{setLibraryOpen(true);setStylesOpen(false);}}>Ресурсы</button><button aria-pressed={stylesOpen} onClick={()=>setStylesOpen(true)}><StudioIcon name="styles"/> Стили</button></div>
+        <div hidden={!stylesOpen}><StyleLibrary document={sourceDocument} palette={palette} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></div>
+        {!stylesOpen&&(libraryOpen?<><AssetLibrary document={sourceDocument} urls={mediaUrls} onUpload={addAsset} onInsert={insertAsset} onReplace={replaceAsset} onFolder={(a,folder)=>libraryCommands({kind:"putAsset",asset:{...a,folder}})} onDelete={deleteAsset} onCreateComponent={createComponent} onAddVariant={addVariant} onUpdateVariant={updateMaster} onInsertComponent={insertComponent} canCreate={!!authoredNode&&!editing} canInsert={canInsert} onError={setSelectionError}/><div className="v2-sidebar-section"><div className="v2-sidebar-heading"><strong>Фигуры</strong></div><div className="v2-nudge">{(["rectangle","circle","triangle","star","heart"] as const).map(shape=><button key={shape} title={shape} disabled={!canInsert} onClick={()=>insertShape(shape)}><StudioIcon name={shape==="rectangle"?"shape":shape}/></button>)}</div></div></>:<>
         <div className="v2-sidebar-heading"><strong>Страницы <small>{document.pages.length}</small></strong>
           <button title="Добавить страницу" aria-label="Добавить страницу" onClick={addPage} disabled={document.pages.length>=30}><Plus size={18}/></button>
         </div>
@@ -635,7 +644,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <div className="v2-sidebar-heading"><strong>Слои {selected?.name}</strong></div>
           {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode} onDropLayer={moveLayer} onState={(id,patch)=>proAction(()=>({kind:"setLayerState",id,...patch}))}/>}
         </div>
-        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте страницу в списке для изменения порядка; название над холстом — для перемещения.</span></div></>}
+        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте страницу в списке для изменения порядка; название над холстом — для перемещения.</span></div></>)}}
       </aside>
       <section className="v2-workspace" aria-label="Бесконечная рабочая область">
         <div className="v2-mobile-panel-controls">
@@ -694,80 +703,21 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </div>
       </section>
       <aside className={`v2-right ${rightOpen?"is-open":""}`} aria-label="Свойства выбранной страницы">
-        <div className="v2-sidebar-tabs"><strong>Дизайн</strong><span>Прототип</span><span>Анимация</span></div>
-        <section className="v2-inspector-section">
-          <h3>Рабочая область</h3>
-          <details className="v2-widget-variables"><summary>Направляющие</summary><label className="v2-widget-field">Ось<select value={guideAxis} onChange={e=>setGuideAxis(e.target.value as "x"|"y")}><option value="x">X — вертикальная</option><option value="y">Y — горизонтальная</option></select></label><label className="v2-widget-field">Координата на холсте<input inputMode="decimal" value={guidePosition} onChange={e=>setGuidePosition(e.target.value)}/></label><button className="v2-inspector-button" disabled={!!editing||(sourceDocument.guides?.length??0)>=100} onClick={addGuide}>+ Направляющая</button>{(sourceDocument.guides??[]).map(g=><div key={g.id} className="v2-pro-actions"><span>{g.axis.toUpperCase()}: {g.position}</span><button aria-label={"Удалить направляющую "+g.axis+" "+g.position} disabled={!!editing} onClick={()=>proAction(()=>({kind:"setGuides",guides:(sourceDocument.guides??[]).filter(x=>x.id!==g.id)}))}>Удалить</button></div>)}</details>
-          <div className="v2-info-row"><span>Масштаб</span><strong>{zoomPercent}%</strong></div>
-          <div className="v2-info-row"><span>Страниц</span><strong>{document.pages.length}</strong></div>
-          <div className="v2-info-row"><span>Инструмент</span><strong>{activeTool==="hand"?"Рука":"Выделение"}</strong></div>
-          <button className="v2-inspector-button" onClick={fitAll}><Maximize size={15}/> Показать весь проект</button>
-        </section>
-        <section className="v2-inspector-section">
-          <h3>Выделение</h3>
-          <div className="v2-pro-actions"><button disabled={!nodeIds.length||!!editing} onClick={()=>copyLayers()}>Копировать</button><button disabled={!hasClipboard||!!editing} onClick={()=>pasteLayers()}>Вставить</button><button disabled={!nodeIds.length||!!editing} onClick={()=>pasteLayers(true)}>Дублировать</button></div>
-          {nodeIds.length>=2&&<><p className="v2-placeholder">Выравнивание по границам выделения</p><div className="v2-pro-actions">{(["left","center","right","top","middle","bottom"] as const).map((a,i)=><button key={a} aria-label={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} title={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} disabled={!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>alignSelection(document,nodeIds,a))}>{["⫷","↔","⫸","⊤","↕","⊥"][i]}</button>)}</div><div className="v2-pro-actions">{(["x","y"] as const).map(axis=><button key={axis} disabled={nodeIds.length<3||!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>distributeSelection(document,nodeIds,axis))}>Интервал {axis.toUpperCase()}</button>)}</div><div className="v2-pro-actions"><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,-15))}>−15°</button><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,15))}>+15°</button></div></>}
-          {activeNode&&<><label className="v2-layout-field">Переместить в<select value={moveTarget} onChange={e=>setMoveTarget(e.target.value)}><option value="">Выберите фрейм</option>{Object.values(document.nodes).filter(n=>n.type==="frame"&&n.id!==activeNode.id&&n.id!==activeNode.parentId&&!n.locked&&n.visible).map(n=><option key={n.id} value={n.id}>{nodeLabel(document,n.id)} · {n.id.slice(0,12)}</option>)}</select></label><button className="v2-inspector-button" disabled={!moveTarget||!!editing} onClick={moveLayerToFrame}>Переместить слой</button></>}
-
-          {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
+        <InspectorTabs value={inspectorTab} onChange={setInspectorTab}/>
+        <div className="v2-inspector-selection"><StudioIcon name={authoredNode?.componentRef?"component":authoredNode?.type==="text"?"text":authoredNode?.type==="image"?"image":authoredNode?.type==="shape"?"shape":"frame"}/><strong>{authoredNode?nodeLabel(sourceDocument,authoredNode.id):nodeIds.length>1?nodeIds.length+" слоёв":selected?.name??"Нет выделения"}</strong></div>
+        {selectionError&&<p role="alert" className="v2-inspector-error">{selectionError}</p>}
+        <InspectorPanel active={inspectorTab==="design"} label="Дизайн">
+        {nodeIds.length>0?<><section className="v2-inspector-section">
+          <h3>Трансформация</h3>
           {authoredNode&&<label className="v2-widget-field">Название слоя<input key={authoredNode.id+":"+(authoredNode.layerName??"")} maxLength={100} defaultValue={nodeLabel(sourceDocument,authoredNode.id)} disabled={!!editing} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==nodeLabel(sourceDocument,authoredNode.id))proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{layerName:name}}));}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></label>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
           {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)proAction(()=>({kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
-        </section>
-        <MotionControls document={sourceDocument} node={authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null)} ids={nodeIds} disabled={!!editing||!!session.transaction} onCommand={command=>proAction(()=>command)} onPreview={()=>{setTimelineTime(0);setTimelineOpen(true);setPreviewOpen(true);}}/>
-        <StyleLibrary document={sourceDocument} disabled={!!editing} onCommand={command=>proAction(()=>command)}/>
-        {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)}/></>;})()}
-        {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/>}
-        {authoredNode&&selectedInstance&&instanceComponent&&<section className="v2-inspector-section v2-linked-inspector"><h3>Связанный компонент</h3><strong>{instanceComponent.name}</strong><p className="v2-placeholder">{authoredNode.id===selectedInstance.id?"Экземпляр":"Вложенный слой"} · {(authoredNode.componentOverrides??[]).length} изменённых свойств</p><label className="v2-widget-field">Вариант<select aria-label="Вариант компонента" disabled={!!editing} value={selectedInstance.componentRef!.variantId} onChange={e=>proAction(()=>({kind:"switchComponentVariant",id:selectedInstance.id,variantId:e.target.value}))}>{instanceComponent.variants.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button className="v2-inspector-button" disabled={!!editing||!authoredNode.componentOverrides?.length} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:authoredNode.id,scope:"layer"}))}>Сбросить свойства слоя</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:selectedInstance.id,scope:"instance"}))}>Сбросить экземпляр</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"detachComponent",id:selectedInstance.id}))}>Отсоединить экземпляр</button><p className="v2-placeholder">Для изменения структуры отсоедините экземпляр или обновите мастер в библиотеке.</p></section>}
-        {authoredNode?.componentRef&&!selectedInstance&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">Старая независимая копия. Создайте новый связанный экземпляр из библиотеки.</p><button className="v2-inspector-button" onClick={()=>proAction(()=>({kind:"detachComponent",id:authoredNode.id}))}>Отсоединить</button></section>}
-        {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>{if(authoredNode.tokenRefs?.typography&&("lineHeight" in patch||"letterSpacing" in patch)){setSelectionError("Сначала отсоедините стиль текста.");return;}setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}));}} onFinish={()=>finishText()}/>}
-        <section className="v2-inspector-section">
-          <h3>Auto Layout</h3>
-          <button className="v2-inspector-button" disabled={!!editing} onClick={addText}>+ Текст (T)</button>
-          {activeNode?.type==="text"&&!editing&&<button className="v2-inspector-button" onClick={()=>startText(activeNode.id)}>Редактировать текст</button>}
-          <button className="v2-inspector-button" disabled={!!editing} onClick={createFrame}>+ Создать фрейм</button>
-          {layoutFrame&&<>
-            <label className="v2-layout-field">Расположение<select value={layoutFrame.layout} onChange={e=>editLayout(layoutFrame.id,{layout:e.target.value as "free"|"vertical"|"horizontal"})}><option value="free">Свободное</option><option value="vertical">Вертикальное</option><option value="horizontal">Горизонтальное</option></select></label>
-            {layoutFrame.layout!=="free"&&<>
-              <label className="v2-layout-field">Gap<input type="number" min={0} max={2000} value={layoutFrame.gap} onChange={e=>editLayout(layoutFrame.id,{gap:Number(e.target.value)})}/></label>
-              <div className="v2-inspector-grid">{(["top","right","bottom","left"] as const).map(side=><label key={side}>{({top:"↑",right:"→",bottom:"↓",left:"←"})[side]}<input aria-label={"Padding "+side} type="number" min={0} max={2000} value={layoutFrame.padding[side]} onChange={e=>editLayout(layoutFrame.id,{padding:{...layoutFrame.padding,[side]:Number(e.target.value)}})}/></label>)}</div>
-              <label className="v2-layout-field">Выравнивание<select value={layoutFrame.alignment??"start"} onChange={e=>editLayout(layoutFrame.id,{alignment:e.target.value as "start"|"center"|"end"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option></select></label>
-              <label className="v2-layout-field">Распределение<select value={layoutFrame.distribution??"start"} onChange={e=>editLayout(layoutFrame.id,{distribution:e.target.value as "start"|"center"|"end"|"space-between"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="space-between">Между элементами</option></select></label>
-            </>}
-            <label className="v2-layout-field">Обрезать содержимое<input type="checkbox" checked={layoutFrame.clip} onChange={e=>editLayout(layoutFrame.id,{clip:e.target.checked})}/></label>
-          </>}
-          {(authoredNode??layoutFrame)&&(()=>{
-            const n=(authoredNode??layoutFrame)!;
-            const sizing:NonNullable<typeof n.sizing>=n.sizing??{width:"fixed",height:"fixed"};
-            return <>{(["width","height"] as const).map(axis=><label key={axis} className="v2-layout-field">{axis==="width"?"Ширина":"Высота"}<select value={sizing[axis]} onChange={e=>editLayout(n.id,{sizing:{...sizing,[axis]:e.target.value as "fixed"|"fill"|"hug"}})}><option value="fixed">Fixed</option>{n.parentId&&<option value="fill">Fill</option>}{n.type==="frame"&&n.layout!=="free"&&<option value="hug">Hug</option>}</select></label>)}
-            <div className="v2-inspector-grid">{(["minWidth","maxWidth","minHeight","maxHeight"] as const).map(key=><label key={key}>{({minWidth:"min W",maxWidth:"max W",minHeight:"min H",maxHeight:"max H"})[key]}<input type="number" min={1} max={20000} value={sizing[key]??""} placeholder={key.startsWith("min")?"1":"20000"} onChange={e=>editLayout(n.id,{sizing:{...sizing,[key]:e.target.value===""?undefined:Number(e.target.value)}})}/></label>)}</div>
-            {n.parentId&&parent?.type==="frame"&&parent.layout==="free"&&(["x","y"] as const).map(axis=><label key={axis} className="v2-layout-field">Anchor {axis.toUpperCase()}<select value={n.anchors?.[axis]??"start"} onChange={e=>editLayout(n.id,{anchors:{x:"start",y:"start",...n.anchors,[axis]:e.target.value as "start"|"center"|"end"|"stretch"}})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="stretch">Растянуть</option></select></label>)}
-            </>;
-          })()}
-          {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>proAction(()=>({kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))}>{offset<0?"↑ Выше":"↓ Ниже"}</button>)}</div>}
-        </section>
-        <InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/>
-        <section className="v2-inspector-section">
-          <h3>Адаптивность</h3>
-          <button className="v2-inspector-button" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}>Открыть Responsive Studio</button>
-          <div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div>
-          {selected&&currentProfile&&<>
-            <label className="v2-layout-field">Режим<select disabled={!!editing} value={currentProfile.mode} onChange={e=>updateProfile({mode:e.target.value as "scale"|"reflow"})}><option value="scale">Масштаб</option><option value="reflow">Reflow</option></select></label>
-            <div className="v2-inspector-grid">{(["width","height"] as const).map(axis=><label key={axis}>{axis==="width"?"W":"H"}<input type="number" min={1} max={20000} disabled={!!editing||axis==="height"&&currentProfile.mode==="scale"} value={currentProfile[axis]} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=20000)updateProfile({[axis]:v});}}/></label>)}</div>
-            <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setPageProfile",id:selected.id,device,profile:null})}>Сбросить профиль</button>
-          </>}
-          {authoredNode&&<>
-            <p className="v2-placeholder">Настройки слоя для {device}; основной холст не изменяется.</p>
-            <div className="v2-inspector-grid">{(["x","y","width","height"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H"})[key]}<input type="number" disabled={!!editing} value={currentOverride[key]??""} placeholder={String(authoredNode[key])} onChange={e=>{const raw=e.target.value,v=Number(raw);if(raw===""){updateOverride({[key]:undefined});return;}if(Number.isFinite(v)&&(key==="width"||key==="height"?v>=1&&v<=20000:Math.abs(v)<=1000000))updateOverride({[key]:v});}}/></label>)}</div>
-            <label className="v2-layout-field">Видимый<input type="checkbox" checked={currentOverride.visible??authoredNode.visible} disabled={!!editing} onChange={e=>updateOverride({visible:e.target.checked})}/></label>
-            <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setResponsiveOverride",id:authoredNode.id,device,patch:null})}>Сбросить слой</button>
-          </>}
-          <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}>Открыть предпросмотр</button>
-        </section>
-        <section className="v2-inspector-section">
+        <InspectorGroup title="Действия со слоями" icon="copy"><div className="v2-pro-actions"><button disabled={!nodeIds.length||!!editing} onClick={()=>copyLayers()}>Копировать</button><button disabled={!hasClipboard||!!editing} onClick={()=>pasteLayers()}>Вставить</button><button disabled={!nodeIds.length||!!editing} onClick={()=>pasteLayers(true)}>Дублировать</button></div>
+          {nodeIds.length>=2&&<><p className="v2-placeholder">Выравнивание по границам выделения</p><div className="v2-pro-actions">{(["left","center","right","top","middle","bottom"] as const).map((a,i)=><button key={a} aria-label={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} title={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} disabled={!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>alignSelection(document,nodeIds,a))}><StudioIcon name={a}/></button>)}</div><div className="v2-pro-actions">{(["x","y"] as const).map(axis=><button key={axis} disabled={nodeIds.length<3||!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>distributeSelection(document,nodeIds,axis))} title={"Интервал "+axis.toUpperCase()} aria-label={"Интервал "+axis.toUpperCase()}><StudioIcon name={axis==="x"?"distributeX":"distributeY"}/></button>)}</div><div className="v2-pro-actions"><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,-15))}>−15°</button><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,15))}>+15°</button></div></>}
+          {activeNode&&<><label className="v2-layout-field">Переместить в<select value={moveTarget} onChange={e=>setMoveTarget(e.target.value)}><option value="">Выберите фрейм</option>{Object.values(document.nodes).filter(n=>n.type==="frame"&&n.id!==activeNode.id&&n.id!==activeNode.parentId&&!n.locked&&n.visible).map(n=><option key={n.id} value={n.id}>{nodeLabel(document,n.id)} · {n.id.slice(0,12)}</option>)}</select></label><button className="v2-inspector-button" disabled={!moveTarget||!!editing} onClick={moveLayerToFrame}>Переместить слой</button></>}</InspectorGroup></section></>:<section className="v2-inspector-section">
           <h3>Страница</h3>
           {selected&&selectedRoot?<>
             <strong className="v2-selected-name">{selected.name}</strong>
@@ -793,12 +743,65 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
               <button onClick={()=>moveSelected("x",100)}>100 →</button>
             </div>
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
-        </section>
-        <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28.6 · Responsive Editing Pro</h3>
-          <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
-          <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
-        </section>
+        </section>}
+        {authoredNode&&selectedInstance&&instanceComponent&&<section className="v2-inspector-section v2-linked-inspector"><h3>Связанный компонент</h3><strong>{instanceComponent.name}</strong><p className="v2-placeholder">{authoredNode.id===selectedInstance.id?"Экземпляр":"Вложенный слой"} · {(authoredNode.componentOverrides??[]).length} изменённых свойств</p><label className="v2-widget-field">Вариант<select aria-label="Вариант компонента" disabled={!!editing} value={selectedInstance.componentRef!.variantId} onChange={e=>proAction(()=>({kind:"switchComponentVariant",id:selectedInstance.id,variantId:e.target.value}))}>{instanceComponent.variants.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button className="v2-inspector-button" disabled={!!editing||!authoredNode.componentOverrides?.length} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:authoredNode.id,scope:"layer"}))}>Сбросить свойства слоя</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:selectedInstance.id,scope:"instance"}))}>Сбросить экземпляр</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"detachComponent",id:selectedInstance.id}))}>Отсоединить экземпляр</button><p className="v2-placeholder">Для изменения структуры отсоедините экземпляр или обновите мастер в библиотеке.</p></section>}
+        {authoredNode?.componentRef&&!selectedInstance&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">Старая независимая копия. Создайте новый связанный экземпляр из библиотеки.</p><button className="v2-inspector-button" onClick={()=>proAction(()=>({kind:"detachComponent",id:authoredNode.id}))}>Отсоединить</button></section>}
+        {authoredNode?.type==="text"&&<TextControls node={authoredNode} palette={palette} document={sourceDocument} onUnlink={()=>proAction(()=>({kind:"bindStyle",id:authoredNode.id,slot:"textColor",tokenId:null}))} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>{if(authoredNode.tokenRefs?.typography&&("lineHeight" in patch||"letterSpacing" in patch)){setSelectionError("Сначала отсоедините стиль текста.");return;}setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}));}} onFinish={()=>finishText()}/>}
+        {(layoutFrame||authoredNode)&&<InspectorGroup title="Auto Layout и ограничения" icon="frame"><section className="v2-inspector-section">
+          <h3>Auto Layout</h3>
+          <button className="v2-inspector-button" disabled={!!editing} onClick={addText}>+ Текст (T)</button>
+          {activeNode?.type==="text"&&!editing&&<button className="v2-inspector-button" onClick={()=>startText(activeNode.id)}>Редактировать текст</button>}
+          <button className="v2-inspector-button" disabled={!!editing} onClick={createFrame}>+ Создать фрейм</button>
+          {layoutFrame&&<>
+            <label className="v2-layout-field">Расположение<select value={layoutFrame.layout} onChange={e=>editLayout(layoutFrame.id,{layout:e.target.value as "free"|"vertical"|"horizontal"})}><option value="free">Свободное</option><option value="vertical">Вертикальное</option><option value="horizontal">Горизонтальное</option></select></label>
+            {layoutFrame.layout!=="free"&&<>
+              <label className="v2-layout-field">Gap<input type="number" min={0} max={2000} value={layoutFrame.gap} onChange={e=>editLayout(layoutFrame.id,{gap:Number(e.target.value)})}/></label>
+              <div className="v2-inspector-grid">{(["top","right","bottom","left"] as const).map(side=><label key={side}>{({top:"↑",right:"→",bottom:"↓",left:"←"})[side]}<input aria-label={"Padding "+side} type="number" min={0} max={2000} value={layoutFrame.padding[side]} onChange={e=>editLayout(layoutFrame.id,{padding:{...layoutFrame.padding,[side]:Number(e.target.value)}})}/></label>)}</div>
+              <label className="v2-layout-field">Выравнивание<select value={layoutFrame.alignment??"start"} onChange={e=>editLayout(layoutFrame.id,{alignment:e.target.value as "start"|"center"|"end"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option></select></label>
+              <label className="v2-layout-field">Распределение<select value={layoutFrame.distribution??"start"} onChange={e=>editLayout(layoutFrame.id,{distribution:e.target.value as "start"|"center"|"end"|"space-between"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="space-between">Между элементами</option></select></label>
+            </>}
+            <label className="v2-layout-field">Обрезать содержимое<input type="checkbox" checked={layoutFrame.clip} onChange={e=>editLayout(layoutFrame.id,{clip:e.target.checked})}/></label>
+          </>}
+          {(authoredNode??layoutFrame)&&(()=>{
+            const n=(authoredNode??layoutFrame)!;
+            const sizing:NonNullable<typeof n.sizing>=n.sizing??{width:"fixed",height:"fixed"};
+            return <>{(["width","height"] as const).map(axis=><label key={axis} className="v2-layout-field">{axis==="width"?"Ширина":"Высота"}<select value={sizing[axis]} onChange={e=>editLayout(n.id,{sizing:{...sizing,[axis]:e.target.value as "fixed"|"fill"|"hug"}})}><option value="fixed">Fixed</option>{n.parentId&&<option value="fill">Fill</option>}{n.type==="frame"&&n.layout!=="free"&&<option value="hug">Hug</option>}</select></label>)}
+            <div className="v2-inspector-grid">{(["minWidth","maxWidth","minHeight","maxHeight"] as const).map(key=><label key={key}>{({minWidth:"min W",maxWidth:"max W",minHeight:"min H",maxHeight:"max H"})[key]}<input type="number" min={1} max={20000} value={sizing[key]??""} placeholder={key.startsWith("min")?"1":"20000"} onChange={e=>editLayout(n.id,{sizing:{...sizing,[key]:e.target.value===""?undefined:Number(e.target.value)}})}/></label>)}</div>
+            {n.parentId&&parent?.type==="frame"&&parent.layout==="free"&&(["x","y"] as const).map(axis=><label key={axis} className="v2-layout-field">Anchor {axis.toUpperCase()}<select value={n.anchors?.[axis]??"start"} onChange={e=>editLayout(n.id,{anchors:{x:"start",y:"start",...n.anchors,[axis]:e.target.value as "start"|"center"|"end"|"stretch"}})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="stretch">Растянуть</option></select></label>)}
+            </>;
+          })()}
+          {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>proAction(()=>({kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))} aria-label={offset<0?"Выше":"Ниже"}><StudioIcon name={offset<0?"top":"bottom"}/></button>)}</div>}
+        </section></InspectorGroup>}
+        {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><InspectorGroup title="Связанные стили" icon="styles"><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></InspectorGroup><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} palette={palette} authoredNode={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)} onUnlink={slot=>proAction(()=>({kind:"bindStyle",id:n.id,slot,tokenId:null}))}/></>;})()}
+        {authoredNode?.type==="image"&&<InspectorGroup title="Изображение" icon="image"><ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/></InspectorGroup>}
+        <InspectorGroup title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
+        </InspectorPanel>
+        <InspectorPanel active={inspectorTab==="animation"} label="Анимация"><MotionControls document={sourceDocument} node={authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null)} ids={nodeIds} disabled={!!editing||!!session.transaction} onCommand={command=>proAction(()=>command)} onPreview={()=>{setTimelineTime(0);setTimelineOpen(true);setPreviewOpen(true);}}/></InspectorPanel>
+        <InspectorPanel active={inspectorTab==="responsive"} label="Адаптив"><section className="v2-inspector-section">
+          <h3>Адаптивность</h3>
+          <button className="v2-inspector-button" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}>Открыть Responsive Studio</button>
+          <div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div>
+          {selected&&currentProfile&&<>
+            <label className="v2-layout-field">Режим<select disabled={!!editing} value={currentProfile.mode} onChange={e=>updateProfile({mode:e.target.value as "scale"|"reflow"})}><option value="scale">Масштаб</option><option value="reflow">Reflow</option></select></label>
+            <div className="v2-inspector-grid">{(["width","height"] as const).map(axis=><label key={axis}>{axis==="width"?"W":"H"}<input type="number" min={1} max={20000} disabled={!!editing||axis==="height"&&currentProfile.mode==="scale"} value={currentProfile[axis]} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=20000)updateProfile({[axis]:v});}}/></label>)}</div>
+            <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setPageProfile",id:selected.id,device,profile:null})}>Сбросить профиль</button>
+          </>}
+          {authoredNode&&<>
+            <p className="v2-placeholder">Настройки слоя для {device}; основной холст не изменяется.</p>
+            <div className="v2-inspector-grid">{(["x","y","width","height"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H"})[key]}<input type="number" disabled={!!editing} value={currentOverride[key]??""} placeholder={String(authoredNode[key])} onChange={e=>{const raw=e.target.value,v=Number(raw);if(raw===""){updateOverride({[key]:undefined});return;}if(Number.isFinite(v)&&(key==="width"||key==="height"?v>=1&&v<=20000:Math.abs(v)<=1000000))updateOverride({[key]:v});}}/></label>)}</div>
+            <label className="v2-layout-field">Видимый<input type="checkbox" checked={currentOverride.visible??authoredNode.visible} disabled={!!editing} onChange={e=>updateOverride({visible:e.target.checked})}/></label>
+            <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setResponsiveOverride",id:authoredNode.id,device,patch:null})}>Сбросить слой</button>
+          </>}
+          <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}>Открыть предпросмотр</button>
+        </section></InspectorPanel>
+        <InspectorPanel active={inspectorTab==="canvas"} label="Холст"><section className="v2-inspector-section">
+          <h3>Рабочая область</h3>
+          <details className="v2-widget-variables"><summary>Направляющие</summary><label className="v2-widget-field">Ось<select value={guideAxis} onChange={e=>setGuideAxis(e.target.value as "x"|"y")}><option value="x">X — вертикальная</option><option value="y">Y — горизонтальная</option></select></label><label className="v2-widget-field">Координата на холсте<input inputMode="decimal" value={guidePosition} onChange={e=>setGuidePosition(e.target.value)}/></label><button className="v2-inspector-button" disabled={!!editing||(sourceDocument.guides?.length??0)>=100} onClick={addGuide}>+ Направляющая</button>{(sourceDocument.guides??[]).map(g=><div key={g.id} className="v2-pro-actions"><span>{g.axis.toUpperCase()}: {g.position}</span><button aria-label={"Удалить направляющую "+g.axis+" "+g.position} disabled={!!editing} onClick={()=>proAction(()=>({kind:"setGuides",guides:(sourceDocument.guides??[]).filter(x=>x.id!==g.id)}))}>Удалить</button></div>)}</details>
+          <div className="v2-info-row"><span>Масштаб</span><strong>{zoomPercent}%</strong></div>
+          <div className="v2-info-row"><span>Страниц</span><strong>{document.pages.length}</strong></div>
+          <div className="v2-info-row"><span>Инструмент</span><strong>{activeTool==="hand"?"Рука":"Выделение"}</strong></div>
+          <button className="v2-inspector-button" onClick={fitAll}><Maximize size={15}/> Показать весь проект</button>
+        </section></InspectorPanel>
       </aside>
     </div>
     {responsiveOpen&&<ResponsiveEditor document={{...sourceDocument,locale}} initialPageId={selectedPage} initialNodeId={authoredNode?.id??null} initialDevice={device} mediaUrls={mediaUrls} onCommand={command=>proAction(()=>command)} onUndo={changeHistory} canUndo={session.undoStack.length>0} canRedo={session.redoStack.length>0} onClose={()=>setResponsiveOpen(false)}/>}
