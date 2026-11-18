@@ -50,7 +50,7 @@ export function StyleLibrary({document,onCommand,disabled}:{document:ProjectDocu
  </fieldset></section>;
 }
 export function StyleBindings({document,node,onCommand,disabled}:{document:ProjectDocumentV2;node:ProjectNodeV2;onCommand:(c:StudioCommand)=>void;disabled:boolean}){
- return <section className="v2-inspector-section"><h3>Связанные стили</h3><fieldset disabled={disabled||node.locked} className="v2-appearance-fieldset">
+ return <section className="v2-inspector-section v2-style-bindings"><h3>Связанные стили</h3><fieldset disabled={disabled||node.locked} className="v2-appearance-fieldset">
  {tokenSlots.filter(slot=>node.type==="text"||slot!=="typography"&&slot!=="textColor").map(slot=><label key={slot} className="v2-widget-field">{labels[slot]}<select aria-label={labels[slot]} value={node.tokenRefs?.[slot]??""} onChange={e=>onCommand({kind:"bindStyle",id:node.id,slot,tokenId:e.target.value||null})}><option value="">Локальный стиль</option>{Object.values(document.tokens??{}).filter(t=>compatibleToken(slot,t)).map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>)}
  <p className="v2-placeholder">Выберите «Локальный стиль», чтобы отсоединить свойство, сохранив текущий внешний вид.</p></fieldset></section>;
 }
