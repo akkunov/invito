@@ -11,6 +11,7 @@ import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
 import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
 import { linkedRoot, alignedSnapshot } from "@/features/studio-v2/core/linked-components.ts";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
+import { ResponsiveEditor } from "./studio-v2-responsive-editor";
 import { MotionControls, MotionTimeline } from "./studio-v2-motion-controls";
 import { motionTracks } from "@/features/studio-v2/core/motion-engine.ts";
 import { StudioV2ProjectRenderer } from "./studio-v2-project-renderer";
@@ -117,6 +118,7 @@ function MiniMap({frames, viewport, size, onCenter}:{
 export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
   const [previewOpen,setPreviewOpen]=useState(false);
+  const [responsiveOpen,setResponsiveOpen]=useState(false);
   const [timelineOpen,setTimelineOpen]=useState(false);
   const [timelineTime,setTimelineTime]=useState(0);
   const [previewRun,setPreviewRun]=useState(0);
@@ -327,6 +329,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   useEffect(()=>{
     function down(e:KeyboardEvent){
       const target=e.target as HTMLElement|null;
+      if(responsiveOpen){if(e.key==="Escape"){e.preventDefault();setResponsiveOpen(false);return;}if(!target?.closest("input,textarea,select,[contenteditable]")&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();changeHistory(e.shiftKey);}return;}
       if(previewOpen){if(e.key==="Escape"){setPreviewOpen(false);setTimelineOpen(false);}return;}
       if(target?.closest("input,textarea,select,[contenteditable=true],[contenteditable=plaintext-only]"))return;
       if(menu&&e.key==="Escape"){setMenu(null);e.preventDefault();return;}
@@ -356,7 +359,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const blur=()=>{setSpaceHeld(false);setDistanceMarks([]);};
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[nodeIds,editing,sourceDocument,previewOpen,hasClipboard,menu,selectedPage,session,document]);
+  },[nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,hasClipboard,menu,selectedPage,session,document]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -605,6 +608,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       <div className="v2-top-actions">
         <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>changeHistory()}><Undo2 size={18}/></button>
         <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>changeHistory(true)}><Redo2 size={18}/></button>
+        <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}>Responsive</button>
         <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><Smartphone size={18}/></button>
         <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><Download size={16}/> JSON</button>
         <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
@@ -748,6 +752,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/>
         <section className="v2-inspector-section">
           <h3>Адаптивность</h3>
+          <button className="v2-inspector-button" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}>Открыть Responsive Studio</button>
           <div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div>
           {selected&&currentProfile&&<>
             <label className="v2-layout-field">Режим<select disabled={!!editing} value={currentProfile.mode} onChange={e=>updateProfile({mode:e.target.value as "scale"|"reflow"})}><option value="scale">Масштаб</option><option value="reflow">Reflow</option></select></label>
@@ -790,12 +795,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28.5 · Animation Engine</h3>
+          <h3>Этап #28.6 · Responsive Editing Pro</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
       </aside>
     </div>
+    {responsiveOpen&&<ResponsiveEditor document={{...sourceDocument,locale}} initialPageId={selectedPage} initialNodeId={authoredNode?.id??null} initialDevice={device} mediaUrls={mediaUrls} onCommand={command=>proAction(()=>command)} onUndo={changeHistory} canUndo={session.undoStack.length>0} canRedo={session.redoStack.length>0} onClose={()=>setResponsiveOpen(false)}/>}
     {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><div className="v2-motion-preview-actions"><button disabled={!motionTracks(sourceDocument).length} aria-pressed={timelineOpen} onClick={()=>{setTimelineOpen(v=>!v);setTimelineTime(0);}}>Timeline</button><button aria-label="Повторить анимации" disabled={timelineOpen} onClick={()=>setPreviewRun(x=>x+1)}>Повторить</button><button onClick={()=>{setPreviewOpen(false);setTimelineOpen(false);}} aria-label="Закрыть предпросмотр">Закрыть ×</button></div></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer key={previewRun} document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device} motionPlayback={timelineOpen?{mode:"timeline",timeMs:timelineTime}:{mode:"live"}}/></div></div>{timelineOpen&&<MotionTimeline document={sourceDocument} time={timelineTime} onTime={setTimelineTime}/>}</div>}
     {(leftOpen||rightOpen)&&<button className="v2-backdrop" onClick={()=>{setLeftOpen(false);setRightOpen(false)}} aria-label="Закрыть панель"/>}
   </main>;
