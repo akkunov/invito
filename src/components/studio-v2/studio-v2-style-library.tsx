@@ -1,0 +1,56 @@
+"use client";
+import {useState} from "react";
+import type {ProjectDocumentV2,ProjectNodeV2} from "@/features/studio-v2/core/document.schema.ts";
+import {type StyleToken,type TokenSlot,tokenSlots,compatibleToken} from "@/features/studio-v2/core/style-tokens.schema.ts";
+import {defaultToken,effectiveToken,styleUsage} from "@/features/studio-v2/core/style-tokens.ts";
+import type {StudioCommand} from "@/features/studio-v2/core/command-engine.ts";
+import {fillCss,uniformCorners} from "@/features/studio-v2/core/appearance.ts";
+const kinds:Record<StyleToken["kind"],string>={color:"Цвет",fill:"Заливка / градиент",typography:"Типографика",stroke:"Обводка",effect:"Эффекты",corners:"Скругление"};
+const labels:Record<TokenSlot,string>={fill:"Стиль заливки",textColor:"Цвет текста",typography:"Стиль текста",stroke:"Стиль обводки",effect:"Стиль эффектов",corners:"Стиль углов"};
+function NumberField({label,value,min,max,step=1,onChange}:{label:string;value:number;min:number;max:number;step?:number;onChange:(n:number)=>void}){
+ return <label className="v2-widget-field">{label}<input type="number" value={value} min={min} max={max} step={step} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
+}
+function ColorField({label,value,onChange}:{label:string;value:string;onChange:(n:string)=>void}){
+ return <label className="v2-widget-field">{label}<input type="color" value={value} onChange={e=>onChange(e.target.value)}/></label>;
+}
+function TokenEditor({token,onChange}:{token:StyleToken;onChange:(token:StyleToken)=>void}){
+ switch(token.kind){
+ case "color":return <ColorField label="Значение цвета" value={token.value} onChange={value=>onChange({...token,value})}/>;
+ case "fill":{const v=token.value;
+ return <><div className="v2-style-sample" style={{background:fillCss(v)}}/><label className="v2-widget-field">Тип заливки<select value={v.kind} onChange={e=>onChange({...token,value:e.target.value==="linear"?{kind:"linear",angle:90,stops:[{color:"#FAF7EF",position:0},{color:"#C7AA78",position:100}]}:e.target.value==="solid"?{kind:"solid",color:"#263329"}:{kind:"none"}})}><option value="none">Нет</option><option value="solid">Цвет</option><option value="linear">Градиент</option></select></label>
+ {v.kind==="solid"&&<ColorField label="Цвет заливки" value={v.color} onChange={color=>onChange({...token,value:{...v,color}})}/>}
+ {v.kind==="linear"&&<><NumberField label="Угол" value={v.angle} min={0} max={360} onChange={angle=>onChange({...token,value:{...v,angle}})}/>{v.stops.map((s,i)=><div className="v2-pro-actions" key={i}><ColorField label={"Цвет "+(i+1)} value={s.color} onChange={color=>onChange({...token,value:{...v,stops:v.stops.map((x,j)=>i===j?{...x,color}:x)}})}/><NumberField label="%" value={s.position} min={v.stops[i-1]?.position??0} max={v.stops[i+1]?.position??100} onChange={position=>onChange({...token,value:{...v,stops:v.stops.map((x,j)=>i===j?{...x,position}:x)}})}/><button disabled={v.stops.length===2} onClick={()=>onChange({...token,value:{...v,stops:v.stops.filter((_,j)=>j!==i)}})}>−</button></div>)}<button className="v2-inspector-button" disabled={v.stops.length>=8} onClick={()=>onChange({...token,value:{...v,stops:[...v.stops,{color:"#FFFFFF",position:100}]}})}>+ Точка</button></>}</>;}
+ case "typography":{const v=token.value;return <><div className="v2-style-type-sample" style={{fontFamily:v.fontFamily==="serif"?"Georgia,serif":"Arial,sans-serif",fontWeight:v.fontWeight}}>Аа Өө Үү Ңң</div><label className="v2-widget-field">Шрифт<select value={v.fontFamily} onChange={e=>onChange({...token,value:{...v,fontFamily:e.target.value as "sans"|"serif"}})}><option value="sans">Arial</option><option value="serif">Georgia</option></select></label>{([["fontSize","Размер",6,400,1],["fontWeight","Вес",100,900,100],["lineHeight","Интерлиньяж",.8,4,.05],["letterSpacing","Трекинг",-10,60,.1]] as const).map(([k,label,min,max,step])=><NumberField key={k} label={label} value={v[k]} min={min} max={max} step={step} onChange={n=>onChange({...token,value:{...v,[k]:n}})}/>)}</>;}
+ case "stroke":{const v=token.value;return <><label className="v2-widget-field">Обводка<input type="checkbox" checked={!!v} onChange={e=>onChange({...token,value:e.target.checked?{color:"#263329",width:1,style:"solid"}:null})}/></label>{v&&<><ColorField label="Цвет линии" value={v.color} onChange={color=>onChange({...token,value:{...v,color}})}/><NumberField label="Толщина" value={v.width} min={0} max={100} onChange={width=>onChange({...token,value:{...v,width}})}/><label className="v2-widget-field">Линия<select value={v.style} onChange={e=>onChange({...token,value:{...v,style:e.target.value as typeof v.style}})}><option value="solid">Сплошная</option><option value="dashed">Пунктир</option><option value="dotted">Точки</option></select></label></>}</>;}
+ case "effect":{const v=token.value,s=v.shadow;return <><NumberField label="Размытие слоя" value={v.blur} min={0} max={100} onChange={blur=>onChange({...token,value:{...v,blur}})}/><label className="v2-widget-field">Тень<input type="checkbox" checked={!!s} onChange={e=>onChange({...token,value:{...v,shadow:e.target.checked?{color:"#000000",x:0,y:8,blur:20,spread:0,opacity:.25}:null}})}/></label>{s&&<><ColorField label="Цвет тени" value={s.color} onChange={color=>onChange({...token,value:{...v,shadow:{...s,color}}})}/>{(["x","y","blur","spread","opacity"] as const).map(k=><NumberField key={k} label={k} value={s[k]} min={k==="blur"||k==="opacity"?0:-2000} max={k==="blur"?300:k==="opacity"?1:2000} step={k==="opacity"?.05:1} onChange={n=>onChange({...token,value:{...v,shadow:{...s,[k]:n}}})}/>)}</>}</>;}
+ case "corners":return <><NumberField label="Общий радиус" min={0} max={10000} value={token.value.topLeft} onChange={n=>onChange({...token,value:uniformCorners(n)})}/><div className="v2-inspector-grid">{(["topLeft","topRight","bottomRight","bottomLeft"] as const).map((k,i)=><NumberField key={k} label={["↖","↗","↘","↙"][i]} min={0} max={10000} value={token.value[k]} onChange={n=>onChange({...token,value:{...token.value,[k]:n}})}/>)}</div></>;
+ }
+}
+export function StyleLibrary({document,onCommand,disabled}:{document:ProjectDocumentV2;onCommand:(c:StudioCommand)=>void;disabled:boolean}){
+ const [name,setName]=useState(""),[kind,setKind]=useState<StyleToken["kind"]>("color"),[selected,setSelected]=useState(""),[themeName,setThemeName]=useState("");
+ const themes=Object.values(document.themes??{}),tokens=Object.values(document.tokens??{});
+ const theme=document.activeThemeId?document.themes?.[document.activeThemeId]:undefined;
+ const base=document.tokens?.[selected],effective=base?effectiveToken(document,base.id):undefined;
+ function create(){if(!name.trim())return;const id="style-"+crypto.randomUUID();onCommand({kind:"putStyleToken",token:defaultToken(id,name.trim(),kind)});setSelected(id);setName("");}
+ function change(token:StyleToken){if(theme){onCommand({kind:"putStyleTheme",theme:{...theme,overrides:{...theme.overrides,[token.id]:token}}});}else onCommand({kind:"putStyleToken",token});}
+ return <section className="v2-inspector-section v2-style-library"><h3>Библиотека стилей</h3><fieldset disabled={disabled} className="v2-appearance-fieldset">
+ <label className="v2-widget-field">Тема проекта<select aria-label="Тема проекта" value={theme?.id??""} onChange={e=>onCommand({kind:"activateStyleTheme",id:e.target.value||null})}><option value="">Базовая</option>{themes.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+ <label className="v2-widget-field">Название темы<input value={themeName} maxLength={100} onChange={e=>setThemeName(e.target.value)}/></label>
+ <button className="v2-inspector-button" disabled={!themeName.trim()||themes.length>=20} onClick={()=>{onCommand({kind:"putStyleTheme",theme:{id:"theme-"+crypto.randomUUID(),name:themeName.trim(),overrides:{}}});setThemeName("");}}>+ Тема</button>
+ {theme&&<button className="v2-inspector-button" onClick={()=>onCommand({kind:"deleteStyleTheme",id:theme.id})}>Удалить активную тему</button>}
+ <label className="v2-widget-field">Название стиля<input value={name} maxLength={100} onChange={e=>setName(e.target.value)}/></label>
+ <label className="v2-widget-field">Тип стиля<select value={kind} onChange={e=>setKind(e.target.value as StyleToken["kind"])}>{Object.entries(kinds).map(([k,label])=><option key={k} value={k}>{label}</option>)}</select></label>
+ <button className="v2-inspector-button" disabled={!name.trim()||tokens.length>=200} onClick={create}>+ Создать стиль</button>
+ <label className="v2-widget-field">Стиль для редактирования<select aria-label="Стиль для редактирования" value={base?.id??""} onChange={e=>setSelected(e.target.value)}><option value="">Выберите стиль</option>{tokens.map(t=><option key={t.id} value={t.id}>{t.name} · {kinds[t.kind]}</option>)}</select></label>
+ {base&&effective&&<div className="v2-component-item"><strong>{base.name}</strong><p className="v2-placeholder">{styleUsage(document,base.id)} слоёв · {theme?theme.overrides[base.id]?"Переопределение темы":"Наследуется из базовой темы":"Базовое значение"}</p>
+ {!theme&&<label className="v2-widget-field">Имя стиля<input key={base.id+base.name} defaultValue={base.name} maxLength={100} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==base.name)onCommand({kind:"putStyleToken",token:{...base,name}});}}/></label>}
+ <TokenEditor token={effective} onChange={change}/>
+ {theme&&theme.overrides[base.id]&&<button className="v2-inspector-button" onClick={()=>{const overrides={...theme.overrides};delete overrides[base.id];onCommand({kind:"putStyleTheme",theme:{...theme,overrides}});}}>Вернуть базовое значение</button>}
+ {!theme&&<button className="v2-inspector-button" disabled={styleUsage(document,base.id)>0} onClick={()=>{onCommand({kind:"deleteStyleToken",id:base.id});setSelected("");}}>Удалить стиль</button>}</div>}
+ </fieldset></section>;
+}
+export function StyleBindings({document,node,onCommand,disabled}:{document:ProjectDocumentV2;node:ProjectNodeV2;onCommand:(c:StudioCommand)=>void;disabled:boolean}){
+ return <section className="v2-inspector-section"><h3>Связанные стили</h3><fieldset disabled={disabled||node.locked} className="v2-appearance-fieldset">
+ {tokenSlots.filter(slot=>node.type==="text"||slot!=="typography"&&slot!=="textColor").map(slot=><label key={slot} className="v2-widget-field">{labels[slot]}<select aria-label={labels[slot]} value={node.tokenRefs?.[slot]??""} onChange={e=>onCommand({kind:"bindStyle",id:node.id,slot,tokenId:e.target.value||null})}><option value="">Локальный стиль</option>{Object.values(document.tokens??{}).filter(t=>compatibleToken(slot,t)).map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>)}
+ <p className="v2-placeholder">Выберите «Локальный стиль», чтобы отсоединить свойство, сохранив текущий внешний вид.</p></fieldset></section>;
+}
