@@ -193,3 +193,13 @@
 .v2-asset-actions button{padding:4px;font-size:10px;border-radius:3px;background:#f3f5fa}
 .v2-component-item{border-bottom:1px solid var(--v2-border);padding:10px 0;font-size:11px}
 .v2-layout-field input[type=range]{width:58%;min-width:0;accent-color:var(--v2-blue)}
+
+.v2-device-switch{display:flex;gap:4px;border:1px solid var(--v2-border);border-radius:6px;padding:3px}
+.v2-device-switch button{flex:1;padding:6px;font-size:10px;white-space:nowrap;border-radius:4px}
+.v2-device-switch button[aria-pressed=true]{background:#e8edff;color:var(--v2-blue);font-weight:700}
+.v2-preview-overlay{position:fixed;inset:0;z-index:30;background:#f3f4f7;display:flex;flex-direction:column}
+.v2-preview-header{background:#fff;border-bottom:1px solid var(--v2-border);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px;flex:none}
+.v2-preview-scroll{flex:1;min-height:0;overflow:auto;padding:24px 10px}
+.v2-preview-device{margin:0 auto;background:#fff;box-shadow:0 8px 40px #20242b18}
+.v2-project-renderer,.v2-project-renderer *{box-sizing:border-box}
+@media(max-width:660px){.studio-v2 .v2-top-actions>.v2-preview-button{display:flex}.v2-preview-header{padding:8px;font-size:11px}.v2-preview-scroll{padding:10px 0}}

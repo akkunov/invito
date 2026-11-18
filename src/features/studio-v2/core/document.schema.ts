@@ -5,6 +5,8 @@ const idSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,79}$/);
 const colorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const sizeSchema = z.number().finite().min(1).max(20000);
 const coordinateSchema = z.number().finite().min(-1_000_000).max(1_000_000);
+export const studioDevices = ["desktop","tablet","mobile"] as const;
+export const responsivePatchSchema = z.strictObject({x:coordinateSchema.optional(),y:coordinateSchema.optional(),width:sizeSchema.optional(),height:sizeSchema.optional(),visible:z.boolean().optional(),opacity:z.number().finite().min(0).max(1).optional(),rotation:z.number().finite().min(-360).max(360).optional()});
 const baseNodeSchema = z.strictObject({
   id: idSchema,
   parentId: idSchema.nullable(),
@@ -81,6 +83,7 @@ export const projectPageSchema = z.strictObject({
   name: z.string().min(1).max(100),
   rootNodeId: idSchema,
   placement: z.strictObject({ x: coordinateSchema, y: coordinateSchema }),
+  responsive: z.strictObject({desktop:z.strictObject({width:sizeSchema,height:sizeSchema,mode:z.enum(["scale","reflow"])}).optional(),tablet:z.strictObject({width:sizeSchema,height:sizeSchema,mode:z.enum(["scale","reflow"])}).optional(),mobile:z.strictObject({width:sizeSchema,height:sizeSchema,mode:z.enum(["scale","reflow"])}).optional()}).optional(),
 });
 export const mediaAssetRefSchema = z.strictObject({
   id: idSchema,
@@ -105,6 +108,7 @@ export const projectDocumentSchema = z.strictObject({
   pages: z.array(projectPageSchema).min(1).max(30),
   nodes: z.record(idSchema, nodeSchema).refine(value => Object.keys(value).length <= 500, "Maximum 500 nodes"),
   assets: z.record(idSchema, mediaAssetRefSchema).refine(value => Object.keys(value).length <= 200, "Maximum 200 assets"),
+  responsiveOverrides: z.strictObject({desktop:z.record(idSchema,responsivePatchSchema).optional(),tablet:z.record(idSchema,responsivePatchSchema).optional(),mobile:z.record(idSchema,responsivePatchSchema).optional()}).optional(),
   components: z.record(idSchema,componentSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 components").optional(),
   variables: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/), variableSchema),
 }).superRefine((doc, ctx) => {
@@ -122,6 +126,7 @@ export const projectDocumentSchema = z.strictObject({
     if (!root || root.type !== "frame" || root.parentId !== null)
       issue(["pages", index, "rootNodeId"], "Page must reference an existing top-level frame");
   }
+  for(const [device,overrides] of Object.entries(doc.responsiveOverrides??{}))for(const id of Object.keys(overrides??{}))if(!doc.nodes[id]||rootIds.has(id))issue(["responsiveOverrides",device,id],"Override must reference a non-root node");
   const membership = new Map<string, number>();
   for (const [key, node] of Object.entries(doc.nodes)) {
     if (node.sizing) {
