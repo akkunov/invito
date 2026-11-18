@@ -11,6 +11,7 @@ import {AppModule} from "../src/app.module.js";
 import {PrismaService} from "../src/database/prisma.service.js";
 import {MediaObjectStore, MediaObjectNotFound} from "../src/modules/media/media-object-store.js";
 import {createEmptyProjectV2} from "../../src/features/studio-v2/core/document.schema.ts";
+import {createWidget} from "../../src/features/studio-v2/core/invitation-behavior.ts";
 
 test("Media #29.4: R2 verification, immutable keys and tenant access", async t => {
   const {publicKey, privateKey} = await generateKeyPair("RS256");
@@ -146,6 +147,26 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
     {title: "Document with media", document});
   assert.equal(project.status, 201, JSON.stringify(project.data));
 
+  // A Music widget can persist only a verified audio/mpeg asset in its own tenant.
+  // Insert a trusted READY fixture here; forged uploads are still rejected below.
+  const audioId = randomUUID();
+  await db.mediaAsset.create({data: {
+    id: audioId, workspaceId, uploadedById: users[0]!,
+    storageKey: "verified/" + workspaceId + "/" + audioId + "/trusted.mp3",
+    name: "song.mp3", mimeType: "audio/mpeg", bytes: 123n,
+    sha256: "a".repeat(64), status: "READY",
+  }});
+  const musicDoc = createEmptyProjectV2("studio-" + randomUUID().slice(0, 8));
+  const musicNode = createWidget("music", "music-node", "frame-1", 400);
+  if (musicNode.block.kind !== "music") throw Error("Unexpected widget");
+  musicNode.block.source = "asset:" + audioId;
+  musicDoc.nodes[musicNode.id] = musicNode;
+  const rootNode = musicDoc.nodes["frame-1"];
+  if (rootNode.type === "frame") rootNode.children.push(musicNode.id);
+  const musicProject = await request("/workspaces/" + workspaceId + "/projects", owner, "POST",
+    {title: "Project with private MP3", document: musicDoc});
+  assert.equal(musicProject.status, 201, JSON.stringify(musicProject.data));
+
   // An authenticated owner of another workspace cannot read or reuse the asset.
   const otherWorkspace = await request("/workspaces", outsider, "POST", {
     slug: "other-" + randomUUID().slice(0, 12), name: "Isolated tenant",
@@ -157,7 +178,20 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
     "POST", {title: "Foreign asset forbidden", document: {
       ...structuredClone(document), id: "studio-" + randomUUID().slice(0, 8),
     }});
-  assert.equal(crossWorkspaceProject.status, 422, "another workspace asset may not be referenced");
+  assert.equal(crossWorkspaceProject.status, 422, "another workspace image may not be referenced");
+  const foreignMusic = await request("/workspaces/" + otherWorkspaceId + "/projects", outsider,
+    "POST", {title: "Foreign MP3 forbidden", document: {
+      ...structuredClone(musicDoc), id: "studio-" + randomUUID().slice(0, 8),
+    }});
+  assert.equal(foreignMusic.status, 422, "another workspace MP3 may not be referenced");
+  // A raster UUID in a music source is not a valid audio file, even in the same tenant.
+  const badMusic = structuredClone(musicDoc);
+  const badWidget = badMusic.nodes["music-node"];
+  if (badWidget.type === "widget" && badWidget.block.kind === "music") {
+    badWidget.block.source = "asset:" + mediaId;
+  }
+  assert.equal((await request("/workspaces/" + workspaceId + "/projects", owner,
+    "POST", {title: "Image-as-audio forbidden", document: badMusic})).status, 422);
 
   // A mismatch must be rejected, with no READY record and no immutable copy.
   const invalid = await request(root + "/uploads", owner, "POST", requestBody);

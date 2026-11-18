@@ -79,7 +79,7 @@ A user with a configured real OIDC session opts into Cloud from Studio v2. On cl
 
 When opening an already-cloud-stored project, the editor resolves image `asset:UUID` through a 60-second signed read URL refreshed approximately every 45 seconds. The raw private R2 keys are never embedded into published or local snapshots.
 
-MP3 upload and signed GET are available through the backend media API, but the current Studio document asset schema only represents image references; using MP3 in a music block requires a separate music field/adapter, and no fake support is claimed.
+MP3 upload is integrated with the Studio v2 music widget when a real OIDC workspace session is configured. The music widget's `block.source` accepts `asset:UUID` (separate from the image-only `ProjectDocumentV2.assets`). The backend rejects audio refs belonging to another tenant or referencing non-MP3 media. The editor resolves the private short-lived read URL for playback; signed URL refresh does not interrupt currently playing audio. Guest publication and permanent publicly playable audio belong to #29.5.
 
 ## Testing and release boundary
 

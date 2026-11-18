@@ -82,6 +82,6 @@ Raster: PNG/JPEG/WebP up to 20 MiB, max side 4096px and max decoded pixels 32 MP
 
 Quota: 500 MiB per workspace, 20 pending uploads, 15-minute server completion window. No public bucket URL, delete API or guest access is provided. Configure R2 lifecycle cleanup for `staging/` orphaned objects.
 
-Cloud save in Studio v2 uses `prepareCloudSnapshot` to upload local images when the user explicitly clicks Save. It does **not** replace IndexedDB records or delete local image blobs. Uploading MP3 through the API is supported; storing music bindings in the Studio document is separate from the current image-only `ProjectDocumentV2.assets` schema.
+Cloud save in Studio v2 uses `prepareCloudSnapshot` to upload local images when the user explicitly clicks Save. It does **not** replace IndexedDB records or delete local image blobs. Studio v2 music widgets support an explicit MP3 upload button when an OIDC workspace session is provided. Their `block.source` holds `asset:UUID`, checked against READY audio/mpeg records in the same workspace, rather than reusing image-only `ProjectDocumentV2.assets`. Guest playback for public publications remains #29.5.
 
 **Deployment:** Existing #29.3 build includes shared Studio schema files from `../src`; the backend still needs the monorepo root in its Vercel build context. Production R2 credentials and CORS must be configured manually; CI fakes the R2 object boundary and verifies server logic against a disposable PostgreSQL 17 database, not a real R2 bucket.

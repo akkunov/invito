@@ -111,3 +111,5 @@ jobs:
         run: npm run test:studio-v2-remote-sync
       - name: Verify cloud media upload transport and immutable local copies
         run: npm run test:studio-v2-cloud-media
+      - name: Verify music widget and invitation block regression
+        run: npm run test:studio-v2-invitation
