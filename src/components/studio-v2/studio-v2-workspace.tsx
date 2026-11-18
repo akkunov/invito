@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import Link from "next/link";
 import type { Locale } from "@/i18n/locales";
 import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
-import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
+import { loadLocalProjectWithRecovery, saveLocalProject, type LocalProjectLoad } from "@/features/studio-v2/browser/media-store";
 import { linkedRoot, alignedSnapshot } from "@/features/studio-v2/core/linked-components.ts";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
 import { InspectorTabs, InspectorPanel, InspectorGroup, type InspectorTab } from "./studio-v2-inspector-shell";
@@ -129,6 +129,11 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [inspectorTab,setInspectorTab]=useState<InspectorTab>("design");
   const [storageStatus,setStorageStatus]=useState("Загрузка локального проекта");
   const [loaded,setLoaded]=useState(false);
+  const [loadFailure,setLoadFailure]=useState<string|null>(null);
+  const [recovery,setRecovery]=useState<Extract<LocalProjectLoad,{kind:"recoverable"}>|null>(null);
+  const [loadAttempt,setLoadAttempt]=useState(0);
+  const [restoring,setRestoring]=useState(false);
+  const saveGeneration=useRef(0);
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
   const [pageStatus,setPageStatus]=useState("");
   const [selectedIds,setSelectedIds]=useState<string[]>([]);
@@ -166,14 +171,52 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const sourceDocument=session.document;
   const palette=useMemo(()=>projectPalette(sourceDocument),[sourceDocument]);
   const mediaUrls=useMediaUrls(sourceDocument.assets);
-  useEffect(()=>{let active=true;let id="studio-v2-demo";try{id=localStorage.getItem("invito-studio-active-project")??id;}catch{/* browser storage disabled */}void loadLocalProject(id).then(doc=>{if(active&&doc){setSession(createEditorSession(doc));setSelectedPage(doc.pages[0].id);setSelectedIds([]);}if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
+  useEffect(()=>{
+    let active=true;let id="studio-v2-demo";
+    try{id=localStorage.getItem("invito-studio-active-project")??id;}catch{/* active project preference is optional */}
+    setLoaded(false);setLoadFailure(null);setRecovery(null);setStorageStatus("Загрузка локального проекта");
+    void loadLocalProjectWithRecovery(id).then(result=>{
+      if(!active)return;
+      if(result.kind==="recoverable"){setRecovery(result);setStorageStatus("Требуется восстановление");return;}
+      if(result.kind==="missing"&&id!=="studio-v2-demo"){setLoadFailure("Сохранённый проект не найден. Автосохранение остановлено, чтобы не заменить ваши данные.");return;}
+      if(result.kind==="ready"){setSession(createEditorSession(result.document));setSelectedPage(result.document.pages[0].id);setSelectedIds([]);}
+      setStorageStatus("Локальный проект");setLoaded(true);
+    }).catch(()=>{if(active){setLoadFailure("Не удалось открыть локальный проект. Ваши данные не будут перезаписаны.");setStorageStatus("Хранилище недоступно");}});
+    return()=>{active=false;};
+  },[loadAttempt]);
+  async function restoreProject(){
+    if(!recovery||restoring)return;
+    setRestoring(true);
+    try{
+      await saveLocalProject(recovery.document,{allowRecovery:true});
+      setSession(createEditorSession(recovery.document));setSelectedPage(recovery.document.pages[0].id);setSelectedIds([]);setTextMeasurements({});
+      setRecovery(null);setLoadFailure(null);setStorageStatus("Восстановлено из копии");setLoaded(true);
+    }catch{setLoadFailure("Не удалось восстановить проект. Резервная копия сохранена.");}
+    finally{setRestoring(false);}
+  }
   async function openTemplateProject(doc:ProjectDocumentV2){
     if(!loaded||session.transaction||editing)throw Error("Завершите редактирование перед открытием проекта.");
     await saveLocalProject(sourceDocument);await saveLocalProject(doc);
     try{localStorage.setItem("invito-studio-active-project",doc.id);}catch{/* project still stored in IndexedDB */}
     setSession(createEditorSession(doc));setSelectedPage(doc.pages[0].id);setSelectedIds([]);setSelectionError(null);setTextMeasurements({});clipboard.current=null;setHasClipboard(false);setViewport(fitBounds(unionRects(doc.pages.map(page=>pageRect(doc,page))),{width:Math.max(1,size.width-14),height:Math.max(1,size.height-14)},45));setStorageStatus("Сохранено локально");
   }
-  useEffect(()=>{if(!loaded||session.transaction)return;const timer=window.setTimeout(()=>{void saveLocalProject(sourceDocument).then(()=>setStorageStatus("Сохранено локально")).catch(()=>setStorageStatus("Не удалось сохранить"));},250);return()=>window.clearTimeout(timer);},[loaded,session.transaction,sourceDocument]);
+  useEffect(()=>{
+    const generation=++saveGeneration.current;
+    if(!loaded||session.transaction)return;
+    let submitted=false;
+    setStorageStatus("Сохранение…");
+    const save=()=>{
+      if(submitted)return;submitted=true;
+      void Promise.resolve().then(()=>saveLocalProject(sourceDocument)).then(()=>{
+        if(saveGeneration.current===generation)setStorageStatus("Сохранено локально");
+      }).catch(()=>{if(saveGeneration.current===generation)setStorageStatus("Не удалось сохранить");});
+    };
+    const timer=window.setTimeout(save,250);
+    const onVisibility=()=>{if(documentGlobal.visibilityState==="hidden")save();};
+    const documentGlobal=window.document;
+    documentGlobal.addEventListener("visibilitychange",onVisibility);window.addEventListener("pagehide",save);
+    return()=>{window.clearTimeout(timer);documentGlobal.removeEventListener("visibilitychange",onVisibility);window.removeEventListener("pagehide",save);};
+  },[loaded,session.transaction,sourceDocument]);
   const document=useMemo(()=>{const bound=bindDocument({...sourceDocument,locale});if(editing&&sourceDocument.nodes[editing.id])bound.nodes[editing.id]=sourceDocument.nodes[editing.id];return layoutDocument(resolveStyleDocument(bound),textMeasurements);},[sourceDocument,textMeasurements,editing?.id,locale]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
   const activeTool=spaceHeld?"hand":tool;
@@ -607,7 +650,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <Link href={`/${locale}`} aria-label="На главную"><StudioIcon name="back" size={16}/></Link>
         <strong>INVITO <span>Studio 2.0</span></strong>
         <button className="v2-project-title" aria-label="Менеджер шаблонов" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setTemplateManagerOpen(true)}>Шаблоны <StudioIcon name="down" size={13}/></button>
-        <span className="v2-draft-state">{storageStatus}</span>
+        <span className="v2-draft-state" role="status">{storageStatus}</span>
       </div>
       <div className="v2-tools" role="toolbar" aria-label="Инструменты холста">
         <button aria-label="Выделение (V)" title="Выделение (V)" aria-pressed={activeTool==="select"} onClick={()=>setTool("select")}><StudioIcon name="select" size={20}/></button>
@@ -814,6 +857,15 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     {templateManagerOpen&&<TemplateManager document={sourceDocument} onOpen={openTemplateProject} onClose={()=>setTemplateManagerOpen(false)}/>}
     {responsiveOpen&&<ResponsiveEditor document={{...sourceDocument,locale}} initialPageId={selectedPage} initialNodeId={authoredNode?.id??null} initialDevice={device} mediaUrls={mediaUrls} onCommand={command=>proAction(()=>command)} onUndo={changeHistory} canUndo={session.undoStack.length>0} canRedo={session.redoStack.length>0} onClose={()=>setResponsiveOpen(false)}/>}
     {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><div className="v2-motion-preview-actions"><button disabled={!motionTracks(sourceDocument).length} aria-pressed={timelineOpen} onClick={()=>{setTimelineOpen(v=>!v);setTimelineTime(0);}}>Timeline</button><button aria-label="Повторить анимации" disabled={timelineOpen} onClick={()=>setPreviewRun(x=>x+1)}>Повторить</button><button onClick={()=>{setPreviewOpen(false);setTimelineOpen(false);}} aria-label="Закрыть предпросмотр">Закрыть ×</button></div></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer key={previewRun} document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device} motionPlayback={timelineOpen?{mode:"timeline",timeMs:timelineTime}:{mode:"live"}}/></div></div>{timelineOpen&&<MotionTimeline document={sourceDocument} time={timelineTime} onTime={setTimelineTime}/>}</div>}
+    {!loaded&&<div className="v2-recovery-overlay" role="dialog" aria-modal="true" aria-label="Локальный проект"><div className="v2-recovery-card">
+       <StudioIcon name="lock" size={26}/>
+       <h2>{recovery?"Восстановление проекта":loadFailure?"Не удалось загрузить проект":"Открываем проект"}</h2>
+       <p>{recovery?"Основная запись повреждена. Найдена предыдущая корректная версия от "+new Date(recovery.savedAt).toLocaleString(locale==="ky"?"ky-KG":"ru-RU")+". Восстановление заменит только повреждённую запись.":loadFailure??"Проверяем локальное хранилище."}</p>
+       {recovery&&<button className="v2-inspector-button" disabled={restoring} onClick={()=>void restoreProject()}>Восстановить резервную копию</button>}
+       {recovery&&loadFailure&&<p role="alert">{loadFailure}</p>}
+       {(loadFailure||recovery)&&<button className="v2-inspector-button" disabled={restoring} onClick={()=>setLoadAttempt(n=>n+1)}>Повторить загрузку</button>}
+       {loadFailure&&!recovery&&<p>Не очищайте данные браузера. Повторите загрузку или откройте проект в исходном профиле браузера.</p>}
+    </div></div>}
     {(leftOpen||rightOpen)&&<button className="v2-backdrop" onClick={()=>{setLeftOpen(false);setRightOpen(false)}} aria-label="Закрыть панель"/>}
   </main>;
 }
