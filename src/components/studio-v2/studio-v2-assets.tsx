@@ -3,17 +3,41 @@ import {useEffect,useRef,useState} from "react";
 import {readMedia,importImage} from "@/features/studio-v2/browser/media-store";
 import type {ProjectDocumentV2,ProjectNodeV2} from "@/features/studio-v2/core/document.schema.ts";
 import type {Asset,Component} from "@/features/studio-v2/core/component-engine.ts";
+type MediaPool={active:boolean;wanted:Set<string>;urls:Map<string,string>;pending:Set<string>;failed:Set<string>};
+const MEDIA_CONCURRENCY=4;
 export function useMediaUrls(assets:ProjectDocumentV2["assets"]){
  const [urls,setUrls]=useState<Record<string,string>>({});
- const key=JSON.stringify(Object.values(assets).map(a=>a.storageKey).filter(k=>k.startsWith("local:")).sort());
+ const pool=useRef<MediaPool|null>(null);
+ const key=JSON.stringify([...new Set(Object.values(assets).map(a=>a.storageKey).filter(k=>k.startsWith("local:")))].sort());
  useEffect(()=>{
-  let active=true;const allocated:string[]=[];
-  setUrls({});
-  void Promise.all((JSON.parse(key) as string[]).map(async k=>{
-   try{const blob=await readMedia(k);if(!blob||!active)return null;const url=URL.createObjectURL(blob);allocated.push(url);return [k,url] as const;}catch{return null;}
-  })).then(entries=>{if(active)setUrls(Object.fromEntries(entries.filter((e):e is readonly [string,string]=>e!==null)));});
-  return()=>{active=false;allocated.forEach(URL.revokeObjectURL);};
- },[key]);return urls;
+  const state:MediaPool={active:true,wanted:new Set(),urls:new Map(),pending:new Set(),failed:new Set()};
+  pool.current=state;
+  return()=>{state.active=false;for(const url of state.urls.values())URL.revokeObjectURL(url);state.urls.clear();if(pool.current===state)pool.current=null;};
+ },[]);
+ useEffect(()=>{
+  const state=pool.current;if(!state)return;
+  state.wanted=new Set(JSON.parse(key) as string[]);
+  for(const [k,url] of state.urls)if(!state.wanted.has(k)){URL.revokeObjectURL(url);state.urls.delete(k);}
+  // Retain unchanged object URLs. Retry previously missing files only on a key-set change.
+  state.failed.clear();
+  const publish=()=>{if(!state.active)return;const next=Object.fromEntries(state.urls);setUrls(old=>Object.keys(old).length===Object.keys(next).length&&Object.keys(next).every(k=>old[k]===next[k])?old:next);};
+  publish();
+  function pump(){
+   if(!state.active)return;
+   while(state.pending.size<MEDIA_CONCURRENCY){
+    const k=[...state.wanted].find(k=>!state.urls.has(k)&&!state.pending.has(k)&&!state.failed.has(k));
+    if(!k)break;
+    state.pending.add(k);
+    void readMedia(k).then(blob=>{
+     if(!state.active||!state.wanted.has(k))return;
+     if(!blob){state.failed.add(k);return;}
+     state.urls.set(k,URL.createObjectURL(blob));publish();
+    }).catch(()=>{if(state.active&&state.wanted.has(k))state.failed.add(k);}).finally(()=>{state.pending.delete(k);pump();});
+   }
+  }
+  pump();
+ },[key]);
+ return urls;
 }
 function assetUrl(a:Asset,urls:Record<string,string>){return a.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+a.storageKey:urls[a.storageKey];}
 export function AssetLibrary({document,urls,onUpload,onInsert,onReplace,onFolder,onDelete,onCreateComponent,onAddVariant,onUpdateVariant,onInsertComponent,canCreate,canInsert,onError}:{document:ProjectDocumentV2;urls:Record<string,string>;onUpload:(asset:Asset)=>void;onInsert:(a:Asset)=>void;onReplace:(a:Asset)=>void;onFolder:(a:Asset,folder:string)=>void;onDelete:(a:Asset)=>void;onCreateComponent:(name:string)=>void;onAddVariant:(component:Component,name:string)=>void;onUpdateVariant:(component:Component,variantId:string)=>void;onInsertComponent:(component:Component,variantId:string)=>void;canCreate:boolean;canInsert:boolean;onError:(message:string)=>void}){
@@ -33,7 +57,7 @@ export function AssetLibrary({document,urls,onUpload,onInsert,onReplace,onFolder
   <input ref={input} type="file" multiple accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onChange={e=>void upload(e.target.files)}/>
   <button className="v2-inspector-button" disabled={busy} onClick={()=>input.current?.click()}>{busy?"Загрузка…":"+ Загрузить изображения"}</button>
   <div className="v2-assets-grid">{assets.map(a=><article key={a.id} className="v2-asset-card">
-    <div className="v2-asset-preview">{assetUrl(a,urls)?<img src={assetUrl(a,urls)} alt={a.name}/>:<span>Нет файла</span>}</div>
+    <div className="v2-asset-preview">{assetUrl(a,urls)?<img loading="lazy" decoding="async" src={assetUrl(a,urls)} alt={a.name}/>:<span>Нет файла</span>}</div>
     <strong title={a.name}>{a.name}</strong>
     <input aria-label={"Папка "+a.name} className="v2-library-input" value={a.folder??""} maxLength={80} placeholder="Без папки" onChange={e=>onFolder(a,e.target.value)}/>
     <div className="v2-asset-actions"><button disabled={!canInsert} onClick={()=>onInsert(a)}>Добавить</button><button onClick={()=>onReplace(a)}>Заменить</button><button aria-label={"Удалить "+a.name} onClick={()=>onDelete(a)}>×</button></div>
