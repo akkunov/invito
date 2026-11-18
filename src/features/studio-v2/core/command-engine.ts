@@ -15,6 +15,8 @@ export type StudioCommand =
   | { kind: "deleteAsset"; id: string }
   | { kind: "putComponent"; component: NonNullable<ProjectDocumentV2["components"]>[string] }
   | { kind: "deleteComponent"; id: string }
+  | { kind: "setGuides"; guides: NonNullable<ProjectDocumentV2["guides"]> }
+  | { kind: "pasteNodes"; parentId: string; nodes: ProjectDocumentV2["nodes"]; roots: string[]; overrides: NonNullable<ProjectDocumentV2["responsiveOverrides"]> }
   | { kind: "insertNode"; parentId: string; node: ProjectNodeV2; index?: number }
   | { kind: "updateNode"; id: string; changes: EditableNodeFields }
   | { kind: "moveNodes"; positions: Record<string, Position> }
@@ -104,6 +106,18 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
     case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
     case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
     case "deleteComponent": { assert(doc.components?.[command.id],"Missing component");delete doc.components![command.id];return; }
+    case "setGuides": { doc.guides=clone(command.guides);return; }
+    case "pasteNodes": {
+      const parent=getFrame(doc,command.parentId);ensureWritable(doc,parent.id);
+      const keys=Object.keys(command.nodes),rootSet=new Set(command.roots);
+      assert(keys.length>0&&rootSet.size===command.roots.length&&command.roots.length>0,"Invalid clipboard roots");
+      assert(keys.every(id=>!Object.hasOwn(doc.nodes,id)&&command.nodes[id].id===id),"Clipboard ID collision");
+      assert(command.roots.every(id=>Object.hasOwn(command.nodes,id)&&command.nodes[id].parentId===parent.id),"Invalid clipboard root");
+      for(const id of keys){const n=command.nodes[id];assert(rootSet.has(id)||n.parentId!==null&&Object.hasOwn(command.nodes,n.parentId),"Clipboard cannot modify existing tree");if(n.type==="frame")assert(n.children.every(child=>Object.hasOwn(command.nodes,child)),"Clipboard child outside tree");}
+      Object.assign(doc.nodes,clone(command.nodes));parent.children.push(...command.roots);
+      for(const device of ["desktop","tablet","mobile"] as const){const map=command.overrides[device];if(!map)continue;assert(Object.keys(map).every(id=>Object.hasOwn(command.nodes,id)),"Override outside clipboard");doc.responsiveOverrides??={};doc.responsiveOverrides[device]={...doc.responsiveOverrides[device],...clone(map)};}
+      return;
+    }
     case "insertNode": {
       const parent = getFrame(doc, command.parentId);
       ensureWritable(doc, command.parentId);
