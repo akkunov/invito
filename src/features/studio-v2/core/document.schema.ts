@@ -55,6 +55,9 @@ const nodeSchema = z.discriminatedUnion("type", [
     type: z.literal("text"),
     runs: z.array(richTextRunSchema).min(1).max(1000),
     textAlign: z.enum(["left", "center", "right"]),
+    lineHeight: z.number().finite().min(0.8).max(4).optional(),
+    letterSpacing: z.number().finite().min(-10).max(60).optional(),
+    autoHeight: z.boolean().optional(),
     bindingKey: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/).nullable(),
   }),
   baseNodeSchema.extend({
