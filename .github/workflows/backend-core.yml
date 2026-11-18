@@ -3,12 +3,18 @@ on:
   push:
     branches: [main, feat/29-2-backend-core]
     paths:
+      - 'tsconfig.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
   pull_request:
     paths:
+      - 'tsconfig.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
+
+concurrency:
+  group: backend-core-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -40,9 +46,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.18.0'
-      # Until the first independently generated server/package-lock.json is committed.
+          cache: npm
+          cache-dependency-path: server/package-lock.json
       - name: Install isolated API dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Prisma schema validation
         run: npm exec prisma validate -- --config prisma.config.ts
       - name: Compile API and generated Prisma Client
@@ -51,8 +58,21 @@ jobs:
         run: npm run db:migrate:deploy
       - name: E2E integration tests (real PostgreSQL)
         run: npm test
-      - name: Upload reproducible lockfile for review
-        uses: actions/upload-artifact@v4
+ 
+  frontend-contract:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          name: invito-api-package-lock
-          path: server/package-lock.json
+          node-version: '22.18.0'
+          cache: npm
+      - name: Install frontend independently
+        run: npm ci --no-audit --no-fund
+      - name: Verify root frontend TypeScript
+        run: npm run typecheck
+      - name: Verify existing backend-domain contracts
+        run: npm run test:backend-contract

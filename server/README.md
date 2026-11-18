@@ -14,7 +14,7 @@ NestJS 12 + Prisma 7.10.1 + PostgreSQL. Source lives in the **same repo** as the
 cd server
 docker compose up -d postgres
 cp .env.example .env
-npm install
+npm ci
 npm run prisma:generate
 npm run db:migrate:deploy
 npm run start:dev
@@ -53,7 +53,7 @@ PATCH http://localhost:4000/api/v1/workspaces/:workspaceId
 
 ## CI and deployment
 
-`.github/workflows/backend-core.yml` builds the API and tests JWT and workspace isolation on a real PostgreSQL service. For now `npm install` generates the independent backend lockfile as an artifact; after successful CI, commit the lockfile and replace it with `npm ci`.
+`.github/workflows/backend-core.yml` builds the API and tests JWT and workspace isolation on a real PostgreSQL service. Backend has its own checked-in `server/package-lock.json`; CI uses reproducible `npm ci` (the root Next.js lockfile remains independent).
 
 For Vercel create a separate project from `akkunov/invito`, set Root Directory to `server`, Node.js >=22, and configure production credentials. No credentials are committed.
 
