@@ -2,13 +2,14 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {resolveStyleDocument} from "@/features/studio-v2/core/style-tokens.ts";
 import {bindDocument,type GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
+import type {MotionPlayback} from "./use-studio-motion";
 import {StudioV2Artboard} from "./studio-v2-artboard";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {deviceForWidth,responsiveDocument,presentationSize,DEVICE_WIDTH,type Device} from "@/features/studio-v2/core/responsive-engine.ts";
 
 /** Shared presentation renderer. The editor uses the same Artboard and layout solver.
  * Public publishing can provide a validated immutable snapshot and asset URL map later. */
-export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",guest={mode:"preview"}}:{document:ProjectDocumentV2;mediaUrls?:Readonly<Record<string,string>>;device?:Device|"auto";guest?:GuestMode}){
+export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",guest={mode:"preview"},motionPlayback={mode:"live"}}:{document:ProjectDocumentV2;mediaUrls?:Readonly<Record<string,string>>;device?:Device|"auto";guest?:GuestMode;motionPlayback?:MotionPlayback}){
  const container=useRef<HTMLDivElement>(null);
  const [width,setWidth]=useState(390);
  const [measured,setMeasured]=useState<Partial<Record<Device,Record<string,number>>>>({});
@@ -25,7 +26,7 @@ export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",guest=
     if(!root.visible)return null;
     return <section key={page.id} aria-label={page.name} data-preview-page={page.id} style={{position:"relative",margin:"0 auto",width:root.width*scale,height:root.height*scale,overflow:"hidden"}}>
       <div style={{position:"absolute",top:0,left:0,transformOrigin:"top left",transform:`scale(${scale})`}}>
-       <StudioV2Artboard document={resolved} rootNodeId={page.rootNodeId} mediaUrls={mediaUrls} guest={guest} onMeasure={measure}/>
+       <StudioV2Artboard document={resolved} rootNodeId={page.rootNodeId} mediaUrls={mediaUrls} guest={guest} motionPlayback={guest.mode==="studio"?undefined:motionPlayback} onMeasure={measure}/>
       </div>
     </section>;
    })}

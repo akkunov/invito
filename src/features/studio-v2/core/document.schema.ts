@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {OVERRIDE_FIELDS} from "./linked-components.ts";
 import {tokenSchema,tokenRefsSchema,themeSchema,compatibleToken,tokenSlots} from "./style-tokens.schema.ts";
+import {motionSchema} from "./motion.schema.ts";
 import {visualSchema} from "./appearance.schema.ts";
 import {bindingKeySchema,bindingValueSchema,invitationBlockSchema,blockAppearanceSchema} from "./invitation.schema.ts";
 
@@ -16,6 +17,7 @@ const baseNodeSchema = z.strictObject({
   layerName: z.string().min(1).max(100).optional(),
   visual: visualSchema.optional(),
   tokenRefs: tokenRefsSchema.optional(),
+  motion: motionSchema.optional(),
   parentId: idSchema.nullable(),
   x: coordinateSchema,
   y: coordinateSchema,

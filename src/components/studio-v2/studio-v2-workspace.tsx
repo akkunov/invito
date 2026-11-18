@@ -11,6 +11,8 @@ import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
 import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
 import { linkedRoot, alignedSnapshot } from "@/features/studio-v2/core/linked-components.ts";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
+import { MotionControls, MotionTimeline } from "./studio-v2-motion-controls";
+import { motionTracks } from "@/features/studio-v2/core/motion-engine.ts";
 import { StudioV2ProjectRenderer } from "./studio-v2-project-renderer";
 import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PageProfile } from "@/features/studio-v2/core/responsive-engine.ts";
 import { InvitationControls } from "./studio-v2-invitation-controls";
@@ -115,6 +117,9 @@ function MiniMap({frames, viewport, size, onCenter}:{
 export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
   const [previewOpen,setPreviewOpen]=useState(false);
+  const [timelineOpen,setTimelineOpen]=useState(false);
+  const [timelineTime,setTimelineTime]=useState(0);
+  const [previewRun,setPreviewRun]=useState(0);
   const [device,setDevice]=useState<Device>("mobile");
   const [libraryOpen,setLibraryOpen]=useState(false);
   const [storageStatus,setStorageStatus]=useState("Загрузка локального проекта");
@@ -322,7 +327,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   useEffect(()=>{
     function down(e:KeyboardEvent){
       const target=e.target as HTMLElement|null;
-      if(previewOpen){if(e.key==="Escape")setPreviewOpen(false);return;}
+      if(previewOpen){if(e.key==="Escape"){setPreviewOpen(false);setTimelineOpen(false);}return;}
       if(target?.closest("input,textarea,select,[contenteditable=true],[contenteditable=plaintext-only]"))return;
       if(menu&&e.key==="Escape"){setMenu(null);e.preventDefault();return;}
       if(editing){if(e.key==="Escape"){finishText(true);e.preventDefault();}return;}
@@ -708,6 +713,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
         </section>
+        <MotionControls document={sourceDocument} node={authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null)} ids={nodeIds} disabled={!!editing||!!session.transaction} onCommand={command=>proAction(()=>command)} onPreview={()=>{setTimelineTime(0);setTimelineOpen(true);setPreviewOpen(true);}}/>
         <StyleLibrary document={sourceDocument} disabled={!!editing} onCommand={command=>proAction(()=>command)}/>
         {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)}/></>;})()}
         {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/>}
@@ -784,13 +790,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28.4 · Design Tokens</h3>
+          <h3>Этап #28.5 · Animation Engine</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
       </aside>
     </div>
-    {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><button onClick={()=>setPreviewOpen(false)} aria-label="Закрыть предпросмотр">Закрыть ×</button></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device}/></div></div></div>}
+    {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><div className="v2-motion-preview-actions"><button disabled={!motionTracks(sourceDocument).length} aria-pressed={timelineOpen} onClick={()=>{setTimelineOpen(v=>!v);setTimelineTime(0);}}>Timeline</button><button aria-label="Повторить анимации" disabled={timelineOpen} onClick={()=>setPreviewRun(x=>x+1)}>Повторить</button><button onClick={()=>{setPreviewOpen(false);setTimelineOpen(false);}} aria-label="Закрыть предпросмотр">Закрыть ×</button></div></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer key={previewRun} document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device} motionPlayback={timelineOpen?{mode:"timeline",timeMs:timelineTime}:{mode:"live"}}/></div></div>{timelineOpen&&<MotionTimeline document={sourceDocument} time={timelineTime} onTime={setTimelineTime}/>}</div>}
     {(leftOpen||rightOpen)&&<button className="v2-backdrop" onClick={()=>{setLeftOpen(false);setRightOpen(false)}} aria-label="Закрыть панель"/>}
   </main>;
 }

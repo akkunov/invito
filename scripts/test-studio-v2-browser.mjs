@@ -146,7 +146,37 @@ try{
   assert.equal(await colorOf("cover-names"),"rgb(51, 102, 153)");
   await page.getByRole("button",{name:"Отменить",exact:true}).click();
   assert.equal(await colorOf("cover-names"),"rgb(170, 68, 0)");
-
+  // Animation should never alter authored canvas geometry or opacity.
+  await page.locator(".v2-layer-row").filter({hasText:"Алина & Тимур"}).first().click();
+  const motion=page.locator(".v2-motion-inspector");
+  await motion.getByLabel("Пресет анимации",{exact:true}).selectOption("fade");
+  await motion.getByLabel("Триггер анимации",{exact:true}).selectOption("load");
+  await motion.getByLabel("Длительность (мс)",{exact:true}).fill("1200");
+  await motion.getByLabel("Длительность (мс)",{exact:true}).blur();
+  await motion.getByLabel("Задержка (мс)",{exact:true}).fill("300");
+  await motion.getByLabel("Задержка (мс)",{exact:true}).blur();
+  const canvasName=page.locator('[data-studio-page="page-1"] [data-studio-node="cover-names"]');
+  assert.equal(await canvasName.evaluate(el=>getComputedStyle(el).opacity),"1");
+  assert.equal(await canvasName.evaluate(el=>el.getAnimations().length),0);
+  await motion.getByRole("button",{name:"Открыть Timeline",exact:true}).click();
+  await dialog.waitFor();
+  const animated=dialog.locator('[data-studio-node="cover-names"]');
+  await dialog.locator(".v2-timeline-row").filter({hasText:"Алина & Тимур"}).waitFor();
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector(".v2-preview-overlay [data-studio-node=cover-names]")).opacity==="0");
+  await dialog.getByLabel("Позиция Timeline",{exact:true}).fill("1500");
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector(".v2-preview-overlay [data-studio-node=cover-names]")).opacity==="1");
+  await dialog.getByLabel("Позиция Timeline",{exact:true}).fill("900");
+  await page.waitForFunction(()=>{const n=document.querySelector(".v2-preview-overlay [data-studio-node=cover-names]"),o=Number(getComputedStyle(n).opacity);return o>0&&o<1;});
+  await page.screenshot({path:join(artifacts,"animation-timeline.png")});
+  // Reduced-motion visitors see the final static state, including during a scrub.
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector(".v2-preview-overlay [data-studio-node=cover-names]")).opacity==="1");
+  assert.equal(await animated.evaluate(el=>el.getAnimations().length),0);
+  await page.emulateMedia({reducedMotion:"no-preference"});
+  await dialog.getByRole("button",{name:"Timeline",exact:true}).click();
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector(".v2-preview-overlay [data-studio-node=cover-names]")).opacity==="1");
+  await dialog.getByRole("button",{name:"Закрыть предпросмотр"}).click();
+  assert.equal(await canvasName.evaluate(el=>getComputedStyle(el).opacity),"1");
 
  }catch(e){await page.screenshot({path:join(artifacts,"desktop-failure.png")}).catch(()=>{});throw e;}finally{await context.close();}
  const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
