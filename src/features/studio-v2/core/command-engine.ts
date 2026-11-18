@@ -1,8 +1,9 @@
+import { resolveLayout } from "./layout-engine.ts";
 import { parseProjectV2, type ProjectDocumentV2, type ProjectNodeV2, type StudioPageV2 } from "./document.schema.ts";
 
 type FrameNode = Extract<ProjectNodeV2, { type: "frame" }>;
 type Position = { x: number; y: number };
-type EditableNodeFields = Partial<Omit<ProjectNodeV2, "id" | "type" | "parentId">>;
+type EditableNodeFields = ProjectNodeV2 extends infer N ? N extends ProjectNodeV2 ? Partial<Omit<N, "id" | "type" | "parentId" | "children">> : never : never;
 
 export type StudioCommand =
   | { kind: "insertNode"; parentId: string; node: ProjectNodeV2; index?: number }
@@ -101,8 +102,30 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
       ensureWritable(doc, command.id);
       const blocked = ["id", "type", "parentId", "children"];
       assert(!Object.keys(command.changes).some(key => blocked.includes(key)), "Use structural commands to edit graph topology");
-      // All resulting node fields (including discriminated variants) are checked by Zod.
-      doc.nodes[command.id] = { ...node, ...clone(command.changes) } as ProjectNodeV2;
+      // Preserve resolved placement when leaving a stack; free anchors are re-based
+      // whenever the authored parent size changes.
+      const geometry = node.type === "frame" ? resolveLayout(doc) : null;
+      const updated = { ...node, ...clone(command.changes) } as ProjectNodeV2;
+      if(node.type==="frame" && updated.type==="frame" && geometry){
+        if(node.layout!=="free" && updated.layout==="free"){
+          for(const id of node.children){const rect=geometry[id];if(rect){const child=doc.nodes[id];Object.assign(child,rect);}}
+          if(updated.sizing)updated.sizing={...updated.sizing,width:updated.sizing.width==="hug"?"fixed":updated.sizing.width,height:updated.sizing.height==="hug"?"fixed":updated.sizing.height};
+          if(!("width" in command.changes))updated.width=geometry[node.id].width;
+          if(!("height" in command.changes))updated.height=geometry[node.id].height;
+        }
+        if(node.layout==="free" && updated.layout==="free"){
+          for(const id of node.children){
+            const child=doc.nodes[id],dx=updated.width-node.width,dy=updated.height-node.height;
+            if(!dx&&!dy)continue;
+            for(const [axis,delta,pos,min,max] of [["width",dx,"x","minWidth","maxWidth"],["height",dy,"y","minHeight","maxHeight"]] as const){
+              const anchor=child.anchors?.[pos]??"start",old=child[axis];
+              if(anchor==="stretch"&&child.sizing?.[axis]!=="fill")child[axis]=Math.max(child.sizing?.[min]??1,Math.min(child.sizing?.[max]??20000,old+delta));
+              if(anchor==="center"||anchor==="end")child[pos]=Math.max(-1e6,Math.min(1e6,child[pos]+(delta-(child[axis]-old))*(anchor==="center"?0.5:1)));
+            }
+          }
+        }
+      }
+      doc.nodes[command.id] = updated;
       return;
     }
     case "moveNodes": {
