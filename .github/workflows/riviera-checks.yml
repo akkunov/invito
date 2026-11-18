@@ -23,6 +23,7 @@ jobs:
       - run: npm run test:studio
       - run: npm run test:studio-v2-core
       - run: npm run test:studio-v2-commands
+      - run: npm run test:studio-v2-stress-core
       - run: npm run test:studio-v2-viewport
       - run: npm run test:studio-v2-ui
       - run: npm run test:studio-v2-selection
@@ -61,6 +62,7 @@ jobs:
           trap 'kill "$PID" || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/invito/studio-build.txt && break; sleep 1; done
           node scripts/test-studio-v2-browser.mjs
+          npm run test:studio-v2-stress-browser
       - name: Upload Studio browser evidence
         if: always()
         uses: actions/upload-artifact@v4
