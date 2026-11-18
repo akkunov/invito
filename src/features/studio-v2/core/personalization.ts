@@ -37,7 +37,7 @@ export function readPersonalizedValue(doc:ProjectDocumentV2,f:EditableField):Per
 function invalid(message:string):never{throw Error(message);}
 function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,locales:readonly ("ru"|"ky")[],complete:boolean){
  const reject=(msg:string)=>invalid(f.id+": "+msg);
- const asset=(id:string)=>{const a=own(doc.assets,id)?doc.assets[id]:undefined;if(!a)reject("Ресурс не разрешён или не найден");return a;};
+ const asset=(id:string)=>{const a=own(doc.assets,id)?doc.assets[id]:undefined;if(!a)return reject("Ресурс не разрешён или не найден");return a;};
  const requiredText=(value:{ru:string;ky:string})=>{if(complete&&f.required&&locales.some(l=>!value[l].trim()))reject("Заполните обязательные языки");};
  if("key" in f){
   if(v.kind!=="binding"||v.value.type!==f.kind)return reject("Неверный тип значения");
@@ -80,7 +80,7 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
   checkValue(f,v,doc,contract.locales,false);
   if("key" in f&&v.kind==="binding"){doc.values??={};doc.values[f.key]=structuredClone(v.value);continue;}
   if(f.kind==="theme"&&v.kind==="theme"){doc.activeThemeId=v.themeId;continue;}
-  if(!("nodeId" in f))invalid("Invalid target");
+  if(!("nodeId" in f))return invalid("Invalid target");
   const node=doc.nodes[f.nodeId];
   if(f.kind==="image"&&v.kind==="image"&&node.type==="image"){
    // Existing image box, focal point, crop, visual effects, locks and typography stay intact.
@@ -98,3 +98,28 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
  noteOverrides(base,doc);
  return parseProjectV2(doc);
 }
+
+/** Candidates are opt-in: merely discovering a binding or image does not grant permission. */
+export function editableCandidates(doc:ProjectDocumentV2):EditableField[]{
+ const fields:EditableField[]=[];
+ let index=0;const common=(ru:string,ky:string,section:EditableField["section"])=>({id:"field-"+(++index),label:{ru:ru.slice(0,100),ky:ky.slice(0,100)},section,required:false});
+ for(const [key,v] of Object.entries(doc.variables)){
+  if(!bindingIsUsed(doc,key))continue;
+  const c=common(v.label.ru||key,v.label.ky||key,v.type==="date"?"date":"main");
+  if(v.type==="text")fields.push({...c,kind:"text",key,maxLength:120,multiline:false});
+  if(v.type==="date")fields.push({...c,kind:"date",key});
+  if(v.type==="number")fields.push({...c,kind:"number",key,min:0,max:1000000});
+  if(v.type==="boolean")fields.push({...c,kind:"boolean",key});
+ }
+ for(const n of Object.values(doc.nodes)){
+  if(n.type==="image"){fields.push({...common(n.layerName??doc.assets[n.assetId]?.name??"Фото","Сүрөт","photos"),kind:"image",nodeId:n.id,minWidth:1,minHeight:1});continue;}
+  if(n.type!=="widget")continue;const b=n.block,c=(section:EditableField["section"])=>common(b.title.ru||b.kind,b.title.ky||b.kind,section);
+  if(b.kind==="gallery")fields.push({...c("photos"),kind:"gallery",nodeId:n.id,maxPhotos:4});
+  if(b.kind==="schedule")fields.push({...c("schedule"),kind:"schedule",nodeId:n.id,maxItems:20});
+  if(b.kind==="music")fields.push({...c("music"),kind:"music",nodeId:n.id,sources:b.source?[b.source]:[]});
+  if(b.kind==="rsvp")fields.push({...c("rsvp"),kind:"rsvp",nodeId:n.id,maxGuests:b.maxGuests});
+ }
+ const themeIds=Object.keys(doc.themes??{});if(themeIds.length)fields.push({...common("Оформление","Жасалгалоо","appearance"),kind:"theme",themeIds,allowBase:true});
+ return fields;
+}
+export function fieldTarget(f:EditableField){return "key" in f?"binding:"+f.key:"nodeId" in f?"node:"+f.nodeId:"theme";}
