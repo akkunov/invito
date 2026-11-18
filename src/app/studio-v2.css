@@ -168,3 +168,7 @@
 .studio-v2 .v2-transform-handle{width:10px;height:10px;border-radius:1px;cursor:crosshair}
 .studio-v2 .v2-transform-rotate{width:22px;height:22px;border-radius:50%;cursor:grab;font-size:16px}
 @media(pointer:coarse){.studio-v2 .v2-transform-handle{width:18px;height:18px}.studio-v2 .v2-transform-rotate{width:30px;height:30px}}
+
+.v2-layout-field{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;color:var(--v2-secondary);font-size:11px}
+.v2-layout-field select,.v2-layout-field input[type=number]{min-width:0;width:58%;background:#fff;color:var(--v2-ink);border:1px solid var(--v2-border);border-radius:5px;padding:6px 7px;font:inherit}
+.v2-layout-field input[type=checkbox]{accent-color:var(--v2-blue)}
