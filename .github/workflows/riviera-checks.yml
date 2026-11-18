@@ -47,10 +47,19 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm run test:public-routes
-      - name: Build exact GitHub Pages static preview
-        run: bash scripts/build-studio-pages.sh
       - name: Install Chromium
         run: bash scripts/install-studio-browser.sh
+      - name: Test actual public customer editor in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4180 > "$RUNNER_TEMP/customer-editor-http.log" 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in {1..30}; do if curl -fsS http://127.0.0.1:4180/ru/editor?template=editorial-riviera-wedding > /dev/null; then break; fi; sleep 1; done
+          npm run test:customer-editor-browser
+      - name: Build exact GitHub Pages static preview
+        run: bash scripts/build-studio-pages.sh
       - name: Test static preview in Chromium
         shell: bash
         run: |
