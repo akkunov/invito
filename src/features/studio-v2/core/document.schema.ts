@@ -16,6 +16,8 @@ const baseNodeSchema = z.strictObject({
   opacity: z.number().finite().min(0).max(1),
   visible: z.boolean(),
   locked: z.boolean(),
+  sizing: z.strictObject({ width: z.enum(["fixed","fill","hug"]), height: z.enum(["fixed","fill","hug"]), minWidth: sizeSchema.optional(), maxWidth: sizeSchema.optional(), minHeight: sizeSchema.optional(), maxHeight: sizeSchema.optional() }).optional(),
+  anchors: z.strictObject({ x: z.enum(["start","center","end","stretch"]), y: z.enum(["start","center","end","stretch"]) }).optional(),
 });
 const paddingSchema = z.strictObject({
   top: z.number().finite().min(0).max(2000),
@@ -43,6 +45,8 @@ const nodeSchema = z.discriminatedUnion("type", [
     children: z.array(idSchema).max(500),
     layout: z.enum(["free", "vertical", "horizontal"]),
     gap: z.number().finite().min(0).max(2000),
+    alignment: z.enum(["start","center","end"]).optional(),
+    distribution: z.enum(["start","center","end","space-between"]).optional(),
     padding: paddingSchema,
     background: z.union([colorSchema, z.literal("transparent")]),
     clip: z.boolean(),
@@ -111,6 +115,13 @@ export const projectDocumentSchema = z.strictObject({
   }
   const membership = new Map<string, number>();
   for (const [key, node] of Object.entries(doc.nodes)) {
+    if (node.sizing) {
+      const s = node.sizing;
+      if ((s.minWidth ?? 1) > (s.maxWidth ?? 20000) || (s.minHeight ?? 1) > (s.maxHeight ?? 20000)) issue(["nodes", key, "sizing"], "Minimum exceeds maximum");
+      if (node.type !== "frame" && (s.width === "hug" || s.height === "hug")) issue(["nodes", key, "sizing"], "Hug requires a frame");
+      if (node.type === "frame" && node.layout === "free" && (s.width === "hug" || s.height === "hug")) issue(["nodes", key, "sizing"], "Hug requires auto layout");
+      if (node.parentId === null && (s.width === "fill" || s.height === "fill")) issue(["nodes", key, "sizing"], "Page roots cannot fill");
+    }
     if (key !== node.id) issue(["nodes", key, "id"], "Node key and ID differ");
     if (rootIds.has(key) && node.parentId !== null)
       issue(["nodes", key, "parentId"], "Root frame must have no parent");
