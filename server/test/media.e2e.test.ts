@@ -47,6 +47,7 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
   const base = "http://127.0.0.1:" + (app.getHttpServer().address() as AddressInfo).port + "/api/v1";
   const users: string[] = [];
   let workspaceId: string | null = null;
+  let otherWorkspaceId: string | null = null;
   t.after(async () => {
     try {
       if (workspaceId) {
@@ -56,6 +57,7 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
         await db.mediaAsset.deleteMany({where: {workspaceId}});
         await db.workspace.delete({where: {id: workspaceId}});
       }
+      if (otherWorkspaceId) await db.workspace.delete({where: {id: otherWorkspaceId}});
       for (const userId of users) await db.user.delete({where: {id: userId}});
     } finally {
       await app.close();
@@ -144,6 +146,19 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
     {title: "Document with media", document});
   assert.equal(project.status, 201, JSON.stringify(project.data));
 
+  // An authenticated owner of another workspace cannot read or reuse the asset.
+  const otherWorkspace = await request("/workspaces", outsider, "POST", {
+    slug: "other-" + randomUUID().slice(0, 12), name: "Isolated tenant",
+  });
+  assert.equal(otherWorkspace.status, 201);
+  otherWorkspaceId = otherWorkspace.data.id;
+  assert.equal((await request("/workspaces/" + otherWorkspaceId + "/media/" + mediaId + "/read-url", outsider)).status, 404);
+  const crossWorkspaceProject = await request("/workspaces/" + otherWorkspaceId + "/projects", outsider,
+    "POST", {title: "Foreign asset forbidden", document: {
+      ...structuredClone(document), id: "studio-" + randomUUID().slice(0, 8),
+    }});
+  assert.equal(crossWorkspaceProject.status, 422, "another workspace asset may not be referenced");
+
   // A mismatch must be rejected, with no READY record and no immutable copy.
   const invalid = await request(root + "/uploads", owner, "POST", requestBody);
   assert.equal(invalid.status, 201);
@@ -153,6 +168,18 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
   assert.equal(rejected.status, 422);
   assert.equal((await db.mediaAsset.findUniqueOrThrow({where: {id: bad.id}})).status, "REJECTED");
   assert.equal((await request(root + "/" + bad.id + "/read-url", owner)).status, 404);
+
+  // Even a matching SHA and MIME header is insufficient without a decodable image.
+  const bogusPng = Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),Buffer.from("not an actual raster")]);
+  const fake = await request(root + "/uploads", owner, "POST", {
+    name: "bogus.png", mimeType: "image/png", bytes: bogusPng.length,
+    sha256: createHash("sha256").update(bogusPng).digest("hex"),
+  });
+  assert.equal(fake.status, 201);
+  const fakeRow = await db.mediaAsset.findUniqueOrThrow({where:{id: fake.data.id}});
+  staged.set(fakeRow.storageKey, {bytes:bogusPng, contentType:"image/png"});
+  assert.equal((await request(root + "/" + fakeRow.id + "/complete", owner, "POST")).status, 422);
+  assert.equal((await db.mediaAsset.findUniqueOrThrow({where:{id: fakeRow.id}})).status, "REJECTED");
 
   // A forged MIME claim without actual MP3 frames cannot become READY.
   const spoof = Buffer.from("ID3fake MP3 file without audio");
