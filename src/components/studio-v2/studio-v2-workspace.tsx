@@ -23,6 +23,7 @@ import { StyleLibrary, StyleBindings } from "./studio-v2-style-library";
 import { resolveStyleDocument, resolveStyleNode } from "@/features/studio-v2/core/style-tokens.ts";
 import type {VisualProperties} from "@/features/studio-v2/core/appearance.schema.ts";
 import { AdvancedProperties } from "./studio-v2-advanced-properties";
+import { createFrameCoalescer } from "@/features/studio-v2/core/frame-coalescer.ts";
 import { visibleArtboards, pinnedArtboards } from "@/features/studio-v2/core/render-window.ts";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
@@ -151,6 +152,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [selectionError,setSelectionError]=useState<string|null>(null);
   const [marquee,setMarquee]=useState<Rect|null>(null);
   const [guides,setGuides]=useState<{guideX?:number;guideY?:number}>({});
+  const gestureQueue=useMemo(()=>createFrameCoalescer<StudioCommand|readonly StudioCommand[]>(command=>setSession(s=>{try{return dispatchStudioCommand(s,command);}catch{return s;}}),run=>requestAnimationFrame(run),id=>cancelAnimationFrame(id)),[]);
+  useEffect(()=>()=>gestureQueue.clear(),[gestureQueue]);
   const nodeGesture=useRef<NodeGesture|null>(null);
   const marqueeGesture=useRef<Marquee|null>(null);
   const touchTap=useRef<{pointer:number;start:Point;id:string;pageId:string}|null>(null);
@@ -396,7 +399,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(e.code==="Space"){e.preventDefault();setSpaceHeld(true);return}
       if(e.key.toLowerCase()==="v"&&!e.metaKey&&!e.ctrlKey)setTool("select");
       if(e.key.toLowerCase()==="h"&&!e.metaKey&&!e.ctrlKey)setTool("hand");
-      if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current||pageDrag.current){nodeGesture.current=null;pageDrag.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}marqueeGesture.current=null;setMarquee(null);return;}
+      if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current||pageDrag.current){gestureQueue.clear();nodeGesture.current=null;pageDrag.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}marqueeGesture.current=null;setMarquee(null);return;}
       if(nodeGesture.current||pageDrag.current)return;
       if((e.ctrlKey||e.metaKey)&&!e.altKey){const key=e.key.toLowerCase();if(key==="c"&&nodeIds.length){e.preventDefault();copyLayers();return;}if(key==="v"&&hasClipboard){e.preventDefault();pasteLayers();return;}if(key==="d"&&nodeIds.length){e.preventDefault();pasteLayers(true);return;}}
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
@@ -416,7 +419,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const blur=()=>{setSpaceHeld(false);setDistanceMarks([]);};
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[loaded,nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,hasClipboard,menu,selectedPage,session,document]);
+  },[loaded,nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,hasClipboard,menu,selectedPage,session,document,gestureQueue]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -485,15 +488,16 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const dx=e.clientX-drag.start.x,dy=e.clientY-drag.start.y;
     if(!drag.started&&Math.hypot(dx,dy)<5)return;
     if(!drag.started){drag.started=true;setSession(s=>beginStudioTransaction(s,"Перемещение страницы"))}
-    setSession(s=>dispatchStudioCommand(s,{
+    gestureQueue.queue({
       kind:"movePage",id:drag.id,
       placement:{x:Math.max(-1e6,Math.min(1e6,Math.round(drag.origin.x+dx/viewport.zoom))),y:Math.max(-1e6,Math.min(1e6,Math.round(drag.origin.y+dy/viewport.zoom)))}
-    }));
+    });
   }
   function endPageDrag(e:ReactPointerEvent<HTMLButtonElement>){
     const drag=pageDrag.current;
     if(!drag||drag.pointer!==e.pointerId)return;
     pageDrag.current=null;
+    if(e.type==="pointercancel")gestureQueue.clear();else gestureQueue.flush();
     if(drag.started)setSession(s=>s.transaction?(e.type==="pointercancel"?cancelStudioTransaction(s):commitStudioTransaction(s)):s);
     if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
   }
@@ -570,14 +574,14 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         const change=(Math.atan2(local.y-center.y,local.x-center.x)-Math.atan2(drag.start.y-center.y,drag.start.x-center.x))*180/Math.PI;
         const angle=change+(drag.ids.length===1?drag.document.nodes[id].rotation:0),snapped=e.shiftKey?Math.round(angle/15)*15:angle;
         const commands=drag.ids.length===1?rotateNode(drag.document,id,snapped):rotateSelection(drag.document,drag.ids,snapped);
-        setSession(s=>{try{return dispatchStudioCommand(s,commands);}catch{return s;}});
+        gestureQueue.queue(commands);
       }else if(drag.handle){
         const command=drag.ids.length===1?resizeNode(drag.document,drag.ids[0],drag.handle,delta,e.shiftKey):scaleSelection(drag.document,drag.ids,drag.handle,delta);
-        setSession(s=>{try{return dispatchStudioCommand(s,command);}catch{return s;}});
+        gestureQueue.queue(command);
       }else{
         const snapped=e.altKey?{delta,guideX:undefined,guideY:undefined}:snapMove(drag.document,drag.ids,delta,drag.zoom);
         setGuides({guideX:snapped.guideX,guideY:snapped.guideY});
-        setSession(s=>dispatchStudioCommand(s,moveSelection(drag.document,drag.ids,snapped.delta)));
+        gestureQueue.queue(moveSelection(drag.document,drag.ids,snapped.delta));
       }
       return;
     }
@@ -604,6 +608,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const drag=nodeGesture.current;
     if(drag?.pointer===e.pointerId){
       nodeGesture.current=null;setGuides({});
+      if(e.type==="pointercancel")gestureQueue.clear();else gestureQueue.flush();
       if(drag.started)setSession(s=>s.transaction?(e.type==="pointercancel"?cancelStudioTransaction(s):commitStudioTransaction(s)):s);
     }
     const box=marqueeGesture.current;
