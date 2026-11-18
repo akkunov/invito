@@ -11,7 +11,11 @@ const colorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const sizeSchema = z.number().finite().min(1).max(20000);
 const coordinateSchema = z.number().finite().min(-1_000_000).max(1_000_000);
 export const studioDevices = ["desktop","tablet","mobile"] as const;
-export const responsivePatchSchema = z.strictObject({x:coordinateSchema.optional(),y:coordinateSchema.optional(),width:sizeSchema.optional(),height:sizeSchema.optional(),visible:z.boolean().optional(),opacity:z.number().finite().min(0).max(1).optional(),rotation:z.number().finite().min(-360).max(360).optional()});
+export const responsivePatchSchema = z.strictObject({
+  x:coordinateSchema.optional(),y:coordinateSchema.optional(),width:sizeSchema.optional(),height:sizeSchema.optional(),visible:z.boolean().optional(),opacity:z.number().finite().min(0).max(1).optional(),rotation:z.number().finite().min(-360).max(360).optional(),
+  textStyle:z.strictObject({fontSize:z.number().finite().min(6).max(400).optional(),lineHeight:z.number().finite().min(.8).max(4).optional(),letterSpacing:z.number().finite().min(-10).max(60).optional(),textAlign:z.enum(["left","center","right"]).optional()}).optional(),
+  frameLayout:z.strictObject({layout:z.enum(["free","vertical","horizontal"]).optional(),gap:z.number().finite().min(0).max(2000).optional(),alignment:z.enum(["start","center","end"]).optional(),distribution:z.enum(["start","center","end","space-between"]).optional(),padding:z.strictObject({top:z.number().finite().min(0).max(2000),right:z.number().finite().min(0).max(2000),bottom:z.number().finite().min(0).max(2000),left:z.number().finite().min(0).max(2000)}).optional()}).optional()
+});
 const baseNodeSchema = z.strictObject({
   id: idSchema,
   layerName: z.string().min(1).max(100).optional(),
@@ -147,7 +151,13 @@ export const projectDocumentSchema = z.strictObject({
     if (!root || root.type !== "frame" || root.parentId !== null)
       issue(["pages", index, "rootNodeId"], "Page must reference an existing top-level frame");
   }
-  for(const [device,overrides] of Object.entries(doc.responsiveOverrides??{}))for(const id of Object.keys(overrides??{}))if(!doc.nodes[id]||rootIds.has(id))issue(["responsiveOverrides",device,id],"Override must reference a non-root node");
+  for(const [device,overrides] of Object.entries(doc.responsiveOverrides??{}))for(const [id,patch] of Object.entries(overrides??{})){
+    const node=doc.nodes[id],path=["responsiveOverrides",device,id];
+    if(!node){issue(path,"Override must reference an existing node");continue;}
+    if(rootIds.has(id)&&Object.keys(patch).some(key=>key!=="frameLayout"))issue(path,"Page root geometry uses page profiles");
+    if(patch.textStyle&&node.type!=="text")issue(path,"Text override requires text layer");
+    if(patch.frameLayout&&node.type!=="frame")issue(path,"Layout override requires frame");
+  }
   for(const [key,value] of Object.entries(doc.values??{}))if(doc.variables[key]?.type!==value.type)issue(["values",key],"Variable type mismatch or missing declaration");
   const validateWidget=(node:z.infer<typeof nodeSchema>,path:(string|number)[])=>{
     if(node.type!=="widget")return;
