@@ -1,5 +1,6 @@
 "use client";
-import {useState} from "react";
+import {ColorPicker,projectPalette} from "./studio-v2-color-picker";
+import {useState,useMemo} from "react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {bindingKeySchema,bindingValueSchema,instantSchema,invitationBlockSchema,musicSourceSchema,type BindingValue,type InvitationBlock} from "@/features/studio-v2/core/invitation.schema.ts";
 import {BLOCK_NAMES,type BlockKind,type WidgetNode} from "@/features/studio-v2/core/invitation-behavior.ts";
@@ -43,6 +44,7 @@ function VariableFields({name,type,value,onChange}:{name:string;type:BindingValu
 }
 function WidgetSettings({node,document,onCommand}:{node:WidgetNode;document:ProjectDocumentV2;onCommand:(c:StudioCommand)=>void}){
  const b=node.block;
+ const palette=useMemo(()=>projectPalette(document),[document]);
  function update(block:InvitationBlock){if(invitationBlockSchema.safeParse(block).success)onCommand({kind:"updateNode",id:node.id,changes:{block}});}
  function appearance(patch:Partial<WidgetNode["appearance"]>){onCommand({kind:"updateNode",id:node.id,changes:{appearance:{...node.appearance,...patch}}});}
  const keys=(type:BindingValue["type"])=>Object.keys(document.variables).filter(k=>document.variables[k].type===type);
@@ -57,9 +59,9 @@ function WidgetSettings({node,document,onCommand}:{node:WidgetNode;document:Proj
  {b.kind==="schedule"&&<>{b.items.map((item,i)=><div className="v2-component-item" key={i}><DraftField label="Время (ЧЧ:ММ)" value={item.time} validate={s=>/^([01]\d|2[0-3]):[0-5]\d$/.test(s)} onCommit={time=>update({...b,items:b.items.map((x,j)=>i===j?{...x,time}:x)})}/><LocalizedFields label="Событие" value={item.label} onChange={label=>update({...b,items:b.items.map((x,j)=>i===j?{...x,label}:x)})}/><button className="v2-inspector-button" onClick={()=>update({...b,items:b.items.filter((_,j)=>i!==j)})}>Удалить событие</button></div>)}<button className="v2-inspector-button" disabled={b.items.length>=20} onClick={()=>update({...b,items:[...b.items,{time:"18:00",label:{ru:"Новое событие",ky:"Жаңы иш-чара"}}]})}>+ Событие</button></>}
  <label className="v2-widget-field">Шрифт<select value={node.appearance.fontFamily} onChange={e=>appearance({fontFamily:e.target.value as "sans"|"serif"})}><option value="sans">Arial</option><option value="serif">Georgia</option></select></label>
  <label className="v2-widget-field">Размер<input type="number" min={12} max={100} value={node.appearance.fontSize} onChange={e=>{const n=Number(e.target.value);if(n>=12&&n<=100)appearance({fontSize:n});}}/></label>
- <label className="v2-widget-field">Текст<input type="color" value={node.appearance.color} onChange={e=>appearance({color:e.target.value})}/></label>
- <label className="v2-widget-field">Акцент<input type="color" value={node.appearance.accent} onChange={e=>appearance({accent:e.target.value})}/></label>
- <label className="v2-widget-field">Фон<input type="color" value={node.appearance.background==="transparent"?"#FFFFFF":node.appearance.background} onChange={e=>appearance({background:e.target.value})}/></label>
+ <ColorPicker label="Текст" palette={palette} value={node.appearance.color} onChange={color=>appearance({color:color})}/>
+ <ColorPicker label="Акцент" palette={palette} value={node.appearance.accent} onChange={color=>appearance({accent:color})}/>
+ <ColorPicker label="Фон" palette={palette} value={node.appearance.background==="transparent"?"#FFFFFF":node.appearance.background} onChange={color=>appearance({background:color})}/>
  <button className="v2-inspector-button" onClick={()=>appearance({background:"transparent"})}>Прозрачный фон</button>
  </div>;
 }
