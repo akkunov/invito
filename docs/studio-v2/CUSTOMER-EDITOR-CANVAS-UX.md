@@ -13,7 +13,7 @@ Customer personalization should be a focused content editor, not a second design
 ## Studio canvas
 - Mouse-hover overlays show the chosen editable object's real **width × height in document pixels**, not its screen-scaled size. Polygon follows nested transforms and rotations via existing `nodeCorners`.
 - The overlay is presentational and pointer-events:none; it does not change selection, history, layout or hit-testing.
-- A native, explicitly `passive:false` wheel listener is registered **only on the canvas**. Ordinary wheel pans, Shift+wheel pans horizontally, Ctrl/⌘+wheel zooms the canvas at the pointer. `preventDefault` suppresses Chrome's page zoom only while the pointer is over the canvas; outside it, the browser retains default shortcuts and accessible zoom.
+- A native, explicitly `passive:false` wheel listener is registered **only on the canvas**. Ordinary wheel pans, Shift+wheel pans horizontally, Ctrl+wheel zooms the canvas at the pointer. `preventDefault` suppresses Chrome's page zoom only while the pointer is over the canvas; outside it, the browser retains default shortcuts and accessible zoom.
 - Delta normalization handles pixel, line and page wheel devices. Browser keyboard zoom (`Ctrl + +/-`) is unchanged.
 
 ## Verification
