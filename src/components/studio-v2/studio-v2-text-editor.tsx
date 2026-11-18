@@ -63,6 +63,7 @@ export function StudioV2TextEditor({node,editing,onRuns,onRange,onFinish}:{node:
  return <div className="v2-text-edit" onPointerDown={e=>e.stopPropagation()} onDoubleClick={e=>e.stopPropagation()}>
   <div ref={ref} role="textbox" aria-label="Редактирование текста" aria-multiline="true" contentEditable="plaintext-only" spellCheck={false} suppressContentEditableWarning
     style={{textAlign:node.textAlign,lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,whiteSpace:"pre-wrap",overflowWrap:"anywhere",minHeight:"1em",width:"100%",outline:0}}
+    onBeforeInput={e=>{const event=e.nativeEvent as InputEvent;if(!composing.current&&(event.inputType==="insertParagraph"||event.inputType==="insertLineBreak")){e.preventDefault();insert("\n");}}}
     onInput={e=>input(e.currentTarget)} onPaste={e=>{e.preventDefault();insert(e.clipboardData.getData("text/plain"));}}
     onDrop={e=>e.preventDefault()} onCompositionStart={()=>{composing.current=true;}} onCompositionEnd={e=>{composing.current=false;input(e.currentTarget);}} onKeyDown={key}/>
  </div>;
