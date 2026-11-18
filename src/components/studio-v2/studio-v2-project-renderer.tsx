@@ -9,11 +9,11 @@ import {deviceForWidth,responsiveDocument,presentationSize,DEVICE_WIDTH,type Dev
 export function StudioV2ProjectRenderer({document,mediaUrls,device="auto"}:{document:ProjectDocumentV2;mediaUrls?:Readonly<Record<string,string>>;device?:Device|"auto"}){
  const container=useRef<HTMLDivElement>(null);
  const [width,setWidth]=useState(390);
- const [measurements,setMeasurements]=useState<Record<string,number>>({});
+ const [measured,setMeasured]=useState<Partial<Record<Device,Record<string,number>>>>({});
  const actual=device==="auto"?deviceForWidth(width):device;
  useEffect(()=>{const el=container.current;if(!el)return;const update=()=>setWidth(Math.max(1,el.clientWidth));update();const observer=new ResizeObserver(update);observer.observe(el);return()=>observer.disconnect();},[]);
- const measure=useCallback((id:string,height:number)=>setMeasurements(old=>old[id]===height?old:{...old,[id]:height}),[]);
- const resolved=useMemo(()=>responsiveDocument(document,actual,measurements),[document,actual,measurements]);
+ const measure=useCallback((id:string,height:number)=>setMeasured(old=>old[actual]?.[id]===height?old:{...old,[actual]:{...old[actual],[id]:height}}),[actual]);
+ const resolved=useMemo(()=>responsiveDocument(document,actual,measured[actual]??{}),[document,actual,measured]);
  const available=device==="auto"?width:Math.min(width,DEVICE_WIDTH[actual]);
  return <div ref={container} className="v2-project-renderer" lang={document.locale} style={{width:"100%",minWidth:0}}>
   <div style={{width:"100%",maxWidth:available,margin:"0 auto"}}>
