@@ -28,7 +28,12 @@ export type SyncResult =
   | {kind: "rejected"; reason: "auth" | "assets" | "other"; message: string};
 
 export class RemoteRequestError extends Error {
-  constructor(readonly status: number, message: string) {super(message); this.name = "RemoteRequestError";}
+  readonly status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+    this.name = "RemoteRequestError";
+  }
 }
 function safeBaseUrl(base: string): string {
   const url = new URL(base);
@@ -75,7 +80,9 @@ export function createStudioRemoteClient(settings: RemoteSyncSettings) {
     return await response.json() as T;
   }
   async function getProject(id: string): Promise<RemoteProject> {
-    return parseProject(await send<unknown>("/projects/" + encodeURIComponent(id)));
+    const project = parseProject(await send<unknown>("/projects/" + encodeURIComponent(id)));
+    if (project.workspaceId !== workspaceId) throw new Error("REMOTE_WORKSPACE_MISMATCH");
+    return project;
   }
   return {
     async listProjects(page = 1) {

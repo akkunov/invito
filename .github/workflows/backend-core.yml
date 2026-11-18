@@ -5,6 +5,8 @@ on:
     paths:
       - 'tsconfig.json'
       - 'src/features/studio-v2/browser/remote-sync.ts'
+      - 'src/components/studio-v2/**'
+      - 'src/app/studio-v2.css'
       - 'scripts/test-studio-v2-remote-sync.mjs'
       - 'package.json'
       - 'server/**'
@@ -13,6 +15,8 @@ on:
     paths:
       - 'tsconfig.json'
       - 'src/features/studio-v2/browser/remote-sync.ts'
+      - 'src/components/studio-v2/**'
+      - 'src/app/studio-v2.css'
       - 'scripts/test-studio-v2-remote-sync.mjs'
       - 'package.json'
       - 'server/**'
@@ -66,6 +70,23 @@ jobs:
         run: npm run db:migrate:deploy
       - name: E2E integration tests (real PostgreSQL)
         run: npm test
+      - name: Smoke test compiled Node runtime
+        run: |
+          npm start >/tmp/invito-api.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:4000/api/v1/health/ready | grep -q ready; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != "1" ]; then
+            cat /tmp/invito-api.log
+            exit 1
+          fi
  
   frontend-contract:
     runs-on: ubuntu-latest
