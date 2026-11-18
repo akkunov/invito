@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=p=>readFileSync(p,"utf8");
+const canvas=read("src/components/studio/studio-canvas.tsx");
+const editor=read("src/components/studio/template-studio.tsx");
+const style=read("src/app/studio.css");
+for(const term of ["startMarquee","selectedIds","onGestureStart","onGestureEnd","Math.hypot","tool===\"hand\"","studio-marquee"])assert.ok(canvas.includes(term),term);
+for(const term of ["studio-modebar","setZoom","startHand","moveHand","endHand","setSpaceHand","transformSelection","Escape","Delete"])assert.ok(editor.includes(term),term);
+assert.match(style,/studio-marquee/);
+assert.match(style,/studio-canvas-scroll\.is-panning/);
+console.log("PASS: Figma-inspired canvas navigation, selection and editing controls wired");

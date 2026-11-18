@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowLeft, ArrowUp, Copy, Download, FileUp, ImagePlus, Plus, Redo2, Save, Trash2, Type, Undo2, Square, MousePointer2, Move, Grid2X2, Ruler, Magnet, Upload } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Copy, Download, FileUp, ImagePlus, Plus, Redo2, Save, Trash2, Type, Undo2, Square, MousePointer2, Move, Grid2X2, Ruler, Magnet, Upload, Hand, ZoomIn, ZoomOut } from "lucide-react";
 import { StudioCanvas } from "@/components/studio/studio-canvas";
 import { StudioTextToolbar } from "@/components/studio/studio-text-toolbar";
 import { processStudioAsset } from "@/features/studio/studio-media";
@@ -21,12 +21,21 @@ function downloadJson(data:unknown,name:string){
 }
 export function TemplateStudio({locale}:{locale:Locale}){
   const [template,setTemplate]=useState<StudioTemplate>(starterTemplate);
-  const [selectedId,setSelectedId]=useState<string|null>(null);
+  const [selectedIds,setSelectedIds]=useState<string[]>([]);
+  const selectedId=selectedIds.length===1?selectedIds[0]:null;
+  function setSelectedId(id:string|null){setSelectedIds(id?[id]:[])}
+  const [tool,setTool]=useState<"move"|"hand">("move");
+  const [spaceHand,setSpaceHand]=useState(false);
+  const activeTool=spaceHand?"hand":tool;
+  const [zoom,setZoom]=useState(85);
+  const canvasScrollRef=useRef<HTMLDivElement>(null);
+  const handRef=useRef<{pointer:number;x:number;y:number;left:number;top:number}|null>(null);
+  const gestureHistory=useRef<StudioTemplate|null>(null);
   const [showGrid,setShowGrid]=useState(true);
   const [showRulers,setShowRulers]=useState(true);
   const [snapToGrid,setSnapToGrid]=useState(true);
   const [editingId,setEditingId]=useState<string|null>(null);
-  const [viewport,setViewport]=useState<320|375|440>(375);
+
   const [saved,setSaved]=useState<string[]>([]);
   const [message,setMessage]=useState("");
   const [ready,setReady]=useState(false);
@@ -49,6 +58,63 @@ export function TemplateStudio({locale}:{locale:Locale}){
     if(!ready)return;
     try{window.localStorage.setItem(DRAFT,JSON.stringify(template));}catch{setMessage("Не удалось сохранить черновик: проверьте место в браузере")}
   },[template,ready]);
+  useEffect(()=>{
+    function down(e:globalThis.KeyboardEvent){
+      const target=e.target as HTMLElement|null;
+      if(target?.closest("input,textarea,select,[contenteditable=true]"))return;
+      if(e.code==="Space"){e.preventDefault();setSpaceHand(true);return;}
+      if(e.key==="Escape"){setSelectedIds([]);setEditingId(null);return;}
+      if(e.key.toLowerCase()==="v"&&!e.ctrlKey&&!e.metaKey){setTool("move");return;}
+      if(e.key.toLowerCase()==="h"&&!e.ctrlKey&&!e.metaKey){setTool("hand");return;}
+      if(e.key==="Delete"||e.key==="Backspace"){
+        e.preventDefault();
+        change({...template,elements:template.elements.filter(x=>!selectedIds.includes(x.id))});
+        setSelectedIds([]);return;
+      }
+      if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="a"){
+        e.preventDefault();setSelectedIds(template.elements.map(x=>x.id));return;
+      }
+      if((e.ctrlKey||e.metaKey)&&e.key==="0"){
+        e.preventDefault();setZoom(85);return;
+      }
+    }
+    const up=(e:globalThis.KeyboardEvent)=>{if(e.code==="Space")setSpaceHand(false)};
+    const blur=()=>setSpaceHand(false);
+    window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
+    return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
+  },[selectedIds,template.elements]);
+  function transformSelection(patches:Record<string,Partial<StudioElement>>){
+    setTemplate(previous=>({...previous,elements:previous.elements.map(el=>patches[el.id]?{...el,...patches[el.id]}:el)}));
+  }
+  function beginGesture(){gestureHistory.current=template}
+  function endGesture(){
+    const original=gestureHistory.current;
+    gestureHistory.current=null;
+    if(original){setUndo(items=>[...items.slice(-39),original]);setRedo([])}
+  }
+  function startHand(e:React.PointerEvent<HTMLDivElement>){
+    if(activeTool!=="hand"||!canvasScrollRef.current||e.button!==0)return;
+    const el=canvasScrollRef.current;
+    handRef.current={pointer:e.pointerId,x:e.clientX,y:e.clientY,left:el.scrollLeft,top:el.scrollTop};
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+  function moveHand(e:React.PointerEvent<HTMLDivElement>){
+    const hand=handRef.current,el=canvasScrollRef.current;
+    if(!hand||!el||hand.pointer!==e.pointerId)return;
+    el.scrollLeft=hand.left-(e.clientX-hand.x);
+    el.scrollTop=hand.top-(e.clientY-hand.y);
+  }
+  function endHand(e:React.PointerEvent<HTMLDivElement>){
+    const el=canvasScrollRef.current;
+    if(handRef.current?.pointer!==e.pointerId)return;
+    handRef.current=null;
+    if(el?.hasPointerCapture(e.pointerId))el.releasePointerCapture(e.pointerId);
+  }
+  function canvasWheel(e:React.WheelEvent<HTMLDivElement>){
+    if(!e.ctrlKey&&!e.metaKey)return;
+    e.preventDefault();setZoom(z=>Math.max(35,Math.min(175,Math.round(z-e.deltaY*.13))));
+  }
   function change(next:StudioTemplate){
     const result=studioTemplateSchema.safeParse(next);
     if(!result.success){setMessage(result.error.issues[0]?.message??"Недопустимое изменение");return}
@@ -104,8 +170,8 @@ export function TemplateStudio({locale}:{locale:Locale}){
   }
   function remove(){
     setEditingId(null);
-    if(!selectedId)return;
-    change({...template,elements:template.elements.filter(el=>el.id!==selectedId)});setSelectedId(null);
+    if(!selectedIds.length)return;
+    change({...template,elements:template.elements.filter(el=>!selectedIds.includes(el.id))});setSelectedIds([]);
   }
   function reorder(direction:-1|1){
     const index=template.elements.findIndex(el=>el.id===selectedId);
@@ -155,7 +221,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
     const next=redo[redo.length-1];
     setRedo(x=>x.slice(0,-1));setUndo(x=>[...x,template]);setTemplate(next);
   }
-  const selected=template.elements.find(node=>node.id===selectedId);
+  const selected=selectedId?template.elements.find(node=>node.id===selectedId):undefined;
   const number=(label:string,key:"x"|"y"|"width"|"height"|"fontSize"|"radius"|"opacity",min:number,max:number)=>
     <label className="studio-field">{label}<input type="number" min={min} max={max} step={key==="opacity"?.05:1}
       value={selected?.[key]??0} onChange={event=>{
@@ -187,21 +253,39 @@ export function TemplateStudio({locale}:{locale:Locale}){
         </div>
         <button type="button" className="studio-upload-action" onClick={()=>assetRef.current?.click()}><Upload size={18}/> Загрузить PNG, JPG, WebP или SVG</button>
         <p className="studio-panel-title">СЛОИ <span>{template.elements.length}/80</span></p>
-        <div className="studio-layers">{[...template.elements].reverse().map(el=><button className={selectedId===el.id?"is-active":""} key={el.id} onClick={()=>setSelectedId(el.id)}><span className="studio-layer-kind">{el.type==="text"?"T":el.type==="image"?"▧":el.type==="button"?"◉":"▢"}</span><span>{el.text||el.type}</span></button>)}</div>
+        <div className="studio-layers">{[...template.elements].reverse().map(el=><button className={selectedIds.includes(el.id)?"is-active":""} key={el.id} onClick={event=>setSelectedIds(previous=>event.shiftKey?(previous.includes(el.id)?previous.filter(x=>x!==el.id):[...previous,el.id]):[el.id])}><span className="studio-layer-kind">{el.type==="text"?"T":el.type==="image"?"▧":el.type==="button"?"◉":"▢"}</span><span>{el.text||el.type}</span></button>)}</div>
         <div className="studio-layer-actions"><button disabled={!selected} onClick={()=>reorder(1)} title="На слой выше"><ArrowUp size={17}/></button><button disabled={!selected} onClick={()=>reorder(-1)} title="На слой ниже"><ArrowDown size={17}/></button><button disabled={!selected} onClick={duplicate} title="Дублировать"><Copy size={17}/></button><button disabled={!selected} onClick={remove} title="Удалить"><Trash2 size={17}/></button></div>
         <p className="studio-panel-title">МОИ ШАБЛОНЫ</p>
         <div className="studio-saved">{saved.length===0?<p>Нет сохранённых шаблонов</p>:saved.map(key=><button key={key} onClick={()=>load(key)}>{key}</button>)}</div>
       </aside>
       <section className="studio-workspace" aria-label="Холст шаблона">
-        <div className="studio-workspace-head"><div><span>ХОЛСТ / {template.name}</span><small>Нажмите на элемент, чтобы выбрать. После выбора его можно передвинуть.</small></div><div className="studio-viewport-choices">{([320,375,440] as const).map(value=><button key={value} aria-pressed={viewport===value} onClick={()=>setViewport(value)}>{value}</button>)}</div></div>
+        <div className="studio-workspace-head"><div><span>ХОЛСТ / {template.name}</span><small>V — выбор, H или пробел — рука, Shift+клик — несколько элементов</small></div>
+          <div className="studio-viewport-choices">
+            <button title="Уменьшить" onClick={()=>setZoom(z=>Math.max(35,z-10))}><ZoomOut size={16}/></button>
+            <button title="Масштаб 100%" aria-label="Масштаб" onClick={()=>setZoom(100)}>{zoom}%</button>
+            <button title="Увеличить" onClick={()=>setZoom(z=>Math.min(175,z+10))}><ZoomIn size={16}/></button>
+          </div>
+        </div>
+        <div className="studio-modebar" role="toolbar" aria-label="Инструменты холста">
+          <button aria-pressed={activeTool==="move"} onClick={()=>setTool("move")}><MousePointer2 size={18}/> Выбор <kbd>V</kbd></button>
+          <button aria-pressed={activeTool==="hand"} onClick={()=>setTool("hand")}><Hand size={18}/> Рука <kbd>H</kbd></button>
+          <span className="studio-selection-count">{selectedIds.length?selectedIds.length+" выбрано":"Кликните объект или выделите область"}</span>
+        </div>
         <div className="studio-canvas-options" role="toolbar" aria-label="Вид холста">
           <button aria-pressed={showGrid} onClick={()=>setShowGrid(x=>!x)}><Grid2X2 size={16}/> Сетка</button>
           <button aria-pressed={showRulers} onClick={()=>setShowRulers(x=>!x)}><Ruler size={16}/> Линейки</button>
           <button aria-pressed={snapToGrid} onClick={()=>setSnapToGrid(x=>!x)}><Magnet size={16}/> Привязка 10 px</button>
         </div>
         {selected&&<StudioTextToolbar element={selected} onChange={changeNode} onEdit={()=>beginTextEdit(selected.id)} onDuplicate={duplicate} onDelete={remove}/>}
-        <div className="studio-canvas-scroll"><StudioCanvas template={template} selectedId={selectedId} onSelect={setSelectedId} onMove={moveNode} onResize={resizeNode} editingId={editingId} onBeginEdit={beginTextEdit} onCommitText={commitInlineText} onCancelEdit={()=>setEditingId(null)} viewport={viewport} showGrid={showGrid} showRulers={showRulers} snapToGrid={snapToGrid}/></div>
-        <p className="studio-canvas-hint"><Move size={15}/> Холст рассчитан на 440 px. Кнопки 320/375/440 меняют масштаб превью. Сетка и линейки не попадут в приглашение.</p>
+        <div ref={canvasScrollRef} className={`studio-canvas-scroll ${activeTool==="hand"?"is-panning":""}`}
+          onPointerDownCapture={startHand} onPointerMove={moveHand} onPointerUp={endHand} onPointerCancel={endHand} onWheel={canvasWheel}>
+          <StudioCanvas template={template} selectedIds={selectedIds} onSelect={setSelectedIds}
+            onTransform={transformSelection} onGestureStart={beginGesture} onGestureEnd={endGesture}
+            editingId={editingId} onBeginEdit={beginTextEdit} onCommitText={commitInlineText}
+            onCancelEdit={()=>setEditingId(null)} tool={activeTool} zoom={zoom}
+            showGrid={showGrid} showRulers={showRulers} snapToGrid={snapToGrid}/>
+        </div>
+        <p className="studio-canvas-hint"><Move size={15}/> Масштаб холста: 35–175%. Shift+клик и рамка выделяют несколько объектов; перетаскивание начинается после движения мыши на 5 px.</p>
       </section>
       <aside className="studio-inspector" aria-label="Свойства">
         <p className="studio-panel-title">ШАБЛОН</p>
@@ -210,7 +294,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
         <label className="studio-field">Высота холста<input type="number" min={500} max={2400} value={template.canvasHeight} onChange={e=>{const height=Number(e.target.value);if(height>=500&&height<=2400&&!template.elements.some(el=>el.y+el.height>height))change({...template,canvasHeight:height})}}/></label>
         <label className="studio-field">Цвет фона<input type="color" value={template.background} onChange={e=>change({...template,background:e.target.value})}/></label>
         <p className="studio-panel-title">СВОЙСТВА {selected?.type.toUpperCase()??""}</p>
-        {!selected?<p className="studio-empty-selection">Выберите элемент на холсте или в панели слоёв.</p>:<div className="studio-fields">
+        {!selected?<p className="studio-empty-selection">Выберите объект на холсте или в панели слоёв. Для множественного выделения удерживайте Shift.</p>:<div className="studio-fields">
           {(selected.type==="text"||selected.type==="button")&&<>
             <label className="studio-field">Текст<textarea rows={3} maxLength={300} value={selected.text} onChange={e=>changeNode({text:e.target.value})}/></label>
             <label className="studio-field">Динамическое поле<select value={selected.binding} onChange={e=>changeNode({binding:e.target.value as StudioElement["binding"]})}>{["none","name1","name2","date","venue","message"].map(x=><option value={x} key={x}>{x}</option>)}</select></label>
