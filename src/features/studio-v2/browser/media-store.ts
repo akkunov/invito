@@ -1,12 +1,13 @@
 import {boundedSize,detectImage,rasterDimensions,MAX_UPLOAD_BYTES,SVG_ELEMENTS,SVG_ATTRIBUTES,safeSvgAttribute,validateSvgSource} from "../core/media-policy.ts";
 import {parseProjectV2,type ProjectDocumentV2} from "../core/document.schema.ts";
+import {templateRecordSchema,type TemplateRecord} from "../core/template-registry.ts";
 import type {Asset} from "../core/component-engine.ts";
 const DB="invito-studio-v2-local";
 function database():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{
- const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>{req.result.createObjectStore("media");req.result.createObjectStore("projects");};
+ const req=indexedDB.open(DB,2);req.onupgradeneeded=()=>{for(const name of ["media","projects","templates"])if(!req.result.objectStoreNames.contains(name))req.result.createObjectStore(name);};
  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(Error("Local storage blocked"));
 });}
-async function request<T>(store:"media"|"projects",mode:IDBTransactionMode,action:(s:IDBObjectStore)=>IDBRequest<T>):Promise<T>{
+async function request<T>(store:"media"|"projects"|"templates",mode:IDBTransactionMode,action:(s:IDBObjectStore)=>IDBRequest<T>):Promise<T>{
  const db=await database();
  try{return await new Promise<T>((resolve,reject)=>{
   const tx=db.transaction(store,mode),req=action(tx.objectStore(store));
@@ -53,3 +54,22 @@ export async function importImage(file:File,folder=""):Promise<Asset>{
   return {id,storageKey,mimeType:"image/png",name:file.name.slice(0,200)||"Изображение",sizeBytes:result.size,pixelWidth:size.width,pixelHeight:size.height,folder:folder.slice(0,80)};
  }finally{bitmap.close();}
 }
+
+export async function listLocalTemplates():Promise<TemplateRecord[]>{
+ const values=await request<unknown[]>("templates","readonly",s=>s.getAll());
+ return values.map(v=>templateRecordSchema.parse(v));
+}
+export async function saveLocalTemplate(record:TemplateRecord){await request("templates","readwrite",s=>s.put(templateRecordSchema.parse(record),record.id));}
+export async function deleteLocalTemplate(id:string){await request("templates","readwrite",s=>s.delete(id));}
+/** Import media and validated registry entry in the same transaction. */
+export async function importLocalTemplate(record:TemplateRecord,media:ReadonlyMap<string,Blob>){
+ const parsed=templateRecordSchema.parse(record),db=await database();
+ try{await new Promise<void>((resolve,reject)=>{
+  const tx=db.transaction(["templates","media"],"readwrite");
+  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error??Error("Template import failed"));tx.onabort=()=>reject(tx.error??Error("Template import cancelled"));
+  for(const [key,blob] of media)tx.objectStore("media").add(blob,key);
+  tx.objectStore("templates").add(parsed,parsed.id);
+ });}finally{db.close();}
+}
+
+export async function listLocalProjectIds():Promise<string[]>{const keys=await request<IDBValidKey[]>("projects","readonly",s=>s.getAllKeys());return keys.filter((k):k is string=>typeof k==="string");}

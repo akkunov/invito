@@ -264,6 +264,49 @@ try{
   await responsive.getByRole("button",{name:"Сбросить адаптивный слой",exact:true}).click();
   await page.screenshot({path:join(artifacts,"responsive-studio.png")});
   await responsive.getByRole("button",{name:"Закрыть адаптивный редактор"}).click();
+  // Template Manager: preserve the source, version snapshots and package resources.
+  await page.getByRole("button",{name:"Открыть Template Manager",exact:true}).click();
+  const manager=page.getByRole("dialog",{name:"Менеджер шаблонов"});
+  await manager.waitFor();
+  await manager.getByLabel("Название нового шаблона").fill("Riviera test");
+  await manager.getByRole("button",{name:"Из текущего проекта"}).click();
+  await manager.getByRole("button",{name:/Riviera test.*v1/}).waitFor();
+  await manager.getByLabel("Комментарий к версии").fill("Second snapshot");
+  await manager.getByRole("button",{name:"Сохранить текущий проект новой версией"}).click();
+  await manager.getByRole("button",{name:/Riviera test.*v2/}).waitFor();
+  await manager.getByLabel("Версия шаблона").selectOption("1");
+  await manager.getByRole("button",{name:"Восстановить как новую версию"}).click();
+  await manager.getByRole("button",{name:/Riviera test.*v3/}).waitFor();
+  await manager.getByRole("button",{name:"Дублировать",exact:true}).click();
+  await manager.getByRole("button",{name:/Riviera test — копия.*v1/}).waitFor();
+  await manager.getByLabel("Поиск шаблонов").fill("копия");
+  assert.equal(await manager.locator(".v2-template-card").count(),1);
+  await manager.getByLabel("Поиск шаблонов").fill("");
+  const downloadPromise=page.waitForEvent("download");
+  await manager.getByRole("button",{name:"Экспорт последней версии"}).click();
+  const download=await downloadPromise,path=join(artifacts,"test-template.invito.json");
+  await download.saveAs(path);
+  const packageData=JSON.parse(await (await import("node:fs/promises")).readFile(path,"utf8"));
+  assert.equal(packageData.format,"invito-template");
+  assert.equal(packageData.media.length,Object.keys(packageData.document.assets).length);
+  assert.ok(packageData.media.length>0);
+  await manager.locator('input[type=file]').setInputFiles(path);
+  await manager.getByRole("status").filter({hasText:"Пакет импортирован"}).waitFor();
+  assert.equal(await manager.locator(".v2-template-card").count(),3);
+  await page.screenshot({path:join(artifacts,"template-manager.png")});
+  await manager.getByRole("button",{name:"Открыть выбранную версию в Studio"}).click();
+  await manager.waitFor({state:"hidden"});
+  await count(page,5);
+  await page.waitForFunction(()=>localStorage.getItem("invito-studio-active-project")?.startsWith("project-"));
+  await page.reload({waitUntil:"networkidle"});
+  await count(page,5);
+  await page.waitForFunction(()=>document.querySelector(".v2-draft-state")?.textContent?.includes("Сохранено локально"));
+  await page.getByRole("button",{name:"Открыть Template Manager",exact:true}).click();
+  await manager.getByLabel("Сохранённый проект").selectOption("studio-v2-demo");
+  await manager.getByRole("button",{name:"Открыть проект",exact:true}).click();
+  await manager.waitFor({state:"hidden"});
+  assert.equal(await page.evaluate(()=>localStorage.getItem("invito-studio-active-project")),"studio-v2-demo");
+
 
  }catch(e){await page.screenshot({path:join(artifacts,"desktop-failure.png")}).catch(()=>{});throw e;}finally{await context.close();}
  const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
