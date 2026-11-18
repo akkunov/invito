@@ -78,6 +78,45 @@ try{
   await dialog.locator('[data-preview-page="page-1"]').waitFor();
   await page.screenshot({path:join(artifacts,"preview-mobile.png")});
   await dialog.getByRole("button",{name:"Закрыть предпросмотр"}).click();
+  // Linked component: use an existing photo as the master, edit two independent instances.
+  await rows.first().click();
+  await page.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).click();
+  await page.getByRole("button",{name:"Ресурсы",exact:true}).click();
+  await page.getByPlaceholder("Название компонента / варианта").fill("Linked photo");
+  await page.getByRole("button",{name:"Создать из выделения",exact:true}).click();
+  const library=page.locator(".v2-component-item").filter({hasText:"Linked photo"});
+  await library.getByRole("button",{name:"+ Основной",exact:true}).click();
+  const instances=page.locator('[data-studio-page="page-1"] [data-studio-node^="node-"]');
+  await page.waitForFunction(()=>document.querySelectorAll('[data-studio-page="page-1"] [data-studio-node^="node-"]').length===1);
+  const instanceId=await instances.first().getAttribute("data-studio-node");
+  const instance=page.locator('[data-studio-node="'+instanceId+'"]');
+  await page.getByLabel("Радиус",{exact:true}).fill("48");
+  await page.getByLabel("Радиус",{exact:true}).blur();
+  await page.waitForFunction(id=>document.querySelector('[data-studio-node="'+id+'"]')?.style.borderTopLeftRadius==="48px",instanceId);
+  await library.getByRole("button",{name:"+ Основной",exact:true}).click();
+  await page.waitForFunction(()=>document.querySelectorAll('[data-studio-page="page-1"] [data-studio-node^="node-"]').length===2);
+  const inheritedId=await instances.last().getAttribute("data-studio-node");
+  await page.getByRole("button",{name:"Страницы / слои",exact:true}).click();
+  // The first-layer label occurs on each copy; select the original by its known ordering.
+  await page.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).last().click();
+  await page.getByLabel("Радиус",{exact:true}).fill("64");
+  await page.getByLabel("Радиус",{exact:true}).blur();
+  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderTopLeftRadius==="64px");
+  await page.getByRole("button",{name:"Ресурсы",exact:true}).click();
+  await library.getByRole("button",{name:"Обновить мастер Linked photo / Основной",exact:true}).click();
+  await page.waitForFunction(id=>document.querySelector('[data-studio-node="'+id+'"]')?.style.borderTopLeftRadius==="64px",inheritedId);
+  assert.equal(await instance.evaluate(el=>el.style.borderTopLeftRadius),"48px");
+  await page.getByPlaceholder("Название компонента / варианта").fill("Rounded");
+  await library.getByRole("button",{name:"Добавить вариант из выделения",exact:true}).click();
+  await library.getByRole("button",{name:"+ Rounded",exact:true}).waitFor();
+  await page.getByRole("button",{name:"Страницы / слои",exact:true}).click();
+  await page.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).nth(1).click();
+  await page.getByLabel("Вариант компонента",{exact:true}).selectOption({label:"Rounded"});
+  assert.equal(await instance.evaluate(el=>el.style.borderTopLeftRadius),"48px");
+  await page.getByRole("button",{name:"Сбросить свойства слоя",exact:true}).click();
+  await page.waitForFunction(id=>document.querySelector('[data-studio-node="'+id+'"]')?.style.borderTopLeftRadius==="64px",instanceId);
+  await page.screenshot({path:join(artifacts,"linked-components.png")});
+
  }catch(e){await page.screenshot({path:join(artifacts,"desktop-failure.png")}).catch(()=>{});throw e;}finally{await context.close();}
  const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
  const page2=await visit(mobile,"ky");

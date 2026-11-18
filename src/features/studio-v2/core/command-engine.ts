@@ -1,3 +1,4 @@
+import {linkedRoot,stripLink,updateComponentDefinition,reconcileInstance,resetNodeOverrides,detachInstance,noteOverrides} from "./linked-components.ts";
 import type {Device,PageProfile,NodeOverride} from "./responsive-engine.ts";
 import { resolveLayout } from "./layout-engine.ts";
 import { parseProjectV2, type ProjectDocumentV2, type ProjectNodeV2, type StudioPageV2 } from "./document.schema.ts";
@@ -13,6 +14,9 @@ export type StudioCommand =
   | { kind: "setResponsiveOverride"; id: string; device: Device; patch: NodeOverride | null }
   | { kind: "putAsset"; asset: ProjectDocumentV2["assets"][string] }
   | { kind: "deleteAsset"; id: string }
+  | { kind: "switchComponentVariant"; id:string; variantId:string }
+  | { kind: "resetComponentOverrides"; id:string; scope:"layer"|"instance" }
+  | { kind: "detachComponent"; id:string }
   | { kind: "putComponent"; component: NonNullable<ProjectDocumentV2["components"]>[string] }
   | { kind: "deleteComponent"; id: string }
   | { kind: "setLayerState"; id:string; locked?:boolean; visible?:boolean }
@@ -106,7 +110,17 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
     case "setResponsiveOverride": { const n=getNode(doc,command.id);ensureWritable(doc,n.id);assert(n.parentId!==null,"Use page profile for root");doc.responsiveOverrides??={};const map=doc.responsiveOverrides[command.device]??={};doc.responsiveOverrides[command.device]=map;if(command.patch){const clean=Object.fromEntries(Object.entries(command.patch).filter(([,value])=>value!==undefined));if(Object.keys(clean).length)map[n.id]=clone(clean);else delete map[n.id];}else delete map[n.id];return; }
     case "putAsset": { doc.assets[command.asset.id]=clone(command.asset); return; }
     case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
-    case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
+    case "putComponent": { updateComponentDefinition(doc,command.component);return; }
+    case "switchComponentVariant": {
+      const root=linkedRoot(doc,command.id);assert(root?.componentRef,"Select a linked instance");ensureWritable(doc,root.parentId!);
+      const component=doc.components?.[root.componentRef.componentId];const variant=component?.variants.find(v=>v.id===command.variantId);assert(component&&variant,"Unknown variant");reconcileInstance(doc,root.id,variant,component.id);return;
+    }
+    case "resetComponentOverrides": {
+      const root=linkedRoot(doc,command.id);assert(root?.componentRef,"Select a linked instance");ensureWritable(doc,root.parentId!);
+      if(command.scope==="layer"){resetNodeOverrides(doc,command.id);return;}
+      const component=doc.components?.[root.componentRef.componentId];const variant=component?.variants.find(v=>v.id===root.componentRef!.variantId);assert(component&&variant,"Missing variant");reconcileInstance(doc,root.id,variant,component.id,true);return;
+    }
+    case "detachComponent": { const root=linkedRoot(doc,command.id)??getNode(doc,command.id);assert(root.parentId,"Cannot detach page root");ensureWritable(doc,root.parentId);detachInstance(doc,root.id);return; }
     case "deleteComponent": { assert(doc.components?.[command.id],"Missing component");delete doc.components![command.id];return; }
     case "setLayerState": { const n=getNode(doc,command.id);assert(n.parentId!==null,"Use page controls for root");ensureWritable(doc,n.parentId);if(command.locked!==undefined)n.locked=command.locked;if(command.visible!==undefined)n.visible=command.visible;return; }
     case "reorderPage": { const i=doc.pages.findIndex(p=>p.id===command.id);assert(i>=0,"Page not found");assert(Number.isInteger(command.index)&&command.index>=0&&command.index<doc.pages.length,"Invalid page index");ensureWritable(doc,doc.pages[i].rootNodeId);const [page]=doc.pages.splice(i,1);doc.pages.splice(command.index,0,page);return; }
@@ -120,6 +134,12 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
       for(const id of keys){const n=command.nodes[id];assert(rootSet.has(id)||n.parentId!==null&&Object.hasOwn(command.nodes,n.parentId),"Clipboard cannot modify existing tree");if(n.type==="frame")assert(n.children.every(child=>Object.hasOwn(command.nodes,child)),"Clipboard child outside tree");}
       Object.assign(doc.nodes,clone(command.nodes));parent.children.push(...command.roots);
       for(const device of ["desktop","tablet","mobile"] as const){const map=command.overrides[device];if(!map)continue;assert(Object.keys(map).every(id=>Object.hasOwn(command.nodes,id)),"Override outside clipboard");doc.responsiveOverrides??={};doc.responsiveOverrides[device]={...doc.responsiveOverrides[device],...clone(map)};}
+      // A clipboard can outlive a master edit; refresh linked copies before validation.
+      for(const id of keys){const node=doc.nodes[id];if(node?.componentRef&&node.componentSourceId){
+        const component=doc.components?.[node.componentRef.componentId],variant=component?.variants.find(v=>v.id===node.componentRef!.variantId);
+        assert(component&&variant,"Clipboard master variant no longer exists");
+        reconcileInstance(doc,id,variant,component.id);
+      }}
       return;
     }
     case "insertNode": {
@@ -135,7 +155,7 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
     case "updateNode": {
       const node = getNode(doc, command.id);
       ensureWritable(doc, command.id);
-      const blocked = ["id", "type", "parentId", "children"];
+      const blocked = ["id", "type", "parentId", "children","componentSourceId","componentOverrides",...(node.componentSourceId?["componentRef"]:[])];
       assert(!Object.keys(command.changes).some(key => blocked.includes(key)), "Use structural commands to edit graph topology");
       // Preserve resolved placement when leaving a stack; free anchors are re-based
       // whenever the authored parent size changes.
@@ -216,9 +236,11 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
       });
       assert(new Set(ids).size === ids.length, "Clone IDs must be unique");
       const parent = getFrame(doc, node.parentId);
+      const partialLinked=!!node.componentSourceId&&!node.componentRef;
       for (const originalId of originals) {
         const original = getNode(doc, originalId);
         const duplicate = clone(original);
+        if(partialLinked)stripLink(duplicate);
         duplicate.id = command.newIds[originalId];
         duplicate.parentId = originalId === node.id ? parent.id : command.newIds[original.parentId!];
         if (duplicate.type === "frame") duplicate.children = duplicate.children.map(id => command.newIds[id]);
@@ -268,6 +290,7 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
 export function applyStudioCommand(document: ProjectDocumentV2, command: StudioCommand): ProjectDocumentV2 {
   const next = clone(document);
   executeUnsafe(next, command);
+  if(command.kind==="updateNode"||command.kind==="moveNodes"||command.kind==="setLayerState")noteOverrides(document,next);
   return parseProjectV2(next);
 }
 export function applyStudioBatch(document: ProjectDocumentV2, commands: readonly StudioCommand[]): ProjectDocumentV2 {

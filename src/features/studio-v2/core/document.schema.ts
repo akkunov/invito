@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {OVERRIDE_FIELDS} from "./linked-components.ts";
 import {visualSchema} from "./appearance.schema.ts";
 import {bindingKeySchema,bindingValueSchema,invitationBlockSchema,blockAppearanceSchema} from "./invitation.schema.ts";
 
@@ -23,6 +24,8 @@ const baseNodeSchema = z.strictObject({
   visible: z.boolean(),
   locked: z.boolean(),
   sizing: z.strictObject({ width: z.enum(["fixed","fill","hug"]), height: z.enum(["fixed","fill","hug"]), minWidth: sizeSchema.optional(), maxWidth: sizeSchema.optional(), minHeight: sizeSchema.optional(), maxHeight: sizeSchema.optional() }).optional(),
+  componentSourceId: idSchema.optional(),
+  componentOverrides: z.array(z.enum(OVERRIDE_FIELDS)).max(OVERRIDE_FIELDS.length).refine(v=>new Set(v).size===v.length,"Duplicate override field").optional(),
   componentRef: z.strictObject({componentId:idSchema,variantId:idSchema}).optional(),
   anchors: z.strictObject({ x: z.enum(["start","center","end","stretch"]), y: z.enum(["start","center","end","stretch"]) }).optional(),
 });
@@ -214,7 +217,7 @@ export const projectDocumentSchema = z.strictObject({
         visited.add(id);
         if(n.id!==id)issue(path,"Node ID mismatch");
         validateWidget(n,path);
-        if(n.componentRef)issue(path,"Component definitions must be detached snapshots");
+        if(n.componentRef||n.componentSourceId||n.componentOverrides)issue(path,"Component definitions must be detached snapshots");
         if(n.type==="image"&&!doc.assets[n.assetId])issue(path,"Missing component asset");
         if(n.type==="text"&&n.bindingKey&&!doc.variables[n.bindingKey])issue(path,"Missing component variable");
         if(n.type==="frame")for(const child of n.children){
@@ -225,6 +228,28 @@ export const projectDocumentSchema = z.strictObject({
       if(visited.size!==Object.keys(variant.nodes).length)issue(path,"Disconnected component nodes");
     }
   }
+  // Linked instances are exact materialized trees with stable source keys.
+  // A legacy root without a source key remains an independent snapshot.
+  const linkedMembers=new Set<string>();
+  for(const root of Object.values(doc.nodes)){
+    if(!root.componentRef||!root.componentSourceId)continue;
+    const path=["nodes",root.id,"componentRef"];
+    const v=doc.components?.[root.componentRef.componentId]?.variants.find(v=>v.id===root.componentRef!.variantId);
+    if(!v||root.componentSourceId!==v.rootId||root.parentId===null){issue(path,"Invalid linked instance root");continue;}
+    const queue:[string,string][]=[[root.id,v.rootId]],seen=new Set<string>();
+    while(queue.length){
+      const [id,sourceId]=queue.pop()!,node=doc.nodes[id],source=v.nodes[sourceId];
+      if(!node||!source||seen.has(id)||linkedMembers.has(id)){issue(path,"Invalid or nested linked tree");continue;}
+      seen.add(id);linkedMembers.add(id);
+      if(node.componentSourceId!==sourceId||node.type!==source.type||id!==root.id&&node.componentRef)issue(path,"Linked member does not match master");
+      if(id===root.id&&node.componentOverrides?.some(k=>["x","y","rotation"].includes(k)))issue(path,"Instance placement is not an override field");
+      if(node.type==="frame"&&source.type==="frame"){
+        if(node.children.length!==source.children.length)issue(path,"Detach instance before changing its structure");
+        else node.children.forEach((child,i)=>queue.push([child,source.children[i]]));
+      }
+    }
+  }
+  for(const node of Object.values(doc.nodes))if((node.componentSourceId||node.componentOverrides)&&!linkedMembers.has(node.id))issue(["nodes",node.id],"Orphan linked component metadata");
   for (const [key, asset] of Object.entries(doc.assets)) {
     if (key !== asset.id) issue(["assets", key, "id"], "Asset key and ID differ");
   }
