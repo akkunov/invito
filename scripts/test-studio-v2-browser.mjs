@@ -56,6 +56,29 @@ try{
   await rows.first().click();
   await page.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).click();
   const photo=page.locator('[data-studio-node="cover-photo"]');
+  // Hover outlines show authored dimensions, even at a scaled canvas zoom.
+  await photo.hover();
+  await page.locator(".v2-hover-measure").waitFor({state:"visible"});
+  assert.match(await page.locator(".v2-hover-measure").textContent(),/908\s*×\s*640\s*px/);
+  const stageCanvas=page.locator(".v2-stage");
+  const panBefore=await page.locator(".v2-world").evaluate(el=>el.style.transform);
+  await page.mouse.wheel(0,120);
+  await page.waitForFunction(value=>document.querySelector(".v2-world")?.style.transform!==value,panBefore);
+  const zoomStart=await page.locator(".v2-canvas-actions").textContent();
+  const browserDpr=await page.evaluate(()=>window.devicePixelRatio);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0,-220);
+  await page.keyboard.up("Control");
+  await page.waitForFunction(value=>document.querySelector(".v2-canvas-actions")?.textContent!==value,zoomStart);
+  assert.equal(await page.evaluate(()=>window.devicePixelRatio),browserDpr,"Ctrl+wheel on stage must not zoom the browser page");
+  const suppressed=await stageCanvas.evaluate(stage=>{
+   const event=new WheelEvent("wheel",{bubbles:true,cancelable:true,ctrlKey:true,deltaY:40,clientX:200,clientY:200});
+   stage.dispatchEvent(event);return event.defaultPrevented;
+  });
+  assert.equal(suppressed,true,"Canvas must have a non-passive wheel handler");
+  await page.getByRole("button",{name:"Показать все страницы",exact:true}).click();
+  await page.locator(".v2-page-item").first().click();
+
   const radius=page.getByLabel("Радиус",{exact:true});
   await radius.fill("32");
   await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderTopLeftRadius==="32px");
@@ -433,7 +456,10 @@ try{
   const imageField=customerPackage.personalization.fields[0],imageNode=customerPackage.document.nodes[imageField.nodeId],originalAsset=imageNode.assetId;
   const replacement=Object.values(customerPackage.document.assets).find(a=>a.id!==originalAsset);
   assert.ok(replacement);
-  await simple.locator("[data-editor-field] select").selectOption(replacement.id);
+  assert.equal(await simple.locator(".se-editor-panel").count(),1);
+  assert.equal(await simple.getByRole("progressbar",{name:"Прогресс по разделам"}).count(),1);
+  await simple.getByRole("radiogroup",{name:"Фотографии"}).getByRole("radio",{name:replacement.name}).check();
+  assert.equal(await simple.locator('.se-media-option[data-selected="true"]').count(),1);
   await simple.locator('.se-artwork [data-studio-node="'+imageNode.id+'"] img').waitFor();
   await page.waitForFunction(({id,alt})=>document.querySelector('.se-artwork [data-studio-node="'+id+'"] img')?.getAttribute("alt")===alt,{id:imageNode.id,alt:replacement.name});
   await simple.getByRole("button",{name:"Проверить",exact:true}).first().click();
