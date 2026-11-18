@@ -10,6 +10,8 @@ import type { Locale } from "@/i18n/locales";
 import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
 import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
+import { StudioV2ProjectRenderer } from "./studio-v2-project-renderer";
+import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PageProfile } from "@/features/studio-v2/core/responsive-engine.ts";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
 import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
@@ -102,6 +104,8 @@ function MiniMap({frames, viewport, size, onCenter}:{
 }
 export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
+  const [previewOpen,setPreviewOpen]=useState(false);
+  const [device,setDevice]=useState<Device>("mobile");
   const [libraryOpen,setLibraryOpen]=useState(false);
   const [storageStatus,setStorageStatus]=useState("Загрузка локального проекта");
   const [loaded,setLoaded]=useState(false);
@@ -143,6 +147,10 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const nodeIds=normalizeSelection(document,selectedIds);
   const activeNode=nodeIds.length===1?document.nodes[nodeIds[0]]:null;
   const authoredNode=activeNode?sourceDocument.nodes[activeNode.id]:null;
+  const currentProfile=selected?pageProfile(sourceDocument,selected,device):null;
+  const currentOverride=authoredNode?sourceDocument.responsiveOverrides?.[device]?.[authoredNode.id]??{}:{};
+  function updateProfile(patch:Partial<PageProfile>){if(selected&&currentProfile&&!editing)libraryCommands({kind:"setPageProfile",id:selected.id,device,profile:{...currentProfile,...patch}});}
+  function updateOverride(patch:NodeOverride){if(authoredNode&&!editing)libraryCommands({kind:"setResponsiveOverride",id:authoredNode.id,device,patch:{...currentOverride,...patch}});}
   function finishText(cancel=false){
     if(!editing)return;
     setSession(s=>s.transaction?(cancel?cancelStudioTransaction(s):commitStudioTransaction(s)):s);setEditing(null);
@@ -233,6 +241,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   useEffect(()=>{
     function down(e:KeyboardEvent){
       const target=e.target as HTMLElement|null;
+      if(previewOpen){if(e.key==="Escape")setPreviewOpen(false);return;}
       if(target?.closest("input,textarea,select,[contenteditable=true]"))return;
       if(editing){if(e.key==="Escape"){finishText(true);e.preventDefault();}return;}
       if(e.key==="Enter"&&activeNode?.type==="text"){e.preventDefault();startText(activeNode.id);return;}
@@ -258,7 +267,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const blur=()=>setSpaceHeld(false);
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[nodeIds,editing,sourceDocument]);
+  },[nodeIds,editing,sourceDocument,previewOpen]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -476,6 +485,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       <div className="v2-top-actions">
         <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>setSession(s=>s.transaction?s:undoStudio(s))}><Undo2 size={18}/></button>
         <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>setSession(s=>s.transaction?s:redoStudio(s))}><Redo2 size={18}/></button>
+        <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><Smartphone size={18}/></button>
         <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><Download size={16}/> JSON</button>
         <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
       </div>
@@ -603,6 +613,22 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {inStack&&authoredNode&&parent?.type==="frame"&&<div className="v2-nudge">{[-1,1].map(offset=><button key={offset} disabled={parent.children.indexOf(authoredNode.id)+offset<0||parent.children.indexOf(authoredNode.id)+offset>=parent.children.length} onClick={()=>setSession(s=>dispatchStudioCommand(s,{kind:"reorderNode",id:authoredNode.id,index:parent.children.indexOf(authoredNode.id)+offset}))}>{offset<0?"↑ Выше":"↓ Ниже"}</button>)}</div>}
         </section>
         <section className="v2-inspector-section">
+          <h3>Адаптивность</h3>
+          <div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div>
+          {selected&&currentProfile&&<>
+            <label className="v2-layout-field">Режим<select disabled={!!editing} value={currentProfile.mode} onChange={e=>updateProfile({mode:e.target.value as "scale"|"reflow"})}><option value="scale">Масштаб</option><option value="reflow">Reflow</option></select></label>
+            <div className="v2-inspector-grid">{(["width","height"] as const).map(axis=><label key={axis}>{axis==="width"?"W":"H"}<input type="number" min={1} max={20000} disabled={!!editing||axis==="height"&&currentProfile.mode==="scale"} value={currentProfile[axis]} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=20000)updateProfile({[axis]:v});}}/></label>)}</div>
+            <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setPageProfile",id:selected.id,device,profile:null})}>Сбросить профиль</button>
+          </>}
+          {authoredNode&&<>
+            <p className="v2-placeholder">Настройки слоя для {device}; основной холст не изменяется.</p>
+            <div className="v2-inspector-grid">{(["x","y","width","height"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H"})[key]}<input type="number" disabled={!!editing} value={currentOverride[key]??""} placeholder={String(authoredNode[key])} onChange={e=>{const raw=e.target.value,v=Number(raw);if(raw===""){updateOverride({[key]:undefined});return;}if(Number.isFinite(v)&&(key==="width"||key==="height"?v>=1&&v<=20000:Math.abs(v)<=1000000))updateOverride({[key]:v});}}/></label>)}</div>
+            <label className="v2-layout-field">Видимый<input type="checkbox" checked={currentOverride.visible??authoredNode.visible} disabled={!!editing} onChange={e=>updateOverride({visible:e.target.checked})}/></label>
+            <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setResponsiveOverride",id:authoredNode.id,device,patch:null})}>Сбросить слой</button>
+          </>}
+          <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}>Открыть предпросмотр</button>
+        </section>
+        <section className="v2-inspector-section">
           <h3>Страница</h3>
           {selected&&selectedRoot?<>
             <strong className="v2-selected-name">{selected.name}</strong>
@@ -626,12 +652,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #26 · Ресурсы</h3>
+          <h3>Этап #27 · Responsive</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
       </aside>
     </div>
+    {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><button onClick={()=>setPreviewOpen(false)} aria-label="Закрыть предпросмотр">Закрыть ×</button></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device}/></div></div></div>}
     {(leftOpen||rightOpen)&&<button className="v2-backdrop" onClick={()=>{setLeftOpen(false);setRightOpen(false)}} aria-label="Закрыть панель"/>}
   </main>;
 }
