@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import Link from "next/link";
 import type { Locale } from "@/i18n/locales";
-import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
+import { AssetLibrary, ImageControls, useMediaUrls, useCloudAssetUrls } from "./studio-v2-assets";
 import { loadLocalProjectWithRecovery, saveLocalProject, type LocalProjectLoad } from "@/features/studio-v2/browser/media-store";
 import { linkedRoot, alignedSnapshot } from "@/features/studio-v2/core/linked-components.ts";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
@@ -178,7 +178,9 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
   const fitted=useRef(false);
   const sourceDocument=session.document;
   const palette=useMemo(()=>projectPalette(sourceDocument),[sourceDocument]);
-  const mediaUrls=useMediaUrls(sourceDocument.assets);
+  const localMediaUrls=useMediaUrls(sourceDocument.assets);
+  const cloudMediaUrls=useCloudAssetUrls(sourceDocument.assets,remoteSettings);
+  const mediaUrls=useMemo(()=>({...localMediaUrls,...cloudMediaUrls}),[localMediaUrls,cloudMediaUrls]);
   useEffect(()=>{
     let active=true;let id="studio-v2-demo";
     try{id=localStorage.getItem("invito-studio-active-project")??id;}catch{/* active project preference is optional */}

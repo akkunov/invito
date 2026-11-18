@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import {createStudioRemoteClient, type RemoteSyncSettings} from "@/features/studio-v2/browser/remote-sync";
 import {readMedia,importImage} from "@/features/studio-v2/browser/media-store";
 import type {ProjectDocumentV2,ProjectNodeV2} from "@/features/studio-v2/core/document.schema.ts";
 import type {Asset,Component} from "@/features/studio-v2/core/component-engine.ts";
@@ -38,6 +39,36 @@ export function useMediaUrls(assets:ProjectDocumentV2["assets"]){
   }
   pump();
  },[key]);
+ return urls;
+}
+/** Refresh short-lived private R2 GET capabilities while a cloud project is open. */
+export function useCloudAssetUrls(assets: ProjectDocumentV2["assets"], settings?: RemoteSyncSettings) {
+ const [urls,setUrls]=useState<Record<string,string>>({});
+ const key=JSON.stringify([...new Set(Object.values(assets).map(a=>a.storageKey)
+    .filter(key=>key.startsWith("asset:")))].sort());
+ useEffect(()=>{
+  if(!settings){setUrls({});return;}
+  let active=true;
+  const client=createStudioRemoteClient(settings);
+  const ids=JSON.parse(key) as string[];
+  const refresh=async()=>{
+   const next:Record<string,string>={};
+   let cursor=0;
+   await Promise.all(Array.from({length:Math.min(4,ids.length)},async()=>{
+    while(active&&cursor<ids.length){
+     const storageKey=ids[cursor++]!;
+     try {
+      const result=await client.getMediaReadUrl(storageKey.slice(6));
+      if(active)next[storageKey]=result.url;
+     } catch { /* missing/forbidden asset stays unavailable */ }
+    }
+   }));
+   if(active)setUrls(next);
+  };
+  void refresh();
+  const timer=window.setInterval(()=>{void refresh();},45_000);
+  return()=>{active=false;window.clearInterval(timer);};
+ },[key,settings?.apiBaseUrl,settings?.workspaceId,settings?.accessToken,settings?.fetcher]);
  return urls;
 }
 function assetUrl(a:Asset,urls:Record<string,string>){return a.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+a.storageKey:urls[a.storageKey];}
