@@ -643,7 +643,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     if(nodeGesture.current||marqueeGesture.current)return;
     const step=e.deltaMode===1?16:e.deltaMode===2?Math.max(1,stageRef.current?.clientHeight??800):1;
     const dx=e.deltaX*step,dy=e.deltaY*step;
-    if(e.ctrlKey||e.metaKey){
+    if(e.ctrlKey){
       const rect=stageRef.current?.getBoundingClientRect();
       if(!rect)return;
       const inset=rulers?RULER_THICKNESS:0;
@@ -784,7 +784,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
             <button onClick={()=>setViewport(v=>zoomAt(v,v.zoom*1.25,{x:sceneSize.width/2,y:sceneSize.height/2}))} aria-label="Увеличить масштаб"><StudioIcon name="plus" size={16}/></button>
             <button onClick={fitAll} aria-label="Показать все страницы" title="Все страницы"><StudioIcon name="fit" size={16}/></button>
           </div>
-          <div className="v2-viewport-hint">Колесо — перемещение · Ctrl/⌘ + колесо — масштаб холста · два пальца — жесты</div>
+          <div className="v2-viewport-hint">Колесо — перемещение · Ctrl + колесо — масштаб холста · два пальца — жесты</div>
           <button className="v2-minimap-toggle" onClick={()=>setMinimapOpen(v=>!v)} aria-label="Показать или скрыть мини-карту" aria-expanded={minimapOpen}><StudioIcon name="map" size={17}/></button>
           {minimapOpen&&<MiniMap frames={frames} viewport={viewport} size={sceneSize} onCenter={center}/>}
         </div>
