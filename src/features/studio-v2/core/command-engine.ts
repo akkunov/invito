@@ -15,6 +15,8 @@ export type StudioCommand =
   | { kind: "deleteAsset"; id: string }
   | { kind: "putComponent"; component: NonNullable<ProjectDocumentV2["components"]>[string] }
   | { kind: "deleteComponent"; id: string }
+  | { kind: "setLayerState"; id:string; locked?:boolean; visible?:boolean }
+  | { kind: "reorderPage"; id:string; index:number }
   | { kind: "setGuides"; guides: NonNullable<ProjectDocumentV2["guides"]> }
   | { kind: "pasteNodes"; parentId: string; nodes: ProjectDocumentV2["nodes"]; roots: string[]; overrides: NonNullable<ProjectDocumentV2["responsiveOverrides"]> }
   | { kind: "insertNode"; parentId: string; node: ProjectNodeV2; index?: number }
@@ -106,6 +108,8 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
     case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
     case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
     case "deleteComponent": { assert(doc.components?.[command.id],"Missing component");delete doc.components![command.id];return; }
+    case "setLayerState": { const n=getNode(doc,command.id);assert(n.parentId!==null,"Use page controls for root");ensureWritable(doc,n.parentId);if(command.locked!==undefined)n.locked=command.locked;if(command.visible!==undefined)n.visible=command.visible;return; }
+    case "reorderPage": { const i=doc.pages.findIndex(p=>p.id===command.id);assert(i>=0,"Page not found");assert(Number.isInteger(command.index)&&command.index>=0&&command.index<doc.pages.length,"Invalid page index");ensureWritable(doc,doc.pages[i].rootNodeId);const [page]=doc.pages.splice(i,1);doc.pages.splice(command.index,0,page);return; }
     case "setGuides": { doc.guides=clone(command.guides);return; }
     case "pasteNodes": {
       const parent=getFrame(doc,command.parentId);ensureWritable(doc,parent.id);
