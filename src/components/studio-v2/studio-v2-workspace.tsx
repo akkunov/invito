@@ -9,6 +9,7 @@ import {
 import type { Locale } from "@/i18n/locales";
 import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
 import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
+import { linkedRoot, alignedSnapshot } from "@/features/studio-v2/core/linked-components.ts";
 import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Component } from "@/features/studio-v2/core/component-engine.ts";
 import { StudioV2ProjectRenderer } from "./studio-v2-project-renderer";
 import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PageProfile } from "@/features/studio-v2/core/responsive-engine.ts";
@@ -161,6 +162,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const nodeIds=normalizeSelection(document,selectedIds);
   const activeNode=nodeIds.length===1?document.nodes[nodeIds[0]]:null;
   const authoredNode=activeNode?sourceDocument.nodes[activeNode.id]:null;
+  const selectedInstance=authoredNode?linkedRoot(sourceDocument,authoredNode.id):undefined;
+  const instanceComponent=selectedInstance?.componentRef?sourceDocument.components?.[selectedInstance.componentRef.componentId]:undefined;
   const currentProfile=selected?pageProfile(sourceDocument,selected,device):null;
   const currentOverride=authoredNode?sourceDocument.responsiveOverrides?.[device]?.[authoredNode.id]??{}:{};
   function updateProfile(patch:Partial<PageProfile>){if(selected&&currentProfile&&!editing)libraryCommands({kind:"setPageProfile",id:selected.id,device,profile:{...currentProfile,...patch}});}
@@ -192,7 +195,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const container=authoredNode?.type==="frame"?authoredNode:!activeNode&&selectedRoot?.type==="frame"?sourceDocument.nodes[selectedRoot.id]:null;
   const layoutFrame=container?.type==="frame"?container:null;
   const targetFrame=authoredNode?.type==="frame"?authoredNode:selectedRoot?.type==="frame"?selectedRoot:null;
-  const canInsert=!!targetFrame&&!targetFrame.locked&&!editing;
+  const canInsert=!!targetFrame&&!targetFrame.locked&&!editing&&!linkedRoot(sourceDocument,targetFrame.id);
   function libraryCommands(commands:StudioCommand|readonly StudioCommand[]){setSession(s=>{if(s.transaction)return s;try{return dispatchStudioCommand(s,commands);}catch{return s;}});}
   function insertWidget(kind:BlockKind){if(!targetFrame||!canInsert)return;const id="widget-"+crypto.randomUUID();const width=Math.max(1,Math.min(900,targetFrame.width-48));libraryCommands({kind:"insertNode",parentId:targetFrame.id,node:createWidget(kind,id,targetFrame.id,width)});setSelectedIds([id]);}
   function addAsset(a:Asset){libraryCommands({kind:"putAsset",asset:a});}
@@ -200,8 +203,24 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   function replaceAsset(a:Asset){if(authoredNode?.type!=="image"||editing){setSelectionError("Выберите изображение для замены.");return;}libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{assetId:a.id}});}
   function deleteAsset(a:Asset){const used=(n:ProjectDocumentV2["nodes"][string])=>n.type==="image"&&n.assetId===a.id||n.type==="widget"&&n.block.kind==="gallery"&&n.block.assetIds.includes(a.id);if(Object.values(sourceDocument.nodes).some(used)||Object.values(sourceDocument.components??{}).some(c=>c.variants.some(v=>Object.values(v.nodes).some(used)))){setSelectionError("Ресурс используется в документе или библиотеке.");return;}libraryCommands({kind:"deleteAsset",id:a.id});}
   function createComponent(name:string){if(!authoredNode||editing)return;const id="component-"+crypto.randomUUID();libraryCommands({kind:"putComponent",component:{id,name,variants:[snapshotVariant(sourceDocument,authoredNode.id,"variant-default","Основной")]}});}
-  function addVariant(c:Component,name:string){if(!authoredNode||editing)return;libraryCommands({kind:"putComponent",component:{...c,variants:[...c.variants,snapshotVariant(sourceDocument,authoredNode.id,"variant-"+crypto.randomUUID(),name)]}});}
-  function insertComponent(c:Component,variantId:string){if(!targetFrame||!canInsert)return;const commands=instantiateComponent(c,variantId,targetFrame.id,()=>"node-"+crypto.randomUUID());libraryCommands(commands);const first=commands[0];if(first?.kind==="insertNode")setSelectedIds([first.node.id]);}
+  function addVariant(c:Component,name:string){
+    if(!authoredNode||editing)return;
+    proAction(()=>{const base=c.variants[0];if(base.nodes[base.rootId].type!==authoredNode.type)throw Error("Тип корневого слоя варианта должен совпадать.");
+      const variant=alignedSnapshot(snapshotVariant(sourceDocument,authoredNode.id,"variant-"+crypto.randomUUID(),name),base,sourceDocument,authoredNode.id,true);
+      return {kind:"putComponent",component:{...c,variants:[...c.variants,variant]}};
+    });
+  }
+  function updateMaster(c:Component,variantId:string){
+    if(!authoredNode||editing)return;
+    proAction(()=>{const base=c.variants.find(v=>v.id===variantId);if(!base||base.nodes[base.rootId].type!==authoredNode.type)throw Error("Выберите слой того же типа, что и мастер.");
+      const variant=alignedSnapshot(snapshotVariant(sourceDocument,authoredNode.id,base.id,base.name),base,sourceDocument,authoredNode.id,false);
+      return {kind:"putComponent",component:{...c,variants:c.variants.map(v=>v.id===variantId?variant:v)}};
+    });
+  }
+  function insertComponent(c:Component,variantId:string){
+    if(!targetFrame||!canInsert||session.transaction)return;
+    try{const commands=instantiateComponent(c,variantId,targetFrame.id,()=>"node-"+crypto.randomUUID());const next=dispatchStudioCommand(session,commands);setSession(next);const first=commands[0];if(first?.kind==="pasteNodes")setSelectedIds(first.roots);setSelectionError(null);}catch(error){setSelectionError(error instanceof Error?error.message:"Не удалось добавить компонент.");}
+  }
   function insertShape(shape:"rectangle"|"circle"|"ellipse"|"triangle"|"star"|"heart"){if(!targetFrame||!canInsert)return;const id="shape-"+crypto.randomUUID();libraryCommands({kind:"insertNode",parentId:targetFrame.id,node:{id,type:"shape",parentId:targetFrame.id,x:24,y:24,width:160,height:160,rotation:0,opacity:1,visible:true,locked:false,shape,fill:"#707A5C",stroke:null,strokeWidth:0}});setSelectedIds([id]);}
   const parent=authoredNode?.parentId?sourceDocument.nodes[authoredNode.parentId]:null;
   const inStack=parent?.type==="frame"&&parent.layout!=="free";
@@ -308,7 +327,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       }
       if(!nodeIds.length&&selectedPage&&(e.key==="Delete"||e.key==="Backspace")){e.preventDefault();deletePage(selectedPage);return;}
       if(nodeIds.length&&(e.key==="Delete"||e.key==="Backspace")){
-        e.preventDefault();setSession(s=>dispatchStudioCommand(s,nodeIds.map(id=>({kind:"deleteNode" as const,id}))));setSelectedIds([]);return;
+        e.preventDefault();proAction(()=>nodeIds.map(id=>({kind:"deleteNode" as const,id})));setSelectedIds([]);return;
       }
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){
         e.preventDefault();changeHistory(e.shiftKey);
@@ -575,7 +594,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     <div className="v2-body">
       <aside className={`v2-left ${leftOpen?"is-open":""}`} aria-label="Страницы и библиотека">
         <div className="v2-sidebar-tabs"><button aria-pressed={!libraryOpen} onClick={()=>setLibraryOpen(false)}>Страницы / слои</button><button aria-pressed={libraryOpen} onClick={()=>setLibraryOpen(true)}>Ресурсы</button></div>
-        {libraryOpen?<><AssetLibrary document={sourceDocument} urls={mediaUrls} onUpload={addAsset} onInsert={insertAsset} onReplace={replaceAsset} onFolder={(a,folder)=>libraryCommands({kind:"putAsset",asset:{...a,folder}})} onDelete={deleteAsset} onCreateComponent={createComponent} onAddVariant={addVariant} onInsertComponent={insertComponent} canCreate={!!authoredNode&&!editing} canInsert={canInsert} onError={setSelectionError}/><div className="v2-sidebar-section"><div className="v2-sidebar-heading"><strong>Фигуры</strong></div><div className="v2-nudge">{(["rectangle","circle","triangle","star","heart"] as const).map((shape,i)=><button key={shape} title={shape} disabled={!canInsert} onClick={()=>insertShape(shape)}>{["□","○","△","☆","♡"][i]}</button>)}</div></div></>:<>
+        {libraryOpen?<><AssetLibrary document={sourceDocument} urls={mediaUrls} onUpload={addAsset} onInsert={insertAsset} onReplace={replaceAsset} onFolder={(a,folder)=>libraryCommands({kind:"putAsset",asset:{...a,folder}})} onDelete={deleteAsset} onCreateComponent={createComponent} onAddVariant={addVariant} onUpdateVariant={updateMaster} onInsertComponent={insertComponent} canCreate={!!authoredNode&&!editing} canInsert={canInsert} onError={setSelectionError}/><div className="v2-sidebar-section"><div className="v2-sidebar-heading"><strong>Фигуры</strong></div><div className="v2-nudge">{(["rectangle","circle","triangle","star","heart"] as const).map((shape,i)=><button key={shape} title={shape} disabled={!canInsert} onClick={()=>insertShape(shape)}>{["□","○","△","☆","♡"][i]}</button>)}</div></div></>:<>
         <div className="v2-sidebar-heading"><strong>Страницы <small>{document.pages.length}</small></strong>
           <button title="Добавить страницу" aria-label="Добавить страницу" onClick={addPage} disabled={document.pages.length>=30}><Plus size={18}/></button>
         </div>
@@ -677,7 +696,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </section>
         {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]);return <AdvancedProperties key={n.id} document={sourceDocument} node={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>proAction(()=>({kind:"updateNode",id:n.id,changes:{visual}}))}/>;})()}
         {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/>}
-        {authoredNode?.componentRef&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">{sourceDocument.components?.[authoredNode.componentRef.componentId]?.name} · редактируемая копия</p><button className="v2-inspector-button" onClick={()=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{componentRef:undefined}})}>Отсоединить</button></section>}
+        {authoredNode&&selectedInstance&&instanceComponent&&<section className="v2-inspector-section v2-linked-inspector"><h3>Связанный компонент</h3><strong>{instanceComponent.name}</strong><p className="v2-placeholder">{authoredNode.id===selectedInstance.id?"Экземпляр":"Вложенный слой"} · {(authoredNode.componentOverrides??[]).length} изменённых свойств</p><label className="v2-widget-field">Вариант<select aria-label="Вариант компонента" disabled={!!editing} value={selectedInstance.componentRef!.variantId} onChange={e=>proAction(()=>({kind:"switchComponentVariant",id:selectedInstance.id,variantId:e.target.value}))}>{instanceComponent.variants.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button className="v2-inspector-button" disabled={!!editing||!authoredNode.componentOverrides?.length} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:authoredNode.id,scope:"layer"}))}>Сбросить свойства слоя</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"resetComponentOverrides",id:selectedInstance.id,scope:"instance"}))}>Сбросить экземпляр</button><button className="v2-inspector-button" disabled={!!editing} onClick={()=>proAction(()=>({kind:"detachComponent",id:selectedInstance.id}))}>Отсоединить экземпляр</button><p className="v2-placeholder">Для изменения структуры отсоедините экземпляр или обновите мастер в библиотеке.</p></section>}
+        {authoredNode?.componentRef&&!selectedInstance&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">Старая независимая копия. Создайте новый связанный экземпляр из библиотеки.</p><button className="v2-inspector-button" onClick={()=>proAction(()=>({kind:"detachComponent",id:authoredNode.id}))}>Отсоединить</button></section>}
         {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}))} onFinish={()=>finishText()}/>}
         <section className="v2-inspector-section">
           <h3>Auto Layout</h3>
@@ -749,7 +769,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28.2 · Advanced Properties</h3>
+          <h3>Этап #28.3 · Linked Components</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
