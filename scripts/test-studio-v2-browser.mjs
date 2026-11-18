@@ -293,6 +293,47 @@ try{
   await manager.locator('input[type=file]').setInputFiles(path);
   await manager.getByRole("status").filter({hasText:"Пакет импортирован"}).waitFor();
   assert.equal(await manager.locator(".v2-template-card").count(),3);
+  // The imported template has local raster assets. Output must render them, not placeholders.
+  const output=manager.locator(".v2-template-output");
+  await output.getByRole("button",{name:"Проверить готовность"}).click();
+  await output.getByLabel("Результат проверки").waitFor();
+  assert.match(await output.getByLabel("Результат проверки").innerText(),/0 ошибок/);
+  await output.getByRole("button",{name:"Сгенерировать обложку"}).click();
+  await output.getByRole("status").filter({hasText:"PNG-обложка обновлена"}).waitFor({timeout:60000});
+  await manager.locator(".v2-template-card[aria-pressed=true] .v2-template-generated-cover").waitFor();
+  await output.getByLabel("Ширина печати").fill("105");
+  await output.getByLabel("DPI печати").selectOption("300");
+  const fs=await import("node:fs/promises");
+  const getOutput=async(format)=>{
+   const pending=page.waitForEvent("download",{timeout:90000});
+   await output.getByRole("button",{name:format,exact:true}).click();
+   const result=await pending,filename=join(artifacts,"print-300dpi."+format.toLowerCase());
+   await result.saveAs(filename);return fs.readFile(filename);
+  };
+  const printPng=await getOutput("PNG");
+  assert.equal(printPng.readUInt32BE(16),1240);
+  const printHeight=printPng.readUInt32BE(20);
+  assert.ok(printHeight>0);
+  assert.equal(printPng.readUInt32BE(printPng.indexOf("pHYs")+4),11811);
+  const sample=await page.evaluate(async base64=>{
+   const img=new Image();img.src="data:image/png;base64,"+base64;await img.decode();
+   const canvas=document.createElement("canvas");canvas.width=48;canvas.height=80;
+   const ctx=canvas.getContext("2d");ctx.drawImage(img,0,0,48,80);
+   const pixels=ctx.getImageData(0,0,48,80).data,colors=new Set();
+   for(let i=0;i<pixels.length;i+=4)colors.add(pixels[i]+","+pixels[i+1]+","+pixels[i+2]);
+   return colors.size;
+  },printPng.toString("base64"));
+  assert.ok(sample>30,"Exported artwork must not be blank");
+  const printPdf=await getOutput("PDF"),pdfText=printPdf.toString("latin1");
+  assert.ok(pdfText.startsWith("%PDF-1.4"));
+  assert.match(pdfText,/\/MediaBox \[0 0 297\.63780 /);
+  assert.ok(pdfText.includes("/Width 1240 /Height "+printHeight+" "));
+  const rgbStart=pdfText.indexOf("stream\n",pdfText.indexOf("4 0 obj"))+7,rgbEnd=pdfText.indexOf("\nendstream",rgbStart);
+  const {inflateSync}=await import("node:zlib");
+  assert.equal(inflateSync(printPdf.subarray(rgbStart,rgbEnd)).length,1240*printHeight*3);
+  await output.getByRole("button",{name:"Создать вариант из темы"}).click();
+  await manager.getByRole("button",{name:/Базовая.*v1/}).waitFor();
+  assert.equal(await manager.locator(".v2-template-card").count(),4);
   await page.screenshot({path:join(artifacts,"template-manager.png")});
   await manager.getByRole("button",{name:"Открыть выбранную версию в Studio"}).click();
   await manager.waitFor({state:"hidden"});
