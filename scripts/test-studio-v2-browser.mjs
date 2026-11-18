@@ -1,0 +1,86 @@
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+import {mkdir} from "node:fs/promises";
+import {join} from "node:path";
+const require=createRequire(join(process.env.STUDIO_BROWSER_PREFIX,"package.json"));
+const {chromium}=require("playwright");
+const base=(process.env.STUDIO_TEST_URL??"http://127.0.0.1:4173/invito").replace(/\/$/,"");
+const artifacts=process.env.STUDIO_TEST_ARTIFACTS??"studio-browser-artifacts";
+await mkdir(artifacts,{recursive:true});
+if(process.env.STUDIO_EXPECT_SHA){
+ const url=base+"/studio-build.txt?sha="+encodeURIComponent(process.env.STUDIO_EXPECT_SHA);
+ let deployed=false;
+ for(let i=0;i<24;i++){try{const response=await fetch(url,{cache:"no-store",signal:AbortSignal.timeout(10000)});if(response.ok&&(await response.text()).trim()===process.env.STUDIO_EXPECT_SHA){deployed=true;break;}}catch{}await new Promise(r=>setTimeout(r,5000));}
+ assert.ok(deployed,"Pages did not serve the expected commit");
+}
+const browser=await chromium.launch({headless:true});
+const errors=[];
+async function visit(context,locale="ru"){
+ const page=await context.newPage();
+ page.on("pageerror",error=>errors.push(error.message));
+ await page.goto(base+"/"+locale+"/admin/studio-v2/",{waitUntil:"networkidle"});
+ await page.locator(".v2-stage").waitFor({state:"visible"});
+ await page.waitForFunction(()=>document.querySelector(".v2-draft-state")?.textContent?.includes("Сохранено локально"));
+ return page;
+}
+const count=async(page,n)=>page.waitForFunction(n=>document.querySelectorAll("[data-studio-page]").length===n,n);
+try{
+ const context=await browser.newContext({viewport:{width:1600,height:1000}});
+ const page=await visit(context);
+ try{
+  await count(page,5);
+  const rows=page.locator(".v2-page-item");
+  const initial=await rows.allTextContents();
+  await rows.nth(4).dragTo(rows.nth(0));
+  await page.waitForFunction(label=>document.querySelector(".v2-page-item")?.textContent?.includes(label),"Благодарность");
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction(label=>document.querySelector(".v2-page-item")?.textContent?.includes(label),"Обложка");
+  assert.equal(await rows.count(),initial.length);
+  await rows.first().click();
+  await page.getByRole("button",{name:"Удалить страницу Детали",exact:true}).click();
+  await count(page,4);
+  await page.keyboard.press("Control+z");
+  await count(page,5);
+  await page.keyboard.press("Control+Shift+z");
+  await count(page,4);
+  await page.getByRole("button",{name:"Отменить",exact:true}).click();
+  await count(page,5);
+  await rows.first().click();
+  await page.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).click();
+  const photo=page.locator('[data-studio-node="cover-photo"]');
+  const radius=page.getByLabel("Радиус",{exact:true});
+  await radius.fill("32");
+  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderRadius==="32px");
+  await radius.blur();
+  await page.getByRole("button",{name:"4 угла",exact:true}).click();
+  await page.getByLabel("↖",{exact:true}).fill("12");
+  await page.getByLabel("↖",{exact:true}).blur();
+  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderTopLeftRadius==="12px");
+  assert.equal(await photo.evaluate(el=>el.style.borderTopRightRadius),"32px");
+  await page.getByRole("button",{name:"Отменить",exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderTopLeftRadius==="32px");
+  await page.waitForTimeout(500);
+  await page.reload({waitUntil:"networkidle"});
+  await page.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]')?.style.borderTopLeftRadius==="32px");
+  await page.screenshot({path:join(artifacts,"desktop.png"),fullPage:true});
+  await page.getByRole("button",{name:"Предпросмотр",exact:true}).click();
+  const dialog=page.getByRole("dialog",{name:"Предпросмотр приглашения"});
+  await dialog.waitFor();
+  await dialog.getByRole("button",{name:"Mobile",exact:true}).click();
+  await dialog.locator('[data-preview-page="page-1"]').waitFor();
+  await page.screenshot({path:join(artifacts,"preview-mobile.png")});
+  await dialog.getByRole("button",{name:"Закрыть предпросмотр"}).click();
+ }catch(e){await page.screenshot({path:join(artifacts,"desktop-failure.png")}).catch(()=>{});throw e;}finally{await context.close();}
+ const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
+ const page2=await visit(mobile,"ky");
+ try{
+  await count(page2,5);
+  await page2.getByRole("button",{name:"Открыть страницы"}).click();
+  await page2.locator(".v2-page-item").first().waitFor({state:"visible"});
+  await page2.locator(".v2-page-item").first().click();
+  await page2.getByRole("button",{name:"Открыть свойства"}).click();
+  await page2.screenshot({path:join(artifacts,"mobile-ky.png")});
+ }catch(e){await page2.screenshot({path:join(artifacts,"mobile-failure.png")}).catch(()=>{});throw e;}finally{await mobile.close();}
+ assert.deepEqual(errors,[],"Browser runtime errors");
+ console.log("PASS: Chromium desktop + mobile, page reorder/delete/undo/redo, corners, reload persistence and preview");
+}finally{await browser.close();}
