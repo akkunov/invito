@@ -95,7 +95,7 @@ function removeSubtree(doc: ProjectDocumentV2, id: string) {
 function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
   switch (command.kind) {
     case "setPageProfile": { const page=doc.pages.find(p=>p.id===command.id);assert(page,"Missing page");ensureWritable(doc,page.rootNodeId);page.responsive??={};if(command.profile)page.responsive[command.device]=clone(command.profile);else delete page.responsive[command.device];return; }
-    case "setResponsiveOverride": { const n=getNode(doc,command.id);ensureWritable(doc,n.id);assert(n.parentId!==null,"Use page profile for root");doc.responsiveOverrides??={};const map=doc.responsiveOverrides[command.device]??={};doc.responsiveOverrides[command.device]=map;if(command.patch)map[n.id]=clone(command.patch);else delete map[n.id];return; }
+    case "setResponsiveOverride": { const n=getNode(doc,command.id);ensureWritable(doc,n.id);assert(n.parentId!==null,"Use page profile for root");doc.responsiveOverrides??={};const map=doc.responsiveOverrides[command.device]??={};doc.responsiveOverrides[command.device]=map;if(command.patch){const clean=Object.fromEntries(Object.entries(command.patch).filter(([,value])=>value!==undefined));if(Object.keys(clean).length)map[n.id]=clone(clean);else delete map[n.id];}else delete map[n.id];return; }
     case "putAsset": { doc.assets[command.asset.id]=clone(command.asset); return; }
     case "deleteAsset": { assert(doc.assets[command.id],"Missing asset");delete doc.assets[command.id];return; }
     case "putComponent": { doc.components??={};doc.components[command.component.id]=clone(command.component);return; }
@@ -201,6 +201,7 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
         duplicate.parentId = originalId === node.id ? parent.id : command.newIds[original.parentId!];
         if (duplicate.type === "frame") duplicate.children = duplicate.children.map(id => command.newIds[id]);
         doc.nodes[duplicate.id] = duplicate;
+        for(const overrides of Object.values(doc.responsiveOverrides??{}))if(overrides?.[originalId])overrides[duplicate.id]=clone(overrides[originalId]);
       }
       const baseIndex = parent.children.indexOf(node.id);
       insertAt(parent.children, command.newIds[node.id], command.index ?? baseIndex + 1);
