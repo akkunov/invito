@@ -120,6 +120,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [distanceMarks,setDistanceMarks]=useState<DistanceGuide[]>([]);
   const [menu,setMenu]=useState<{x:number;y:number;ids:string[]}|null>(null);
   const [moveTarget,setMoveTarget]=useState("");
+  const [guideAxis,setGuideAxis]=useState<"x"|"y">("x");
+  const [guidePosition,setGuidePosition]=useState("0");
   const [editing,setEditing]=useState<TextEditingSession|null>(null);
   const [textMeasurements,setTextMeasurements]=useState<Record<string,number>>({});
   const measureText=useCallback((id:string,height:number)=>setTextMeasurements(old=>old[id]===height?old:{...old,[id]:height}),[]);
@@ -243,6 +245,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     });
   }
   function moveLayerToFrame(){if(activeNode&&moveTarget)moveLayer(activeNode.id,moveTarget);}
+  function addGuide(){const position=Number(guidePosition);if(!guidePosition.trim()||!Number.isFinite(position)||Math.abs(position)>1e6){setSelectionError("Введите координату от −1000000 до 1000000.");return;}proAction(()=>({kind:"setGuides",guides:[...(sourceDocument.guides??[]),{id:"guide-"+crypto.randomUUID(),axis:guideAxis,position}]}));}
   const selectionRect=nodeIds.length?selectionBounds(document,nodeIds):null;
   const selectionPolygon=activeNode?nodeCorners(document,activeNode.id):selectionRect?[{x:selectionRect.x,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y+selectionRect.height},{x:selectionRect.x,y:selectionRect.y+selectionRect.height}]:[];
   const selectionScreen=selectionPolygon.map(p=>worldToScreen(p,viewport));
@@ -591,6 +594,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
             {menu&&<div className="v2-canvas-menu" role="group" aria-label="Действия со слоями" style={{left:menu.x,top:menu.y}} onPointerDown={e=>e.stopPropagation()}><button disabled={!menu.ids.length} onClick={()=>copyLayers(menu.ids)}>Копировать <kbd>Ctrl+C</kbd></button><button disabled={!hasClipboard} onClick={()=>pasteLayers(false,menu.ids)}>Вставить <kbd>Ctrl+V</kbd></button><button disabled={!menu.ids.length} onClick={()=>pasteLayers(true,menu.ids)}>Дублировать <kbd>Ctrl+D</kbd></button><button disabled={!menu.ids.length} onClick={()=>{proAction(()=>menu.ids.map(id=>({kind:"deleteNode",id})));setSelectedIds([]);}}>Удалить</button><button onClick={()=>setMenu(null)}>Закрыть</button></div>}
             {distanceMarks.length>0&&<svg className="v2-distance-overlay" width={sceneSize.width} height={sceneSize.height} aria-hidden="true">{distanceMarks.map((mark,i)=>{const a=worldToScreen(mark.from,viewport),b=worldToScreen(mark.to,viewport);return <g key={i}><line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#dc2626" strokeDasharray="3 2"/><text x={(a.x+b.x)/2} y={(a.y+b.y)/2-5} textAnchor="middle" fontSize={11} fill="#dc2626">{Math.round(mark.distance)}</text></g>;})}</svg>}
             {marquee&&<div className="v2-marquee" style={{left:marquee.x,top:marquee.y,width:marquee.width,height:marquee.height}}/>}
+            {(sourceDocument.guides??[]).map(g=><div key={g.id} aria-hidden="true" className={"v2-custom-guide v2-custom-guide-"+g.axis} style={g.axis==="x"?{left:g.position*viewport.zoom+viewport.x}:{top:g.position*viewport.zoom+viewport.y}}/>)}
             {guides.guideX!==undefined&&<div className="v2-guide v2-guide-x" style={{left:guides.guideX*viewport.zoom+viewport.x}}/>}
             {guides.guideY!==undefined&&<div className="v2-guide v2-guide-y" style={{top:guides.guideY*viewport.zoom+viewport.y}}/>}
             {document.pages.map(page=>{
@@ -622,6 +626,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <div className="v2-sidebar-tabs"><strong>Дизайн</strong><span>Прототип</span><span>Анимация</span></div>
         <section className="v2-inspector-section">
           <h3>Рабочая область</h3>
+          <details className="v2-widget-variables"><summary>Направляющие</summary><label className="v2-widget-field">Ось<select value={guideAxis} onChange={e=>setGuideAxis(e.target.value as "x"|"y")}><option value="x">X — вертикальная</option><option value="y">Y — горизонтальная</option></select></label><label className="v2-widget-field">Координата на холсте<input inputMode="decimal" value={guidePosition} onChange={e=>setGuidePosition(e.target.value)}/></label><button className="v2-inspector-button" disabled={!!editing||(sourceDocument.guides?.length??0)>=100} onClick={addGuide}>+ Направляющая</button>{(sourceDocument.guides??[]).map(g=><div key={g.id} className="v2-pro-actions"><span>{g.axis.toUpperCase()}: {g.position}</span><button aria-label={"Удалить направляющую "+g.axis+" "+g.position} disabled={!!editing} onClick={()=>proAction(()=>({kind:"setGuides",guides:(sourceDocument.guides??[]).filter(x=>x.id!==g.id)}))}>Удалить</button></div>)}</details>
           <div className="v2-info-row"><span>Масштаб</span><strong>{zoomPercent}%</strong></div>
           <div className="v2-info-row"><span>Страниц</span><strong>{document.pages.length}</strong></div>
           <div className="v2-info-row"><span>Инструмент</span><strong>{activeTool==="hand"?"Рука":"Выделение"}</strong></div>
