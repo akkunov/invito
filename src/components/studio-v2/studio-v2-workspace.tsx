@@ -96,6 +96,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
   const [selectedIds,setSelectedIds]=useState<string[]>([]);
+  const [selectionError,setSelectionError]=useState<string|null>(null);
   const [marquee,setMarquee]=useState<Rect|null>(null);
   const [guides,setGuides]=useState<{guideX?:number;guideY?:number}>({});
   const nodeGesture=useRef<NodeGesture|null>(null);
@@ -127,15 +128,15 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const selectionPolygon=activeNode?nodeCorners(document,activeNode.id):selectionRect?[{x:selectionRect.x,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y+selectionRect.height},{x:selectionRect.x,y:selectionRect.y+selectionRect.height}]:[];
   const selectionScreen=selectionPolygon.map(p=>worldToScreen(p,viewport));
   function chooseNode(id:string,add=false){
-    setSelectedIds(ids=>selectNode(document,ids,id,add));
+    setSelectionError(null);setSelectedIds(ids=>selectNode(document,ids,id,add));
   }
   function performGroup(){
     const id="group-"+crypto.randomUUID();
-    try{const commands=groupSelection(document,nodeIds,id);setSession(s=>dispatchStudioCommand(s,commands));setSelectedIds([id]);}catch{/* Unsupported group constraints leave document unchanged. */}
+    try{const commands=groupSelection(document,nodeIds,id);setSession(s=>dispatchStudioCommand(s,commands));setSelectedIds([id]);setSelectionError(null);}catch{setSelectionError("Для группы выберите соседние слои одного свободного фрейма.");}
   }
   function performUngroup(){
     if(!activeNode||activeNode.type!=="frame")return;
-    try{const commands=ungroupSelection(document,activeNode.id);setSession(s=>dispatchStudioCommand(s,commands));setSelectedIds(activeNode.children);}catch{/* Invalid group is not mutated. */}
+    try{const commands=ungroupSelection(document,activeNode.id);setSession(s=>dispatchStudioCommand(s,commands));setSelectedIds(activeNode.children);setSelectionError(null);}catch{setSelectionError("Разгруппировка недоступна для этого фрейма.");}
   }
   const inset=rulers?RULER_THICKNESS:0;
   const sceneSize={width:Math.max(1,size.width-inset),height:Math.max(1,size.height-inset)};
@@ -166,7 +167,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(e.code==="Space"){e.preventDefault();setSpaceHeld(true);return}
       if(e.key.toLowerCase()==="v"&&!e.metaKey&&!e.ctrlKey)setTool("select");
       if(e.key.toLowerCase()==="h"&&!e.metaKey&&!e.ctrlKey)setTool("hand");
-      if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current?.started){nodeGesture.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}return;}
+      if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current){nodeGesture.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}marqueeGesture.current=null;setMarquee(null);return;}
       if(nodeGesture.current||pageDrag.current)return;
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
         e.preventDefault();const step=e.shiftKey?10:1;
@@ -254,12 +255,12 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const hit=target.closest<HTMLElement>("[data-studio-node]");
     const pageHit=target.closest<HTMLElement>("[data-studio-page]");
     const id=hit?.dataset.studioNode,pageId=pageHit?.dataset.studioPage;
-    if(e.pointerType==="touch"&&id&&pageId&&canSelect(document,id))touchTap.current={pointer:e.pointerId,start:local,id,pageId};
+    if(e.pointerType==="touch"&&activeTool==="select"&&id&&pageId&&canSelect(document,id))touchTap.current={pointer:e.pointerId,start:local,id,pageId};
     if(e.pointerType!=="touch"&&e.button===0&&activeTool==="select"){
       if(id&&canSelect(document,id)){
         if(pageId)setSelectedPage(pageId);
         const ids=e.shiftKey?selectNode(document,nodeIds,id,true):nodeIds.includes(id)?nodeIds:[id];
-        setSelectedIds(ids);
+        setSelectionError(null);setSelectedIds(ids);
         if(ids.includes(id))startNodeGesture(e,ids);
         return;
       }
@@ -393,8 +394,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><Ruler size={18}/></button>
       </div>
       <div className="v2-top-actions">
-        <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>setSession(s=>undoStudio(s))}><Undo2 size={18}/></button>
-        <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>setSession(s=>redoStudio(s))}><Redo2 size={18}/></button>
+        <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>setSession(s=>s.transaction?s:undoStudio(s))}><Undo2 size={18}/></button>
+        <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>setSession(s=>s.transaction?s:redoStudio(s))}><Redo2 size={18}/></button>
         <button className="v2-export" onClick={()=>downloadDocument(document)}><Download size={16}/> JSON</button>
         <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
       </div>
@@ -485,6 +486,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </section>
         <section className="v2-inspector-section">
           <h3>Выделение</h3>
+          {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
           {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
