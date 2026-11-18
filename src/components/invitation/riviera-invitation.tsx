@@ -17,8 +17,13 @@ const IMAGES = {
 
 function dateParts(value: string, locale: "ru" | "ky") {
   const [year = "2027", month = "06", day = "20"] = value.slice(0, 10).split("-");
-  const parsed = new Date(`${year}-${month}-${day}T12:00:00`);
-  const weekday = new Intl.DateTimeFormat(locale === "ky" ? "ky-KG" : "ru-RU", { weekday: "long", timeZone: "Asia/Bishkek" }).format(parsed);
+  // Keep SSR and browser hydration byte-for-byte consistent across ICU versions.
+  // Calendar dates are invitation-local (Bishkek), not the viewer's system zone.
+  const dayIndex = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 12)).getUTCDay();
+  const days = locale === "ky"
+    ? ["жекшемби","дүйшөмбү","шейшемби","шаршемби","бейшемби","жума","ишемби"]
+    : ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+  const weekday = days[dayIndex] ?? "";
   return { number: `${day}.${month}.${year}`, weekday };
 }
 
