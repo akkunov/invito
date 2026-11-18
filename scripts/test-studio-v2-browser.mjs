@@ -482,6 +482,72 @@ try{
   await page2.getByRole("button",{name:"Открыть свойства"}).click();
   await page2.screenshot({path:join(artifacts,"mobile-ky.png")});
  }catch(e){await page2.screenshot({path:join(artifacts,"mobile-failure.png")}).catch(()=>{});throw e;}finally{await mobile.close();}
+ // A real IndexedDB v2 -> v3 upgrade, atomic checkpoint and corrupt-record recovery.
+ const recoveryContext=await browser.newContext({viewport:{width:1600,height:1000}});
+ const recoveryPage=await recoveryContext.newPage();
+ recoveryPage.on("pageerror",error=>errors.push(error.message));
+ try{
+  await recoveryPage.goto(base+"/studio-build.txt",{waitUntil:"domcontentloaded"});
+  await recoveryPage.evaluate(()=>new Promise((resolve,reject)=>{
+   const req=indexedDB.open("invito-studio-v2-local",2);
+   req.onupgradeneeded=()=>{for(const name of ["media","projects","templates"])req.result.createObjectStore(name);};
+   req.onsuccess=()=>{req.result.close();resolve(null);};req.onerror=()=>reject(req.error);
+  }));
+  await recoveryPage.goto(base+"/ru/admin/studio-v2/",{waitUntil:"networkidle"});
+  const saved=()=>recoveryPage.waitForFunction(()=>document.querySelector(".v2-draft-state")?.textContent==="Сохранено локально");
+  await saved();
+  await recoveryPage.locator(".v2-page-item").first().click();
+  await recoveryPage.locator(".v2-layer-row").filter({hasText:"Свадебное фото"}).click();
+  await recoveryPage.getByLabel("Радиус",{exact:true}).fill("37");
+  await recoveryPage.getByLabel("Радиус",{exact:true}).blur();
+  await saved();
+  // Confirm both committed revisions exist in separate stores, not just UI state.
+  const state=await recoveryPage.evaluate(()=>new Promise((resolve,reject)=>{
+   const open=indexedDB.open("invito-studio-v2-local",3);
+   open.onerror=()=>reject(open.error);open.onsuccess=()=>{
+    const db=open.result,tx=db.transaction(["projects","projectRecovery"],"readonly");
+    const a=tx.objectStore("projects").get("studio-v2-demo"),b=tx.objectStore("projectRecovery").get("studio-v2-demo");
+    tx.oncomplete=()=>{db.close();resolve({current:a.result?.nodes["cover-photo"]?.visual?.corners?.topLeft,previous:b.result?.document?.nodes["cover-photo"]?.visual?.corners?.topLeft??0,id:b.result?.document?.id});};
+    tx.onerror=()=>{db.close();reject(tx.error);};
+   };
+  }));
+  assert.equal(state.current,37);assert.equal(state.id,"studio-v2-demo");assert.notEqual(state.previous,37);
+  const corrupt=async(removeBackup=false)=>recoveryPage.evaluate(removeBackup=>new Promise((resolve,reject)=>{
+   const open=indexedDB.open("invito-studio-v2-local",3);
+   open.onerror=()=>reject(open.error);open.onsuccess=()=>{
+    const db=open.result,tx=db.transaction(["projects","projectRecovery"],"readwrite");
+    tx.objectStore("projects").put({id:"studio-v2-demo",damaged:true},"studio-v2-demo");
+    if(removeBackup)tx.objectStore("projectRecovery").delete("studio-v2-demo");
+    tx.oncomplete=()=>{db.close();resolve(null);};tx.onerror=()=>{db.close();reject(tx.error);};
+   };
+  }),removeBackup);
+  const checkCorrupt=()=>recoveryPage.evaluate(()=>new Promise((resolve,reject)=>{
+   const open=indexedDB.open("invito-studio-v2-local",3);
+   open.onerror=()=>reject(open.error);open.onsuccess=()=>{
+    const db=open.result,tx=db.transaction("projects","readonly"),req=tx.objectStore("projects").get("studio-v2-demo");
+    tx.oncomplete=()=>{db.close();resolve(req.result?.damaged===true);};tx.onerror=()=>{db.close();reject(tx.error);};
+   };
+  }));
+  await corrupt();
+  await recoveryPage.reload({waitUntil:"networkidle"});
+  const recoveryDialog=recoveryPage.getByRole("dialog",{name:"Локальный проект"});
+  await recoveryDialog.getByRole("button",{name:"Восстановить резервную копию"}).waitFor();
+  await recoveryPage.keyboard.press("Delete");
+  await recoveryPage.waitForTimeout(650);
+  assert.equal(await checkCorrupt(),true,"No autosave before explicit restore");
+  await recoveryPage.screenshot({path:join(artifacts,"project-recovery.png")});
+  await recoveryDialog.getByRole("button",{name:"Восстановить резервную копию"}).click();
+  await recoveryDialog.waitFor({state:"hidden"});await saved();await count(recoveryPage,5);
+  assert.equal(await checkCorrupt(),false);
+  assert.equal(await recoveryPage.locator('[data-studio-node="cover-photo"]').evaluate(el=>parseFloat(el.style.borderTopLeftRadius)||0),state.previous);
+  // Missing checkpoint: report the failure and keep the damaged bytes intact.
+  await corrupt(true);await recoveryPage.reload({waitUntil:"networkidle"});
+  await recoveryDialog.getByRole("heading",{name:"Не удалось загрузить проект"}).waitFor();
+  await recoveryDialog.getByRole("button",{name:"Повторить загрузку"}).click();
+  await recoveryDialog.getByRole("heading",{name:"Не удалось загрузить проект"}).waitFor();
+  await recoveryPage.waitForTimeout(650);
+  assert.equal(await checkCorrupt(),true,"Corrupt project without a backup must never be overwritten by demo");
+ }catch(e){await recoveryPage.screenshot({path:join(artifacts,"recovery-failure.png")}).catch(()=>{});throw e;}finally{await recoveryContext.close();}
  assert.deepEqual(errors,[],"Browser runtime errors");
  console.log("PASS: Chromium desktop + mobile, page reorder/delete/undo/redo, corners, reload persistence and preview");
 }finally{await browser.close();}
