@@ -240,3 +240,21 @@
 .v2-pro-actions{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.v2-pro-actions button{flex:1;min-width:24px;font-size:10px;white-space:nowrap;background:#f2f3f5;border:1px solid var(--v2-border);border-radius:5px;padding:6px 4px}.v2-pro-actions button:disabled{opacity:.45}.v2-pro-actions button:focus-visible,.v2-canvas-menu button:focus-visible{outline:2px solid var(--v2-blue);outline-offset:1px}.v2-distance-overlay{position:absolute;inset:0;pointer-events:none;z-index:10;overflow:visible}.v2-canvas-menu{position:absolute;z-index:25;width:200px;padding:5px;background:#fff;border:1px solid var(--v2-border);border-radius:6px;box-shadow:0 8px 24px #20242b22;display:grid;gap:2px}.v2-canvas-menu button{display:flex;justify-content:space-between;padding:8px;text-align:left;font-size:11px;border-radius:4px}.v2-canvas-menu button:not(:disabled):hover{background:#edf0f9}.v2-canvas-menu button:disabled{opacity:.4}.v2-canvas-menu kbd{color:#606773;font:inherit}
 
 .v2-custom-guide{position:absolute;z-index:3;pointer-events:none;opacity:.75}.v2-custom-guide-x{top:0;bottom:0;border-left:1px dashed #7c3aed}.v2-custom-guide-y{left:0;right:0;border-top:1px dashed #7c3aed}
+
+/* Page and layer management share the existing Studio chrome. */
+.v2-page-row,.v2-layer-with-actions{display:flex;align-items:center;min-width:0;gap:3px}
+.v2-page-row>.v2-page-item,.v2-layer-with-actions>.v2-layer-row{flex:1;min-width:0;width:auto}
+.v2-page-delete,.v2-layer-state{flex:none;width:24px;height:28px;display:grid;place-items:center;border-radius:4px;color:var(--v2-muted);font-size:12px}
+.v2-page-delete:not(:disabled):hover,.v2-danger:not(:disabled):hover{color:#b42318;background:#fff0ef}
+.v2-layer-state[aria-pressed=true]{color:var(--v2-blue);background:#e8edff}
+.v2-page-delete:disabled,.v2-layer-state:disabled{opacity:.4}
+.v2-page-row button:focus-visible,.v2-layer-with-actions button:focus-visible{outline:2px solid var(--v2-blue)}
+.v2-appearance-fieldset{padding:0;margin:0;border:0;min-width:0}
+.v2-appearance-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;margin-top:10px}
+.v2-appearance-heading button{border:1px solid var(--v2-border);border-radius:4px;padding:4px 7px}
+.v2-fill-chip{width:24px;height:20px;border:1px solid var(--v2-border);border-radius:4px}
+.v2-crop-preview{width:100%;max-height:180px;position:relative;overflow:hidden;background:#e2e7f0;cursor:grab;touch-action:none;border:1px solid var(--v2-border)}
+.v2-crop-preview:active{cursor:grabbing}.v2-crop-preview img{display:block;width:100%;height:100%;position:absolute;inset:0;user-select:none;pointer-events:none}
+.v2-appearance-fieldset .v2-pro-actions .v2-widget-field{flex:1;min-width:0;margin:0}
+.v2-appearance-fieldset .v2-pro-actions>input[type=color]{width:28px;height:28px;padding:0;border:1px solid var(--v2-border)}
+.v2-appearance-fieldset button[aria-pressed=true]{background:#e8edff;color:var(--v2-blue)}

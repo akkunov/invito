@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {visualSchema} from "./appearance.schema.ts";
 import {bindingKeySchema,bindingValueSchema,invitationBlockSchema,blockAppearanceSchema} from "./invitation.schema.ts";
 
 /** Studio v2 project contract. Independent of React, Next and the legacy InvitationDocument. */
@@ -10,6 +11,8 @@ export const studioDevices = ["desktop","tablet","mobile"] as const;
 export const responsivePatchSchema = z.strictObject({x:coordinateSchema.optional(),y:coordinateSchema.optional(),width:sizeSchema.optional(),height:sizeSchema.optional(),visible:z.boolean().optional(),opacity:z.number().finite().min(0).max(1).optional(),rotation:z.number().finite().min(-360).max(360).optional()});
 const baseNodeSchema = z.strictObject({
   id: idSchema,
+  layerName: z.string().min(1).max(100).optional(),
+  visual: visualSchema.optional(),
   parentId: idSchema.nullable(),
   x: coordinateSchema,
   y: coordinateSchema,

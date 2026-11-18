@@ -52,6 +52,7 @@ jobs:
           npm run test:studio-v2-responsive
           npm run test:studio-v2-invitation
           npm run test:studio-v2-canvas-pro
+          npm run test:studio-v2-appearance
           npm run typecheck
       - name: Export only Studio as a static Pages site
         shell: bash

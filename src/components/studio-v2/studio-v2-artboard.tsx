@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import {appearanceCss,maskCss,contentTransform} from "@/features/studio-v2/core/appearance.ts";
 import {InvitationBlockView} from "./studio-v2-invitation-block";
 import type {GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
@@ -36,6 +37,7 @@ function nodeStyle(node: ProjectNodeV2): CSSProperties {
     transform: node.rotation ? `rotate(${node.rotation}deg)` : undefined,
     transformOrigin: "center",
     pointerEvents: node.locked ? "none" : "auto",
+    ...appearanceCss(node),
   };
   return base;
 }
@@ -47,8 +49,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
     case "frame":
       return <div key={id} data-studio-node={id} style={{
         ...style,
-        background: node.background,
-        overflow: node.clip ? "hidden" : "visible",
+        overflow: node.clip || (node.visual?.corners && Object.values(node.visual.corners).some(r=>r>0)) ? "hidden" : "visible",
       }}>{node.children.map(child => renderNode(document, child,options))}</div>;
     case "text":
       return <div key={id} data-studio-node={id} style={{
@@ -63,23 +64,21 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       const asset = document.assets[node.assetId];
       if (!asset) return null;
       const path = asset.storageKey.startsWith("/images/") ? `${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${asset.storageKey}` : options.mediaUrls?.[asset.storageKey];
-      return <div key={id} data-studio-node={id} style={{ ...style, overflow: "hidden" }}>
+      return <div key={id} data-studio-node={id} style={{ ...style, overflow: "hidden",clipPath:maskCss(node) }}>
         {path?<Image unoptimized draggable={false} src={path} alt={asset.name}
           fill sizes="(max-width: 900px) 300px, 500px"
-          style={{ objectFit: node.fit, objectPosition: `${node.focalX * 100}% ${node.focalY * 100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
+          style={{ objectFit: node.fit, objectPosition: `${(node.visual?.imageCrop?.x??node.focalX) * 100}% ${(node.visual?.imageCrop?.y??node.focalY) * 100}%`,transform:contentTransform(node),transformOrigin:`${(node.visual?.imageCrop?.x??node.focalX)*100}% ${(node.visual?.imageCrop?.y??node.focalY)*100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
       </div>;
     }
     case "widget":
       return <div key={id} data-studio-node={id} style={{...style,overflow:"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls}/></div>;
     case "shape":
       return <div key={id} data-studio-node={id} style={{
-        ...style, background: node.fill,
-        border: node.stroke ? `${node.strokeWidth}px solid ${node.stroke}` : undefined,
-        borderRadius: node.shape === "circle" || node.shape === "ellipse" ? "50%" : 0,
-        clipPath: node.shape === "triangle" ? "polygon(50% 0,100% 100%,0 100%)"
+        ...style, ...(node.visual?.stroke===undefined&&node.stroke?{border:`${node.strokeWidth}px solid ${node.stroke}`,outline:undefined,outlineOffset:undefined}:{}), transform:`rotate(${node.rotation}deg) ${contentTransform(node)}`,
+        clipPath: maskCss(node) ?? (node.shape === "triangle" ? "polygon(50% 0,100% 100%,0 100%)"
           : node.shape === "star" ? "polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"
           : node.shape === "heart" ? "polygon(50% 92%,6% 50%,0 28%,5% 11%,22% 3%,40% 12%,50% 26%,60% 12%,78% 3%,95% 11%,100% 28%,94% 50%)"
-          : undefined,
+          : undefined),
       }}/>;
   }
 }
@@ -87,8 +86,8 @@ export function StudioV2Artboard({ document, rootNodeId, ...options }: { documen
   const root = document.nodes[rootNodeId];
   if (!root || root.type !== "frame") return null;
   return <div className="studio-v2-artboard-content" style={{
-    width: root.width, height: root.height, position: "relative", background: root.background,
-    overflow: root.clip ? "hidden" : "visible",
+    width: root.width, height: root.height, position: "relative", ...appearanceCss(root),
+    overflow: root.clip || (root.visual?.corners && Object.values(root.visual.corners).some(r=>r>0)) ? "hidden" : "visible",
   }}>
     {root.children.map(id => renderNode(document, id, options))}
   </div>;

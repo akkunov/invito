@@ -32,6 +32,7 @@ jobs:
       - run: npm run test:studio-v2-responsive
       - run: npm run test:studio-v2-invitation
       - run: npm run test:studio-v2-canvas-pro
+      - run: npm run test:studio-v2-appearance
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build

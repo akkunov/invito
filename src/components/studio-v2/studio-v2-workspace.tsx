@@ -15,6 +15,7 @@ import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PagePro
 import { InvitationControls } from "./studio-v2-invitation-controls";
 import { BLOCK_NAMES, bindDocument, createWidget, type BlockKind } from "@/features/studio-v2/core/invitation-behavior.ts";
 import { alignSelection, distributeSelection, scaleSelection, rotateSelection, copySelection, pasteSelection, reparentPreserveWorld, distanceGuides, freeSelection, canResizeSelection, type CanvasClipboard, type DistanceGuide } from "@/features/studio-v2/core/canvas-pro.ts";
+import { AdvancedProperties } from "./studio-v2-advanced-properties";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
 import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
@@ -37,16 +38,17 @@ type Marquee = { pointer:number; start:Point; current:Point; pageId:string; addi
 function rectBetween(a:Point,b:Point):Rect{return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),width:Math.abs(a.x-b.x),height:Math.abs(a.y-b.y)};}
 function nodeLabel(doc:ProjectDocumentV2,id:string){
  const node=doc.nodes[id];if(!node)return id;
+ if(node.layerName)return node.layerName;
  if(node.type==="frame")return node.name;
  if(node.type==="text")return node.runs.map(r=>r.text).join("").slice(0,40)||"Текст";
  if(node.type==="image")return doc.assets[node.assetId]?.name??"Фото";
  if(node.type==="widget")return BLOCK_NAMES[node.block.kind][doc.locale];
  return "Фигура";
 }
-function LayerRows({document,ids,selected,onSelect,onDropLayer,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;onDropLayer:(id:string,target:string)=>void;depth?:number}){
+function LayerRows({document,ids,selected,onSelect,onDropLayer,onState,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;onDropLayer:(id:string,target:string)=>void;onState:(id:string,patch:{locked?:boolean;visible?:boolean})=>void;depth?:number}){
  return <>{[...ids].reverse().map(id=>{
   const n=document.nodes[id];if(!n)return null;
-  return <div key={id}><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span>{n.type==="frame"?"▣":n.type==="text"?"T":n.type==="image"?"▧":"◇"}</span><span>{nodeLabel(document,id)}</span></button>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} depth={depth+1}/>}</div>
+  return <div key={id}><div className="v2-layer-with-actions"><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span>{n.type==="frame"?"▣":n.type==="text"?"T":n.type==="image"?"▧":"◇"}</span><span>{nodeLabel(document,id)}</span></button><button className="v2-layer-state" aria-label={(n.visible?"Скрыть ":"Показать ")+nodeLabel(document,id)} aria-pressed={!n.visible} onClick={()=>onState(id,{visible:!n.visible})}>{n.visible?"◉":"○"}</button><button className="v2-layer-state" aria-label={(n.locked?"Разблокировать ":"Заблокировать ")+nodeLabel(document,id)} aria-pressed={n.locked} onClick={()=>onState(id,{locked:!n.locked})}>{n.locked?"🔒":"♙"}</button></div>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} onState={onState} depth={depth+1}/>}</div>
  })}</>;
 }
 const clampZoom = (zoom: number) => clamp(zoom, 0.025, 3);
@@ -114,6 +116,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [storageStatus,setStorageStatus]=useState("Загрузка локального проекта");
   const [loaded,setLoaded]=useState(false);
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
+  const [pageStatus,setPageStatus]=useState("");
   const [selectedIds,setSelectedIds]=useState<string[]>([]);
   const clipboard=useRef<CanvasClipboard|null>(null);
   const [hasClipboard,setHasClipboard]=useState(false);
@@ -295,7 +298,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(e.code==="Space"){e.preventDefault();setSpaceHeld(true);return}
       if(e.key.toLowerCase()==="v"&&!e.metaKey&&!e.ctrlKey)setTool("select");
       if(e.key.toLowerCase()==="h"&&!e.metaKey&&!e.ctrlKey)setTool("hand");
-      if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current){nodeGesture.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}marqueeGesture.current=null;setMarquee(null);return;}
+      if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current||pageDrag.current){nodeGesture.current=null;pageDrag.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}marqueeGesture.current=null;setMarquee(null);return;}
       if(nodeGesture.current||pageDrag.current)return;
       if((e.ctrlKey||e.metaKey)&&!e.altKey){const key=e.key.toLowerCase();if(key==="c"&&nodeIds.length){e.preventDefault();copyLayers();return;}if(key==="v"&&hasClipboard){e.preventDefault();pasteLayers();return;}if(key==="d"&&nodeIds.length){e.preventDefault();pasteLayers(true);return;}}
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
@@ -303,11 +306,12 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         const delta={x:e.key==="ArrowLeft"?-step:e.key==="ArrowRight"?step:0,y:e.key==="ArrowUp"?-step:e.key==="ArrowDown"?step:0};
         if(movable(nodeIds))setSession(s=>dispatchStudioCommand(s,moveSelection(layoutDocument(s.document,textMeasurements),nodeIds,delta)));return;
       }
+      if(!nodeIds.length&&selectedPage&&(e.key==="Delete"||e.key==="Backspace")){e.preventDefault();deletePage(selectedPage);return;}
       if(nodeIds.length&&(e.key==="Delete"||e.key==="Backspace")){
         e.preventDefault();setSession(s=>dispatchStudioCommand(s,nodeIds.map(id=>({kind:"deleteNode" as const,id}))));setSelectedIds([]);return;
       }
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){
-        e.preventDefault();setSession(s=>s.transaction?s:e.shiftKey?redoStudio(s):undoStudio(s));
+        e.preventDefault();changeHistory(e.shiftKey);
       }
     }
     const up=(e:KeyboardEvent)=>{if(e.code==="Space")setSpaceHeld(false);if(e.key==="Alt")setDistanceMarks([]);};
@@ -323,6 +327,31 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   function center(world:Point){
     setViewport(v=>({...v,x:sceneSize.width/2-world.x*v.zoom,y:sceneSize.height/2-world.y*v.zoom}));
+  }
+  function changeHistory(redo=false){
+    if(editing||session.transaction)return;
+    const next=redo?redoStudio(session):undoStudio(session);
+    if(next===session)return;
+    const restored=next.document.pages.find(p=>!session.document.pages.some(old=>old.id===p.id));
+    const current=next.document.pages.find(p=>p.id===selectedPage);
+    if(restored){setSelectedPage(restored.id);setSelectedIds([]);setPageStatus(redo?"Страница возвращена.":"Страница восстановлена.");}
+    else if(!current&&selectedPage){setSelectedPage(next.document.pages[0].id);setSelectedIds([]);setPageStatus("");}
+    else{setSelectedIds(ids=>ids.filter(id=>next.document.nodes[id]));setPageStatus("");}
+    setSession(next);
+  }
+  function deletePage(id:string){
+    if(editing||session.transaction||document.pages.length<=1)return;
+    const index=document.pages.findIndex(p=>p.id===id);if(index<0)return;
+    try{
+      const next=dispatchStudioCommand(session,{kind:"deletePage",id});
+      const fallback=next.document.pages[Math.min(index,next.document.pages.length-1)];
+      if(selectedPage===id){setSelectedPage(fallback.id);setSelectedIds([]);}
+      setSession(next);setPageStatus("Страница удалена. Ctrl+Z — вернуть.");setSelectionError(null);
+    }catch(error){setSelectionError(error instanceof Error?error.message:"Не удалось удалить страницу.");}
+  }
+  function reorderPage(id:string,index:number){
+    if(editing||session.transaction)return;
+    proAction(()=>({kind:"reorderPage",id,index}));
   }
   function focusPage(page:StudioPageV2){
     if(editing)finishText();
@@ -346,7 +375,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     setViewport(v=>({...v,x:sceneSize.width/2-(x+root.width/2)*v.zoom,y:sceneSize.height/2-root.height/2*v.zoom}));
   }
   function startPageDrag(e:ReactPointerEvent<HTMLButtonElement>,page:StudioPageV2){
-    if(activeTool!=="select"||e.button!==0)return;
+    if(activeTool!=="select"||e.button!==0||sourceDocument.nodes[page.rootNodeId]?.locked||session.transaction&&!editing)return;
     if(editing)finishText();
     e.stopPropagation();setSelectedPage(page.id);setSelectedIds([]);
     pageDrag.current={id:page.id,start:{x:e.clientX,y:e.clientY},origin:{...page.placement},started:false,pointer:e.pointerId};
@@ -360,14 +389,14 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     if(!drag.started){drag.started=true;setSession(s=>beginStudioTransaction(s,"Перемещение страницы"))}
     setSession(s=>dispatchStudioCommand(s,{
       kind:"movePage",id:drag.id,
-      placement:{x:Math.round(drag.origin.x+dx/viewport.zoom),y:Math.round(drag.origin.y+dy/viewport.zoom)}
+      placement:{x:Math.max(-1e6,Math.min(1e6,Math.round(drag.origin.x+dx/viewport.zoom))),y:Math.max(-1e6,Math.min(1e6,Math.round(drag.origin.y+dy/viewport.zoom)))}
     }));
   }
   function endPageDrag(e:ReactPointerEvent<HTMLButtonElement>){
     const drag=pageDrag.current;
     if(!drag||drag.pointer!==e.pointerId)return;
     pageDrag.current=null;
-    if(drag.started)setSession(s=>commitStudioTransaction(s));
+    if(drag.started)setSession(s=>s.transaction?(e.type==="pointercancel"?cancelStudioTransaction(s):commitStudioTransaction(s)):s);
     if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
   }
   function localPoint(e:{clientX:number;clientY:number}):Point {
@@ -536,8 +565,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><Ruler size={18}/></button>
       </div>
       <div className="v2-top-actions">
-        <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>setSession(s=>s.transaction?s:undoStudio(s))}><Undo2 size={18}/></button>
-        <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>setSession(s=>s.transaction?s:redoStudio(s))}><Redo2 size={18}/></button>
+        <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>changeHistory()}><Undo2 size={18}/></button>
+        <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>changeHistory(true)}><Redo2 size={18}/></button>
         <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><Smartphone size={18}/></button>
         <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><Download size={16}/> JSON</button>
         <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
@@ -552,19 +581,19 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </div>
         <div className="v2-page-list">{document.pages.map((page,index)=>{
           const background=document.nodes[page.rootNodeId];
-          return <button className={`v2-page-item ${selectedPage===page.id?"is-selected":""}`} key={page.id} onClick={()=>focusPage(page)}>
+          return <div key={page.id} className="v2-page-row"><button draggable={!editing&&!background.locked} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-page",page.id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-page")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();const id=e.dataTransfer.getData("application/x-invito-page");if(id&&id!==page.id)reorderPage(id,index);}} className={`v2-page-item ${selectedPage===page.id?"is-selected":""}`} onClick={()=>focusPage(page)}>
             <span className="v2-page-index">{index+1}</span>
             <span className="v2-page-thumbnail" style={{background:background.type==="frame"?background.background:"#FFF"}}>
               <span>{page.name==="Обложка"?"А & Т":page.name==="RSVP"?"RSVP":page.name.slice(0,1)}</span>
             </span>
             <span>{page.name}</span>
-          </button>;
+          </button><button className="v2-page-delete" title="Удалить страницу" aria-label={"Удалить страницу "+page.name} disabled={document.pages.length<=1||!!editing||background.locked} onClick={()=>deletePage(page.id)}>×</button></div>;
         })}</div>
         <div className="v2-sidebar-section">
           <div className="v2-sidebar-heading"><strong>Слои {selected?.name}</strong></div>
-          {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode} onDropLayer={moveLayer}/>}
+          {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode} onDropLayer={moveLayer} onState={(id,patch)=>proAction(()=>({kind:"setLayerState",id,...patch}))}/>}
         </div>
-        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте название страницы над фреймом, чтобы изменить расположение.</span></div></>}
+        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте страницу в списке для изменения порядка; название над холстом — для перемещения.</span></div></>}
       </aside>
       <section className="v2-workspace" aria-label="Бесконечная рабочая область">
         <div className="v2-mobile-panel-controls">
@@ -639,13 +668,15 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {activeNode&&<><label className="v2-layout-field">Переместить в<select value={moveTarget} onChange={e=>setMoveTarget(e.target.value)}><option value="">Выберите фрейм</option>{Object.values(document.nodes).filter(n=>n.type==="frame"&&n.id!==activeNode.id&&n.id!==activeNode.parentId&&!n.locked&&n.visible).map(n=><option key={n.id} value={n.id}>{nodeLabel(document,n.id)} · {n.id.slice(0,12)}</option>)}</select></label><button className="v2-inspector-button" disabled={!moveTarget||!!editing} onClick={moveLayerToFrame}>Переместить слой</button></>}
 
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
+          {authoredNode&&<label className="v2-widget-field">Название слоя<input key={authoredNode.id+":"+(authoredNode.layerName??"")} maxLength={100} defaultValue={nodeLabel(sourceDocument,authoredNode.id)} disabled={!!editing} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==nodeLabel(sourceDocument,authoredNode.id))proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{layerName:name}}));}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></label>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
           {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
         </section>
-        {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:patch})}/>}
+        {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]);return <AdvancedProperties key={n.id} document={sourceDocument} node={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>proAction(()=>({kind:"updateNode",id:n.id,changes:{visual}}))}/>;})()}
+        {authoredNode?.type==="image"&&<ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/>}
         {authoredNode?.componentRef&&<section className="v2-inspector-section"><h3>Компонент</h3><p className="v2-placeholder">{sourceDocument.components?.[authoredNode.componentRef.componentId]?.name} · редактируемая копия</p><button className="v2-inspector-button" onClick={()=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{componentRef:undefined}})}>Отсоединить</button></section>}
         {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}))} onFinish={()=>finishText()}/>}
         <section className="v2-inspector-section">
@@ -694,6 +725,10 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <h3>Страница</h3>
           {selected&&selectedRoot?<>
             <strong className="v2-selected-name">{selected.name}</strong>
+            <label className="v2-widget-field">Название страницы<input key={selected.id+selected.name} defaultValue={selected.name} maxLength={100} disabled={!!editing||selectedRoot.locked} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==selected.name)proAction(()=>({kind:"renamePage",id:selected.id,name}));}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></label>
+            <div className="v2-pro-actions"><button disabled={!!editing||document.pages[0].id===selected.id||selectedRoot.locked} onClick={()=>reorderPage(selected.id,document.pages.findIndex(p=>p.id===selected.id)-1)}>↑ Выше</button><button disabled={!!editing||document.pages.at(-1)?.id===selected.id||selectedRoot.locked} onClick={()=>reorderPage(selected.id,document.pages.findIndex(p=>p.id===selected.id)+1)}>↓ Ниже</button></div>
+            <button className="v2-inspector-button v2-danger" disabled={document.pages.length<=1||!!editing||selectedRoot.locked} onClick={()=>deletePage(selected.id)}>Удалить страницу</button>
+            <p className="v2-placeholder" role="status">{pageStatus||"Удаление и перемещение можно отменить через Ctrl+Z."}</p>
             <div className="v2-inspector-grid">
               <label>X<input type="number" value={Math.round(selected.placement.x)} onChange={e=>{
                 const x=Number(e.target.value);
@@ -714,7 +749,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28.1 · Canvas Pro</h3>
+          <h3>Этап #28.2 · Advanced Properties</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
