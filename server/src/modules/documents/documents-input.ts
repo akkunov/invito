@@ -68,4 +68,17 @@ export async function verifyAssets(db: PrismaClient, workspaceId: string, docume
   }) : [];
   try { assertReadyAssets(document, workspaceId, assets, staticAssets); }
   catch { throw new UnprocessableEntityException("ASSET_UNAVAILABLE_OR_UNTRUSTED"); }
+  // Music widget references are distinct from the image-only asset library.
+  const audioIds = [...new Set(Object.values(document.nodes).flatMap(node =>
+    node.type === "widget" && node.block.kind === "music" && node.block.source.startsWith("asset:")
+      ? [node.block.source.slice(6)] : []))];
+  if (audioIds.length) {
+    const ready = await db.mediaAsset.findMany({
+      where: {id: {in: audioIds}, workspaceId, status: "READY", mimeType: "audio/mpeg"},
+      select: {id: true},
+    });
+    if (ready.length !== audioIds.length) {
+      throw new UnprocessableEntityException("MUSIC_ASSET_UNAVAILABLE_OR_UNTRUSTED");
+    }
+  }
 }

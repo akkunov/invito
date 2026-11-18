@@ -11,9 +11,10 @@ export const bindingValueSchema=z.discriminatedUnion("type",[
 ]);
 export const musicSourceSchema=z.string().max(1000).refine(value=>{
  if(value==="")return true;
+ if(/^asset:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value))return true;
  if(/^\/audio\/[a-zA-Z0-9_/-]+\.(mp3|ogg|m4a|wav)$/i.test(value))return true;
  try{const url=new URL(value);return url.protocol==="https:"&&!url.username&&!url.password&&!url.hash&&/\.(mp3|ogg|m4a|wav)$/i.test(url.pathname);}catch{return false;}
-},"Use an HTTPS audio file or /audio/ path");
+},"Use a verified asset:UUID, HTTPS audio file or /audio/ path");
 export const invitationBlockSchema=z.discriminatedUnion("kind",[
  z.strictObject({kind:z.literal("rsvp"),title:localized,deadline:instantSchema.nullable(),maxGuests:z.number().int().min(1).max(10)}),
  z.strictObject({kind:z.literal("countdown"),title:localized,target:instantSchema,targetKey:bindingKeySchema.nullable()}),

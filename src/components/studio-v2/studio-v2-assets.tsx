@@ -42,10 +42,13 @@ export function useMediaUrls(assets:ProjectDocumentV2["assets"]){
  return urls;
 }
 /** Refresh short-lived private R2 GET capabilities while a cloud project is open. */
-export function useCloudAssetUrls(assets: ProjectDocumentV2["assets"], settings?: RemoteSyncSettings) {
+export function useCloudAssetUrls(document: ProjectDocumentV2, settings?: RemoteSyncSettings) {
  const [urls,setUrls]=useState<Record<string,string>>({});
- const key=JSON.stringify([...new Set(Object.values(assets).map(a=>a.storageKey)
-    .filter(key=>key.startsWith("asset:")))].sort());
+ const key=JSON.stringify([...new Set([
+   ...Object.values(document.assets).map(a=>a.storageKey),
+   ...Object.values(document.nodes).flatMap(node =>
+     node.type==="widget"&&node.block.kind==="music" ? [node.block.source] : []),
+ ].filter(key=>key.startsWith("asset:")))].sort());
  useEffect(()=>{
   if(!settings){setUrls({});return;}
   let active=true;
