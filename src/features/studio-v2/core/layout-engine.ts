@@ -13,11 +13,13 @@ const align=(available:number,content:number,value:string)=>value==="center"?(av
 
 /** Intrinsic size is bottom-up; fill children contribute their minimum to hug parents.
  * No feedback cycle between child fill and parent hug. Geometry is in parent-local units. */
-export function resolveLayout(doc:ProjectDocumentV2):Geometry {
+export type TextMeasurements = Readonly<Record<string,number>>;
+export function resolveLayout(doc:ProjectDocumentV2,textMeasurements:TextMeasurements={}):Geometry {
  const intrinsic=new Map<string,{width:number;height:number}>();
  function measure(n:ProjectNodeV2):{width:number;height:number}{
    const cached=intrinsic.get(n.id);if(cached)return cached;
    const result={width:limit(n,"width",n.width),height:limit(n,"height",n.height)};
+   if(n.type==="text"&&n.autoHeight&&Number.isFinite(textMeasurements[n.id]))result.height=limit(n,"height",textMeasurements[n.id]);
    if(n.type==="frame"){
      const children=visibleChildren(doc,n);for(const c of children)measure(c);
      if(n.layout!=="free"){
@@ -84,7 +86,7 @@ export function resolveLayout(doc:ProjectDocumentV2):Geometry {
  return result;
 }
 /** Derived render-only document. Never write solved coordinates back into the source. */
-export function layoutDocument(doc:ProjectDocumentV2):ProjectDocumentV2 {
- const geometry=resolveLayout(doc);
+export function layoutDocument(doc:ProjectDocumentV2,textMeasurements:TextMeasurements={}):ProjectDocumentV2 {
+ const geometry=resolveLayout(doc,textMeasurements);
  return {...doc,nodes:Object.fromEntries(Object.entries(doc.nodes).map(([id,n])=>[id,geometry[id]?{...n,...geometry[id]}:n]))};
 }

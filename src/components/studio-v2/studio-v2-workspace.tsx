@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { Locale } from "@/i18n/locales";
 import { StudioV2Artboard } from "./studio-v2-artboard";
+import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
+import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
 import { createStudioV2Demo } from "@/features/studio-v2/demo-project";
 import { createEditorSession, dispatchStudioCommand, beginStudioTransaction, commitStudioTransaction, cancelStudioTransaction, undoStudio, redoStudio, type StudioEditorSession } from "@/features/studio-v2/core/command-engine.ts";
 import { type ProjectDocumentV2, type StudioPageV2 } from "@/features/studio-v2/core/document.schema.ts";
@@ -99,6 +101,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
   const [selectedIds,setSelectedIds]=useState<string[]>([]);
+  const [editing,setEditing]=useState<TextEditingSession|null>(null);
+  const [textMeasurements,setTextMeasurements]=useState<Record<string,number>>({});
+  const measureText=useCallback((id:string,height:number)=>setTextMeasurements(old=>old[id]===height?old:{...old,[id]:height}),[]);
   const [selectionError,setSelectionError]=useState<string|null>(null);
   const [marquee,setMarquee]=useState<Rect|null>(null);
   const [guides,setGuides]=useState<{guideX?:number;guideY?:number}>({});
@@ -121,7 +126,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const pageDrag=useRef<{id:string;start:Point;origin:Point;started:boolean;pointer:number}|null>(null);
   const fitted=useRef(false);
   const sourceDocument=session.document;
-  const document=useMemo(()=>layoutDocument(sourceDocument),[sourceDocument]);
+  const document=useMemo(()=>layoutDocument(sourceDocument,textMeasurements),[sourceDocument,textMeasurements]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
   const activeTool=spaceHeld?"hand":tool;
   const selected=document.pages.find(p=>p.id===selectedPage)??null;
@@ -129,6 +134,30 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const nodeIds=normalizeSelection(document,selectedIds);
   const activeNode=nodeIds.length===1?document.nodes[nodeIds[0]]:null;
   const authoredNode=activeNode?sourceDocument.nodes[activeNode.id]:null;
+  function finishText(cancel=false){
+    if(!editing)return;
+    setSession(s=>s.transaction?(cancel?cancelStudioTransaction(s):commitStudioTransaction(s)):s);setEditing(null);
+  }
+  function startText(id:string){
+    const n=sourceDocument.nodes[id];if(n?.type!=="text"||!canSelect(sourceDocument,id)||editing?.id===id||nodeGesture.current?.started||pageDrag.current?.started)return;
+    if(editing)finishText();
+    setSelectedIds([id]);setEditing({id,range:{start:0,end:plainText(n.runs).length},typingStyle:null});
+    setSession(s=>beginStudioTransaction(s,"Редактирование текста"));
+  }
+  function editTextRuns(id:string,runs:TextRun[]){setSession(s=>{try{return dispatchStudioCommand(s,{kind:"updateNode",id,changes:{runs}});}catch{return s;}});}
+  function updateTextRange(range:TextRange){setEditing(old=>old?{...old,range,typingStyle:old.range.start===range.start&&old.range.end===range.end?old.typingStyle:null}:null);}
+  function styleText(node:TextNode,patch:Partial<TextStyle>){
+    const range=editing?.id===node.id?editing.range:{start:0,end:plainText(node.runs).length};
+    if(editing?.id===node.id&&range.start===range.end){setEditing(old=>old?{...old,typingStyle:{...(old.typingStyle??rangeStyle(node.runs,range)),...patch}}:null);if(!plainText(node.runs))editTextRuns(node.id,formatRange(node.runs,range,patch));return;}
+    try{editTextRuns(node.id,formatRange(node.runs,range,patch));}catch{/* Keep valid runs. */}
+  }
+  function addText(){
+    const target=authoredNode?.type==="frame"?authoredNode:selectedRoot;
+    if(target?.type!=="frame"||target.locked||editing)return;
+    const id="text-"+crypto.randomUUID();
+    const n:TextNode={id,type:"text",parentId:target.id,x:24,y:24,width:Math.min(400,target.width),height:80,rotation:0,opacity:1,visible:true,locked:false,runs:[{text:"Новый текст",style:{fontFamily:"sans",fontSize:48,fontWeight:400,italic:false,underline:false,strike:false,color:"#20242B"}}],textAlign:"left",bindingKey:null,autoHeight:true};
+    setSession(s=>dispatchStudioCommand(s,{kind:"insertNode",parentId:target.id,node:n}));setSelectedIds([id]);
+  }
   const container=authoredNode?.type==="frame"?authoredNode:!activeNode&&selectedRoot?.type==="frame"?sourceDocument.nodes[selectedRoot.id]:null;
   const layoutFrame=container?.type==="frame"?container:null;
   const parent=authoredNode?.parentId?sourceDocument.nodes[authoredNode.parentId]:null;
@@ -148,6 +177,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const selectionPolygon=activeNode?nodeCorners(document,activeNode.id):selectionRect?[{x:selectionRect.x,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y+selectionRect.height},{x:selectionRect.x,y:selectionRect.y+selectionRect.height}]:[];
   const selectionScreen=selectionPolygon.map(p=>worldToScreen(p,viewport));
   function chooseNode(id:string,add=false){
+    if(editing)finishText();
     setSelectionError(null);setSelectedIds(ids=>selectNode(document,ids,id,add));
   }
   function performGroup(){
@@ -184,6 +214,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     function down(e:KeyboardEvent){
       const target=e.target as HTMLElement|null;
       if(target?.closest("input,textarea,select,[contenteditable=true]"))return;
+      if(editing){if(e.key==="Escape"){finishText(true);e.preventDefault();}return;}
+      if(e.key==="Enter"&&activeNode?.type==="text"){e.preventDefault();startText(activeNode.id);return;}
+      if(e.key.toLowerCase()==="t"&&!e.ctrlKey&&!e.metaKey){addText();return;}
       if(e.code==="Space"){e.preventDefault();setSpaceHeld(true);return}
       if(e.key.toLowerCase()==="v"&&!e.metaKey&&!e.ctrlKey)setTool("select");
       if(e.key.toLowerCase()==="h"&&!e.metaKey&&!e.ctrlKey)setTool("hand");
@@ -192,7 +225,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
         e.preventDefault();const step=e.shiftKey?10:1;
         const delta={x:e.key==="ArrowLeft"?-step:e.key==="ArrowRight"?step:0,y:e.key==="ArrowUp"?-step:e.key==="ArrowDown"?step:0};
-        if(movable(nodeIds))setSession(s=>dispatchStudioCommand(s,moveSelection(layoutDocument(s.document),nodeIds,delta)));return;
+        if(movable(nodeIds))setSession(s=>dispatchStudioCommand(s,moveSelection(layoutDocument(s.document,textMeasurements),nodeIds,delta)));return;
       }
       if(nodeIds.length&&(e.key==="Delete"||e.key==="Backspace")){
         e.preventDefault();setSession(s=>dispatchStudioCommand(s,nodeIds.map(id=>({kind:"deleteNode" as const,id}))));setSelectedIds([]);return;
@@ -205,7 +238,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const blur=()=>setSpaceHeld(false);
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[nodeIds]);
+  },[nodeIds,editing,sourceDocument]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -216,12 +249,14 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     setViewport(v=>({...v,x:sceneSize.width/2-world.x*v.zoom,y:sceneSize.height/2-world.y*v.zoom}));
   }
   function focusPage(page:StudioPageV2){
+    if(editing)finishText();
     setSelectedPage(page.id);setSelectedIds([]);
     const rect=pageRect(document,page);
     center({x:rect.x+rect.width/2,y:rect.y+rect.height/2});
     setLeftOpen(false);
   }
   function addPage(){
+    if(editing)finishText();
     const root=document.nodes[document.pages[0].rootNodeId];
     if(root.type!=="frame"||document.pages.length>=30)return;
     const name="Новая страница "+(document.pages.length+1);
@@ -236,6 +271,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   function startPageDrag(e:ReactPointerEvent<HTMLButtonElement>,page:StudioPageV2){
     if(activeTool!=="select"||e.button!==0)return;
+    if(editing)finishText();
     e.stopPropagation();setSelectedPage(page.id);setSelectedIds([]);
     pageDrag.current={id:page.id,start:{x:e.clientX,y:e.clientY},origin:{...page.placement},started:false,pointer:e.pointerId};
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -265,15 +301,17 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   function distance(a:Point,b:Point){return Math.hypot(a.x-b.x,a.y-b.y)}
   function middle(a:Point,b:Point){return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
   function startNodeGesture(e:ReactPointerEvent<HTMLElement>,ids:string[],handle?:Handle,rotate=false){
+    if(editing)return;
     if(!rotate&&!handle&&!movable(ids))return;
     if(handle&&ids.some(id=>{const n=sourceDocument.nodes[id];return n.sizing?.width==="hug"||n.sizing?.height==="hug"||n.sizing?.width==="fill"||n.sizing?.height==="fill"||!movable([id]);}))return;
     nodeGesture.current={pointer:e.pointerId,start:localPoint(e),document,ids,started:false,handle,rotate,zoom:viewport.zoom};
-    stageRef.current?.setPointerCapture(e.pointerId);
+    if(handle||rotate)stageRef.current?.setPointerCapture(e.pointerId);else (e.target as Element).setPointerCapture(e.pointerId);
   }
   function stagePointerDown(e:ReactPointerEvent<HTMLDivElement>){
     const local=localPoint(e);
     const target=e.target as Element;
-    if(target.closest("button,.v2-minimap"))return;
+    if(target.closest("button,.v2-minimap,.v2-text-edit"))return;
+    if(editing){finishText();return;}
     const hit=target.closest<HTMLElement>("[data-studio-node]");
     const pageHit=target.closest<HTMLElement>("[data-studio-page]");
     const id=hit?.dataset.studioNode,pageId=pageHit?.dataset.studioPage;
@@ -449,9 +487,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <button aria-label="Открыть страницы" onClick={()=>setLeftOpen(v=>!v)}><Layers3 size={18}/> Страницы</button>
           <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}>Свойства</button>
         </div>
-        <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""}`}
+        <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""} ${editing?"is-text-editing":""}`}
           onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
-          onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onWheel={stageWheel}>
+          onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onWheel={stageWheel} onDoubleClick={e=>{if(activeTool!=="select")return;const target=(e.target as Element).closest<HTMLElement>("[data-studio-node]");const id=target?.dataset.studioNode;if(id)startText(id);}}>
           <div className="v2-stage-background" style={grid?backgroundStyle:undefined}/>
           <div className="v2-stage-inner" style={{left:inset,top:inset}}>
             <div className="v2-world" style={{
@@ -462,13 +500,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
                 return <div key={page.id} data-studio-page={page.id} className={`v2-frame ${selectedPage===page.id?"is-selected":""}`}
                   style={{left:page.placement.x,top:page.placement.y,width:root.width,height:root.height}}
                   >
-                  <StudioV2Artboard document={document} rootNodeId={page.rootNodeId}/>
+                  <StudioV2Artboard document={document} rootNodeId={page.rootNodeId} editingId={editing?.id} onMeasure={measureText} renderEditor={node=>editing?.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null}/>
                 </div>;
               })}
             </div>
             {selectionScreen.length>0&&<svg className="v2-selection-outline" width={sceneSize.width} height={sceneSize.height} aria-hidden="true"><polygon points={selectionScreen.map(p=>p.x+","+p.y).join(" ")} fill="none" stroke="#2549d9" strokeWidth="1.5"/></svg>}
-            {activeNode&&activeTool==="select"&&selectionScreen.map((point,index)=><button key={index} className="v2-transform-handle" aria-label={"Изменить размер "+["NW","NE","SE","SW"][index]} style={{left:point.x,top:point.y}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,[activeNode.id],(["nw","ne","se","sw"] as const)[index]);}}/>)}
-            {activeNode&&activeTool==="select"&&selectionScreen.length===4&&<button className="v2-transform-rotate" aria-label="Вращение" style={{left:(selectionScreen[0].x+selectionScreen[1].x)/2,top:(selectionScreen[0].y+selectionScreen[1].y)/2-24}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,[activeNode.id],undefined,true);}}>↻</button>}
+            {activeNode&&!editing&&activeTool==="select"&&selectionScreen.map((point,index)=><button key={index} className="v2-transform-handle" aria-label={"Изменить размер "+["NW","NE","SE","SW"][index]} style={{left:point.x,top:point.y}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,[activeNode.id],(["nw","ne","se","sw"] as const)[index]);}}/>)}
+            {activeNode&&!editing&&activeTool==="select"&&selectionScreen.length===4&&<button className="v2-transform-rotate" aria-label="Вращение" style={{left:(selectionScreen[0].x+selectionScreen[1].x)/2,top:(selectionScreen[0].y+selectionScreen[1].y)/2-24}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,[activeNode.id],undefined,true);}}>↻</button>}
             {marquee&&<div className="v2-marquee" style={{left:marquee.x,top:marquee.y,width:marquee.width,height:marquee.height}}/>}
             {guides.guideX!==undefined&&<div className="v2-guide v2-guide-x" style={{left:guides.guideX*viewport.zoom+viewport.x}}/>}
             {guides.guideY!==undefined&&<div className="v2-guide v2-guide-y" style={{top:guides.guideY*viewport.zoom+viewport.y}}/>}
@@ -510,14 +548,17 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <h3>Выделение</h3>
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
-          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
+          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
-          <button className="v2-inspector-button" onClick={()=>setSelectedIds([])}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
+          <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
         </section>
+        {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}))} onFinish={()=>finishText()}/>}
         <section className="v2-inspector-section">
           <h3>Auto Layout</h3>
-          <button className="v2-inspector-button" onClick={createFrame}>+ Создать фрейм</button>
+          <button className="v2-inspector-button" disabled={!!editing} onClick={addText}>+ Текст (T)</button>
+          {activeNode?.type==="text"&&!editing&&<button className="v2-inspector-button" onClick={()=>startText(activeNode.id)}>Редактировать текст</button>}
+          <button className="v2-inspector-button" disabled={!!editing} onClick={createFrame}>+ Создать фрейм</button>
           {layoutFrame&&<>
             <label className="v2-layout-field">Расположение<select value={layoutFrame.layout} onChange={e=>editLayout(layoutFrame.id,{layout:e.target.value as "free"|"vertical"|"horizontal"})}><option value="free">Свободное</option><option value="vertical">Вертикальное</option><option value="horizontal">Горизонтальное</option></select></label>
             {layoutFrame.layout!=="free"&&<>
@@ -562,7 +603,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #24 · Auto Layout</h3>
+          <h3>Этап #25 · Rich Text</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Это демонстрационный документ: изменения не публикуются и не сохраняются на сервере.</p>
         </section>

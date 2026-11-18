@@ -1,12 +1,30 @@
 "use client";
 import Image from "next/image";
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
+import type { TextNode, TextStyle } from "@/features/studio-v2/core/rich-text-engine.ts";
 import type { ProjectDocumentV2, ProjectNodeV2 } from "@/features/studio-v2/core/document.schema.ts";
 
 const fonts: Record<string, string> = {
   serif: "Georgia, 'Times New Roman', serif",
   sans: "Arial, Helvetica, sans-serif",
 };
+export function textRunStyle(style:TextStyle):CSSProperties{
+ return {fontFamily:fonts[style.fontFamily],fontSize:style.fontSize,fontWeight:style.fontWeight,fontStyle:style.italic?"italic":"normal",textDecoration:[style.underline?"underline":"",style.strike?"line-through":""].filter(Boolean).join(" "),color:style.color};
+}
+export function TextRuns({node}:{node:TextNode}){
+ return <>{node.runs.map((run,index)=><span key={index} style={textRunStyle(run.style)}>{run.text}</span>)}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
+}
+function TextContent({node,onMeasure}:{node:TextNode;onMeasure?:(id:string,height:number)=>void}){
+ const ref=useRef<HTMLDivElement>(null);
+ useLayoutEffect(()=>{
+  const el=ref.current;if(!el||!node.autoHeight||!onMeasure)return;
+  const measure=()=>onMeasure(node.id,Math.max(1,el.offsetHeight));
+  measure();const observer=new ResizeObserver(measure);observer.observe(el);
+  return()=>observer.disconnect();
+ },[node.id,node.autoHeight,onMeasure]);
+ return <div ref={ref} style={{width:"100%",whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node}/></div>;
+}
+export type ArtboardTextOptions={editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
   const base: CSSProperties = {
     position: "absolute",
@@ -19,7 +37,7 @@ function nodeStyle(node: ProjectNodeV2): CSSProperties {
   };
   return base;
 }
-function renderNode(document: ProjectDocumentV2, id: string): React.ReactNode {
+function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTextOptions): React.ReactNode {
   const node = document.nodes[id];
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
@@ -29,19 +47,16 @@ function renderNode(document: ProjectDocumentV2, id: string): React.ReactNode {
         ...style,
         background: node.background,
         overflow: node.clip ? "hidden" : "visible",
-      }}>{node.children.map(child => renderNode(document, child))}</div>;
+      }}>{node.children.map(child => renderNode(document, child,options))}</div>;
     case "text":
       return <div key={id} data-studio-node={id} style={{
-        ...style, textAlign: node.textAlign,
-        display: "flex", alignItems: "center",
-        justifyContent: node.textAlign === "left" ? "flex-start" : node.textAlign === "right" ? "flex-end" : "center",
-        whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.14,
-      }}><span>{node.runs.map((run, index) => <span key={index} style={{
-        fontFamily: fonts[run.style.fontFamily], fontSize: run.style.fontSize,
-        fontWeight: run.style.fontWeight, fontStyle: run.style.italic ? "italic" : "normal",
-        textDecoration: [run.style.underline ? "underline" : "", run.style.strike ? "line-through" : ""].filter(Boolean).join(" "),
-        color: run.style.color,
-      }}>{run.text}</span>)}</span></div>;
+        ...style,textAlign:node.textAlign,display:"flex",alignItems:node.autoHeight?"flex-start":"center",
+        justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
+        whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
+      }}>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} onMeasure={options.onMeasure}/></div>
+        {options.editingId===id&&options.renderEditor?.(node)}
+      </div>;
     case "image": {
       const asset = document.assets[node.assetId];
       if (!asset || !asset.storageKey.startsWith("/images/")) return null;
@@ -64,13 +79,13 @@ function renderNode(document: ProjectDocumentV2, id: string): React.ReactNode {
       }}/>;
   }
 }
-export function StudioV2Artboard({ document, rootNodeId }: { document: ProjectDocumentV2; rootNodeId: string }) {
+export function StudioV2Artboard({ document, rootNodeId, ...options }: { document: ProjectDocumentV2; rootNodeId: string } & ArtboardTextOptions) {
   const root = document.nodes[rootNodeId];
   if (!root || root.type !== "frame") return null;
   return <div className="studio-v2-artboard-content" style={{
     width: root.width, height: root.height, position: "relative", background: root.background,
     overflow: root.clip ? "hidden" : "visible",
   }}>
-    {root.children.map(id => renderNode(document, id))}
+    {root.children.map(id => renderNode(document, id, options))}
   </div>;
 }

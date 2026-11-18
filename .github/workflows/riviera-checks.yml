@@ -27,6 +27,7 @@ jobs:
       - run: npm run test:studio-v2-ui
       - run: npm run test:studio-v2-selection
       - run: npm run test:studio-v2-layout
+      - run: npm run test:studio-v2-rich-text
       - run: npm run test:editor-navigation
       - run: npm run typecheck
       - run: npm run build
