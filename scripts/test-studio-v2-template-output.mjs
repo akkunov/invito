@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {deflateSync,inflateSync} from "node:zlib";
-import {printSize,rasterPdf,pngWithDpi} from "../src/features/studio-v2/core/print-output.ts";
+import {printSize,rasterPdf,pngWithDpi,printStrips,pngHeader,pngIdat,pngEnd,pngStripRows,stripedPdfParts} from "../src/features/studio-v2/core/print-output.ts";
 import {createEmptyProjectV2} from "../src/features/studio-v2/core/document.schema.ts";
 import {createTemplate,createThemeVariant,templateDocument} from "../src/features/studio-v2/core/template-registry.ts";
 import {templatePreflight,printImageWarnings} from "../src/features/studio-v2/core/template-preflight.ts";
@@ -32,3 +32,28 @@ const variant=createThemeVariant(record,null,"template-b",now);
 assert.equal(templateDocument(variant).id,"template-b");assert.equal(templateDocument(record).id,"template-a");assert.equal(variant.meta.status,"draft");
 assert.throws(()=>createThemeVariant(record,"missing","template-c",now));
 console.log("PASS: physical print sizes, PDF xref and RGB stream, PNG DPI, preflight, immutable variants");
+
+const high=printSize(1080,1920,105,1200),ultra=printSize(1080,1920,105,2400);
+assert.deepEqual([high.pixelWidth,high.pixelHeight],[4961,8819]);
+assert.deepEqual([ultra.pixelWidth,ultra.pixelHeight],[9921,17638]);
+for(const size of [high,ultra]){
+ const bands=printStrips(size);let y=0;
+ for(const b of bands){assert.equal(b.y,y);assert.ok(b.height*size.pixelWidth<=2_000_000);y+=b.height;}
+ assert.equal(y,size.pixelHeight);
+}
+assert.throws(()=>printSize(1080,1920,148,2400));
+const rgba=new Uint8ClampedArray([255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255]),mini={pixelWidth:2,pixelHeight:2,widthMm:25.4,heightMm:25.4,dpi:2400};
+const rows=pngStripRows(rgba,2,2);
+assert.deepEqual([...rows],[1,255,0,0,1,255,0,1,0,0,255,255,255,0]);
+const encoded=Buffer.from(deflateSync(rows)),split=encoded.length>>1;
+const multi=Buffer.concat([pngHeader(mini),pngIdat(encoded.subarray(0,split)),pngIdat(encoded.subarray(split)),pngEnd()]);
+assert.equal(multi.readUInt32BE(16),2);
+assert.equal(multi.readUInt32BE(multi.indexOf("pHYs")+4),94488);
+const data=[];for(let at=8;at<multi.length;){const len=multi.readUInt32BE(at),type=multi.toString("ascii",at+4,at+8);if(type==="IDAT")data.push(multi.subarray(at+8,at+8+len));at+=len+12;}
+assert.deepEqual(inflateSync(Buffer.concat(data)),Buffer.from(rows));
+const striped=Buffer.concat(stripedPdfParts([{y:0,height:1,data:deflateSync(Buffer.from([255,0,0,0,255,0]))},{y:1,height:1,data:deflateSync(Buffer.from([0,0,255,255,255,255]))}],mini));
+const stripedText=striped.toString("latin1");
+assert.match(stripedText,/72\.00000000 0 0 36\.00000000 0 36\.00000000 cm/);
+assert.match(stripedText,/72\.00000000 0 0 36\.00000000 0 0\.00000000 cm/);
+assert.throws(()=>stripedPdfParts([{y:1,height:1,data:encoded}],mini));
+console.log("PASS: 1200/2400dpi sizing, strip coverage, streaming PNG and positioned PDF bands");
