@@ -5,14 +5,8 @@ import {StudioIcon} from "./studio-icon";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {effectiveToken} from "@/features/studio-v2/core/style-tokens.ts";
 const presets=["#FFFFFF","#FAF7EF","#C7AA78","#707A5C","#263329","#20242B","#000000","#AB665C","#8A9AAA","#E8B4BA","#4A86E8","#635BDB"];
+import {normalizeHex,hexToHsv,hsvToHex} from "@/features/studio-v2/core/color-math.ts";
 const clamp=(v:number,max=1)=>Math.max(0,Math.min(max,v));
-export function normalizeHex(value:string){const s=value.trim().replace(/^#/,"");return /^[\da-f]{6}$/i.test(s)?"#"+s.toUpperCase():/^[\da-f]{3}$/i.test(s)?"#"+s.split("").map(c=>c+c).join("").toUpperCase():null;}
-export function hexToHsv(hex:string){
- const color=normalizeHex(hex)??"#000000",r=parseInt(color.slice(1,3),16)/255,g=parseInt(color.slice(3,5),16)/255,b=parseInt(color.slice(5,7),16)/255,max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
- let h=0;if(d)h=max===r?((g-b)/d+6)%6:max===g?(b-r)/d+2:(r-g)/d+4;
- return {h:h*60,s:max?d/max:0,v:max};
-}
-export function hsvToHex(h:number,s:number,v:number){const hue=((h%360)+360)%360,c=clamp(v)*clamp(s),x=c*(1-Math.abs(hue/60%2-1)),m=clamp(v)-c;const rgb=hue<60?[c,x,0]:hue<120?[x,c,0]:hue<180?[0,c,x]:hue<240?[0,x,c]:hue<300?[x,0,c]:[c,0,x];return "#"+rgb.map(n=>Math.round((n+m)*255).toString(16).padStart(2,"0")).join("").toUpperCase();}
 export type PaletteColor={name:string;color:string};
 export function projectPalette(doc:ProjectDocumentV2):PaletteColor[]{
  const result:PaletteColor[]=[];const seen=new Set<string>();
@@ -35,7 +29,7 @@ export function ColorPicker({label,value,onChange,palette=[],disabled=false,alph
  return <div className="v2-color-field"><span className="v2-color-label">{label}</span><div className="v2-color-row">
  <button type="button" ref={anchor} className="v2-color-swatch" aria-label={"Открыть палитру: "+label} aria-expanded={open} disabled={disabled||!!linkedLabel} onClick={()=>{setRecent(readRecent());setOpen(v=>!v);}}><i style={{background:current,opacity:alpha??1}}/></button>
  {linkedLabel?<span className="v2-color-linked"><StudioIcon name="styles"/>{linkedLabel}</span>:<input aria-label={label} id={id} type="text" spellCheck={false} maxLength={7} value={draft??value.toUpperCase()} disabled={disabled} onChange={e=>setDraft(e.target.value)} onBlur={()=>{if(draft!==null)commit(draft);setDraft(null);}} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();e.currentTarget.blur();}if(e.key==="Escape"){e.stopPropagation();setDraft(null);}}}/>}
- {linkedLabel&&onUnlink?<button type="button" className="v2-color-unlink" title="Отсоединить стиль" aria-label={"Отсоединить "+label} onClick={onUnlink}><StudioIcon name="close"/></button>:alpha!==undefined&&onAlphaChange?<input className="v2-alpha-value" aria-label={label+" — прозрачность"} type="number" min={0} max={100} value={Math.round(alpha*100)} disabled={disabled} onChange={e=>{if(e.target.value!==""){const n=Number(e.target.value);if(n>=0&&n<=100)onAlphaChange(n/100);}}}/>:null}
+ {linkedLabel&&onUnlink?<button type="button" className="v2-color-unlink" title="Отсоединить стиль" aria-label={"Отсоединить "+label} disabled={disabled} onClick={onUnlink}><StudioIcon name="close"/></button>:alpha!==undefined&&onAlphaChange?<input className="v2-alpha-value" aria-label={label+" — прозрачность"} type="number" min={0} max={100} value={Math.round(alpha*100)} disabled={disabled} onChange={e=>{if(e.target.value!==""){const n=Number(e.target.value);if(n>=0&&n<=100)onAlphaChange(n/100);}}}/>:null}
  </div>
  {open&&!linkedLabel&&!disabled&&createPortal(<div ref={panel} className="v2-color-popover" role="dialog" aria-label={"Палитра "+label} style={position}><header><strong>{label}</strong><button type="button" aria-label="Закрыть палитру" onClick={close}><StudioIcon name="close"/></button></header>
  <div className="v2-color-sv" style={{backgroundColor:`hsl(${h},100%,50%)`}} onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);drag.current={pointer:e.pointerId,color:current};selectSV(e);}} onPointerMove={e=>{if(drag.current?.pointer===e.pointerId)selectSV(e);}} onPointerUp={e=>{if(drag.current?.pointer===e.pointerId){const color=drag.current.color;drag.current=null;setGestureColor(null);commit(color);}}} onPointerCancel={()=>{drag.current=null;setGestureColor(null);}}><i style={{left:hsv.s*100+"%",top:(1-hsv.v)*100+"%",background:current}}/></div>

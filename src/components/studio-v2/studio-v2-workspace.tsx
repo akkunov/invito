@@ -2,10 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft, Check, ChevronDown, Download, Grid2X2, Hand, Layers3, Maximize,
-  Minus, MousePointer2, Move, Plus, Ruler, Undo2, Redo2, Smartphone, PanelLeftClose, PanelRightClose, Map as MapIcon,
-} from "lucide-react";
 import type { Locale } from "@/i18n/locales";
 import { AssetLibrary, ImageControls, useMediaUrls } from "./studio-v2-assets";
 import { loadLocalProject, saveLocalProject } from "@/features/studio-v2/browser/media-store";
@@ -106,7 +102,7 @@ function MiniMap({frames, viewport, size, onCenter}:{
   }
   return <div className="v2-minimap" role="button" tabIndex={0} aria-label="Мини-карта проекта. Кликните для перехода"
     onClick={click} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();onCenter({x:projection.scene.x+projection.scene.width/2,y:projection.scene.y+projection.scene.height/2})}}}>
-    <div className="v2-minimap-title"><MapIcon size={13}/> Навигатор</div>
+    <div className="v2-minimap-title"><StudioIcon name="map" size={13}/> Навигатор</div>
     <div className="v2-minimap-surface" style={{width:mapSize.width,height:mapSize.height}}>
       {projection.artboards.map((frame,index)=><div key={index} className="v2-mini-frame" style={{
         left:frame.x,top:frame.y,width:Math.max(2,frame.width),height:Math.max(2,frame.height)
@@ -599,9 +595,9 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   return <main className="studio-v2" lang={locale}>
     <header className="v2-topbar">
       <div className="v2-brand">
-        <Link href={`/${locale}`} aria-label="На главную"><ArrowLeft size={16}/></Link>
+        <Link href={`/${locale}`} aria-label="На главную"><StudioIcon name="back" size={16}/></Link>
         <strong>INVITO <span>Studio 2.0</span></strong>
-        <span className="v2-project-title">Свадебная коллекция <ChevronDown size={13}/></span>
+        <span className="v2-project-title">Свадебная коллекция <StudioIcon name="down" size={13}/></span>
         <span className="v2-draft-state">{storageStatus}</span>
       </div>
       <div className="v2-tools" role="toolbar" aria-label="Инструменты холста">
@@ -610,16 +606,16 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <button aria-label="Создать фрейм" title="Создать фрейм" onClick={createFrame} disabled={!!editing}><StudioIcon name="frame" size={20}/></button>
         <button aria-label="Добавить текст (T)" title="Добавить текст (T)" onClick={addText} disabled={!!editing}><StudioIcon name="text" size={20}/></button>
         <span className="v2-top-divider"/>
-        <button title="Показать или скрыть сетку" aria-label="Сетка" aria-pressed={grid} onClick={()=>setGrid(v=>!v)}><Grid2X2 size={18}/></button>
-        <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><Ruler size={18}/></button>
+        <button title="Показать или скрыть сетку" aria-label="Сетка" aria-pressed={grid} onClick={()=>setGrid(v=>!v)}><StudioIcon name="grid" size={18}/></button>
+        <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><StudioIcon name="ruler" size={18}/></button>
       </div>
       <div className="v2-top-actions">
-        <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>changeHistory()}><Undo2 size={18}/></button>
-        <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>changeHistory(true)}><Redo2 size={18}/></button>
-        <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}>Responsive</button>
-        <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><Smartphone size={18}/></button>
-        <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><Download size={16}/> JSON</button>
-        <span className="v2-stage-tag"><Check size={13}/> Функциональный прототип</span>
+        <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>changeHistory()}><StudioIcon name="undo" size={18}/></button>
+        <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>changeHistory(true)}><StudioIcon name="redo" size={18}/></button>
+        <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}><StudioIcon name="responsive" size={18}/></button>
+        <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><StudioIcon name="phone" size={18}/></button>
+        <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><StudioIcon name="download" size={16}/> JSON</button>
+        <span className="v2-stage-tag"><StudioIcon name="check" size={13}/> Функциональный прототип</span>
       </div>
     </header>
     <div className="v2-body">
@@ -628,7 +624,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <div hidden={!stylesOpen}><StyleLibrary document={sourceDocument} palette={palette} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></div>
         {!stylesOpen&&(libraryOpen?<><AssetLibrary document={sourceDocument} urls={mediaUrls} onUpload={addAsset} onInsert={insertAsset} onReplace={replaceAsset} onFolder={(a,folder)=>libraryCommands({kind:"putAsset",asset:{...a,folder}})} onDelete={deleteAsset} onCreateComponent={createComponent} onAddVariant={addVariant} onUpdateVariant={updateMaster} onInsertComponent={insertComponent} canCreate={!!authoredNode&&!editing} canInsert={canInsert} onError={setSelectionError}/><div className="v2-sidebar-section"><div className="v2-sidebar-heading"><strong>Фигуры</strong></div><div className="v2-nudge">{(["rectangle","circle","triangle","star","heart"] as const).map(shape=><button key={shape} title={shape} disabled={!canInsert} onClick={()=>insertShape(shape)}><StudioIcon name={shape==="rectangle"?"shape":shape}/></button>)}</div></div></>:<>
         <div className="v2-sidebar-heading"><strong>Страницы <small>{document.pages.length}</small></strong>
-          <button title="Добавить страницу" aria-label="Добавить страницу" onClick={addPage} disabled={document.pages.length>=30}><Plus size={18}/></button>
+          <button title="Добавить страницу" aria-label="Добавить страницу" onClick={addPage} disabled={document.pages.length>=30}><StudioIcon name="plus" size={18}/></button>
         </div>
         <div className="v2-page-list">{document.pages.map((page,index)=>{
           const background=document.nodes[page.rootNodeId];
@@ -638,18 +634,18 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
               <span>{page.name==="Обложка"?"А & Т":page.name==="RSVP"?"RSVP":page.name.slice(0,1)}</span>
             </span>
             <span>{page.name}</span>
-          </button><button className="v2-page-delete" title="Удалить страницу" aria-label={"Удалить страницу "+page.name} disabled={document.pages.length<=1||!!editing||background.locked} onClick={()=>deletePage(page.id)}>×</button></div>;
+          </button><button className="v2-page-delete" title="Удалить страницу" aria-label={"Удалить страницу "+page.name} disabled={document.pages.length<=1||!!editing||background.locked} onClick={()=>deletePage(page.id)}><StudioIcon name="close"/></button></div>;
         })}</div>
         <div className="v2-sidebar-section">
           <div className="v2-sidebar-heading"><strong>Слои {selected?.name}</strong></div>
           {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode} onDropLayer={moveLayer} onState={(id,patch)=>proAction(()=>({kind:"setLayerState",id,...patch}))}/>}
         </div>
-        <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте страницу в списке для изменения порядка; название над холстом — для перемещения.</span></div></>)}}
+        <div className="v2-sidebar-tip"><StudioIcon name="move" size={17}/> <span>Перетаскивайте страницу в списке для изменения порядка; название над холстом — для перемещения.</span></div></>)}
       </aside>
       <section className="v2-workspace" aria-label="Бесконечная рабочая область">
         <div className="v2-mobile-panel-controls">
-          <button aria-label="Открыть страницы" onClick={()=>setLeftOpen(v=>!v)}><Layers3 size={18}/> Страницы</button>
-          <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}>Свойства</button>
+          <button aria-label="Открыть страницы" onClick={()=>setLeftOpen(v=>!v)}><StudioIcon name="layers" size={18}/> Страницы</button>
+          <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}><StudioIcon name="styles"/> Свойства</button>
         </div>
         <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""} ${editing?"is-text-editing":""}`}
           onContextMenu={e=>{if(editing)return;e.preventDefault();const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;const ids=id&&canSelect(document,id)?nodeIds.includes(id)?nodeIds:[id]:[];if(id&&ids.includes(id))setSelectedIds(ids);const page=(e.target as Element).closest<HTMLElement>("[data-studio-page]")?.dataset.studioPage;if(page){setSelectedPage(page);if(!id)setSelectedIds([]);}const local=localPoint(e);setMenu({x:Math.max(4,Math.min(sceneSize.width-210,local.x)),y:Math.max(4,Math.min(sceneSize.height-220,local.y)),ids});}} onPointerLeave={()=>setDistanceMarks([])} onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
@@ -692,13 +688,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </div>
           {rulers&&<Rulers viewport={viewport} size={sceneSize}/>}
           <div className="v2-canvas-actions">
-            <button onClick={()=>setViewport(v=>zoomAt(v,v.zoom/1.25,{x:sceneSize.width/2,y:sceneSize.height/2}))} aria-label="Уменьшить масштаб"><Minus size={16}/></button>
+            <button onClick={()=>setViewport(v=>zoomAt(v,v.zoom/1.25,{x:sceneSize.width/2,y:sceneSize.height/2}))} aria-label="Уменьшить масштаб"><StudioIcon name="minus" size={16}/></button>
             <span>{zoomPercent}%</span>
-            <button onClick={()=>setViewport(v=>zoomAt(v,v.zoom*1.25,{x:sceneSize.width/2,y:sceneSize.height/2}))} aria-label="Увеличить масштаб"><Plus size={16}/></button>
-            <button onClick={fitAll} aria-label="Показать все страницы" title="Все страницы"><Maximize size={16}/></button>
+            <button onClick={()=>setViewport(v=>zoomAt(v,v.zoom*1.25,{x:sceneSize.width/2,y:sceneSize.height/2}))} aria-label="Увеличить масштаб"><StudioIcon name="plus" size={16}/></button>
+            <button onClick={fitAll} aria-label="Показать все страницы" title="Все страницы"><StudioIcon name="fit" size={16}/></button>
           </div>
           <div className="v2-viewport-hint">Колесо — перемещение · Ctrl/⌘ + колесо — масштаб · два пальца — масштаб и перемещение</div>
-          <button className="v2-minimap-toggle" onClick={()=>setMinimapOpen(v=>!v)} aria-label="Показать или скрыть мини-карту" aria-expanded={minimapOpen}><MapIcon size={17}/></button>
+          <button className="v2-minimap-toggle" onClick={()=>setMinimapOpen(v=>!v)} aria-label="Показать или скрыть мини-карту" aria-expanded={minimapOpen}><StudioIcon name="map" size={17}/></button>
           {minimapOpen&&<MiniMap frames={frames} viewport={viewport} size={sceneSize} onCenter={center}/>}
         </div>
       </section>
@@ -712,6 +708,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           {authoredNode&&<label className="v2-widget-field">Название слоя<input key={authoredNode.id+":"+(authoredNode.layerName??"")} maxLength={100} defaultValue={nodeLabel(sourceDocument,authoredNode.id)} disabled={!!editing} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==nodeLabel(sourceDocument,authoredNode.id))proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{layerName:name}}));}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></label>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
           {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)proAction(()=>({kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
+          {authoredNode&&<label className="v2-layout-field">Непрозрачность (%)<input aria-label="Непрозрачность слоя" type="number" min={0} max={100} value={Math.round(authoredNode.opacity*100)} disabled={!!editing||authoredNode.locked} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=0&&n<=100)proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{opacity:n/100}}));}}/></label>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
@@ -774,7 +771,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </section></InspectorGroup>}
         {(authoredNode??(!activeNode&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null))&&(()=>{const n=(authoredNode??sourceDocument.nodes[selectedRoot!.id]),resolved=resolveStyleNode(sourceDocument,n);return <><InspectorGroup title="Связанные стили" icon="styles"><StyleBindings document={sourceDocument} node={n} disabled={!!editing} onCommand={command=>proAction(()=>command)}/></InspectorGroup><AdvancedProperties key={n.id} document={sourceDocument} node={resolved} palette={palette} authoredNode={n} mediaUrls={mediaUrls} disabled={!!editing||n.locked} onChange={visual=>changeVisual(n,resolved,visual)} onUnlink={slot=>proAction(()=>({kind:"bindStyle",id:n.id,slot,tokenId:null}))}/></>;})()}
         {authoredNode?.type==="image"&&<InspectorGroup title="Изображение" icon="image"><ImageControls node={authoredNode} onChange={patch=>libraryCommands({kind:"updateNode",id:authoredNode.id,changes:{...patch,...(authoredNode.visual?.imageCrop?{visual:{...authoredNode.visual,imageCrop:{...authoredNode.visual.imageCrop,x:patch.focalX??authoredNode.visual.imageCrop.x,y:patch.focalY??authoredNode.visual.imageCrop.y}}}:{})}})}/></InspectorGroup>}
-        <InspectorGroup title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
+        <InspectorGroup key={authoredNode?.type==="widget"?"widget":"other"} title="Блоки и данные приглашения" icon="component" defaultOpen={authoredNode?.type==="widget"}><InvitationControls document={{...sourceDocument,locale}} node={authoredNode} onInsert={insertWidget} onCommand={libraryCommands} disabled={!!editing||!canInsert}/></InspectorGroup>
         </InspectorPanel>
         <InspectorPanel active={inspectorTab==="animation"} label="Анимация"><MotionControls document={sourceDocument} node={authoredNode??(!nodeIds.length&&selectedRoot?sourceDocument.nodes[selectedRoot.id]:null)} ids={nodeIds} disabled={!!editing||!!session.transaction} onCommand={command=>proAction(()=>command)} onPreview={()=>{setTimelineTime(0);setTimelineOpen(true);setPreviewOpen(true);}}/></InspectorPanel>
         <InspectorPanel active={inspectorTab==="responsive"} label="Адаптив"><section className="v2-inspector-section">
@@ -800,7 +797,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <div className="v2-info-row"><span>Масштаб</span><strong>{zoomPercent}%</strong></div>
           <div className="v2-info-row"><span>Страниц</span><strong>{document.pages.length}</strong></div>
           <div className="v2-info-row"><span>Инструмент</span><strong>{activeTool==="hand"?"Рука":"Выделение"}</strong></div>
-          <button className="v2-inspector-button" onClick={fitAll}><Maximize size={15}/> Показать весь проект</button>
+          <button className="v2-inspector-button" onClick={fitAll}><StudioIcon name="fit" size={15}/> Показать весь проект</button>
         </section></InspectorPanel>
       </aside>
     </div>

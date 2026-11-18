@@ -60,6 +60,7 @@ jobs:
           npm run test:studio-v2-style-tokens
           npm run test:studio-v2-motion
           npm run test:studio-v2-responsive-pro
+          npm run test:studio-v2-color-math
           npm run typecheck
       - name: Export only Studio as a static Pages site
         run: bash scripts/build-studio-pages.sh
