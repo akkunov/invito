@@ -10,7 +10,7 @@ assert.equal(deviceForWidth(390),"mobile");assert.equal(deviceForWidth(768),"tab
 assert.deepEqual(responsiveDocument(doc,"mobile"),layoutDocument(doc),"legacy coordinates remain intact");
 for(const device of ["desktop","tablet","mobile"]){
  const resolved=responsiveDocument(doc,device),size=presentationSize(doc,resolved,doc.pages[0],device);
- assert.equal(size.width,DEVICE_WIDTH[device]);
+ assert.ok(Math.abs(size.width-DEVICE_WIDTH[device])<1e-8);
  assert.ok(Math.abs(size.height-1920*DEVICE_WIDTH[device]/1080)<1e-8);
 }
 doc=applyStudioCommand(doc,{kind:"setPageProfile",id:"page-1",device:"mobile",profile:{width:900,height:1000,mode:"reflow"}});
@@ -31,6 +31,10 @@ let session=createEditorSession(doc);
 session=dispatchStudioCommand(session,{kind:"setResponsiveOverride",id:"box",device:"mobile",patch:{x:42}});
 assert.equal(session.document.responsiveOverrides.mobile.box.x,42);
 assert.deepEqual(undoStudio(session).document.responsiveOverrides,doc.responsiveOverrides);
+const cleared=applyStudioCommand(doc,{kind:"setResponsiveOverride",id:"box",device:"tablet",patch:{x:undefined,width:undefined,visible:undefined}});
+assert.deepEqual(responsiveDocument(cleared,"tablet"),layoutDocument(cleared));
+const duplicated=applyStudioCommand(doc,{kind:"duplicateNode",id:"box",newIds:{box:"box-copy"}});
+assert.deepEqual(duplicated.responsiveOverrides.tablet["box-copy"],doc.responsiveOverrides.tablet.box);
 const deleted=applyStudioCommand(doc,{kind:"deleteNode",id:"box"});
 assert.equal(deleted.responsiveOverrides.tablet.box,undefined);
 console.log("PASS: device selection, legacy scale parity, responsive constraints, isolated overrides, serialization and undo");
