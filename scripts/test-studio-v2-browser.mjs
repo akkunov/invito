@@ -595,6 +595,20 @@ try{
   await largePage.getByRole("button",{name:"Отменить",exact:true}).click();
   await largePage.waitForFunction(()=>document.querySelector('[data-studio-node="cover-photo"]').style.borderTopLeftRadius!=="41px");
   await count(largePage,25);
+  // Import another asset without remounting or revoking the existing image URL.
+  await largePage.getByRole("button",{name:"Ресурсы",exact:true}).click();
+  const sample=await largePage.evaluate(()=>{const c=document.createElement("canvas");c.width=16;c.height=16;const ctx=c.getContext("2d");ctx.fillStyle="#334455";ctx.fillRect(0,0,16,16);return c.toDataURL("image/png").split(",")[1];});
+  const upload=largePage.locator('.v2-left input[type=file]');
+  const addSample=async(name)=>{await upload.setInputFiles({name,mimeType:"image/png",buffer:Buffer.from(sample,"base64")});const img=largePage.locator(".v2-asset-card").filter({hasText:name}).locator("img");await img.waitFor({state:"attached"});return img;};
+  const imgA=await addSample("performance-a.png"),firstUrl=await imgA.getAttribute("src");
+  assert.ok(firstUrl?.startsWith("blob:"));
+  const imgB=await addSample("performance-b.png"),secondUrl=await imgB.getAttribute("src");
+  assert.ok(secondUrl?.startsWith("blob:"));
+  assert.equal(await imgA.getAttribute("src"),firstUrl);
+  await largePage.getByRole("button",{name:"Удалить performance-b.png",exact:true}).click();
+  await imgB.waitFor({state:"detached"});
+  assert.equal(await imgA.getAttribute("src"),firstUrl);
+  assert.equal(await largePage.evaluate(async u=>{try{return (await fetch(u)).ok;}catch{return false;}},firstUrl),true);
  }catch(e){await largePage.screenshot({path:join(artifacts,"large-canvas-failure.png")}).catch(()=>{});throw e;}finally{await largeContext.close();}
  assert.deepEqual(errors,[],"Browser runtime errors");
  console.log("PASS: Chromium desktop + mobile, page reorder/delete/undo/redo, corners, reload persistence and preview");
