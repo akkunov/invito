@@ -1,4 +1,8 @@
 "use client";
+import {ColorPicker,type PaletteColor} from "./studio-v2-color-picker";
+import {StudioIcon} from "./studio-icon";
+import {resolveStyleNode} from "@/features/studio-v2/core/style-tokens.ts";
+import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {useLayoutEffect,useRef,type KeyboardEvent} from "react";
 import {plainText,reconcileText,rangeStyle,replaceRange,sanitizePlainText,type TextNode,type TextRun,type TextRange,type TextStyle} from "@/features/studio-v2/core/rich-text-engine.ts";
 import {textRunStyle} from "./studio-v2-artboard";
@@ -68,18 +72,20 @@ export function StudioV2TextEditor({node,editing,onRuns,onRange,onFinish}:{node:
     onDrop={e=>e.preventDefault()} onCompositionStart={()=>{composing.current=true;}} onCompositionEnd={e=>{composing.current=false;input(e.currentTarget);}} onKeyDown={key}/>
  </div>;
 }
-export function TextControls({node,editing,onStyle,onNode,onFinish}:{node:TextNode;editing:TextEditingSession|null;onStyle:(patch:Partial<TextStyle>)=>void;onNode:(patch:Partial<Pick<TextNode,"textAlign"|"lineHeight"|"letterSpacing"|"autoHeight">>)=>void;onFinish?:()=>void}){
- const style=editing?.typingStyle??rangeStyle(node.runs,editing?.range??{start:0,end:plainText(node.runs).length});
+export function TextControls({node,editing,onStyle,onNode,onFinish,palette=[],document,onUnlink}:{node:TextNode;palette?:PaletteColor[];document?:ProjectDocumentV2;onUnlink?:()=>void;editing:TextEditingSession|null;onStyle:(patch:Partial<TextStyle>)=>void;onNode:(patch:Partial<Pick<TextNode,"textAlign"|"lineHeight"|"letterSpacing"|"autoHeight">>)=>void;onFinish?:()=>void}){
+ const resolved=document?resolveStyleNode(document,node) as TextNode:node;
+ const style=editing?.typingStyle??rangeStyle(resolved.runs,editing?.range??{start:0,end:plainText(resolved.runs).length});
+ const linked=node.tokenRefs?.textColor;const color=linked&&document?resolved.runs[0]?.style.color??style.color:style.color;
  return <section className="v2-inspector-section">
- <h3>Текст</h3>
- <label className="v2-layout-field">Шрифт<select value={style.fontFamily} onChange={e=>onStyle({fontFamily:e.target.value as TextStyle["fontFamily"]})}><option value="sans">Arial</option><option value="serif">Georgia</option></select></label>
- <label className="v2-layout-field">Размер<input type="number" min={6} max={400} value={style.fontSize} onChange={e=>{const n=Number(e.target.value);if(n>=6&&n<=400)onStyle({fontSize:n});}}/></label>
- <label className="v2-layout-field">Насыщенность<select value={style.fontWeight} onChange={e=>onStyle({fontWeight:Number(e.target.value)})}>{[100,200,300,400,500,600,700,800,900].map(w=><option key={w} value={w}>{w}</option>)}</select></label>
- <div className="v2-nudge">{([{label:"B",key:"bold"},{label:"I",key:"italic"},{label:"U",key:"underline"},{label:"S",key:"strike"}] as const).map(({label,key})=><button key={key} aria-label={key} aria-pressed={key==="bold"?style.fontWeight>=700:style[key]} onMouseDown={e=>e.preventDefault()} onClick={()=>onStyle(key==="bold"?{fontWeight:style.fontWeight>=700?400:700}:{[key]:!style[key]})}>{label}</button>)}</div>
- <label className="v2-layout-field">Цвет<input type="color" value={style.color} onChange={e=>onStyle({color:e.target.value})}/></label>
- <label className="v2-layout-field">Выравнивание<select value={node.textAlign} onChange={e=>onNode({textAlign:e.target.value as TextNode["textAlign"]})}><option value="left">Слева</option><option value="center">Центр</option><option value="right">Справа</option></select></label>
- <label className="v2-layout-field">Высота строки<input type="number" min={0.8} max={4} step={0.05} value={node.lineHeight??1.14} onChange={e=>{const n=Number(e.target.value);if(n>=0.8&&n<=4)onNode({lineHeight:n});}}/></label>
- <label className="v2-layout-field">Интервал букв<input type="number" min={-10} max={60} value={node.letterSpacing??0} onChange={e=>{const n=Number(e.target.value);if(n>=-10&&n<=60)onNode({letterSpacing:n});}}/></label>
+ <h3>Типографика</h3>
+ <label className="v2-layout-field">Шрифт<select value={style.fontFamily} disabled={node.locked||!!node.tokenRefs?.typography} onChange={e=>onStyle({fontFamily:e.target.value as TextStyle["fontFamily"]})}><option value="sans">Arial</option><option value="serif">Georgia</option></select></label>
+ <label className="v2-layout-field">Размер<input type="number" min={6} max={400} value={style.fontSize} disabled={node.locked||!!node.tokenRefs?.typography} onChange={e=>{const n=Number(e.target.value);if(n>=6&&n<=400)onStyle({fontSize:n});}}/></label>
+ <label className="v2-layout-field">Насыщенность<select value={style.fontWeight} disabled={node.locked||!!node.tokenRefs?.typography} onChange={e=>onStyle({fontWeight:Number(e.target.value)})}>{[100,200,300,400,500,600,700,800,900].map(w=><option key={w} value={w}>{w}</option>)}</select></label>
+ <div className="v2-nudge">{([{label:"B",key:"bold"},{label:"I",key:"italic"},{label:"U",key:"underline"},{label:"S",key:"strike"}] as const).map(({label,key})=><button key={key} aria-label={key} disabled={node.locked||key==="bold"&&!!node.tokenRefs?.typography} aria-pressed={key==="bold"?style.fontWeight>=700:style[key]} onMouseDown={e=>e.preventDefault()} onClick={()=>onStyle(key==="bold"?{fontWeight:style.fontWeight>=700?400:700}:{[key]:!style[key]})} title={label}><StudioIcon name={key}/></button>)}</div>
+ <ColorPicker label="Цвет текста" value={color} palette={palette} disabled={node.locked||!!(linked&&editing)} linkedLabel={linked?document?.tokens?.[linked]?.name??linked:undefined} onUnlink={editing?undefined:onUnlink} onChange={color=>onStyle({color})}/>
+ <div className="v2-nudge v2-text-align">{(["left","center","right"] as const).map((align,i)=><button key={align} title={["Слева","По центру","Справа"][i]} aria-label={["Слева","По центру","Справа"][i]} aria-pressed={node.textAlign===align} onMouseDown={e=>e.preventDefault()} onClick={()=>onNode({textAlign:align})}><StudioIcon name={align==="left"?"textLeft":align==="center"?"textCenter":"textRight"}/></button>)}</div>
+ <label className="v2-layout-field">Высота строки<input type="number" min={0.8} max={4} step={0.05} value={resolved.lineHeight??1.14} disabled={node.locked||!!node.tokenRefs?.typography} onChange={e=>{const n=Number(e.target.value);if(n>=0.8&&n<=4)onNode({lineHeight:n});}}/></label>
+ <label className="v2-layout-field">Интервал букв<input type="number" min={-10} max={60} value={resolved.letterSpacing??0} disabled={node.locked||!!node.tokenRefs?.typography} onChange={e=>{const n=Number(e.target.value);if(n>=-10&&n<=60)onNode({letterSpacing:n});}}/></label>
  <label className="v2-layout-field">Автовысота<input type="checkbox" checked={!!node.autoHeight} onChange={e=>onNode({autoHeight:e.target.checked})}/></label>
  {editing&&<><p className="v2-placeholder">Выделено: {editing.range.end-editing.range.start} · Esc — отмена, Ctrl/⌘+Enter — готово</p><button className="v2-inspector-button" onClick={onFinish}>Готово</button></>}
  </section>;
