@@ -23,6 +23,7 @@ import { StyleLibrary, StyleBindings } from "./studio-v2-style-library";
 import { resolveStyleDocument, resolveStyleNode } from "@/features/studio-v2/core/style-tokens.ts";
 import type {VisualProperties} from "@/features/studio-v2/core/appearance.schema.ts";
 import { AdvancedProperties } from "./studio-v2-advanced-properties";
+import { visibleArtboards, pinnedArtboards } from "@/features/studio-v2/core/render-window.ts";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
 import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
@@ -359,6 +360,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   }
   const inset=rulers?RULER_THICKNESS:0;
   const sceneSize={width:Math.max(1,size.width-inset),height:Math.max(1,size.height-inset)};
+  const renderPages=visibleArtboards(document.pages.map((p,i)=>({id:p.id,rect:frames[i]})),viewport,sceneSize,pinnedArtboards(document,selectedPage,[...nodeIds,...(nodeGesture.current?.ids??[])],editing?.id,pageDrag.current?.id),Object.keys(document.nodes).length);
 
   useEffect(()=>{
     const stage=stageRef.current;
@@ -711,10 +713,10 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
             }}>
               {document.pages.map(page=>{
                 const root=document.nodes[page.rootNodeId];
-                return <div key={page.id} data-studio-page={page.id} className={`v2-frame ${selectedPage===page.id?"is-selected":""}`}
+                return <div key={page.id} data-studio-page={page.id} data-artboard-rendered={renderPages.has(page.id)?"true":"false"} className={`v2-frame ${selectedPage===page.id?"is-selected":""}`}
                   style={{left:page.placement.x,top:page.placement.y,width:root.width,height:root.height}}
                   >
-                  <StudioV2Artboard document={document} mediaUrls={mediaUrls} rootNodeId={page.rootNodeId} editingId={editing?.id} onMeasure={measureText} renderEditor={node=>editing?.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null}/>
+                  {renderPages.has(page.id)&&<StudioV2Artboard document={document} mediaUrls={mediaUrls} rootNodeId={page.rootNodeId} editingId={editing?.id} onMeasure={measureText} renderEditor={editing?node=>editing.id===node.id?<StudioV2TextEditor node={node} editing={editing} onRuns={runs=>editTextRuns(node.id,runs)} onRange={updateTextRange} onFinish={finishText}/>:null:undefined}/>}
                 </div>;
               })}
             </div>
