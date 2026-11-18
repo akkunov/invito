@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.18.0" },
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start:dev": "npm run dev",
     "build": "npm run prisma:generate && tsc -p tsconfig.build.json",
-    "start": "node dist/src/main.js",
+    "start": "node dist/server/src/main.js",
     "typecheck": "npm run prisma:generate && tsc --noEmit -p tsconfig.build.json",
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "db:migrate:dev": "prisma migrate dev --config prisma.config.ts",
