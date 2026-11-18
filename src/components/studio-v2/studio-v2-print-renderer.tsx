@@ -37,8 +37,7 @@ function inlineTree(source:HTMLElement,clone:HTMLElement){
   if(a instanceof HTMLSelectElement)Array.from(c.querySelectorAll("option")).forEach((o,j)=>{if(j===a.selectedIndex)o.setAttribute("selected","");else o.removeAttribute("selected");});
  }
 }
-export async function renderPrintCanvas(source:ProjectDocumentV2,pageId:string,pixelWidth:number,pixelHeight:number):Promise<HTMLCanvasElement>{
- if(!Number.isInteger(pixelWidth)||!Number.isInteger(pixelHeight)||pixelWidth<1||pixelHeight<1||pixelWidth>10000||pixelHeight>10000||pixelWidth*pixelHeight>32_000_000)throw Error("Недопустимый размер экспорта");
+async function renderPrintCanvas<T extends {pixelWidth:number;pixelHeight:number}>(source:ProjectDocumentV2,pageId:string,dimensions:(width:number,height:number)=>T):Promise<{canvas:HTMLCanvasElement;size:T}>{
  const page=source.pages.find(p=>p.id===pageId);if(!page)throw Error("Страница не найдена");
  const host=document.createElement("div");host.className="v2-print-capture";
  Object.assign(host.style,{position:"fixed",left:"-100000px",top:"0",pointerEvents:"none",zIndex:"-1",overflow:"visible"});
@@ -57,6 +56,8 @@ export async function renderPrintCanvas(source:ProjectDocumentV2,pageId:string,p
   }
   rendered=host.querySelector<HTMLElement>(".studio-v2-artboard-content");if(!rendered)throw Error("Не удалось отобразить страницу");
   const width=rendered.offsetWidth,height=rendered.offsetHeight;if(!width||!height)throw Error("Пустой артборд");
+  const size=dimensions(width,height),{pixelWidth,pixelHeight}=size;
+  if(!Number.isInteger(pixelWidth)||!Number.isInteger(pixelHeight)||pixelWidth<1||pixelHeight<1||pixelWidth>10000||pixelHeight>10000||pixelWidth*pixelHeight>32_000_000)throw Error("Недопустимый размер экспорта");
   for(const img of Array.from(rendered.querySelectorAll("img"))){img.loading="eager";await img.decode();if(!img.naturalWidth)throw Error("Изображение не загрузилось: "+img.alt);}
   const clone=rendered.cloneNode(true) as HTMLElement;inlineTree(rendered,clone);await embedImages(rendered,clone);
   clone.setAttribute("xmlns","http://www.w3.org/1999/xhtml");clone.style.margin="0";clone.style.overflow="hidden";
@@ -67,13 +68,11 @@ export async function renderPrintCanvas(source:ProjectDocumentV2,pageId:string,p
   const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)throw Error("Canvas недоступен");
   ctx.fillStyle="#FFFFFF";ctx.fillRect(0,0,pixelWidth,pixelHeight);ctx.drawImage(img,0,0,pixelWidth,pixelHeight);
   // Reject a tainted surface before handing it to either export path.
-  ctx.getImageData(0,0,1,1);return canvas;
+  ctx.getImageData(0,0,1,1);return {canvas,size};
  }finally{reactRoot.unmount();host.remove();Object.values(urls).forEach(URL.revokeObjectURL);}
 }
 export async function exportPrintPage(source:ProjectDocumentV2,pageId:string,widthMm:number,dpi:PrintDpi,format:"png"|"pdf"){
- const resolved=layoutDocument(resolveStyleDocument(bindDocument(source))),page=resolved.pages.find(p=>p.id===pageId);if(!page)throw Error("Страница не найдена");
- const root=resolved.nodes[page.rootNodeId],size=printSize(root.width,root.height,widthMm,dpi);
- const canvas=await renderPrintCanvas(source,pageId,size.pixelWidth,size.pixelHeight);
+ const {canvas,size}=await renderPrintCanvas(source,pageId,(width,height)=>printSize(width,height,widthMm,dpi));
  try{
   if(format==="png"){const png=new Uint8Array(await (await toBlob(canvas)).arrayBuffer());return new Blob([pngWithDpi(png,dpi).slice().buffer],{type:"image/png"});}
   const ctx=canvas.getContext("2d");if(!ctx)throw Error("Canvas недоступен");
@@ -84,9 +83,7 @@ export async function exportPrintPage(source:ProjectDocumentV2,pageId:string,wid
  }finally{canvas.width=0;canvas.height=0;}
 }
 export async function generateCover(source:ProjectDocumentV2,pageId:string){
- const doc=layoutDocument(resolveStyleDocument(bindDocument(source))),page=doc.pages.find(p=>p.id===pageId);if(!page)throw Error("Страница не найдена");
- const root=doc.nodes[page.rootNodeId],scale=Math.min(800/root.width,1200/root.height);
- const canvas=await renderPrintCanvas(source,pageId,Math.max(1,Math.round(root.width*scale)),Math.max(1,Math.round(root.height*scale)));
+ const {canvas}=await renderPrintCanvas(source,pageId,(width,height)=>{const scale=Math.min(800/width,1200/height);return {pixelWidth:Math.max(1,Math.round(width*scale)),pixelHeight:Math.max(1,Math.round(height*scale))};});
  try{return await toBlob(canvas);}finally{canvas.width=0;canvas.height=0;}
 }
 export function downloadOutput(blob:Blob,name:string,extension:string){
