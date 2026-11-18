@@ -4,7 +4,7 @@ export type Component = NonNullable<ProjectDocumentV2["components"]>[string];
 export type Asset = ProjectDocumentV2["assets"][string];
 export function snapshotVariant(doc:ProjectDocumentV2,rootId:string,id:string,name:string):Component["variants"][number]{
  const nodes:Record<string,ProjectNodeV2>={};
- function visit(key:string){const n=doc.nodes[key];if(!n||nodes[key])throw Error("Invalid source tree");nodes[key]=structuredClone(n);if(n.type==="frame")n.children.forEach(visit);}
+ function visit(key:string){const n=doc.nodes[key];if(!n||nodes[key])throw Error("Invalid source tree");nodes[key]=structuredClone(n);delete nodes[key].componentRef;if(n.type==="frame")n.children.forEach(visit);}
  visit(rootId);nodes[rootId].parentId=null;
  return {id,name,rootId,nodes};
 }
@@ -14,7 +14,7 @@ export function instantiateComponent(component:Component,variantId:string,parent
  const commands:StudioCommand[]=[];
  function walk(id:string,parent:string){
   const source=variant!.nodes[id],node={...structuredClone(source),id:ids.get(id)!,parentId:parent};
-  if(id===variant!.rootId){node.x=position.x;node.y=position.y;}
+  if(id===variant!.rootId){node.x=position.x;node.y=position.y;node.componentRef={componentId:component.id,variantId};}
   if(node.type==="frame")node.children=[];
   commands.push({kind:"insertNode",parentId:parent,node});
   if(source.type==="frame")source.children.forEach(c=>walk(c,node.id));
