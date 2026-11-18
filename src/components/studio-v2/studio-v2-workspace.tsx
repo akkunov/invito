@@ -142,6 +142,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const clipboard=useRef<CanvasClipboard|null>(null);
   const [hasClipboard,setHasClipboard]=useState(false);
   const [distanceMarks,setDistanceMarks]=useState<DistanceGuide[]>([]);
+  const [hoveredNodeId,setHoveredNodeId]=useState<string|null>(null);
   const [menu,setMenu]=useState<{x:number;y:number;ids:string[]}|null>(null);
   const [moveTarget,setMoveTarget]=useState("");
   const [guideAxis,setGuideAxis]=useState<"x"|"y">("x");
@@ -564,7 +565,12 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const local=localPoint(e);
     if(touchTap.current?.pointer===e.pointerId&&distance(local,touchTap.current.start)>5)touchTap.current=null;
     const drag=nodeGesture.current;
-    if(!drag){const hovered=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;setDistanceMarks(old=>{const next=e.altKey&&hovered?distanceGuides(document,nodeIds,hovered):[];return JSON.stringify(old)===JSON.stringify(next)?old:next;});}
+    if(!drag){
+      const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;
+      const hovered=id&&document.nodes[id]?.parentId!==null&&document.nodes[id]?.visible?id:null;
+      setHoveredNodeId(old=>old===(hovered??null)?old:hovered??null);
+      setDistanceMarks(old=>{const next=e.altKey&&hovered?distanceGuides(document,nodeIds,hovered):[];return JSON.stringify(old)===JSON.stringify(next)?old:next;});
+    }
     if(drag?.pointer===e.pointerId){
       const delta={x:(local.x-drag.start.x)/drag.zoom,y:(local.y-drag.start.y)/drag.zoom};
       if(!drag.started&&distance(local,drag.start)<4)return;
@@ -630,22 +636,40 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     }
     if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
   }
-  function stageWheel(e:ReactWheelEvent<HTMLDivElement>){
-    e.preventDefault();
+  function stageWheel(e:WheelEvent){
+    // React's delegated wheel listener may be passive. The native non-passive
+    // listener guarantees Ctrl+wheel zooms the artboard, not the browser page.
+    if(e.cancelable)e.preventDefault();
     if(nodeGesture.current||marqueeGesture.current)return;
+    const step=e.deltaMode===1?16:e.deltaMode===2?Math.max(1,stageRef.current?.clientHeight??800):1;
+    const dx=e.deltaX*step,dy=e.deltaY*step;
     if(e.ctrlKey||e.metaKey){
-      const anchor=localPoint(e);
-      setViewport(v=>zoomAt(v,v.zoom*Math.exp(-e.deltaY*.008),anchor));
+      const rect=stageRef.current?.getBoundingClientRect();
+      if(!rect)return;
+      const inset=rulers?RULER_THICKNESS:0;
+      const anchor={x:e.clientX-rect.left-inset,y:e.clientY-rect.top-inset};
+      setViewport(v=>zoomAt(v,v.zoom*Math.exp(-Math.max(-350,Math.min(350,dy))*.0025),anchor));
     }else{
-      setViewport(v=>panViewport(v,{x:-e.deltaX-(e.shiftKey?e.deltaY:0),y:e.shiftKey?0:-e.deltaY}));
+      setViewport(v=>panViewport(v,{x:-dx-(e.shiftKey?dy:0),y:e.shiftKey?0:-dy}));
     }
   }
+  useEffect(()=>{
+    const stage=stageRef.current;if(!stage)return;
+    stage.addEventListener("wheel",stageWheel,{passive:false});
+    return()=>stage.removeEventListener("wheel",stageWheel);
+    // The native handler only closes over ruler inset and stable state dispatchers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[rulers]);
   function moveSelected(axis:"x"|"y",delta:number){
     if(!selected)return;
     setSession(s=>dispatchStudioCommand(s,{kind:"movePage",id:selected.id,placement:{
       ...selected.placement,[axis]:selected.placement[axis]+delta,
     }}));
   }
+  const hoverNode=hoveredNodeId&&!editing&&activeTool==="select"&&!nodeGesture.current&&!pageDrag.current?document.nodes[hoveredNodeId]:null;
+  const hoverScreen=hoverNode?nodeCorners(document,hoverNode.id).map(point=>worldToScreen(point,viewport)):[];
+  const hoverX=hoverScreen.length?Math.min(...hoverScreen.map(point=>point.x)):0;
+  const hoverY=hoverScreen.length?Math.min(...hoverScreen.map(point=>point.y)):0;
   const zoomPercent=Math.round(viewport.zoom*100);
   const gridWorld=viewport.zoom<.3?100:40;
   const backgroundStyle:CSSProperties={
@@ -709,8 +733,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}><StudioIcon name="styles"/> Свойства</button>
         </div>
         <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""} ${editing?"is-text-editing":""}`}
-          onContextMenu={e=>{if(editing)return;e.preventDefault();const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;const ids=id&&canSelect(document,id)?nodeIds.includes(id)?nodeIds:[id]:[];if(id&&ids.includes(id))setSelectedIds(ids);const page=(e.target as Element).closest<HTMLElement>("[data-studio-page]")?.dataset.studioPage;if(page){setSelectedPage(page);if(!id)setSelectedIds([]);}const local=localPoint(e);setMenu({x:Math.max(4,Math.min(sceneSize.width-210,local.x)),y:Math.max(4,Math.min(sceneSize.height-220,local.y)),ids});}} onPointerLeave={()=>setDistanceMarks([])} onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
-          onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onWheel={stageWheel} onDoubleClick={e=>{if(activeTool!=="select")return;const target=(e.target as Element).closest<HTMLElement>("[data-studio-node]");const id=target?.dataset.studioNode;if(id)startText(id);}}>
+          onContextMenu={e=>{if(editing)return;e.preventDefault();const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;const ids=id&&canSelect(document,id)?nodeIds.includes(id)?nodeIds:[id]:[];if(id&&ids.includes(id))setSelectedIds(ids);const page=(e.target as Element).closest<HTMLElement>("[data-studio-page]")?.dataset.studioPage;if(page){setSelectedPage(page);if(!id)setSelectedIds([]);}const local=localPoint(e);setMenu({x:Math.max(4,Math.min(sceneSize.width-210,local.x)),y:Math.max(4,Math.min(sceneSize.height-220,local.y)),ids});}} onPointerLeave={()=>{setDistanceMarks([]);setHoveredNodeId(null);}} onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
+          onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onDoubleClick={e=>{if(activeTool!=="select")return;const target=(e.target as Element).closest<HTMLElement>("[data-studio-node]");const id=target?.dataset.studioNode;if(id)startText(id);}}>
           <div className="v2-stage-background" style={grid?backgroundStyle:undefined}/>
           <div className="v2-stage-inner" style={{left:inset,top:inset}}>
             <div className="v2-world" style={{
@@ -725,6 +749,12 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
                 </div>;
               })}
             </div>
+            {hoverNode&&hoverScreen.length===4&&<>
+              <svg className="v2-hover-outline" width={sceneSize.width} height={sceneSize.height} aria-hidden="true"><polygon points={hoverScreen.map(p=>p.x+","+p.y).join(" ")} fill="none" stroke="#2974e5" strokeWidth="1.3"/></svg>
+              <div className="v2-hover-measure" aria-hidden="true" style={{left:Math.max(6,Math.min(sceneSize.width-114,hoverX)),top:Math.max(5,Math.min(sceneSize.height-25,hoverY-25))}}>
+                {Math.round(hoverNode.width)} × {Math.round(hoverNode.height)} <span>px</span>
+              </div>
+            </>}
             {selectionScreen.length>0&&<svg className="v2-selection-outline" width={sceneSize.width} height={sceneSize.height} aria-hidden="true"><polygon points={selectionScreen.map(p=>p.x+","+p.y).join(" ")} fill="none" stroke="#2549d9" strokeWidth="1.5"/></svg>}
             {nodeIds.length>0&&!editing&&activeTool==="select"&&canResizeSelection(document,nodeIds)&&selectionScreen.map((point,index)=><button key={index} className="v2-transform-handle" aria-label={"Изменить размер "+["NW","NE","SE","SW"][index]} style={{left:point.x,top:point.y}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,nodeIds,(["nw","ne","se","sw"] as const)[index]);}}/>)}
             {nodeIds.length>0&&!editing&&activeTool==="select"&&freeSelection(document,nodeIds)&&selectionScreen.length===4&&<button className="v2-transform-rotate" aria-label="Вращение" style={{left:(selectionScreen[0].x+selectionScreen[1].x)/2,top:(selectionScreen[0].y+selectionScreen[1].y)/2-24}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,nodeIds,undefined,true);}}>↻</button>}
@@ -754,7 +784,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
             <button onClick={()=>setViewport(v=>zoomAt(v,v.zoom*1.25,{x:sceneSize.width/2,y:sceneSize.height/2}))} aria-label="Увеличить масштаб"><StudioIcon name="plus" size={16}/></button>
             <button onClick={fitAll} aria-label="Показать все страницы" title="Все страницы"><StudioIcon name="fit" size={16}/></button>
           </div>
-          <div className="v2-viewport-hint">Колесо — перемещение · Ctrl/⌘ + колесо — масштаб · два пальца — масштаб и перемещение</div>
+          <div className="v2-viewport-hint">Колесо — перемещение · Ctrl/⌘ + колесо — масштаб холста · два пальца — жесты</div>
           <button className="v2-minimap-toggle" onClick={()=>setMinimapOpen(v=>!v)} aria-label="Показать или скрыть мини-карту" aria-expanded={minimapOpen}><StudioIcon name="map" size={17}/></button>
           {minimapOpen&&<MiniMap frames={frames} viewport={viewport} size={sceneSize} onCenter={center}/>}
         </div>
