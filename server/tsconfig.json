@@ -15,7 +15,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
     "rewriteRelativeImportExtensions": true,
