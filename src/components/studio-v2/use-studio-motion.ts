@@ -1,6 +1,6 @@
 "use client";
 import {useLayoutEffect,useRef} from "react";
-import {easingCss,motionFrames,scrollProgress,parallaxOffset,type MotionTrack} from "@/features/studio-v2/core/motion-engine.ts";
+import {easingCss,motionFrames,scrollProgress,type MotionTrack} from "@/features/studio-v2/core/motion-engine.ts";
 export type MotionPlayback={mode:"live"}|{mode:"timeline";timeMs:number};
 const motionQuery="(prefers-reduced-motion: reduce)";
 /** Motion is attached to rendered elements, not the authored document or layout solver. */
@@ -11,7 +11,7 @@ export function useStudioMotion(ref:React.RefObject<HTMLDivElement|null>,tracks:
  const signature=JSON.stringify(tracks);
  useLayoutEffect(()=>{
   const root=ref.current;if(!root||mode==="off"||!root.animate)return;
-  const list=JSON.parse(signature) as MotionTrack[];
+  const list=JSON.parse(signature) as MotionTrack[];if(!list.length)return;
   const media=window.matchMedia(motionQuery);
   const cleanups:Array<()=>void>=[];
   const animations=new Set<Animation>();
