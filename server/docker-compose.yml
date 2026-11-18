@@ -1,0 +1,17 @@
+# Development-only PostgreSQL. Do not expose this container on the public internet.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: invito
+      POSTGRES_PASSWORD: invito_dev_only
+      POSTGRES_DB: invito
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invito -d invito"]
+      interval: 3s
+      retries: 20
+    volumes:
+      - invito_pg:/var/lib/postgresql/data
+volumes:
+  invito_pg:
