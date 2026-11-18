@@ -4,11 +4,17 @@ on:
     branches: [main, feat/29-3-templates-projects-api]
     paths:
       - 'tsconfig.json'
+      - 'src/features/studio-v2/browser/remote-sync.ts'
+      - 'scripts/test-studio-v2-remote-sync.mjs'
+      - 'package.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
   pull_request:
     paths:
       - 'tsconfig.json'
+      - 'src/features/studio-v2/browser/remote-sync.ts'
+      - 'scripts/test-studio-v2-remote-sync.mjs'
+      - 'package.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
 
@@ -78,3 +84,5 @@ jobs:
         run: npm run typecheck
       - name: Verify existing backend-domain contracts
         run: npm run test:backend-contract
+      - name: Verify remote sync conflict and offline behavior
+        run: npm run test:studio-v2-remote-sync
