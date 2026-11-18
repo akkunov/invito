@@ -10,7 +10,8 @@ export function useStudioMotion(ref:React.RefObject<HTMLDivElement|null>,tracks:
  const mode=playback?.mode??"off";
  const signature=JSON.stringify(tracks);
  useLayoutEffect(()=>{
-  const root=ref.current;if(!root||mode==="off"||!root.animate)return;
+  const element=ref.current;if(!element||mode==="off"||!element.animate)return;
+  const root:HTMLDivElement=element;
   const list=JSON.parse(signature) as MotionTrack[];if(!list.length)return;
   const media=window.matchMedia(motionQuery);
   const cleanups:Array<()=>void>=[];
