@@ -40,6 +40,8 @@
     "node_modules",
     "server/prisma.config.ts",
     "server/src/generated",
-    "server/dist"
+    "server/dist",
+    "server/src",
+    "server/test"
   ]
 }
