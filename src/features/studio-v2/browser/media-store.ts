@@ -71,3 +71,5 @@ export async function importLocalTemplate(record:TemplateRecord,media:ReadonlyMa
   tx.objectStore("templates").add(parsed,parsed.id);
  });}finally{db.close();}
 }
+
+export async function listLocalProjectIds():Promise<string[]>{const keys=await request<IDBValidKey[]>("projects","readonly",s=>s.getAllKeys());return keys.filter((k):k is string=>typeof k==="string");}
