@@ -13,7 +13,7 @@ export function pageProfile(doc:ProjectDocumentV2,page:StudioPageV2,device:Devic
  * while retaining source parent dimensions for anchor calculations. */
 export function responsiveDocument(doc:ProjectDocumentV2,device:Device,measurements:TextMeasurements={}):ProjectDocumentV2{
  const nodes={...doc.nodes};
- for(const [id,patch] of Object.entries(doc.responsiveOverrides?.[device]??{}))if(nodes[id])nodes[id]={...nodes[id],...patch};
+ for(const [id,patch] of Object.entries(doc.responsiveOverrides?.[device]??{}))if(nodes[id])nodes[id]={...nodes[id],...Object.fromEntries(Object.entries(patch).filter(([,value])=>value!==undefined))};
  const source={...doc,nodes};
  const sizes:Record<string,{width:number;height:number}>={};
  for(const page of doc.pages){const p=pageProfile(doc,page,device);if(p.mode==="reflow")sizes[page.rootNodeId]={width:p.width,height:p.height};}
