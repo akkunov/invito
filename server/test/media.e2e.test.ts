@@ -132,7 +132,7 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
   assert.equal(listing.status, 200);
   assert.equal(listing.data.items.length, 1);
   assert.ok(!("uploadUrl" in listing.data.items[0]));
-  assert.ok(!("storageKey" in (await db.mediaAsset.findUniqueOrThrow({where: {id: mediaId}})).toString()));
+  assert.ok(listing.data.items[0].storageKey === "asset:" + mediaId, "raw R2 object keys are private");
 
   // READY workspace-scoped media can be stored in existing Studio v2 JSONB snapshots.
   const document = createEmptyProjectV2("studio-" + randomUUID().slice(0, 8));
