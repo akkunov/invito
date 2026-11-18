@@ -10,6 +10,7 @@ import {layoutDocument} from "@/features/studio-v2/core/layout-engine.ts";
 import {useMediaUrls} from "./studio-v2-assets";
 import {StudioV2Artboard} from "./studio-v2-artboard";
 import {StudioIcon} from "./studio-icon";
+import {SimpleEditor} from "./studio-v2-simple-editor";
 import {PersonalizationConfig} from "./studio-v2-personalization-config";
 import {TemplateOutput} from "./studio-v2-template-output";
 import {coverStorageKey,validateTemplateResources} from "@/features/studio-v2/browser/template-output";
@@ -35,6 +36,7 @@ export function TemplateManager({document,onOpen,onClose}:Props){
  const [query,setQuery]=useState(""),[category,setCategory]=useState(""),[status,setStatus]=useState(""),[limit,setLimit]=useState(12);
  const [selected,setSelected]=useState(""),[version,setVersion]=useState(1),[meta,setMeta]=useState<TemplateMeta|null>(null),[note,setNote]=useState(""),[newName,setNewName]=useState(""),[newCategory,setNewCategory]=useState<TemplateMeta["category"]>("wedding");
  const fileInput=useRef<HTMLInputElement>(null);
+ const [simpleOpen,setSimpleOpen]=useState(false);
  useEffect(()=>{let active=true;void Promise.all([listLocalTemplates(),listLocalProjectIds()]).then(([list,ids])=>{if(active){setRecords(list);setProjectIds(ids);}}).catch(e=>{if(active)setError(String(e));}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
  const record=records.find(t=>t.id===selected),filtered=filterTemplates(records,query,category,status);
  const selectedVersion=record?.versions.find(v=>v.number===version);
@@ -44,6 +46,7 @@ export function TemplateManager({document,onOpen,onClose}:Props){
  async function create(blank=false){if(!newName.trim())return;const id=newId(),source=blank?createEmptyProjectV2(id,document.locale):document;
   await persist(createTemplate(id,{name:newName.trim(),category:newCategory,description:"",tags:[],coverPageId:source.pages[0].id,status:"draft"},source,now()));setNewName("");setMessage("Шаблон создан.");
  }
+ if(simpleOpen&&record&&selectedVersion)return <SimpleEditor key={record.id+"-"+selectedVersion.number} source={selectedVersion.document} contract={selectedVersion.personalization??{version:1,locales:[selectedVersion.document.locale],fields:[]}} name={record.meta.name} version={selectedVersion.number} onClose={()=>setSimpleOpen(false)}/>;
  return <div className="v2-preview-overlay v2-template-manager" role="dialog" aria-modal="true" aria-label="Менеджер шаблонов">
  <header className="v2-preview-header"><strong>Template Manager</strong><span className="v2-placeholder">Локальная библиотека · {records.length}</span><div className="v2-template-header-actions"><button disabled={busy||outputBusy||!loaded} onClick={()=>fileInput.current?.click()}><StudioIcon name="download"/> Импорт</button><button disabled={busy||outputBusy} onClick={onClose} aria-label="Закрыть менеджер шаблонов"><StudioIcon name="close"/></button></div><input type="file" accept=".json,application/json" ref={fileInput} hidden onChange={e=>{const file=e.target.files?.[0];e.target.value="";if(file)void action(async()=>{const t=await importTemplatePackage(file);setRecords(old=>[...old,t]);choose(t);setMessage("Пакет импортирован.");});}}/></header>
  <div className="v2-template-body">
@@ -65,6 +68,7 @@ export function TemplateManager({document,onOpen,onClose}:Props){
  <button className="v2-inspector-button" onClick={()=>void action(async()=>{const updated=updateTemplateMeta(record,{...meta,tags:[...new Set(tagDraft.split(",").map(t=>t.trim()).filter(Boolean))].slice(0,12)},now());if(updated.meta.status==="ready"){const issues=await validateTemplateResources(updated);if(issues.some(i=>i.severity==="error"))throw Error("Нельзя отметить готовым: "+issues.filter(i=>i.severity==="error").map(i=>i.message).join("; "));}await persist(updated);setMessage("Свойства сохранены.");})}>Сохранить свойства</button>
  <h3>Версии</h3><label className="v2-widget-field">Версия<select aria-label="Версия шаблона" value={version} onChange={e=>setVersion(Number(e.target.value))}>{[...record.versions].reverse().map(v=><option key={v.number} value={v.number}>v{v.number} · {v.note||"Снимок"}</option>)}</select></label>
  <button className="v2-inspector-button" onClick={()=>void action(async()=>{if(!selectedVersion)return;await onOpen(forkTemplateDocument(selectedVersion.document,"project-"+crypto.randomUUID()));onClose();})}>Открыть выбранную версию в Studio</button>
+ <button className="v2-inspector-button" disabled={!selectedVersion} onClick={()=>setSimpleOpen(true)}><StudioIcon name="phone"/> Открыть Simple Editor</button>
  <button className="v2-inspector-button" disabled={version===record.versions.length||record.versions.length>=50} onClick={()=>void action(async()=>{await persist(restoreTemplateVersion(record,version,now()));setMessage("Версия восстановлена новым снимком.");})}>Восстановить как новую версию</button>
  <label className="v2-widget-field">Комментарий к версии<input maxLength={300} value={note} onChange={e=>setNote(e.target.value)}/></label>
  <button className="v2-inspector-button" disabled={record.versions.length>=50} onClick={()=>void action(async()=>{await persist(appendTemplateVersion(record,document,note,now()));setMessage("Текущий проект сохранён новой версией.");})}>Сохранить текущий проект новой версией</button>
