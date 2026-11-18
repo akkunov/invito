@@ -227,3 +227,30 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
   assert.equal((await request(root + "/" + audio.id + "/complete", owner, "POST")).status, 422);
   assert.equal((await db.mediaAsset.findUniqueOrThrow({where:{id:audio.id}})).status, "REJECTED");
 });
+test("Cloudflare R2 SigV4 presigning works offline, with short image and bounded audio leases", async () => {
+  const keys = ["R2_ACCOUNT_ID","R2_BUCKET","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","R2_ENDPOINT"] as const;
+  const old = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+  try {
+    process.env.R2_ACCOUNT_ID = "0123456789abcdef0123456789abcdef";
+    process.env.R2_BUCKET = "invito-ci-private";
+    process.env.R2_ACCESS_KEY_ID = "ci-key";
+    process.env.R2_SECRET_ACCESS_KEY = "ci-secret-never-production";
+    delete process.env.R2_ENDPOINT;
+    const objectStore = new MediaObjectStore();
+    const put = new URL(await objectStore.signUpload("staging/ci/asset", "image/png"));
+    assert.equal(put.protocol, "https:");
+    assert.equal(put.hostname, "0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com");
+    assert.ok(put.searchParams.has("X-Amz-Signature"));
+    assert.equal(put.searchParams.get("X-Amz-Expires"), "180");
+    const readImage = new URL(await objectStore.signRead("verified/ci/photo.png", "image/png"));
+    assert.equal(readImage.searchParams.get("X-Amz-Expires"), "60");
+    const readAudio = new URL(await objectStore.signRead("verified/ci/song.mp3", "audio/mpeg"));
+    assert.equal(readAudio.searchParams.get("X-Amz-Expires"), "1200");
+  } finally {
+    for (const key of keys) {
+      const prev = old[key];
+      if (prev === undefined) delete process.env[key];
+      else process.env[key] = prev;
+    }
+  }
+});
