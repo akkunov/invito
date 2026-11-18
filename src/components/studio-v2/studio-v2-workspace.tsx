@@ -26,7 +26,7 @@ import {
   rulerMarks, screenToWorld, unionRects, zoomAt, worldToScreen, type Point, type Rect, type Size, type Viewport,
 } from "@/features/studio-v2/core/viewport.ts";
 
-import { canSelect, normalizeSelection, selectNode, nodeCorners, nodeBounds, selectionBounds, moveSelection, resizeNode, rotateNode, marqueeSelection, snapMove, groupSelection, ungroupSelection, type Handle } from "@/features/studio-v2/core/selection-transform.ts";
+import { canSelect, normalizeSelection, selectNode, nodeCorners, selectionBounds, moveSelection, resizeNode, rotateNode, marqueeSelection, snapMove, groupSelection, ungroupSelection, type Handle } from "@/features/studio-v2/core/selection-transform.ts";
 
 import { layoutDocument } from "@/features/studio-v2/core/layout-engine.ts";
 import type { StudioCommand } from "@/features/studio-v2/core/command-engine.ts";
@@ -430,7 +430,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const local=localPoint(e);
     if(touchTap.current?.pointer===e.pointerId&&distance(local,touchTap.current.start)>5)touchTap.current=null;
     const drag=nodeGesture.current;
-    if(!drag){const hovered=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;setDistanceMarks(e.altKey&&hovered?distanceGuides(document,nodeIds,hovered):[]);}
+    if(!drag){const hovered=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;setDistanceMarks(old=>{const next=e.altKey&&hovered?distanceGuides(document,nodeIds,hovered):[];return JSON.stringify(old)===JSON.stringify(next)?old:next;});}
     if(drag?.pointer===e.pointerId){
       const delta={x:(local.x-drag.start.x)/drag.zoom,y:(local.y-drag.start.y)/drag.zoom};
       if(!drag.started&&distance(local,drag.start)<4)return;
@@ -569,7 +569,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}>Свойства</button>
         </div>
         <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""} ${editing?"is-text-editing":""}`}
-          onContextMenu={e=>{if(editing)return;e.preventDefault();const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;const ids=id&&canSelect(document,id)?nodeIds.includes(id)?nodeIds:[id]:nodeIds;if(id&&ids.includes(id))setSelectedIds(ids);const local=localPoint(e);setMenu({x:Math.max(4,Math.min(sceneSize.width-210,local.x)),y:Math.max(4,Math.min(sceneSize.height-220,local.y)),ids});}} onPointerLeave={()=>setDistanceMarks([])} onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
+          onContextMenu={e=>{if(editing)return;e.preventDefault();const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;const ids=id&&canSelect(document,id)?nodeIds.includes(id)?nodeIds:[id]:[];if(id&&ids.includes(id))setSelectedIds(ids);const page=(e.target as Element).closest<HTMLElement>("[data-studio-page]")?.dataset.studioPage;if(page){setSelectedPage(page);if(!id)setSelectedIds([]);}const local=localPoint(e);setMenu({x:Math.max(4,Math.min(sceneSize.width-210,local.x)),y:Math.max(4,Math.min(sceneSize.height-220,local.y)),ids});}} onPointerLeave={()=>setDistanceMarks([])} onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
           onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onWheel={stageWheel} onDoubleClick={e=>{if(activeTool!=="select")return;const target=(e.target as Element).closest<HTMLElement>("[data-studio-node]");const id=target?.dataset.studioNode;if(id)startText(id);}}>
           <div className="v2-stage-background" style={grid?backgroundStyle:undefined}/>
           <div className="v2-stage-inner" style={{left:inset,top:inset}}>
@@ -630,7 +630,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <section className="v2-inspector-section">
           <h3>Выделение</h3>
           <div className="v2-pro-actions"><button disabled={!nodeIds.length||!!editing} onClick={()=>copyLayers()}>Копировать</button><button disabled={!hasClipboard||!!editing} onClick={()=>pasteLayers()}>Вставить</button><button disabled={!nodeIds.length||!!editing} onClick={()=>pasteLayers(true)}>Дублировать</button></div>
-          {nodeIds.length>=2&&<><p className="v2-placeholder">Выравнивание по границам выделения</p><div className="v2-pro-actions">{(["left","center","right","top","middle","bottom"] as const).map((a,i)=><button key={a} title={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} disabled={!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>alignSelection(document,nodeIds,a))}>{["⫷","↔","⫸","⊤","↕","⊥"][i]}</button>)}</div><div className="v2-pro-actions">{(["x","y"] as const).map(axis=><button key={axis} disabled={nodeIds.length<3||!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>distributeSelection(document,nodeIds,axis))}>Интервал {axis.toUpperCase()}</button>)}</div><div className="v2-pro-actions"><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,-15))}>−15°</button><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,15))}>+15°</button></div></>}
+          {nodeIds.length>=2&&<><p className="v2-placeholder">Выравнивание по границам выделения</p><div className="v2-pro-actions">{(["left","center","right","top","middle","bottom"] as const).map((a,i)=><button key={a} aria-label={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} title={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} disabled={!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>alignSelection(document,nodeIds,a))}>{["⫷","↔","⫸","⊤","↕","⊥"][i]}</button>)}</div><div className="v2-pro-actions">{(["x","y"] as const).map(axis=><button key={axis} disabled={nodeIds.length<3||!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>distributeSelection(document,nodeIds,axis))}>Интервал {axis.toUpperCase()}</button>)}</div><div className="v2-pro-actions"><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,-15))}>−15°</button><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,15))}>+15°</button></div></>}
           {activeNode&&<><label className="v2-layout-field">Переместить в<select value={moveTarget} onChange={e=>setMoveTarget(e.target.value)}><option value="">Выберите фрейм</option>{Object.values(document.nodes).filter(n=>n.type==="frame"&&n.id!==activeNode.id&&n.id!==activeNode.parentId&&!n.locked&&n.visible).map(n=><option key={n.id} value={n.id}>{nodeLabel(document,n.id)} · {n.id.slice(0,12)}</option>)}</select></label><button className="v2-inspector-button" disabled={!moveTarget||!!editing} onClick={moveLayerToFrame}>Переместить слой</button></>}
 
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
