@@ -14,6 +14,7 @@ import { StudioV2ProjectRenderer } from "./studio-v2-project-renderer";
 import { pageProfile, DEVICE_WIDTH, type Device, type NodeOverride, type PageProfile } from "@/features/studio-v2/core/responsive-engine.ts";
 import { InvitationControls } from "./studio-v2-invitation-controls";
 import { BLOCK_NAMES, bindDocument, createWidget, type BlockKind } from "@/features/studio-v2/core/invitation-behavior.ts";
+import { alignSelection, distributeSelection, scaleSelection, rotateSelection, copySelection, pasteSelection, reparentPreserveWorld, distanceGuides, freeSelection, canResizeSelection, type CanvasClipboard, type DistanceGuide } from "@/features/studio-v2/core/canvas-pro.ts";
 import { StudioV2Artboard } from "./studio-v2-artboard";
 import { StudioV2TextEditor, TextControls, type TextEditingSession } from "./studio-v2-text-editor";
 import { plainText, formatRange, rangeStyle, type TextRun, type TextStyle, type TextRange, type TextNode } from "@/features/studio-v2/core/rich-text-engine.ts";
@@ -42,10 +43,10 @@ function nodeLabel(doc:ProjectDocumentV2,id:string){
  if(node.type==="widget")return BLOCK_NAMES[node.block.kind][doc.locale];
  return "Фигура";
 }
-function LayerRows({document,ids,selected,onSelect,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;depth?:number}){
+function LayerRows({document,ids,selected,onSelect,onDropLayer,depth=0}:{document:ProjectDocumentV2;ids:string[];selected:string[];onSelect:(id:string,add:boolean)=>void;onDropLayer:(id:string,target:string)=>void;depth?:number}){
  return <>{[...ids].reverse().map(id=>{
   const n=document.nodes[id];if(!n)return null;
-  return <div key={id}><button className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span>{n.type==="frame"?"▣":n.type==="text"?"T":n.type==="image"?"▧":"◇"}</span><span>{nodeLabel(document,id)}</span></button>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} depth={depth+1}/>}</div>
+  return <div key={id}><button draggable={canSelect(document,id)} onDragStart={e=>{e.dataTransfer.setData("application/x-invito-layer",id);e.dataTransfer.effectAllowed="move";}} onDragOver={e=>{if(e.dataTransfer.types.includes("application/x-invito-layer")){e.preventDefault();e.dataTransfer.dropEffect="move";}}} onDrop={e=>{e.preventDefault();e.stopPropagation();const source=e.dataTransfer.getData("application/x-invito-layer");if(source&&source!==id)onDropLayer(source,id);}} className="v2-layer-row" style={{paddingLeft:12+depth*14}} aria-pressed={selected.includes(id)} disabled={!canSelect(document,id)} onClick={e=>onSelect(id,e.shiftKey)}><span>{n.type==="frame"?"▣":n.type==="text"?"T":n.type==="image"?"▧":"◇"}</span><span>{nodeLabel(document,id)}</span></button>{n.type==="frame"&&<LayerRows document={document} ids={n.children} selected={selected} onSelect={onSelect} onDropLayer={onDropLayer} depth={depth+1}/>}</div>
  })}</>;
 }
 const clampZoom = (zoom: number) => clamp(zoom, 0.025, 3);
@@ -114,6 +115,11 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [loaded,setLoaded]=useState(false);
   const [selectedPage,setSelectedPage]=useState<string|null>("page-1");
   const [selectedIds,setSelectedIds]=useState<string[]>([]);
+  const clipboard=useRef<CanvasClipboard|null>(null);
+  const [hasClipboard,setHasClipboard]=useState(false);
+  const [distanceMarks,setDistanceMarks]=useState<DistanceGuide[]>([]);
+  const [menu,setMenu]=useState<{x:number;y:number;ids:string[]}|null>(null);
+  const [moveTarget,setMoveTarget]=useState("");
   const [editing,setEditing]=useState<TextEditingSession|null>(null);
   const [textMeasurements,setTextMeasurements]=useState<Record<string,number>>({});
   const measureText=useCallback((id:string,height:number)=>setTextMeasurements(old=>old[id]===height?old:{...old,[id]:height}),[]);
@@ -205,6 +211,38 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const node={id,parentId:target.id,type:"frame" as const,name:"Новый фрейм",x:24,y:24,width:320,height:240,rotation:0,opacity:1,visible:true,locked:false,children:[],layout:"free" as const,gap:16,padding:{top:16,right:16,bottom:16,left:16},background:"transparent",clip:false};
     setSession(s=>dispatchStudioCommand(s,{kind:"insertNode",parentId:target.id,node}));setSelectedIds([id]);
   }
+  function proAction(make:()=>StudioCommand|StudioCommand[]){
+    if(editing||session.transaction)return;
+    try{const commands=make();const next=dispatchStudioCommand(session,commands);setSession(next);setSelectionError(null);}
+    catch(error){setSelectionError(error instanceof Error?error.message:"Не удалось изменить слои.");}
+    setMenu(null);
+  }
+  function copyLayers(ids=nodeIds){
+    try{clipboard.current=copySelection(sourceDocument,document,ids);setHasClipboard(true);setSelectionError(null);}catch{setSelectionError("Выберите слои для копирования.");}
+    setMenu(null);
+  }
+  function pasteLayers(duplicate=false,ids=nodeIds){
+    if(editing||session.transaction)return;
+    try{
+      const clip=duplicate?copySelection(sourceDocument,document,ids):clipboard.current;
+      const first=ids.length?document.nodes[ids[0]]:null;
+      const target=duplicate?first?.parentId:(first?.type==="frame"?first.id:first?.parentId??selectedRoot?.id);
+      if(!clip||!target)throw Error("Выберите страницу или фрейм.");
+      const result=pasteSelection(document,clip,target,()=>"node-"+crypto.randomUUID());
+      setSession(dispatchStudioCommand(session,result.command));setSelectedIds(result.ids);setSelectionError(null);
+    }catch(error){setSelectionError(error instanceof Error?error.message:"Не удалось вставить слои.");}setMenu(null);
+  }
+  function moveLayer(id:string,targetId:string){
+    const target=document.nodes[targetId];if(!target)return;
+    proAction(()=>{
+      if(target.type==="frame")return reparentPreserveWorld(document,id,target.id);
+      if(!target.parentId)throw Error("Нужен фрейм");
+      const parent=document.nodes[target.parentId];if(parent.type!=="frame")throw Error("Нужен фрейм");
+      const index=parent.children.indexOf(targetId);
+      return reparentPreserveWorld(document,id,parent.id,index);
+    });
+  }
+  function moveLayerToFrame(){if(activeNode&&moveTarget)moveLayer(activeNode.id,moveTarget);}
   const selectionRect=nodeIds.length?selectionBounds(document,nodeIds):null;
   const selectionPolygon=activeNode?nodeCorners(document,activeNode.id):selectionRect?[{x:selectionRect.x,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y},{x:selectionRect.x+selectionRect.width,y:selectionRect.y+selectionRect.height},{x:selectionRect.x,y:selectionRect.y+selectionRect.height}]:[];
   const selectionScreen=selectionPolygon.map(p=>worldToScreen(p,viewport));
@@ -246,7 +284,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     function down(e:KeyboardEvent){
       const target=e.target as HTMLElement|null;
       if(previewOpen){if(e.key==="Escape")setPreviewOpen(false);return;}
-      if(target?.closest("input,textarea,select,[contenteditable=true]"))return;
+      if(target?.closest("input,textarea,select,[contenteditable=true],[contenteditable=plaintext-only]"))return;
+      if(menu&&e.key==="Escape"){setMenu(null);e.preventDefault();return;}
       if(editing){if(e.key==="Escape"){finishText(true);e.preventDefault();}return;}
       if(e.key==="Enter"&&activeNode?.type==="text"){e.preventDefault();startText(activeNode.id);return;}
       if(e.key.toLowerCase()==="t"&&!e.ctrlKey&&!e.metaKey){addText();return;}
@@ -255,6 +294,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(e.key.toLowerCase()==="h"&&!e.metaKey&&!e.ctrlKey)setTool("hand");
       if(e.key==="Escape"){setSelectedIds([]);setSelectedPage(null);setLeftOpen(false);setRightOpen(false);if(nodeGesture.current){nodeGesture.current=null;setSession(s=>s.transaction?cancelStudioTransaction(s):s);setGuides({});}marqueeGesture.current=null;setMarquee(null);return;}
       if(nodeGesture.current||pageDrag.current)return;
+      if((e.ctrlKey||e.metaKey)&&!e.altKey){const key=e.key.toLowerCase();if(key==="c"&&nodeIds.length){e.preventDefault();copyLayers();return;}if(key==="v"&&hasClipboard){e.preventDefault();pasteLayers();return;}if(key==="d"&&nodeIds.length){e.preventDefault();pasteLayers(true);return;}}
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
         e.preventDefault();const step=e.shiftKey?10:1;
         const delta={x:e.key==="ArrowLeft"?-step:e.key==="ArrowRight"?step:0,y:e.key==="ArrowUp"?-step:e.key==="ArrowDown"?step:0};
@@ -267,11 +307,11 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         e.preventDefault();setSession(s=>s.transaction?s:e.shiftKey?redoStudio(s):undoStudio(s));
       }
     }
-    const up=(e:KeyboardEvent)=>{if(e.code==="Space")setSpaceHeld(false)};
-    const blur=()=>setSpaceHeld(false);
+    const up=(e:KeyboardEvent)=>{if(e.code==="Space")setSpaceHeld(false);if(e.key==="Alt")setDistanceMarks([]);};
+    const blur=()=>{setSpaceHeld(false);setDistanceMarks([]);};
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[nodeIds,editing,sourceDocument,previewOpen]);
+  },[nodeIds,editing,sourceDocument,previewOpen,hasClipboard,menu,selectedPage,session,document]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -335,6 +375,8 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   function middle(a:Point,b:Point){return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
   function startNodeGesture(e:ReactPointerEvent<HTMLElement>,ids:string[],handle?:Handle,rotate=false){
     if(editing)return;
+    if(rotate&&!freeSelection(document,ids))return;
+    if(handle&&!canResizeSelection(document,ids))return;
     if(!rotate&&!handle&&!movable(ids))return;
     if(handle&&ids.some(id=>{const n=sourceDocument.nodes[id];return n.sizing?.width==="hug"||n.sizing?.height==="hug"||n.sizing?.width==="fill"||n.sizing?.height==="fill"||!movable([id]);}))return;
     nodeGesture.current={pointer:e.pointerId,start:localPoint(e),document,ids,started:false,handle,rotate,zoom:viewport.zoom};
@@ -343,6 +385,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   function stagePointerDown(e:ReactPointerEvent<HTMLDivElement>){
     const local=localPoint(e);
     const target=e.target as Element;
+    if(menu&&!target.closest(".v2-canvas-menu"))setMenu(null);
     if(target.closest("button,.v2-minimap,.v2-text-edit"))return;
     if(editing){finishText();return;}
     const hit=target.closest<HTMLElement>("[data-studio-node]");
@@ -387,17 +430,20 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const local=localPoint(e);
     if(touchTap.current?.pointer===e.pointerId&&distance(local,touchTap.current.start)>5)touchTap.current=null;
     const drag=nodeGesture.current;
+    if(!drag){const hovered=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;setDistanceMarks(e.altKey&&hovered?distanceGuides(document,nodeIds,hovered):[]);}
     if(drag?.pointer===e.pointerId){
       const delta={x:(local.x-drag.start.x)/drag.zoom,y:(local.y-drag.start.y)/drag.zoom};
       if(!drag.started&&distance(local,drag.start)<4)return;
       if(!drag.started){drag.started=true;setSession(s=>beginStudioTransaction(s,"Трансформация слоя"));}
       if(drag.rotate){
-        const id=drag.ids[0],b=nodeBounds(drag.document,id),center=worldToScreen({x:b.x+b.width/2,y:b.y+b.height/2},viewport);
-        const angle=(Math.atan2(local.y-center.y,local.x-center.x)-Math.atan2(drag.start.y-center.y,drag.start.x-center.x))*180/Math.PI+drag.document.nodes[id].rotation;
-        setSession(s=>dispatchStudioCommand(s,rotateNode(drag.document,id,e.shiftKey?Math.round(angle/15)*15:angle)));
+        const id=drag.ids[0],b=selectionBounds(drag.document,drag.ids),center=worldToScreen({x:b.x+b.width/2,y:b.y+b.height/2},viewport);
+        const change=(Math.atan2(local.y-center.y,local.x-center.x)-Math.atan2(drag.start.y-center.y,drag.start.x-center.x))*180/Math.PI;
+        const angle=change+(drag.ids.length===1?drag.document.nodes[id].rotation:0),snapped=e.shiftKey?Math.round(angle/15)*15:angle;
+        const commands=drag.ids.length===1?rotateNode(drag.document,id,snapped):rotateSelection(drag.document,drag.ids,snapped);
+        setSession(s=>{try{return dispatchStudioCommand(s,commands);}catch{return s;}});
       }else if(drag.handle){
-        const command=resizeNode(drag.document,drag.ids[0],drag.handle,delta,e.shiftKey);
-        setSession(s=>dispatchStudioCommand(s,command));
+        const command=drag.ids.length===1?resizeNode(drag.document,drag.ids[0],drag.handle,delta,e.shiftKey):scaleSelection(drag.document,drag.ids,drag.handle,delta);
+        setSession(s=>{try{return dispatchStudioCommand(s,command);}catch{return s;}});
       }else{
         const snapped=e.altKey?{delta,guideX:undefined,guideY:undefined}:snapMove(drag.document,drag.ids,delta,drag.zoom);
         setGuides({guideX:snapped.guideX,guideY:snapped.guideY});
@@ -513,7 +559,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         })}</div>
         <div className="v2-sidebar-section">
           <div className="v2-sidebar-heading"><strong>Слои {selected?.name}</strong></div>
-          {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode}/>}
+          {selectedRoot?.type==="frame"&&<LayerRows document={document} ids={selectedRoot.children} selected={nodeIds} onSelect={chooseNode} onDropLayer={moveLayer}/>}
         </div>
         <div className="v2-sidebar-tip"><Move size={17}/> <span>Перетаскивайте название страницы над фреймом, чтобы изменить расположение.</span></div></>}
       </aside>
@@ -523,7 +569,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}>Свойства</button>
         </div>
         <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""} ${editing?"is-text-editing":""}`}
-          onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
+          onContextMenu={e=>{if(editing)return;e.preventDefault();const id=(e.target as Element).closest<HTMLElement>("[data-studio-node]")?.dataset.studioNode;const ids=id&&canSelect(document,id)?nodeIds.includes(id)?nodeIds:[id]:nodeIds;if(id&&ids.includes(id))setSelectedIds(ids);const local=localPoint(e);setMenu({x:Math.max(4,Math.min(sceneSize.width-210,local.x)),y:Math.max(4,Math.min(sceneSize.height-220,local.y)),ids});}} onPointerLeave={()=>setDistanceMarks([])} onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
           onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onWheel={stageWheel} onDoubleClick={e=>{if(activeTool!=="select")return;const target=(e.target as Element).closest<HTMLElement>("[data-studio-node]");const id=target?.dataset.studioNode;if(id)startText(id);}}>
           <div className="v2-stage-background" style={grid?backgroundStyle:undefined}/>
           <div className="v2-stage-inner" style={{left:inset,top:inset}}>
@@ -540,8 +586,10 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
               })}
             </div>
             {selectionScreen.length>0&&<svg className="v2-selection-outline" width={sceneSize.width} height={sceneSize.height} aria-hidden="true"><polygon points={selectionScreen.map(p=>p.x+","+p.y).join(" ")} fill="none" stroke="#2549d9" strokeWidth="1.5"/></svg>}
-            {activeNode&&!editing&&activeTool==="select"&&selectionScreen.map((point,index)=><button key={index} className="v2-transform-handle" aria-label={"Изменить размер "+["NW","NE","SE","SW"][index]} style={{left:point.x,top:point.y}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,[activeNode.id],(["nw","ne","se","sw"] as const)[index]);}}/>)}
-            {activeNode&&!editing&&activeTool==="select"&&selectionScreen.length===4&&<button className="v2-transform-rotate" aria-label="Вращение" style={{left:(selectionScreen[0].x+selectionScreen[1].x)/2,top:(selectionScreen[0].y+selectionScreen[1].y)/2-24}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,[activeNode.id],undefined,true);}}>↻</button>}
+            {nodeIds.length>0&&!editing&&activeTool==="select"&&canResizeSelection(document,nodeIds)&&selectionScreen.map((point,index)=><button key={index} className="v2-transform-handle" aria-label={"Изменить размер "+["NW","NE","SE","SW"][index]} style={{left:point.x,top:point.y}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,nodeIds,(["nw","ne","se","sw"] as const)[index]);}}/>)}
+            {nodeIds.length>0&&!editing&&activeTool==="select"&&freeSelection(document,nodeIds)&&selectionScreen.length===4&&<button className="v2-transform-rotate" aria-label="Вращение" style={{left:(selectionScreen[0].x+selectionScreen[1].x)/2,top:(selectionScreen[0].y+selectionScreen[1].y)/2-24}} onPointerDown={e=>{e.stopPropagation();if(e.button===0)startNodeGesture(e,nodeIds,undefined,true);}}>↻</button>}
+            {menu&&<div className="v2-canvas-menu" role="group" aria-label="Действия со слоями" style={{left:menu.x,top:menu.y}} onPointerDown={e=>e.stopPropagation()}><button disabled={!menu.ids.length} onClick={()=>copyLayers(menu.ids)}>Копировать <kbd>Ctrl+C</kbd></button><button disabled={!hasClipboard} onClick={()=>pasteLayers(false,menu.ids)}>Вставить <kbd>Ctrl+V</kbd></button><button disabled={!menu.ids.length} onClick={()=>pasteLayers(true,menu.ids)}>Дублировать <kbd>Ctrl+D</kbd></button><button disabled={!menu.ids.length} onClick={()=>{proAction(()=>menu.ids.map(id=>({kind:"deleteNode",id})));setSelectedIds([]);}}>Удалить</button><button onClick={()=>setMenu(null)}>Закрыть</button></div>}
+            {distanceMarks.length>0&&<svg className="v2-distance-overlay" width={sceneSize.width} height={sceneSize.height} aria-hidden="true">{distanceMarks.map((mark,i)=>{const a=worldToScreen(mark.from,viewport),b=worldToScreen(mark.to,viewport);return <g key={i}><line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#dc2626" strokeDasharray="3 2"/><text x={(a.x+b.x)/2} y={(a.y+b.y)/2-5} textAnchor="middle" fontSize={11} fill="#dc2626">{Math.round(mark.distance)}</text></g>;})}</svg>}
             {marquee&&<div className="v2-marquee" style={{left:marquee.x,top:marquee.y,width:marquee.width,height:marquee.height}}/>}
             {guides.guideX!==undefined&&<div className="v2-guide v2-guide-x" style={{left:guides.guideX*viewport.zoom+viewport.x}}/>}
             {guides.guideY!==undefined&&<div className="v2-guide v2-guide-y" style={{top:guides.guideY*viewport.zoom+viewport.y}}/>}
@@ -581,6 +629,10 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </section>
         <section className="v2-inspector-section">
           <h3>Выделение</h3>
+          <div className="v2-pro-actions"><button disabled={!nodeIds.length||!!editing} onClick={()=>copyLayers()}>Копировать</button><button disabled={!hasClipboard||!!editing} onClick={()=>pasteLayers()}>Вставить</button><button disabled={!nodeIds.length||!!editing} onClick={()=>pasteLayers(true)}>Дублировать</button></div>
+          {nodeIds.length>=2&&<><p className="v2-placeholder">Выравнивание по границам выделения</p><div className="v2-pro-actions">{(["left","center","right","top","middle","bottom"] as const).map((a,i)=><button key={a} title={["Слева","Центр X","Справа","Сверху","Центр Y","Снизу"][i]} disabled={!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>alignSelection(document,nodeIds,a))}>{["⫷","↔","⫸","⊤","↕","⊥"][i]}</button>)}</div><div className="v2-pro-actions">{(["x","y"] as const).map(axis=><button key={axis} disabled={nodeIds.length<3||!!editing||!freeSelection(document,nodeIds)} onClick={()=>proAction(()=>distributeSelection(document,nodeIds,axis))}>Интервал {axis.toUpperCase()}</button>)}</div><div className="v2-pro-actions"><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,-15))}>−15°</button><button disabled={!freeSelection(document,nodeIds)||!!editing} onClick={()=>proAction(()=>rotateSelection(document,nodeIds,15))}>+15°</button></div></>}
+          {activeNode&&<><label className="v2-layout-field">Переместить в<select value={moveTarget} onChange={e=>setMoveTarget(e.target.value)}><option value="">Выберите фрейм</option>{Object.values(document.nodes).filter(n=>n.type==="frame"&&n.id!==activeNode.id&&n.id!==activeNode.parentId&&!n.locked&&n.visible).map(n=><option key={n.id} value={n.id}>{nodeLabel(document,n.id)} · {n.id.slice(0,12)}</option>)}</select></label><button className="v2-inspector-button" disabled={!moveTarget||!!editing} onClick={moveLayerToFrame}>Переместить слой</button></>}
+
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
           {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
@@ -657,7 +709,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           </>:<p className="v2-placeholder">Выберите страницу на холсте или слева.</p>}
         </section>
         <section className="v2-inspector-section v2-phase-note">
-          <h3>Этап #28 · Блоки приглашения</h3>
+          <h3>Этап #28.1 · Canvas Pro</h3>
           <p>Выберите объект, затем перетащите его или угловые маркеры. Shift — точные углы и сохранение пропорций, Alt — отключение привязки.</p>
           <p>Проект сохраняется только в браузере. Публикация и серверное хранение ещё не подключены.</p>
         </section>
