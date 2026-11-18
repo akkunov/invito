@@ -1,0 +1,32 @@
+"use client";
+import {useCallback,useEffect,useMemo,useRef,useState} from "react";
+import {StudioV2Artboard} from "./studio-v2-artboard";
+import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
+import {deviceForWidth,responsiveDocument,presentationSize,DEVICE_WIDTH,type Device} from "@/features/studio-v2/core/responsive-engine.ts";
+
+/** Shared presentation renderer. The editor uses the same Artboard and layout solver.
+ * Public publishing can provide a validated immutable snapshot and asset URL map later. */
+export function StudioV2ProjectRenderer({document,mediaUrls,device="auto"}:{document:ProjectDocumentV2;mediaUrls?:Readonly<Record<string,string>>;device?:Device|"auto"}){
+ const container=useRef<HTMLDivElement>(null);
+ const [width,setWidth]=useState(390);
+ const [measurements,setMeasurements]=useState<Record<string,number>>({});
+ const actual=device==="auto"?deviceForWidth(width):device;
+ useEffect(()=>{const el=container.current;if(!el)return;const update=()=>setWidth(Math.max(1,el.clientWidth));update();const observer=new ResizeObserver(update);observer.observe(el);return()=>observer.disconnect();},[]);
+ const measure=useCallback((id:string,height:number)=>setMeasurements(old=>old[id]===height?old:{...old,[id]:height}),[]);
+ const resolved=useMemo(()=>responsiveDocument(document,actual,measurements),[document,actual,measurements]);
+ const available=device==="auto"?width:Math.min(width,DEVICE_WIDTH[actual]);
+ return <div ref={container} className="v2-project-renderer" lang={document.locale} style={{width:"100%",minWidth:0}}>
+  <div style={{width:"100%",maxWidth:available,margin:"0 auto"}}>
+   {document.pages.map(page=>{
+    const size=presentationSize(document,resolved,page,actual),scale=Math.min(1,available/size.width)*size.scale;
+    const root=resolved.nodes[page.rootNodeId];
+    if(!root.visible)return null;
+    return <section key={page.id} aria-label={page.name} data-preview-page={page.id} style={{position:"relative",margin:"0 auto",width:root.width*scale,height:root.height*scale,overflow:"hidden"}}>
+      <div style={{position:"absolute",top:0,left:0,transformOrigin:"top left",transform:`scale(${scale})`}}>
+       <StudioV2Artboard document={resolved} rootNodeId={page.rootNodeId} mediaUrls={mediaUrls} onMeasure={measure}/>
+      </div>
+    </section>;
+   })}
+  </div>
+ </div>;
+}
