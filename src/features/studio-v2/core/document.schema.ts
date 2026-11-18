@@ -116,6 +116,7 @@ export const projectDocumentSchema = z.strictObject({
   assets: z.record(idSchema, mediaAssetRefSchema).refine(value => Object.keys(value).length <= 200, "Maximum 200 assets"),
   responsiveOverrides: z.strictObject({desktop:z.record(idSchema,responsivePatchSchema).optional(),tablet:z.record(idSchema,responsivePatchSchema).optional(),mobile:z.record(idSchema,responsivePatchSchema).optional()}).optional(),
   components: z.record(idSchema,componentSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 components").optional(),
+  guides: z.array(z.strictObject({id:idSchema,axis:z.enum(["x","y"]),position:coordinateSchema})).max(100).refine(v=>new Set(v.map(g=>g.id)).size===v.length,"Duplicate guide ID").optional(),
   values: z.record(bindingKeySchema,bindingValueSchema).refine(v=>Object.keys(v).length<=100,"Maximum 100 values").optional(),
   variables: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/), variableSchema),
 }).superRefine((doc, ctx) => {
