@@ -10,6 +10,7 @@ import { snapshotVariant, instantiateComponent, imageNode, type Asset, type Comp
 import { InspectorTabs, InspectorPanel, InspectorGroup, type InspectorTab } from "./studio-v2-inspector-shell";
 import { StudioIcon } from "./studio-icon";
 import { projectPalette } from "./studio-v2-color-picker";
+import { TemplateManager } from "./studio-v2-template-manager";
 import { ResponsiveEditor } from "./studio-v2-responsive-editor";
 import { MotionControls, MotionTimeline } from "./studio-v2-motion-controls";
 import { motionTracks } from "@/features/studio-v2/core/motion-engine.ts";
@@ -67,7 +68,7 @@ function downloadDocument(project: ProjectDocumentV2) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(project, null, 2)], { type: "application/json" }));
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "invito-studio-v2-demo.json";
+  anchor.download = project.id+".json";
   anchor.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1200);
 }
@@ -117,6 +118,7 @@ function MiniMap({frames, viewport, size, onCenter}:{
 export function StudioV2Workspace({locale}:{locale:Locale}) {
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
   const [previewOpen,setPreviewOpen]=useState(false);
+  const [templateManagerOpen,setTemplateManagerOpen]=useState(false);
   const [responsiveOpen,setResponsiveOpen]=useState(false);
   const [timelineOpen,setTimelineOpen]=useState(false);
   const [timelineTime,setTimelineTime]=useState(0);
@@ -164,7 +166,13 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   const sourceDocument=session.document;
   const palette=useMemo(()=>projectPalette(sourceDocument),[sourceDocument]);
   const mediaUrls=useMediaUrls(sourceDocument.assets);
-  useEffect(()=>{let active=true;void loadLocalProject("studio-v2-demo").then(doc=>{if(active&&doc)setSession(createEditorSession(doc));if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
+  useEffect(()=>{let active=true;let id="studio-v2-demo";try{id=localStorage.getItem("invito-studio-active-project")??id;}catch{/* browser storage disabled */}void loadLocalProject(id).then(doc=>{if(active&&doc){setSession(createEditorSession(doc));setSelectedPage(doc.pages[0].id);setSelectedIds([]);}if(active)setStorageStatus("Локальный проект");}).catch(()=>{if(active)setStorageStatus("Хранилище недоступно");}).finally(()=>{if(active)setLoaded(true);});return()=>{active=false;};},[]);
+  async function openTemplateProject(doc:ProjectDocumentV2){
+    if(!loaded||session.transaction||editing)throw Error("Завершите редактирование перед открытием проекта.");
+    await saveLocalProject(sourceDocument);await saveLocalProject(doc);
+    try{localStorage.setItem("invito-studio-active-project",doc.id);}catch{/* project still stored in IndexedDB */}
+    setSession(createEditorSession(doc));setSelectedPage(doc.pages[0].id);setSelectedIds([]);setSelectionError(null);setTextMeasurements({});clipboard.current=null;setHasClipboard(false);setViewport(fitBounds(unionRects(doc.pages.map(page=>pageRect(doc,page))),{width:Math.max(1,size.width-14),height:Math.max(1,size.height-14)},45));setStorageStatus("Сохранено локально");
+  }
   useEffect(()=>{if(!loaded||session.transaction)return;const timer=window.setTimeout(()=>{void saveLocalProject(sourceDocument).then(()=>setStorageStatus("Сохранено локально")).catch(()=>setStorageStatus("Не удалось сохранить"));},250);return()=>window.clearTimeout(timer);},[loaded,session.transaction,sourceDocument]);
   const document=useMemo(()=>{const bound=bindDocument({...sourceDocument,locale});if(editing&&sourceDocument.nodes[editing.id])bound.nodes[editing.id]=sourceDocument.nodes[editing.id];return layoutDocument(resolveStyleDocument(bound),textMeasurements);},[sourceDocument,textMeasurements,editing?.id,locale]);
   const frames=useMemo(()=>document.pages.map(page=>pageRect(document,page)),[document]);
@@ -331,6 +339,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
   useEffect(()=>{
     function down(e:KeyboardEvent){
       const target=e.target as HTMLElement|null;
+      if(templateManagerOpen){if(e.key==="Escape"&&!target?.closest("input,textarea,select")){e.preventDefault();}return;}
       if(responsiveOpen){if(e.key==="Escape"){e.preventDefault();setResponsiveOpen(false);return;}if(!target?.closest("input,textarea,select,[contenteditable]")&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();changeHistory(e.shiftKey);}return;}
       if(previewOpen){if(e.key==="Escape"){setPreviewOpen(false);setTimelineOpen(false);}return;}
       if(target?.closest("input,textarea,select,[contenteditable=true],[contenteditable=plaintext-only]"))return;
@@ -361,7 +370,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     const blur=()=>{setSpaceHeld(false);setDistanceMarks([]);};
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,hasClipboard,menu,selectedPage,session,document]);
+  },[nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,hasClipboard,menu,selectedPage,session,document]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -597,7 +606,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       <div className="v2-brand">
         <Link href={`/${locale}`} aria-label="На главную"><StudioIcon name="back" size={16}/></Link>
         <strong>INVITO <span>Studio 2.0</span></strong>
-        <span className="v2-project-title">Свадебная коллекция <StudioIcon name="down" size={13}/></span>
+        <button className="v2-project-title" aria-label="Менеджер шаблонов" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setTemplateManagerOpen(true)}>Шаблоны <StudioIcon name="down" size={13}/></button>
         <span className="v2-draft-state">{storageStatus}</span>
       </div>
       <div className="v2-tools" role="toolbar" aria-label="Инструменты холста">
@@ -610,6 +619,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         <button title="Тонкие линейки" aria-label="Линейки" aria-pressed={rulers} onClick={()=>setRulers(v=>!v)}><StudioIcon name="ruler" size={18}/></button>
       </div>
       <div className="v2-top-actions">
+        <button title="Открыть Template Manager" aria-label="Открыть Template Manager" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setTemplateManagerOpen(true)}><StudioIcon name="component" size={18}/></button>
         <button title="Отменить" aria-label="Отменить" disabled={!session.undoStack.length} onClick={()=>changeHistory()}><StudioIcon name="undo" size={18}/></button>
         <button title="Повторить" aria-label="Повторить" disabled={!session.redoStack.length} onClick={()=>changeHistory(true)}><StudioIcon name="redo" size={18}/></button>
         <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}><StudioIcon name="responsive" size={18}/></button>
@@ -801,6 +811,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
         </section></InspectorPanel>
       </aside>
     </div>
+    {templateManagerOpen&&<TemplateManager document={sourceDocument} onOpen={openTemplateProject} onClose={()=>setTemplateManagerOpen(false)}/>}
     {responsiveOpen&&<ResponsiveEditor document={{...sourceDocument,locale}} initialPageId={selectedPage} initialNodeId={authoredNode?.id??null} initialDevice={device} mediaUrls={mediaUrls} onCommand={command=>proAction(()=>command)} onUndo={changeHistory} canUndo={session.undoStack.length>0} canRedo={session.redoStack.length>0} onClose={()=>setResponsiveOpen(false)}/>}
     {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><div className="v2-motion-preview-actions"><button disabled={!motionTracks(sourceDocument).length} aria-pressed={timelineOpen} onClick={()=>{setTimelineOpen(v=>!v);setTimelineTime(0);}}>Timeline</button><button aria-label="Повторить анимации" disabled={timelineOpen} onClick={()=>setPreviewRun(x=>x+1)}>Повторить</button><button onClick={()=>{setPreviewOpen(false);setTimelineOpen(false);}} aria-label="Закрыть предпросмотр">Закрыть ×</button></div></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer key={previewRun} document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device} motionPlayback={timelineOpen?{mode:"timeline",timeMs:timelineTime}:{mode:"live"}}/></div></div>{timelineOpen&&<MotionTimeline document={sourceDocument} time={timelineTime} onTime={setTimelineTime}/>}</div>}
     {(leftOpen||rightOpen)&&<button className="v2-backdrop" onClick={()=>{setLeftOpen(false);setRightOpen(false)}} aria-label="Закрыть панель"/>}
