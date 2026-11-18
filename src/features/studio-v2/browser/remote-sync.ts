@@ -101,6 +101,57 @@ export function createStudioRemoteClient(settings: RemoteSyncSettings) {
       return created;
     },
     getProject,
+    /** Stage in the user's private R2 workspace, verify server-side, and receive an asset:UUID. */
+    async uploadMedia(name: string, blob: Blob) {
+      if (!blob.size || blob.size > 20 * 1024 * 1024) throw new Error("MEDIA_TOO_LARGE");
+      const mime = blob.type;
+      if (!["image/png","image/jpeg","image/webp","audio/mpeg"].includes(mime)) {
+        throw new Error("UNSUPPORTED_MEDIA_MIME");
+      }
+      const sha256 = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await blob.arrayBuffer())))
+        .map(b=>b.toString(16).padStart(2,"0")).join("");
+      const ticket = await send<{
+        id: string; storageKey: string; uploadUrl: string;
+        headers: Record<string,string>; expiresInSeconds: number;
+      }>("/workspaces/" + workspaceId + "/media/uploads", "POST",
+        {name, mimeType: mime, bytes: blob.size, sha256});
+      const uploadEndpoint = new URL(ticket.uploadUrl);
+      // A compromised/misconfigured API response must never send user files to arbitrary hosts.
+      if (uploadEndpoint.protocol !== "https:" ||
+          !uploadEndpoint.hostname.endsWith(".r2.cloudflarestorage.com") ||
+          ticket.headers?.["Content-Type"] !== mime) {
+        throw new Error("UNTRUSTED_SIGNED_UPLOAD_URL");
+      }
+      const put = await fetcher(uploadEndpoint.toString(), {
+        method: "PUT", headers: ticket.headers, body: blob,
+        cache: "no-store", credentials: "omit", redirect: "error",
+      });
+      if (!put.ok) throw new RemoteRequestError(put.status, "MEDIA_UPLOAD_FAILED");
+      const verified = await send<{
+        id: string; storageKey: string; name: string; mimeType: string;
+        sizeBytes: number; sha256: string; pixelWidth: number | null;
+        pixelHeight: number | null; status: string;
+      }>("/workspaces/" + workspaceId + "/media/" + encodeURIComponent(ticket.id) + "/complete", "POST");
+      if (verified.id !== ticket.id || verified.storageKey !== "asset:" + ticket.id ||
+          verified.sha256 !== sha256 || verified.sizeBytes !== blob.size ||
+          verified.mimeType !== mime || verified.status !== "READY") {
+        throw new Error("INVALID_VERIFIED_MEDIA_RESPONSE");
+      }
+      return verified;
+    },
+    async getMediaReadUrl(assetId: string) {
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(assetId)) {
+        throw new Error("INVALID_MEDIA_ASSET_ID");
+      }
+      const result = await send<{url: string; expiresInSeconds: number; mimeType: string}>(
+        "/workspaces/" + workspaceId + "/media/" + encodeURIComponent(assetId) + "/read-url");
+      const url = new URL(result.url);
+      if (url.protocol !== "https:" || !url.hostname.endsWith(".r2.cloudflarestorage.com") ||
+          result.expiresInSeconds > 60 || result.expiresInSeconds < 1) {
+        throw new Error("UNTRUSTED_MEDIA_READ_URL");
+      }
+      return result;
+    },
     async sync(remoteProjectId: string, expectedRevision: number, localDocument: ProjectDocumentV2): Promise<SyncResult> {
       // Validate before network; never coerce a broken local draft.
       const local = parseProjectV2(localDocument);
