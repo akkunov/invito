@@ -134,6 +134,12 @@ function executeUnsafe(doc: ProjectDocumentV2, command: StudioCommand) {
       for(const id of keys){const n=command.nodes[id];assert(rootSet.has(id)||n.parentId!==null&&Object.hasOwn(command.nodes,n.parentId),"Clipboard cannot modify existing tree");if(n.type==="frame")assert(n.children.every(child=>Object.hasOwn(command.nodes,child)),"Clipboard child outside tree");}
       Object.assign(doc.nodes,clone(command.nodes));parent.children.push(...command.roots);
       for(const device of ["desktop","tablet","mobile"] as const){const map=command.overrides[device];if(!map)continue;assert(Object.keys(map).every(id=>Object.hasOwn(command.nodes,id)),"Override outside clipboard");doc.responsiveOverrides??={};doc.responsiveOverrides[device]={...doc.responsiveOverrides[device],...clone(map)};}
+      // A clipboard can outlive a master edit; refresh linked copies before validation.
+      for(const id of keys){const node=doc.nodes[id];if(node?.componentRef&&node.componentSourceId){
+        const component=doc.components?.[node.componentRef.componentId],variant=component?.variants.find(v=>v.id===node.componentRef!.variantId);
+        assert(component&&variant,"Clipboard master variant no longer exists");
+        reconcileInstance(doc,id,variant,component.id);
+      }}
       return;
     }
     case "insertNode": {
