@@ -1,38 +1,70 @@
 "use client";
-import {useLayoutEffect,useRef,useState,type KeyboardEvent} from "react";
-import {plainText,reconcileText,rangeStyle,formatRange,type TextNode,type TextRun,type TextRange,type TextStyle} from "@/features/studio-v2/core/rich-text-engine.ts";
-import {TextRuns,textRunStyle} from "./studio-v2-artboard";
+import {useLayoutEffect,useRef,type KeyboardEvent} from "react";
+import {plainText,reconcileText,rangeStyle,replaceRange,sanitizePlainText,type TextNode,type TextRun,type TextRange,type TextStyle} from "@/features/studio-v2/core/rich-text-engine.ts";
+import {textRunStyle} from "./studio-v2-artboard";
 export type TextEditingSession={id:string;range:TextRange;typingStyle:TextStyle|null};
+function selectionOffsets(el:HTMLElement):TextRange|null{
+ const sel=window.getSelection();if(!sel?.rangeCount||!sel.anchorNode||!sel.focusNode||!el.contains(sel.anchorNode)||!el.contains(sel.focusNode))return null;
+ const offset=(node:Node,index:number)=>{const range=document.createRange();range.selectNodeContents(el);range.setEnd(node,index);return range.toString().length;};
+ const a=offset(sel.anchorNode,sel.anchorOffset),b=offset(sel.focusNode,sel.focusOffset);return {start:Math.min(a,b),end:Math.max(a,b)};
+}
+function restoreSelection(el:HTMLElement,range:TextRange){
+ const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+ function locate(index:number):[Node,number]{walker.currentNode=el;let node:Node|null;while((node=walker.nextNode())){const length=node.textContent?.length??0;if(index<=length)return [node,index];index-=length;}return [el,el.childNodes.length];}
+ const [a,ai]=locate(range.start),[b,bi]=locate(range.end);const r=document.createRange();r.setStart(a,ai);r.setEnd(b,bi);const sel=window.getSelection();sel?.removeAllRanges();sel?.addRange(r);
+}
 export function StudioV2TextEditor({node,editing,onRuns,onRange,onFinish}:{node:TextNode;editing:TextEditingSession;onRuns:(runs:TextRun[])=>void;onRange:(range:TextRange)=>void;onFinish:(cancel:boolean)=>void}){
- const ref=useRef<HTMLTextAreaElement>(null);
+ const ref=useRef<HTMLDivElement>(null);
  const composing=useRef(false);
- const [composition,setComposition]=useState<string|null>(null);
- const value=plainText(node.runs);
- const firstStyle=rangeStyle(node.runs,editing.range);
- useLayoutEffect(()=>{const el=ref.current;if(!el)return;el.focus();el.setSelectionRange(editing.range.start,editing.range.end);},[node.id]);
+ const initialized=useRef(false);
+ const rendered=useRef<string|null>(null);
+ const latestRange=useRef(editing.range);
+ const lastNativeText=useRef<string|null>(null);
  useLayoutEffect(()=>{
-  const el=ref.current;if(!el||composing.current||document.activeElement!==el)return;
-  if(el.selectionStart!==editing.range.start||el.selectionEnd!==editing.range.end)el.setSelectionRange(editing.range.start,editing.range.end);
- },[editing.range.start,editing.range.end]);
- function update(value:string,el:HTMLTextAreaElement){
-  try{onRuns(reconcileText(node.runs,value,editing.typingStyle??undefined));onRange({start:el.selectionStart,end:el.selectionEnd});}catch{/* Preserve last valid document when the run cap is exceeded. */}
+  const el=ref.current;if(!el||composing.current)return;
+  const signature=JSON.stringify(node.runs);
+  if(rendered.current!==signature||lastNativeText.current!==null){
+   const fragment=document.createDocumentFragment();
+   for(const run of node.runs){
+    const span=document.createElement("span");
+    const style=textRunStyle(run.style);
+    span.style.fontFamily=String(style.fontFamily);span.style.fontSize=style.fontSize+"px";span.style.fontWeight=String(style.fontWeight);
+    span.style.fontStyle=String(style.fontStyle);span.style.textDecoration=String(style.textDecoration);span.style.color=String(style.color);
+    span.textContent=run.text;fragment.append(span);
+   }
+   el.replaceChildren(fragment);rendered.current=signature;lastNativeText.current=null;
+   if(!initialized.current){initialized.current=true;el.focus();}
+   if(document.activeElement===el)restoreSelection(el,latestRange.current);
+  }
+ },[node.runs]);
+ useLayoutEffect(()=>{
+  const sync=()=>{const el=ref.current;if(!el||composing.current||document.activeElement!==el)return;const range=selectionOffsets(el);if(range&&(range.start!==latestRange.current.start||range.end!==latestRange.current.end)){latestRange.current=range;onRange(range);}};
+  document.addEventListener("selectionchange",sync);return()=>document.removeEventListener("selectionchange",sync);
+ },[onRange]);
+ function publish(runs:TextRun[],range:TextRange){
+  latestRange.current=range;lastNativeText.current=plainText(runs);onRuns(runs);onRange(range);
  }
- function key(e:KeyboardEvent<HTMLTextAreaElement>){
-  e.stopPropagation();
-  if(e.nativeEvent.isComposing||composing.current)return;
+ function insert(text:string){
+  const el=ref.current;if(!el)return;
+  const range=selectionOffsets(el)??latestRange.current;
+  try{const clean=sanitizePlainText(text),next=replaceRange(node.runs,range,clean,editing.typingStyle??undefined);const end=range.start+clean.length;publish(next,{start:end,end});}catch{/* Preserve last valid document when run limit is exceeded. */}
+ }
+ function input(el:HTMLDivElement){
+  if(composing.current)return;
+  const range=selectionOffsets(el)??latestRange.current;
+  try{publish(reconcileText(node.runs,el.textContent??"",editing.typingStyle??undefined),range);}catch{lastNativeText.current="";onRuns([...node.runs]);}
+ }
+ function key(e:KeyboardEvent<HTMLDivElement>){
+  e.stopPropagation();if(e.nativeEvent.isComposing||composing.current)return;
   if(e.key==="Escape"){e.preventDefault();onFinish(true);}
   else if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();onFinish(false);}
+  else if(e.key==="Enter"){e.preventDefault();insert("\n");}
  }
- return <div className="v2-text-edit" style={{background:"transparent"}} onPointerDown={e=>e.stopPropagation()} onDoubleClick={e=>e.stopPropagation()}>
-  <textarea ref={ref} aria-label="Редактирование текста" spellCheck={false} value={composition??value} style={{
-    ...textRunStyle(firstStyle),color:"transparent",caretColor:firstStyle.color,background:"transparent",resize:"none",border:0,outline:0,
-    textAlign:node.textAlign,lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,whiteSpace:"pre-wrap",overflowWrap:"anywhere",
-    padding:0,margin:0,width:"100%",height:"100%",display:"block",overflow:"hidden",
-  }} onChange={e=>{if(composing.current)setComposition(e.currentTarget.value);else update(e.currentTarget.value,e.currentTarget);}}
-  onSelect={e=>{if(!composing.current)onRange({start:e.currentTarget.selectionStart,end:e.currentTarget.selectionEnd});}}
-  onCompositionStart={e=>{composing.current=true;setComposition(e.currentTarget.value);}}
-  onCompositionEnd={e=>{composing.current=false;setComposition(null);update(e.currentTarget.value,e.currentTarget);}}
-  onKeyDown={key}/>
+ return <div className="v2-text-edit" onPointerDown={e=>e.stopPropagation()} onDoubleClick={e=>e.stopPropagation()}>
+  <div ref={ref} role="textbox" aria-label="Редактирование текста" aria-multiline="true" contentEditable="plaintext-only" spellCheck={false} suppressContentEditableWarning
+    style={{textAlign:node.textAlign,lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,whiteSpace:"pre-wrap",overflowWrap:"anywhere",minHeight:"1em",width:"100%",outline:0}}
+    onInput={e=>input(e.currentTarget)} onPaste={e=>{e.preventDefault();insert(e.clipboardData.getData("text/plain"));}}
+    onDrop={e=>e.preventDefault()} onCompositionStart={()=>{composing.current=true;}} onCompositionEnd={e=>{composing.current=false;input(e.currentTarget);}} onKeyDown={key}/>
  </div>;
 }
 export function TextControls({node,editing,onStyle,onNode,onFinish}:{node:TextNode;editing:TextEditingSession|null;onStyle:(patch:Partial<TextStyle>)=>void;onNode:(patch:Partial<Pick<TextNode,"textAlign"|"lineHeight"|"letterSpacing"|"autoHeight">>)=>void;onFinish?:()=>void}){
