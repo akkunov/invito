@@ -225,7 +225,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
       if(nodeIds.length&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
         e.preventDefault();const step=e.shiftKey?10:1;
         const delta={x:e.key==="ArrowLeft"?-step:e.key==="ArrowRight"?step:0,y:e.key==="ArrowUp"?-step:e.key==="ArrowDown"?step:0};
-        if(movable(nodeIds))setSession(s=>dispatchStudioCommand(s,moveSelection(layoutDocument(s.document),nodeIds,delta)));return;
+        if(movable(nodeIds))setSession(s=>dispatchStudioCommand(s,moveSelection(layoutDocument(s.document,textMeasurements),nodeIds,delta)));return;
       }
       if(nodeIds.length&&(e.key==="Delete"||e.key==="Backspace")){
         e.preventDefault();setSession(s=>dispatchStudioCommand(s,nodeIds.map(id=>({kind:"deleteNode" as const,id}))));setSelectedIds([]);return;
@@ -305,7 +305,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
     if(!rotate&&!handle&&!movable(ids))return;
     if(handle&&ids.some(id=>{const n=sourceDocument.nodes[id];return n.sizing?.width==="hug"||n.sizing?.height==="hug"||n.sizing?.width==="fill"||n.sizing?.height==="fill"||!movable([id]);}))return;
     nodeGesture.current={pointer:e.pointerId,start:localPoint(e),document,ids,started:false,handle,rotate,zoom:viewport.zoom};
-    stageRef.current?.setPointerCapture(e.pointerId);
+    if(handle||rotate)stageRef.current?.setPointerCapture(e.pointerId);else (e.target as Element).setPointerCapture(e.pointerId);
   }
   function stagePointerDown(e:ReactPointerEvent<HTMLDivElement>){
     const local=localPoint(e);
@@ -487,7 +487,7 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <button aria-label="Открыть страницы" onClick={()=>setLeftOpen(v=>!v)}><Layers3 size={18}/> Страницы</button>
           <button aria-label="Открыть свойства" onClick={()=>setRightOpen(v=>!v)}>Свойства</button>
         </div>
-        <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""}`}
+        <div ref={stageRef} className={`v2-stage ${activeTool==="hand"?"is-hand":""} ${editing?"is-text-editing":""}`}
           onPointerDown={stagePointerDown} onPointerMove={stagePointerMove}
           onPointerUp={stagePointerUp} onPointerCancel={stagePointerUp} onWheel={stageWheel} onDoubleClick={e=>{if(activeTool!=="select")return;const target=(e.target as Element).closest<HTMLElement>("[data-studio-node]");const id=target?.dataset.studioNode;if(id)startText(id);}}>
           <div className="v2-stage-background" style={grid?backgroundStyle:undefined}/>
@@ -548,17 +548,17 @@ export function StudioV2Workspace({locale}:{locale:Locale}) {
           <h3>Выделение</h3>
           {selectionError&&<p role="alert" className="v2-placeholder">{selectionError}</p>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
-          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
+          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
-          <button className="v2-inspector-button" onClick={()=>setSelectedIds([])}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
+          <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
         </section>
         {authoredNode?.type==="text"&&<TextControls node={authoredNode} editing={editing} onStyle={patch=>styleText(authoredNode,patch)} onNode={patch=>setSession(s=>dispatchStudioCommand(s,{kind:"updateNode",id:authoredNode.id,changes:patch}))} onFinish={()=>finishText()}/>}
         <section className="v2-inspector-section">
           <h3>Auto Layout</h3>
           <button className="v2-inspector-button" disabled={!!editing} onClick={addText}>+ Текст (T)</button>
           {activeNode?.type==="text"&&!editing&&<button className="v2-inspector-button" onClick={()=>startText(activeNode.id)}>Редактировать текст</button>}
-          <button className="v2-inspector-button" onClick={createFrame}>+ Создать фрейм</button>
+          <button className="v2-inspector-button" disabled={!!editing} onClick={createFrame}>+ Создать фрейм</button>
           {layoutFrame&&<>
             <label className="v2-layout-field">Расположение<select value={layoutFrame.layout} onChange={e=>editLayout(layoutFrame.id,{layout:e.target.value as "free"|"vertical"|"horizontal"})}><option value="free">Свободное</option><option value="vertical">Вертикальное</option><option value="horizontal">Горизонтальное</option></select></label>
             {layoutFrame.layout!=="free"&&<>
