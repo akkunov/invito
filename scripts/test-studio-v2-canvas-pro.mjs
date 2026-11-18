@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {createEmptyProjectV2} from "../src/features/studio-v2/core/document.schema.ts";
 import {applyStudioCommand,applyStudioBatch,createEditorSession,dispatchStudioCommand,undoStudio} from "../src/features/studio-v2/core/command-engine.ts";
 import {layoutDocument} from "../src/features/studio-v2/core/layout-engine.ts";
-import {nodeBounds,nodeCorners,selectionBounds} from "../src/features/studio-v2/core/selection-transform.ts";
+import {nodeBounds,nodeCorners,selectionBounds,snapMove} from "../src/features/studio-v2/core/selection-transform.ts";
 import {alignSelection,distributeSelection,scaleSelection,rotateSelection,copySelection,pasteSelection,reparentPreserveWorld,distanceGuides,canResizeSelection} from "../src/features/studio-v2/core/canvas-pro.ts";
 let doc=createEmptyProjectV2("canvas-pro");
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
@@ -38,4 +38,7 @@ assert.throws(()=>pasteSelection({...doc,id:"another-project"},clip,"frame-two",
 const marks=distanceGuides(doc,["a"],"b");assert.equal(marks.find(m=>m.axis==="x").distance,80);
 assert.equal(distanceGuides(doc,["a"],"a").length,0);
 assert.equal(doc.nodes.a.x,20);
+const guided=applyStudioCommand(doc,{kind:"setGuides",guides:[{id:"guide-a",axis:"x",position:1000}]});
+const snap=snapMove(guided,["a"],{x:877,y:0},1,6);close(snap.delta.x,880);close(snap.guideX,1000);
+assert.throws(()=>applyStudioCommand(guided,{kind:"setGuides",guides:[{id:"guide-a",axis:"x",position:1000001}]}));
 console.log("PASS: alignment, equal gaps, uniform resize, group rotation, reparent, clipboard copy, page coordinates, overrides, undo, distance");
