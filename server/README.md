@@ -65,3 +65,23 @@ For Vercel create a separate project from `akkunov/invito`, set Root Directory t
 This stage implements actual authorization, identity and workspace access, not project/template CRUD, file upload, publication/RSVP or payment APIs. Those remain in #29.3–#29.6. Existing local Studio drafts are untouched; a future sync adapter is required.
 
 See [ADR-029-01](../docs/backend/ADR-029-01-PERSISTENCE.md).
+
+## #29.4 — Private R2 Media Storage
+
+**No R2 setup is required to boot the API:** when credentials are absent, all media initiation and read operations fail closed with 503. Never set media credentials in the Next.js frontend or commit .env values.
+
+Set `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and optional `R2_ENDPOINT` in the **backend Vercel project**. The bucket must remain **private**. For browser direct PUT, configure bucket CORS with exactly your trusted editor origins and `PUT` + `Content-Type` (sample: `docs/backend/ADR-029-04-MEDIA.md`).
+
+**Upload lifecycle** (all endpoints require the verified OIDC bearer token):
+1. `POST /api/v1/workspaces/:workspaceId/media/uploads`: editor sends `{name,mimeType,bytes,sha256}`; receives 180-second signed PUT URL and exact Content-Type header. Nothing is READY yet.
+2. Browser sends the **raw Blob** by PUT to the signed R2 URL, without JWT or any other API credentials.
+3. `POST /api/v1/workspaces/:workspaceId/media/:assetId/complete`: server reads private R2 staging bytes with a hard upper bound, recomputes SHA-256 and MIME, decodes raster / parses MP3, copies verified bytes to a server-only immutable key, commits READY metadata in PostgreSQL.
+4. `GET /api/v1/workspaces/:workspaceId/media/:assetId/read-url`: authorized workspace viewer receives a 60-second private GET URL. `GET /api/v1/workspaces/:workspaceId/media` lists only READY metadata, never actual R2 object keys.
+
+Raster: PNG/JPEG/WebP up to 20 MiB, max side 4096px and max decoded pixels 32 MP. MP3: up to 15 MiB, max duration 15 minutes, valid MPEG audio. SVG and arbitrary codecs are rejected by the **server**, even if the browser supports local SVG rasterization.
+
+Quota: 500 MiB per workspace, 20 pending uploads, 15-minute server completion window. No public bucket URL, delete API or guest access is provided. Configure R2 lifecycle cleanup for `staging/` orphaned objects.
+
+Cloud save in Studio v2 uses `prepareCloudSnapshot` to upload local images when the user explicitly clicks Save. It does **not** replace IndexedDB records or delete local image blobs. Uploading MP3 through the API is supported; storing music bindings in the Studio document is separate from the current image-only `ProjectDocumentV2.assets` schema.
+
+**Deployment:** Existing #29.3 build includes shared Studio schema files from `../src`; the backend still needs the monorepo root in its Vercel build context. Production R2 credentials and CORS must be configured manually; CI fakes the R2 object boundary and verifies server logic against a disposable PostgreSQL 17 database, not a real R2 bucket.
