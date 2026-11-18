@@ -15,9 +15,9 @@ export function instantiateComponent(component:Component,variantId:string,parent
  function walk(id:string,parent:string){
   const source=variant!.nodes[id],node={...structuredClone(source),id:ids.get(id)!,parentId:parent};
   if(id===variant!.rootId){node.x=position.x;node.y=position.y;node.componentRef={componentId:component.id,variantId};}
-  if(node.type==="frame")node.children=[];
+  if(node.type==="frame"){node.children=[];node.locked=false;}
   commands.push({kind:"insertNode",parentId:parent,node});
-  if(source.type==="frame")source.children.forEach(c=>walk(c,node.id));
+  if(source.type==="frame"){source.children.forEach(c=>walk(c,node.id));if(source.locked)commands.push({kind:"updateNode",id:node.id,changes:{locked:true}});}
  }
  walk(variant.rootId,parentId);return commands;
 }
