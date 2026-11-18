@@ -24,7 +24,7 @@ try{
   assert.ok(await page.locator(".editor-block-list li").count()>=5);
   assert.ok(await page.locator(".editor-phone").isVisible());
   assert.ok((await page.locator(".editor-phone").boundingBox())?.width>=330);
-  assert.equal(await page.locator(".editor-appearance-section").count(),0);
+  assert.equal(await page.locator(".inspector-appearance-section").count(),1);
   const cover=page.locator(".editor-inspector");
   const first=cover.locator(".inspector-fields input").first();
   const initial=await first.inputValue();
