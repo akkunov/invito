@@ -1,11 +1,12 @@
 import {z} from "zod";
+import {personalizationSchema} from "../core/personalization.schema.ts";
 import {projectDocumentSchema,parseProjectV2} from "../core/document.schema.ts";
 import {createTemplate,templateMetaSchema,templateDocument,type TemplateRecord} from "../core/template-registry.ts";
 import {detectImage,rasterDimensions,boundedSize} from "../core/media-policy.ts";
 import {readMedia,importLocalTemplate} from "./media-store.ts";
 const MAX_BYTES=80_000_000;
 const MAX_FILE_BYTES=115_000_000;
-const packageSchema=z.strictObject({format:z.literal("invito-template"),version:z.literal(1),meta:templateMetaSchema,document:projectDocumentSchema,media:z.array(z.strictObject({assetId:z.string().max(80),data:z.string().max(70_000_000)})).max(200)});
+const packageSchema=z.strictObject({format:z.literal("invito-template"),version:z.literal(1),meta:templateMetaSchema,document:projectDocumentSchema,personalization:personalizationSchema.optional(),media:z.array(z.strictObject({assetId:z.string().max(80),data:z.string().max(70_000_000)})).max(200)});
 function encode(blob:Blob):Promise<string>{return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});}
 async function checkedRaster(blob:Blob){
  if(!blob.size||blob.size>50_000_000)throw Error("Недопустимый размер изображения");
@@ -25,7 +26,7 @@ export async function exportTemplatePackage(record:TemplateRecord){
   total+=blob.size;if(total>MAX_BYTES)throw Error("Пакет превышает 80 МБ изображений");
   const checked=await checkedRaster(blob);media.push({assetId:asset.id,data:await encode(checked.blob)});
  }
- const json=JSON.stringify(packageSchema.parse({format:"invito-template",version:1,meta:record.meta,document,media}));
+ const json=JSON.stringify(packageSchema.parse({format:"invito-template",version:1,meta:record.meta,document,personalization:record.versions.at(-1)?.personalization,media}));
  const result=new Blob([json],{type:"application/json"});if(result.size>MAX_FILE_BYTES)throw Error("Пакет слишком большой");return result;
 }
 export async function importTemplatePackage(file:File):Promise<TemplateRecord>{
@@ -44,7 +45,7 @@ export async function importTemplatePackage(file:File):Promise<TemplateRecord>{
   assets[entry.assetId]={...asset,storageKey,mimeType:checked.mime,sizeBytes:checked.blob.size,pixelWidth:checked.width,pixelHeight:checked.height};
   media.set(storageKey,checked.blob);
  }
- const record=createTemplate("template-"+crypto.randomUUID(),{...pack.meta,status:"draft"},parseProjectV2(document),new Date().toISOString());
+ const record=createTemplate("template-"+crypto.randomUUID(),{...pack.meta,status:"draft"},parseProjectV2(document),new Date().toISOString(),pack.personalization);
  await importLocalTemplate(record,media);return record;
 }
 export function downloadTemplatePackage(blob:Blob,name:string){
