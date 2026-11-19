@@ -13,7 +13,7 @@ import { projectPalette } from "./studio-v2-color-picker";
 import { TemplateManager } from "./studio-v2-template-manager";
 import { StudioV2PrintDialog } from "./studio-v2-print-dialog";
 import { StudioCloudPanel } from "./studio-v2-cloud-panel";
-import { StudioPublishPanel } from "./studio-v2-publish-panel";
+import { StudioPublishPanel, StudioPublishUnavailable } from "./studio-v2-publish-panel";
 import type { RemoteSyncSettings } from "@/features/studio-v2/browser/remote-sync";
 import { ResponsiveEditor } from "./studio-v2-responsive-editor";
 import { MotionControls, MotionTimeline } from "./studio-v2-motion-controls";
@@ -709,7 +709,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
         <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}><StudioIcon name="responsive" size={18}/></button>
         <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><StudioIcon name="phone" size={18}/></button>
         {remoteSettings&&<button title="Синхронизация с сервером" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setCloudPanelOpen(true)}><StudioIcon name="component" size={16}/> Облако</button>}
-        {remoteSettings&&<button className="v2-export" title="Опубликовать приглашение" aria-label="Опубликовать приглашение" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setPublishPanelOpen(true)}><StudioIcon name="share" size={16}/> Публикация</button>}
+        <button className="v2-export" title="Опубликовать приглашение" aria-label="Опубликовать приглашение" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setPublishPanelOpen(true)}><StudioIcon name="share" size={16}/> Публикация</button>
         <button className="v2-export" title="Экспорт и печать" aria-label="Экспорт и печать" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setPrintOpen(true)}><StudioIcon name="printer" size={16}/> Экспорт</button>
         <span className="v2-stage-tag"><StudioIcon name="check" size={13}/> Функциональный прототип</span>
       </div>
@@ -905,7 +905,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
     </div>
     {templateManagerOpen&&<TemplateManager document={sourceDocument} onOpen={openTemplateProject} onClose={()=>setTemplateManagerOpen(false)}/>}
     {printOpen&&<StudioV2PrintDialog document={sourceDocument} selectedPageId={selectedPage??sourceDocument.pages[0]?.id??""} onDownloadJson={()=>downloadDocument(sourceDocument)} onClose={()=>setPrintOpen(false)}/>}
-    {publishPanelOpen&&remoteSettings&&<StudioPublishPanel document={sourceDocument} settings={remoteSettings} locale={locale} onClose={()=>setPublishPanelOpen(false)}/>}
+    {publishPanelOpen&&(remoteSettings?<StudioPublishPanel document={sourceDocument} settings={remoteSettings} locale={locale} onClose={()=>setPublishPanelOpen(false)}/>:<StudioPublishUnavailable onClose={()=>setPublishPanelOpen(false)}/>)}
     {cloudPanelOpen&&remoteSettings&&<StudioCloudPanel document={sourceDocument} settings={remoteSettings} onOpenLocalCopy={openTemplateProject} onClose={()=>setCloudPanelOpen(false)}/>}
     {responsiveOpen&&<ResponsiveEditor document={{...sourceDocument,locale}} initialPageId={selectedPage} initialNodeId={authoredNode?.id??null} initialDevice={device} mediaUrls={mediaUrls} onCommand={command=>proAction(()=>command)} onUndo={changeHistory} canUndo={session.undoStack.length>0} canRedo={session.redoStack.length>0} onClose={()=>setResponsiveOpen(false)}/>}
     {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><div className="v2-motion-preview-actions"><button disabled={!motionTracks(sourceDocument).length} aria-pressed={timelineOpen} onClick={()=>{setTimelineOpen(v=>!v);setTimelineTime(0);}}>Timeline</button><button aria-label="Повторить анимации" disabled={timelineOpen} onClick={()=>setPreviewRun(x=>x+1)}>Повторить</button><button onClick={()=>{setPreviewOpen(false);setTimelineOpen(false);}} aria-label="Закрыть предпросмотр">Закрыть ×</button></div></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer key={previewRun} document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device} motionPlayback={timelineOpen?{mode:"timeline",timeMs:timelineTime}:{mode:"live"}}/></div></div>{timelineOpen&&<MotionTimeline document={sourceDocument} time={timelineTime} onTime={setTimelineTime}/>}</div>}

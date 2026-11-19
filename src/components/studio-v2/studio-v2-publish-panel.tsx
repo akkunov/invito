@@ -110,3 +110,18 @@ export function StudioPublishPanel({document,settings,locale,onClose}:{
   </section></div>
  </div>;
 }
+
+/** Show the publishing entrypoint even before OIDC is wired to the editor.
+ * Never fabricate an account or offer an enabled upload when no session exists. */
+export function StudioPublishUnavailable({onClose}:{onClose:()=>void}){
+ return <div className="v2-preview-overlay v2-publish-overlay" role="dialog" aria-modal="true" aria-label="Публикация приглашения">
+  <header className="v2-preview-header"><strong><StudioIcon name="share" size={18}/> Публикация</strong>
+   <button onClick={onClose}><StudioIcon name="close"/> Закрыть</button></header>
+  <div className="v2-publish-scroll"><section className="v2-publish-panel">
+   <h2>Публикация в INVITO</h2>
+   <p>Создание публичных ссылок и сбор RSVP уже реализованы на сервере. Чтобы публиковать из Studio, нужно подключить авторизацию OIDC, PostgreSQL и Cloudflare R2, затем войти в Workspace.</p>
+   <p>Сейчас редактор работает с локальными проектами. Ваши фотографии, макеты и черновики не отправляются автоматически.</p>
+   <button className="v2-inspector-button" onClick={onClose}>Продолжить редактирование</button>
+  </section></div>
+ </div>;
+}
