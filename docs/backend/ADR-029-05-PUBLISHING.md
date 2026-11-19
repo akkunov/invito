@@ -68,7 +68,7 @@ Only `yes` and `no` are exposed to guests; a decline always sends `guests:0`. Th
 3. Guest opens `https://invito.kg/ru/i/:slug` or `/ky/i/:slug`. Next.js SSR requests the public API with `cache:no-store`; browser checks current release and updates short-lived media links.
 4. An RSVP widget submits using a per-request UUID and Turnstile token (in production). Network retries reuse the request UUID, protecting against duplicates.
 
-The Studio **Публикация** button is hidden until a real `remoteSettings` provider is injected; it does **not** manufacture authentication. This change does not create an OIDC identity provider or deploy the database.
+The Studio **Публикация** button stays visible. Without a real `remoteSettings` provider it opens an honest setup-information panel; it does **not** manufacture authentication or send local data. This change does not create an OIDC identity provider or deploy the database.
 
 ## Configuration
 

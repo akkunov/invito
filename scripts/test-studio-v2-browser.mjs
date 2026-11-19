@@ -47,6 +47,15 @@ try{
   assert.ok(directDownloaded.suggestedFilename().toLowerCase().endsWith(".png"),"Current project PNG export should download a real file");
   await directPrint.getByRole("button",{name:"Закрыть экспорт"}).click();
   assert.equal(await directPrint.count(),0,"Print dialog can be closed without modifying Studio");
+  // The publishing action remains discoverable before a real OIDC provider is wired.
+  const publishAction=page.getByRole("button",{name:"Опубликовать приглашение",exact:true});
+  assert.equal(await publishAction.isVisible(),true,"Publish action must be visible in Studio v2");
+  await publishAction.click();
+  const publishSetup=page.getByRole("dialog",{name:"Публикация приглашения"});
+  await publishSetup.waitFor({state:"visible"});
+  assert.match(await publishSetup.textContent(),/авторизацию OIDC/);
+  await publishSetup.getByRole("button",{name:"Закрыть"}).click();
+  assert.equal(await publishSetup.count(),0);
   const rows=page.locator(".v2-page-item");
   const initial=await rows.allTextContents();
   await rows.nth(4).dragTo(rows.nth(0));

@@ -44,6 +44,10 @@ const browser=await chromium.launch({headless:true});
 try{
  const page=await browser.newPage({viewport:{width:430,height:900}});
  await page.goto("http://127.0.0.1:4180/ru/i/smoke/",{waitUntil:"networkidle"});
+ const guestStyle=await page.locator(".v2-public-invitation").evaluate(el=>({
+   maxHeight:getComputedStyle(el).maxHeight,
+ }));
+ assert.equal(guestStyle.maxHeight,"none","Guest pages must not be clipped to the editor viewport");
  const form=page.locator(".v2-guest-form");
  await form.waitFor({state:"visible"});
  assert.equal(await page.locator('meta[name="robots"]').getAttribute("content").then(v=>v?.includes("noindex")),true);
