@@ -1,13 +1,15 @@
 name: INVITO Backend Core
 on:
   push:
-    branches: [main, feat/29-3-templates-projects-api]
+    branches: [main, feat/29-4-media-storage]
     paths:
       - 'tsconfig.json'
       - 'src/features/studio-v2/browser/remote-sync.ts'
       - 'src/components/studio-v2/**'
       - 'src/app/studio-v2.css'
       - 'scripts/test-studio-v2-remote-sync.mjs'
+      - 'scripts/test-studio-v2-cloud-media.mjs'
+      - 'src/features/studio-v2/browser/cloud-media.ts'
       - 'package.json'
       - 'server/**'
       - '.github/workflows/backend-core.yml'
@@ -107,3 +109,7 @@ jobs:
         run: npm run test:backend-contract
       - name: Verify remote sync conflict and offline behavior
         run: npm run test:studio-v2-remote-sync
+      - name: Verify cloud media upload transport and immutable local copies
+        run: npm run test:studio-v2-cloud-media
+      - name: Verify music widget and invitation block regression
+        run: npm run test:studio-v2-invitation

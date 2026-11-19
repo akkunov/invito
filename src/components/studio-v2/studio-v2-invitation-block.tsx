@@ -48,10 +48,16 @@ function Gallery({node,document,guest,mediaUrls}:Props){
 function Music({source,locale,guest}:{source:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
  const ref=useRef<HTMLAudioElement|null>(null),[playing,setPlaying]=useState(false),[error,setError]=useState(false);
  const w=words[locale];
- useEffect(()=>()=>{ref.current?.pause();ref.current=null;},[source]);
+ // Signed URL refresh must not pause an already playing track; a different authored source changes the Music key.
+ useEffect(()=>()=>{ref.current?.pause();ref.current=null;},[]);
  async function toggle(){
   if(guest.mode==="studio"||!source)return;
-  if(!ref.current){const url=source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+source:source;const audio=new Audio(url);audio.loop=true;ref.current=audio;}
+  const url=source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+source:source;
+  // Never change a playing stream; on resume use a newer signed URL if available.
+  if(ref.current?.paused&&ref.current.src!==new URL(url,window.location.href).href){
+   ref.current.pause();ref.current=null;
+  }
+  if(!ref.current){const audio=new Audio(url);audio.loop=true;ref.current=audio;}
   const audio=ref.current;
   if(!audio.paused){audio.pause();setPlaying(false);return;}
   try{setError(false);await audio.play();setPlaying(true);}catch{setError(true);setPlaying(false);}
@@ -63,6 +69,6 @@ export function InvitationBlockView(props:Props){
  const style={fontFamily:a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent} as CSSProperties;
  return <div className="v2-guest-block" style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
  <h3>{b.title[document.locale]}</h3>
- {b.kind==="rsvp"?<Rsvp {...props}/>:b.kind==="countdown"?<Countdown target={countdownTarget(document,b)} locale={document.locale}/>:b.kind==="location"?(()=>{const address=locationAddress(document,b);return address.trim()?<><p>{address}</p>{guest.mode==="studio"?<span className="v2-guest-link">{w.map}</span>:<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{w.map}</a>}</>:<p>{w.noAddress}</p>;})():b.kind==="gallery"?<Gallery {...props}/>:b.kind==="music"?<Music key={b.source} source={b.source} locale={document.locale} guest={guest}/>:b.kind==="schedule"?<div className="v2-guest-schedule">{b.items.length?b.items.map((item,i)=><div key={i}><time>{item.time}</time><span>{item.label[document.locale]}</span></div>):<p>{w.noSchedule}</p>}</div>:null}
+ {b.kind==="rsvp"?<Rsvp {...props}/>:b.kind==="countdown"?<Countdown target={countdownTarget(document,b)} locale={document.locale}/>:b.kind==="location"?(()=>{const address=locationAddress(document,b);return address.trim()?<><p>{address}</p>{guest.mode==="studio"?<span className="v2-guest-link">{w.map}</span>:<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{w.map}</a>}</>:<p>{w.noAddress}</p>;})():b.kind==="gallery"?<Gallery {...props}/>:b.kind==="music"?<Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source} locale={document.locale} guest={guest}/>:b.kind==="schedule"?<div className="v2-guest-schedule">{b.items.length?b.items.map((item,i)=><div key={i}><time>{item.time}</time><span>{item.label[document.locale]}</span></div>):<p>{w.noSchedule}</p>}</div>:null}
  </div>;
 }

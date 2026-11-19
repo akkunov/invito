@@ -1,6 +1,8 @@
 "use client";
 
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {readMedia} from "@/features/studio-v2/browser/media-store";
+import {prepareCloudSnapshot, type VerifiedCloudAsset} from "@/features/studio-v2/browser/cloud-media";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {forkTemplateDocument} from "@/features/studio-v2/core/template-registry.ts";
 import {
@@ -45,6 +47,7 @@ export function StudioCloudPanel({settings, document, onOpenLocalCopy, onClose}:
   const key = storageKey(settings, document.id);
   const [link, setLink] = useState<RemoteLink | null>(null);
   const [busy, setBusy] = useState(false);
+  const verifiedCache = useRef(new Map<string, VerifiedCloudAsset>());
   const [message, setMessage] = useState("Локальный черновик сохраняется независимо от облака.");
   const [conflict, setConflict] = useState<Extract<SyncResult,{kind:"conflict"}> | null>(null);
   useEffect(() => {setLink(readLink(key)); setConflict(null);}, [key]);
@@ -67,17 +70,21 @@ export function StudioCloudPanel({settings, document, onOpenLocalCopy, onClose}:
     if (busy) return;
     setBusy(true); setMessage("Обрабатываем запрос…");
     try {
+      // Never replace the local document or its IndexedDB media. Upload to a
+      // separate, validated snapshot only after the user explicitly clicks save.
+      const prepared = await prepareCloudSnapshot(document, readMedia, client.uploadMedia, verifiedCache.current);
+      const serverDocument = prepared.document;
       if (!link || asNew) {
-        const created = await client.createProject(document.id, document);
+        const created = await client.createProject(document.id, serverDocument);
         persist({remoteId: created.id, revision: created.latestRevision});
         setConflict(null);
-        setMessage("Новый облачный проект создан, серверная ревизия 1.");
+        setMessage("Новый облачный проект создан, серверная ревизия 1. Файлов загружено: " + prepared.uploads + ".");
         return;
       }
-      const result = await client.sync(link.remoteId, link.revision, document);
+      const result = await client.sync(link.remoteId, link.revision, serverDocument);
       if (result.kind === "synced") {
         persist({remoteId: link.remoteId, revision: result.revision});
-        setConflict(null); setMessage("Сохранено на сервере. Ревизия " + result.revision + ".");
+        setConflict(null); setMessage("Сохранено на сервере. Ревизия " + result.revision + ". Новых файлов: " + prepared.uploads + ".");
       } else if (result.kind === "conflict") {
         setConflict(result);
         setMessage("Конфликт изменений: на сервере есть другая версия. Автозамена отключена.");
@@ -124,7 +131,7 @@ export function StudioCloudPanel({settings, document, onOpenLocalCopy, onClose}:
           <button disabled={busy} onClick={()=>setConflict(null)}>Оставить локальную</button>
         </div>
       </div>}
-      <p className="v2-cloud-hint">Изображения, хранящиеся только в браузере, сервер не принимает до реализации загрузки медиа (#29.4). Токены не записываются в localStorage.</p>
+      <p className="v2-cloud-hint">При сохранении локальные фотографии сначала проверяются и загружаются в приватное хранилище R2, затем сохраняется отдельная серверная копия проекта. Оригинал IndexedDB не изменяется. Авторизация и R2 должны быть настроены администратором.</p>
     </section>
   </div>;
 }
