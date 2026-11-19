@@ -36,7 +36,7 @@ export function StudioV2PublicInvitation({initial}:{initial:PublicInvitation}){
    const response=await fetch(base+"/public/invitations/"+encodeURIComponent(initial.slug)+"/rsvp",{
      method:"POST",headers:{"content-type":"application/json"},credentials:"omit",cache:"no-store",
      body:JSON.stringify({requestId,nodeId,name:input.name,attendance:input.attendance,
-       guests:input.guests,turnstileToken,website}),
+       guests:input.guests,...(turnstileToken?{turnstileToken}:{}),website}),
    });
    if(!response.ok)throw new Error("RSVP_HTTP_"+response.status);
  },[base,initial.slug]);
