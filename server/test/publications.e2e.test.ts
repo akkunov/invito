@@ -130,6 +130,18 @@ test("Publishing #29.5: immutable guest release, authorization, RSVP and unpubli
    {...rsvp,requestId:randomUUID(),nodeId:"not-found"})).status,404);
  const no={...rsvp,requestId:randomUUID(),name:"Отказ",attendance:"no",guests:0};
  assert.equal((await request("/public/invitations/"+slug+"/rsvp",null,"POST",no)).status,201);
+ // Rate buckets are persisted in PostgreSQL, not serverless process memory.
+ const minute=new Date(Math.floor(Date.now()/60000)*60000);
+ await db.rsvpThrottle.upsert({
+   where:{publicationId_bucket:{publicationId:initial.data.id,bucket:minute}},
+   create:{publicationId:initial.data.id,bucket:minute,count:60},
+   update:{count:60},
+ });
+ if(Math.floor(Date.now()/60000)===Math.floor(minute.getTime()/60000)){
+   const limited=await request("/public/invitations/"+slug+"/rsvp",null,"POST",
+     {...rsvp,requestId:randomUUID(),name:"Rate limited"});
+   assert.equal(limited.status,429,"65th RSVP in a rate bucket must be rejected");
+ }
  const responses=await request("/projects/"+projectId+"/rsvp",owner);
  assert.equal(responses.status,200);
  assert.equal(responses.data.items.length,2);
@@ -168,6 +180,14 @@ test("Publishing #29.5: immutable guest release, authorization, RSVP and unpubli
  assert.equal(restored.data.latestRelease,3);
  assert.equal((await request("/public/invitations/"+slug)).status,200);
  assert.equal(await db.publicationRelease.count({where:{publicationId:initial.data.id}}),3);
+ // Exactly one concurrent compare-and-swap writer is permitted to append release 4.
+ const nextRace={slug,projectRevisionId:revised.id,expectedRelease:3};
+ const raced=await Promise.all([
+   request(publishUrl,owner,"POST",{...nextRace,idempotencyKey:"race-A-"+randomUUID()}),
+   request(publishUrl,owner,"POST",{...nextRace,idempotencyKey:"race-B-"+randomUUID()}),
+ ]);
+ assert.deepEqual(raced.map(r=>r.status).sort((a,b)=>a-b),[201,409]);
+ assert.equal(await db.publicationRelease.count({where:{publicationId:initial.data.id}}),4);
  const count=await db.auditEvent.count({where:{workspaceId,entity:"Publication"}});
  assert.ok(count>=4);
 });
