@@ -4,6 +4,7 @@ const paths={
  ruler:<><rect x="2" y="6" width="16" height="8" rx="1"/><path d="M5 6v4M8 6v2M11 6v4M14 6v2"/></>,
  undo:<path d="M7 4L3 8l4 4M3 8h9a5 5 0 010 10"/>,
  redo:<path d="M13 4l4 4-4 4M17 8H8a5 5 0 000 10"/>,
+ printer:<><path d="M5 7V2h10v5M5 15H3a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2"/><path d="M5 12h10v6H5zM15 10h.01"/></>,
  download:<><path d="M10 3v10M6 9l4 4 4-4M3 14v3h14v-3"/></>,
  phone:<><rect x="6" y="2" width="8" height="16" rx="2"/><path d="M9 15h2"/></>,
  layers:<><path d="M10 2l8 4-8 4-8-4zM2 10l8 4 8-4M2 14l8 4 8-4"/></>,
