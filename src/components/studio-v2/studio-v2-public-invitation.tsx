@@ -29,14 +29,14 @@ export function StudioV2PublicInvitation({initial}:{initial:PublicInvitation}){
   const timer=window.setInterval(()=>void refresh(),45_000);
   return()=>{active=false;window.clearInterval(timer);};
  },[base,initial.slug]);
- const submitRsvp=useCallback(async(nodeId:string,input:RsvpInput,turnstileToken?:string)=>{
+ const submitRsvp=useCallback(async(nodeId:string,input:RsvpInput,turnstileToken?:string,website="")=>{
    const key=nodeId+":"+JSON.stringify(input);
    let requestId=requestIdByPayload.current.get(key);
    if(!requestId){requestId=crypto.randomUUID();requestIdByPayload.current.set(key,requestId);}
    const response=await fetch(base+"/public/invitations/"+encodeURIComponent(initial.slug)+"/rsvp",{
      method:"POST",headers:{"content-type":"application/json"},credentials:"omit",cache:"no-store",
      body:JSON.stringify({requestId,nodeId,name:input.name,attendance:input.attendance,
-       guests:input.guests,turnstileToken,website:""}),
+       guests:input.guests,turnstileToken,website}),
    });
    if(!response.ok)throw new Error("RSVP_HTTP_"+response.status);
  },[base,initial.slug]);

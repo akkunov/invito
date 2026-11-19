@@ -38,13 +38,13 @@ export function validateRsvp(input:unknown,maxGuests:number):RsvpInput{
  const value=rsvpInputSchema.parse(input);if(value.guests>maxGuests)throw Error("Guest limit exceeded");return value;
 }
 /** Preview never calls a transport; live requires a supplied, authenticated-at-server adapter. */
-export type GuestMode={mode:"studio"}|{mode:"preview"}|{mode:"live";submitRsvp?:(nodeId:string,input:RsvpInput)=>Promise<void>};
-export async function submitGuestResponse(mode:GuestMode,nodeId:string,input:unknown,maxGuests:number,deadline:string|null,now=Date.now()){
+export type GuestMode={mode:"studio"}|{mode:"preview"}|{mode:"live";rsvpEnabled?:boolean;turnstileSiteKey?:string;submitRsvp?:(nodeId:string,input:RsvpInput,turnstileToken?:string,website?:string)=>Promise<void>};
+export async function submitGuestResponse(mode:GuestMode,nodeId:string,input:unknown,maxGuests:number,deadline:string|null,now=Date.now(),turnstileToken?:string,website?:string){
  if(deadline&&now>=Date.parse(deadline))throw Error("RSVP closed");
  const value=validateRsvp(input,maxGuests);
  if(mode.mode==="preview")return "preview" as const;
  if(mode.mode!=="live"||!mode.submitRsvp)throw Error("RSVP unavailable");
- await mode.submitRsvp(nodeId,value);return "sent" as const;
+ await mode.submitRsvp(nodeId,value,turnstileToken,website);return "sent" as const;
 }
 export function createWidget(kind:BlockKind,id:string,parentId:string,width:number,now=Date.now()):WidgetNode{
  const title=BLOCK_NAMES[kind];const target=new Date(now+30*86400000).toISOString();
