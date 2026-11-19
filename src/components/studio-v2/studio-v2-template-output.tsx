@@ -2,6 +2,7 @@
 import {useMemo,useRef,useState} from "react";
 import {StudioIcon} from "./studio-icon";
 import {templateDocument,createThemeVariant,type TemplateRecord} from "@/features/studio-v2/core/template-registry.ts";
+import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {layoutDocument} from "@/features/studio-v2/core/layout-engine.ts";
 import {resolveStyleDocument} from "@/features/studio-v2/core/style-tokens.ts";
 import {bindDocument} from "@/features/studio-v2/core/invitation-behavior.ts";

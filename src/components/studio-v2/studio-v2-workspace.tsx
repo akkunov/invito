@@ -11,6 +11,7 @@ import { InspectorTabs, InspectorPanel, InspectorGroup, type InspectorTab } from
 import { StudioIcon } from "./studio-icon";
 import { projectPalette } from "./studio-v2-color-picker";
 import { TemplateManager } from "./studio-v2-template-manager";
+import { StudioV2PrintDialog } from "./studio-v2-print-dialog";
 import { StudioCloudPanel } from "./studio-v2-cloud-panel";
 import type { RemoteSyncSettings } from "@/features/studio-v2/browser/remote-sync";
 import { ResponsiveEditor } from "./studio-v2-responsive-editor";
@@ -123,6 +124,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
   const [session,setSession]=useState<StudioEditorSession>(()=>createEditorSession(createStudioV2Demo()));
   const [previewOpen,setPreviewOpen]=useState(false);
   const [templateManagerOpen,setTemplateManagerOpen]=useState(false);
+  const [printOpen,setPrintOpen]=useState(false);
   const [cloudPanelOpen,setCloudPanelOpen]=useState(false);
   const [responsiveOpen,setResponsiveOpen]=useState(false);
   const [timelineOpen,setTimelineOpen]=useState(false);
@@ -394,7 +396,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
     function down(e:KeyboardEvent){
       if(!loaded)return;
       const target=e.target as HTMLElement|null;
-      if(templateManagerOpen){if(e.key==="Escape"&&!target?.closest("input,textarea,select")){e.preventDefault();}return;}
+      if(templateManagerOpen||printOpen){return;}
       if(responsiveOpen){if(e.key==="Escape"){e.preventDefault();setResponsiveOpen(false);return;}if(!target?.closest("input,textarea,select,[contenteditable]")&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();changeHistory(e.shiftKey);}return;}
       if(previewOpen){if(e.key==="Escape"){setPreviewOpen(false);setTimelineOpen(false);}return;}
       if(target?.closest("input,textarea,select,[contenteditable=true],[contenteditable=plaintext-only]"))return;
@@ -425,7 +427,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
     const blur=()=>{setSpaceHeld(false);setDistanceMarks([]);};
     window.addEventListener("keydown",down);window.addEventListener("keyup",up);window.addEventListener("blur",blur);
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("blur",blur)};
-  },[loaded,nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,hasClipboard,menu,selectedPage,session,document,gestureQueue]);
+  },[loaded,nodeIds,editing,sourceDocument,previewOpen,responsiveOpen,templateManagerOpen,printOpen,hasClipboard,menu,selectedPage,session,document,gestureQueue]);
   function zoomTo(value:number, screenAnchor:Point={x:sceneSize.width/2,y:sceneSize.height/2}){
     setViewport(v=>zoomAt(v,clampZoom(value),screenAnchor));
   }
@@ -705,7 +707,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
         <button className="v2-responsive-toggle" aria-label="Адаптивный редактор" title="Адаптивный редактор" disabled={!!editing||!!session.transaction} onClick={()=>setResponsiveOpen(true)}><StudioIcon name="responsive" size={18}/></button>
         <button className="v2-preview-button" title="Предпросмотр" aria-label="Предпросмотр" onClick={()=>{if(editing)finishText();setPreviewOpen(true);}}><StudioIcon name="phone" size={18}/></button>
         {remoteSettings&&<button title="Синхронизация с сервером" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setCloudPanelOpen(true)}><StudioIcon name="component" size={16}/> Облако</button>}
-        <button className="v2-export" onClick={()=>downloadDocument(sourceDocument)}><StudioIcon name="download" size={16}/> JSON</button>
+        <button className="v2-export" title="Экспорт и печать" aria-label="Экспорт и печать" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setPrintOpen(true)}><StudioIcon name="printer" size={16}/> Экспорт</button>
         <span className="v2-stage-tag"><StudioIcon name="check" size={13}/> Функциональный прототип</span>
       </div>
     </header>
@@ -899,6 +901,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
       </aside>
     </div>
     {templateManagerOpen&&<TemplateManager document={sourceDocument} onOpen={openTemplateProject} onClose={()=>setTemplateManagerOpen(false)}/>}
+    {printOpen&&<StudioV2PrintDialog document={sourceDocument} selectedPageId={selectedPage??sourceDocument.pages[0]?.id??""} onDownloadJson={()=>downloadDocument(sourceDocument)} onClose={()=>setPrintOpen(false)}/>}
     {cloudPanelOpen&&remoteSettings&&<StudioCloudPanel document={sourceDocument} settings={remoteSettings} onOpenLocalCopy={openTemplateProject} onClose={()=>setCloudPanelOpen(false)}/>}
     {responsiveOpen&&<ResponsiveEditor document={{...sourceDocument,locale}} initialPageId={selectedPage} initialNodeId={authoredNode?.id??null} initialDevice={device} mediaUrls={mediaUrls} onCommand={command=>proAction(()=>command)} onUndo={changeHistory} canUndo={session.undoStack.length>0} canRedo={session.redoStack.length>0} onClose={()=>setResponsiveOpen(false)}/>}
     {previewOpen&&<div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Предпросмотр приглашения"><header className="v2-preview-header"><strong>Предпросмотр</strong><div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div><div className="v2-motion-preview-actions"><button disabled={!motionTracks(sourceDocument).length} aria-pressed={timelineOpen} onClick={()=>{setTimelineOpen(v=>!v);setTimelineTime(0);}}>Timeline</button><button aria-label="Повторить анимации" disabled={timelineOpen} onClick={()=>setPreviewRun(x=>x+1)}>Повторить</button><button onClick={()=>{setPreviewOpen(false);setTimelineOpen(false);}} aria-label="Закрыть предпросмотр">Закрыть ×</button></div></header><div className="v2-preview-scroll"><div className="v2-preview-device" style={{width:DEVICE_WIDTH[device],maxWidth:"100%"}}><StudioV2ProjectRenderer key={previewRun} document={{...sourceDocument,locale}} mediaUrls={mediaUrls} device={device} motionPlayback={timelineOpen?{mode:"timeline",timeMs:timelineTime}:{mode:"live"}}/></div></div>{timelineOpen&&<MotionTimeline document={sourceDocument} time={timelineTime} onTime={setTimelineTime}/>}</div>}
