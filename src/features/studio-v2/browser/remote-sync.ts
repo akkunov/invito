@@ -101,6 +101,47 @@ export function createStudioRemoteClient(settings: RemoteSyncSettings) {
       return created;
     },
     getProject,
+    /** Stable release IDs are server generated and never inferred from the document UUID. */
+    async getProjectRevision(id:string,number:number) {
+      if(!Number.isSafeInteger(number)||number<1)throw new Error("INVALID_REVISION");
+      const result=await send<{
+        id:string;number:number;document:unknown;sha256:string;
+      }>("/projects/"+encodeURIComponent(id)+"/revisions/"+number);
+      if(!/^[a-f0-9-]{36}$/i.test(result.id)||result.number!==number||
+        !/^[a-f0-9]{64}$/i.test(result.sha256))throw new Error("INVALID_REMOTE_REVISION");
+      return {...result,document:parseProjectV2(result.document)};
+    },
+    async getPublication(id:string) {
+      return send<null|{id:string;slug:string;status:"ACTIVE"|"UNPUBLISHED";latestRelease:number}>(
+        "/projects/"+encodeURIComponent(id)+"/publication");
+    },
+    async publishProject(id:string,input:{
+      slug:string;projectRevisionId:string;expectedRelease:number;idempotencyKey:string;
+    }) {
+      const result=await send<{id:string;slug:string;status:string;latestRelease:number}>(
+        "/projects/"+encodeURIComponent(id)+"/publish","POST",input);
+      if(result.slug!==input.slug||result.status!=="ACTIVE"||
+        result.latestRelease!==input.expectedRelease+1)throw new Error("INVALID_PUBLICATION_RESULT");
+      return result;
+    },
+    async unpublishProject(id:string,expectedRelease:number) {
+      const result=await send<{id:string;status:string;latestRelease:number}>(
+        "/projects/"+encodeURIComponent(id)+"/unpublish","POST",{expectedRelease});
+      if(result.status!=="UNPUBLISHED"||result.latestRelease!==expectedRelease){
+        throw new Error("INVALID_UNPUBLISH_RESULT");
+      }
+      return result;
+    },
+    async listRsvp(id:string,page=1) {
+      return send<{items:Array<{
+        id:string;guestName:string;nodeId:string;attendance:"YES"|"NO"|"MAYBE";
+        guestCount:number;message:string|null;createdAt:string;
+      }>;nextPage:number|null}>("/projects/"+encodeURIComponent(id)+"/rsvp?page="+page);
+    },
+    async rsvpSummary(id:string) {
+      return send<{responses:number;attending:number;declined:number}>(
+        "/projects/"+encodeURIComponent(id)+"/rsvp/summary");
+    },
     /** Stage in the user's private R2 workspace, verify server-side, and receive an asset:UUID. */
     async uploadMedia(name: string, blob: Blob) {
       if (!blob.size || blob.size > 20 * 1024 * 1024) throw new Error("MEDIA_TOO_LARGE");
