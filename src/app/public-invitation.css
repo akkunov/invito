@@ -12,3 +12,9 @@
  position:absolute!important;width:1px!important;height:1px!important;
  overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important
 }
+
+/* Override the fixed-height, clipped Studio editor shell on public guest pages. */
+.studio-v2.v2-public-invitation{
+ height:auto;min-height:100dvh;max-height:none;overflow:visible;
+ display:block;isolation:auto;
+}
