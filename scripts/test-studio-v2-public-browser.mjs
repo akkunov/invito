@@ -62,6 +62,9 @@ try{
  assert.match(submissions[0].requestId,/^[0-9a-f-]{36}$/i);
  assert.equal(Object.hasOwn(submissions[0],"turnstileToken"),false,"no fake captcha token");
  assert.equal(await form.getByRole("button",{name:"Подтвердить"}).isDisabled(),true);
+ // Locale route must select the RU/KY guest labels without mutating the saved release.
+ await page.goto("http://127.0.0.1:4180/ky/i/smoke/",{waitUntil:"networkidle"});
+ await page.getByLabel("Атыңыз").waitFor({state:"visible"});
  active=false;
  const missing=await page.goto("http://127.0.0.1:4180/ru/i/smoke/",{waitUntil:"domcontentloaded"});
  assert.equal(missing.status(),404,"unpublished invitation must not be server-rendered");

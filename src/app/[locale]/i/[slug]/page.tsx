@@ -28,5 +28,5 @@ export default async function InvitationPage({params}:{
  if(!response.ok)throw new Error("PUBLIC_INVITATION_UNAVAILABLE");
  const result=decodePublicInvitation(await response.json());
  if(result.slug!==slug)notFound();
- return <StudioV2PublicInvitation initial={result}/>;
+ return <StudioV2PublicInvitation initial={result} locale={locale}/>;
 }

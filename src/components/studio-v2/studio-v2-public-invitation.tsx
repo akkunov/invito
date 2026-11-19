@@ -5,7 +5,7 @@ import type {PublicInvitation} from "@/features/studio-v2/browser/public-invitat
 import {decodePublicInvitation,invitationApiBase} from "@/features/studio-v2/browser/public-invitation";
 import type {RsvpInput} from "@/features/studio-v2/core/invitation.schema.ts";
 
-export function StudioV2PublicInvitation({initial}:{initial:PublicInvitation}){
+export function StudioV2PublicInvitation({initial,locale}:{initial:PublicInvitation;locale:"ru"|"ky"}){
  const [publication,setPublication]=useState(initial);
  const [available,setAvailable]=useState(true);
  const requestIdByPayload=useRef(new Map<string,string>());
@@ -48,8 +48,9 @@ export function StudioV2PublicInvitation({initial}:{initial:PublicInvitation}){
     <h1>Приглашение недоступно</h1>
     <p>Автор временно закрыл доступ к этому приглашению.</p>
    </main>;
- return <main className="studio-v2 v2-public-invitation" lang={publication.document.locale}>
-   <StudioV2ProjectRenderer document={publication.document} mediaUrls={publication.mediaUrls}
+ const localizedDocument={...publication.document,locale};
+ return <main className="studio-v2 v2-public-invitation" lang={locale}>
+   <StudioV2ProjectRenderer document={localizedDocument} mediaUrls={publication.mediaUrls}
       guest={guest} device="auto"/>
  </main>;
 }
