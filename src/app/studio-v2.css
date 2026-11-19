@@ -617,3 +617,32 @@
  .v2-studio-print-heading span{display:none}
  .v2-studio-print-close{min-width:36px;padding:0 9px;font-size:11px}
 }
+
+/* Owner-only cloud publishing panel. Separate from template manager and export. */
+.v2-publish-overlay{background:#f5f5f7;color:#1a1c23}
+.v2-publish-overlay .v2-preview-header strong{display:inline-flex;align-items:center;gap:9px}
+.v2-publish-overlay .v2-preview-header button{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #d4d8de;padding:9px 12px;border-radius:7px}
+.v2-publish-scroll{overflow-y:auto;min-height:0;flex:1;padding:30px 16px}
+.v2-publish-panel{width:min(100%,650px);margin:auto;padding:27px;border:1px solid #e2e4e7;border-radius:12px;background:#fff;display:grid;gap:15px}
+.v2-publish-panel h2{font-size:22px;font-weight:750;margin:0;letter-spacing:-.025em}
+.v2-publish-panel p{font-size:12px;line-height:1.6;margin:0;color:#616773}
+.v2-publish-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#626672}
+.v2-publish-panel .v2-widget-field{display:grid;gap:7px;font-size:12px}
+.v2-publish-panel .v2-widget-field input{height:40px;width:100%;padding:0 11px;border-radius:7px;border:1px solid #cfd2da;background:#fff;font:inherit}
+.v2-publish-actions{display:flex;gap:10px;flex-wrap:wrap}
+.v2-publish-actions button,.v2-publish-link button{min-height:36px;display:inline-flex;gap:7px;align-items:center;border:1px solid #d2d3d7;border-radius:7px;padding:8px 13px;background:#fff;font-size:12px;cursor:pointer}
+.v2-publish-actions button:first-child{background:#202127;border-color:#202127;color:#fff}
+.v2-publish-actions button:disabled{opacity:.5;cursor:not-allowed}
+.v2-publish-link{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#f5f5f7;border-radius:8px;padding:12px;font-size:12px}
+.v2-publish-link a{flex:1;min-width:0;overflow-wrap:anywhere;text-decoration:underline;color:#33438c}
+.v2-publish-panel .v2-publish-error{color:#ae3333}
+.v2-publish-panel .v2-publish-status{color:#286040}
+.v2-publish-responses{border-top:1px solid #e5e6e8;padding-top:17px;display:grid;gap:12px}
+.v2-publish-responses h3{font-size:14px;font-weight:700;margin:0}
+.v2-publish-stats{display:flex;gap:22px;flex-wrap:wrap}
+.v2-publish-stats span{font-size:11px;color:#616873;display:grid;gap:3px}
+.v2-publish-stats strong{font-size:23px;color:#191b1f}
+.v2-publish-replies{max-height:290px;overflow-y:auto;border:1px solid #e4e5e7;border-radius:8px}
+.v2-publish-replies>div{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;font-size:12px;border-bottom:1px solid #eee}
+.v2-publish-replies>div:last-child{border-bottom:0}
+@media(max-width:660px){.v2-publish-scroll{padding:12px}.v2-publish-panel{padding:16px}}
