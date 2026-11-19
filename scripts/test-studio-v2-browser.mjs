@@ -44,7 +44,7 @@ try{
   const directPending=page.waitForEvent("download",{timeout:90000});
   await directPrint.getByRole("button",{name:"PNG",exact:true}).click();
   const directDownloaded=await directPending;
-  assert.match(directDownloaded.suggestedFilename(),/\\.png$/i);
+  assert.ok(directDownloaded.suggestedFilename().toLowerCase().endsWith(".png"),"Current project PNG export should download a real file");
   await directPrint.getByRole("button",{name:"Закрыть экспорт"}).click();
   assert.equal(await directPrint.count(),0,"Print dialog can be closed without modifying Studio");
   const rows=page.locator(".v2-page-item");
