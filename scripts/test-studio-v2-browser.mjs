@@ -29,6 +29,24 @@ try{
  const page=await visit(context);
  try{
   await count(page,5);
+  // Professional print must be directly reachable from Studio without creating
+  // or selecting a template in Template Manager.
+  const exportButton=page.getByRole("button",{name:"Экспорт и печать",exact:true});
+  assert.equal(await exportButton.isVisible(),true,"Direct print/export button must be visible");
+  await exportButton.click();
+  const directPrint=page.getByRole("dialog",{name:"Экспорт и печать",exact:true});
+  await directPrint.waitFor({state:"visible"});
+  assert.equal(await directPrint.getByText("Экспорт текущего проекта").isVisible(),true);
+  assert.equal(await directPrint.getByRole("button",{name:"Векторный PDF (печать)"}).isVisible(),true);
+  assert.equal(await directPrint.getByRole("button",{name:"Пакет для CMYK / PDF/X-4"}).isVisible(),true);
+  assert.equal(await directPrint.getByRole("button",{name:"Скачать проект JSON"}).isVisible(),true);
+  await directPrint.getByLabel("DPI печати").selectOption("150");
+  const directPending=page.waitForEvent("download",{timeout:90000});
+  await directPrint.getByRole("button",{name:"PNG",exact:true}).click();
+  const directDownloaded=await directPending;
+  assert.match(directDownloaded.suggestedFilename(),/\\.png$/i);
+  await directPrint.getByRole("button",{name:"Закрыть экспорт"}).click();
+  assert.equal(await directPrint.count(),0,"Print dialog can be closed without modifying Studio");
   const rows=page.locator(".v2-page-item");
   const initial=await rows.allTextContents();
   await rows.nth(4).dragTo(rows.nth(0));
