@@ -8,6 +8,6 @@ import {DocumentsModule} from "../documents/documents.module.js";
   imports: [DocumentsModule],
   providers: [MediaObjectStore, MediaService],
   controllers: [MediaController],
-  exports: [MediaService],
+  exports: [MediaService,MediaObjectStore],
 })
 export class MediaModule {}
