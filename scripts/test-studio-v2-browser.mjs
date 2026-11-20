@@ -115,6 +115,9 @@ try{
   assert.equal(Number(await xValue.inputValue()),-24.4,"Stepper must move X in 0.1px increments");
   await xValue.fill(String(oldX));await xValue.press("Enter");
   assert.equal(Number(await xValue.inputValue()),oldX,"Original layer position must be restorable");
+  // The next regression verifies canvas wheel panning. Restore mouse location
+  // from the Inspector to the canvas before dispatching the wheel.
+  await photo.hover();
   const stageCanvas=page.locator(".v2-stage");
   const panBefore=await page.locator(".v2-world").evaluate(el=>el.style.transform);
   const unmodifiedZoom=await page.locator(".v2-canvas-actions").textContent();
