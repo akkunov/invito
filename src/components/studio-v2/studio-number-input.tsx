@@ -59,7 +59,8 @@ export function StudioNumberInput({
     input.value=persisted;
     setInvalid(true);
   }else{
-    input.value=persisted;
+    // Valid edits may still be committing through the editor state reducer.
+    // Do not overwrite their visible value with an older render on blur.
     setInvalid(false);
   }
   onBlur?.(event);

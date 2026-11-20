@@ -43,10 +43,10 @@ for(const [action,label] of [
  ['ResponsiveEditor document=',"Responsive editor mounted"],
  ['InspectorTabs value=',"Inspector navigation"],
  ['MotionControls',"Animation Inspector"],
- ['ColorPicker',"Color control"],
  ['AssetLibrary',"Asset manager"],
  ["useCloudAssetUrls","R2 read URL resolution"],
 ])includes(workspace,action,label);
+includes("src/components/studio-v2/studio-v2-advanced-properties.tsx","ColorPicker","Color control is available in advanced inspector");
 includes("src/components/studio-v2/studio-v2-print-dialog.tsx","TemplateOutput","Print uses template-grade renderer");
 includes("src/components/studio-v2/studio-v2-template-output.tsx","openVectorPrint","Vector print code reachable");
 includes("src/components/studio-v2/studio-v2-template-output.tsx","prepareProfessionalPrint","Production print package reachable");
