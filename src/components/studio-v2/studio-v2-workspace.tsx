@@ -14,6 +14,7 @@ import { TemplateManager } from "./studio-v2-template-manager";
 import { StudioV2PrintDialog } from "./studio-v2-print-dialog";
 import { StudioCloudPanel } from "./studio-v2-cloud-panel";
 import { StudioPublishPanel, StudioPublishUnavailable } from "./studio-v2-publish-panel";
+import {StudioNumberInput} from "./studio-number-input";
 import type { RemoteSyncSettings } from "@/features/studio-v2/browser/remote-sync";
 import { ResponsiveEditor } from "./studio-v2-responsive-editor";
 import { MotionControls, MotionTimeline } from "./studio-v2-motion-controls";
@@ -809,8 +810,17 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
           <h3>Трансформация</h3>
           {authoredNode&&<label className="v2-widget-field">Название слоя<input key={authoredNode.id+":"+(authoredNode.layerName??"")} maxLength={100} defaultValue={nodeLabel(sourceDocument,authoredNode.id)} disabled={!!editing} onBlur={e=>{const name=e.target.value.trim();if(name&&name!==nodeLabel(sourceDocument,authoredNode.id))proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{layerName:name}}));}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></label>}
           {nodeIds.length>0?<><strong className="v2-selected-name">{activeNode?nodeLabel(document,activeNode.id):nodeIds.length+" слоёв"}</strong>
-          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<input type="number" value={Math.round(activeNode[key]*100)/100} disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"} onChange={e=>{const v=Number(e.target.value);if(!Number.isFinite(v)||e.target.value==="")return;const valid=key==="width"||key==="height"?v>=1&&v<=20000:key==="rotation"?Math.abs(v)<=360:Math.abs(v)<=1e6;if(valid)proAction(()=>({kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
-          {authoredNode&&<label className="v2-layout-field">Непрозрачность (%)<input aria-label="Непрозрачность слоя" type="number" min={0} max={100} value={Math.round(authoredNode.opacity*100)} disabled={!!editing||authoredNode.locked} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=0&&n<=100)proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{opacity:n/100}}));}}/></label>}
+          {activeNode&&<div className="v2-inspector-grid">{(["x","y","width","height","rotation"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H",rotation:"°"})[key]}<StudioNumberInput
+  key={activeNode.id+":"+key}
+  aria-label={({x:"Координата X",y:"Координата Y",width:"Ширина слоя",height:"Высота слоя",rotation:"Угол поворота"})[key]}
+  value={Math.round(activeNode[key]*100)/100}
+  min={key==="width"||key==="height"?1:key==="rotation"?-360:-1_000_000}
+  max={key==="width"||key==="height"?20_000:key==="rotation"?360:1_000_000}
+  step={key==="rotation"?1:key==="width"||key==="height"?1:0.1}
+  steppers
+  disabled={!!editing||inStack&&(key==="x"||key==="y")||(key==="width"||key==="height")&&authoredNode?.sizing?.[key]!==undefined&&authoredNode.sizing[key]!=="fixed"}
+  onValueChange={v=>{if(v!==undefined)proAction(()=>({kind:"updateNode",id:activeNode.id,changes:{[key]:v}}));}}/></label>)}</div>}
+          {authoredNode&&<label className="v2-layout-field">Непрозрачность (%)<StudioNumberInput aria-label="Непрозрачность слоя" min={0} max={100} value={Math.round(authoredNode.opacity*100)} disabled={!!editing||authoredNode.locked} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=0&&n<=100)proAction(()=>({kind:"updateNode",id:authoredNode.id,changes:{opacity:n/100}}));}}/></label>}
           {nodeIds.length>1&&<button className="v2-inspector-button" onClick={performGroup}>Группировать</button>}
           {activeNode?.type==="frame"&&activeNode.background==="transparent"&&<button className="v2-inspector-button" onClick={performUngroup}>Разгруппировать</button>}
           <button className="v2-inspector-button" onClick={()=>{if(editing)finishText();setSelectedIds([]);}}>Снять выделение</button></>:<p className="v2-placeholder">Выберите слой на холсте или в списке. Shift — несколько слоёв.</p>}
@@ -825,11 +835,11 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
             <button className="v2-inspector-button v2-danger" disabled={document.pages.length<=1||!!editing||selectedRoot.locked} onClick={()=>deletePage(selected.id)}>Удалить страницу</button>
             <p className="v2-placeholder" role="status">{pageStatus||"Удаление и перемещение можно отменить через Ctrl+Z."}</p>
             <div className="v2-inspector-grid">
-              <label>X<input type="number" value={Math.round(selected.placement.x)} onChange={e=>{
+              <label>X<StudioNumberInput value={Math.round(selected.placement.x)} onChange={e=>{
                 const x=Number(e.target.value);
                 if(Number.isFinite(x)&&Math.abs(x)<=1_000_000)setSession(s=>dispatchStudioCommand(s,{kind:"movePage",id:selected.id,placement:{...selected.placement,x}}));
               }}/></label>
-              <label>Y<input type="number" value={Math.round(selected.placement.y)} onChange={e=>{
+              <label>Y<StudioNumberInput value={Math.round(selected.placement.y)} onChange={e=>{
                 const y=Number(e.target.value);
                 if(Number.isFinite(y)&&Math.abs(y)<=1_000_000)setSession(s=>dispatchStudioCommand(s,{kind:"movePage",id:selected.id,placement:{...selected.placement,y}}));
               }}/></label>
@@ -854,8 +864,8 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
           {layoutFrame&&<>
             <label className="v2-layout-field">Расположение<select value={layoutFrame.layout} onChange={e=>editLayout(layoutFrame.id,{layout:e.target.value as "free"|"vertical"|"horizontal"})}><option value="free">Свободное</option><option value="vertical">Вертикальное</option><option value="horizontal">Горизонтальное</option></select></label>
             {layoutFrame.layout!=="free"&&<>
-              <label className="v2-layout-field">Gap<input type="number" min={0} max={2000} value={layoutFrame.gap} onChange={e=>editLayout(layoutFrame.id,{gap:Number(e.target.value)})}/></label>
-              <div className="v2-inspector-grid">{(["top","right","bottom","left"] as const).map(side=><label key={side}>{({top:"↑",right:"→",bottom:"↓",left:"←"})[side]}<input aria-label={"Padding "+side} type="number" min={0} max={2000} value={layoutFrame.padding[side]} onChange={e=>editLayout(layoutFrame.id,{padding:{...layoutFrame.padding,[side]:Number(e.target.value)}})}/></label>)}</div>
+              <label className="v2-layout-field">Gap<StudioNumberInput min={0} max={2000} value={layoutFrame.gap} onChange={e=>editLayout(layoutFrame.id,{gap:Number(e.target.value)})}/></label>
+              <div className="v2-inspector-grid">{(["top","right","bottom","left"] as const).map(side=><label key={side}>{({top:"↑",right:"→",bottom:"↓",left:"←"})[side]}<StudioNumberInput aria-label={"Padding "+side} min={0} max={2000} value={layoutFrame.padding[side]} onChange={e=>editLayout(layoutFrame.id,{padding:{...layoutFrame.padding,[side]:Number(e.target.value)}})}/></label>)}</div>
               <label className="v2-layout-field">Выравнивание<select value={layoutFrame.alignment??"start"} onChange={e=>editLayout(layoutFrame.id,{alignment:e.target.value as "start"|"center"|"end"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option></select></label>
               <label className="v2-layout-field">Распределение<select value={layoutFrame.distribution??"start"} onChange={e=>editLayout(layoutFrame.id,{distribution:e.target.value as "start"|"center"|"end"|"space-between"})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="space-between">Между элементами</option></select></label>
             </>}
@@ -865,7 +875,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
             const n=(authoredNode??layoutFrame)!;
             const sizing:NonNullable<typeof n.sizing>=n.sizing??{width:"fixed",height:"fixed"};
             return <>{(["width","height"] as const).map(axis=><label key={axis} className="v2-layout-field">{axis==="width"?"Ширина":"Высота"}<select value={sizing[axis]} onChange={e=>editLayout(n.id,{sizing:{...sizing,[axis]:e.target.value as "fixed"|"fill"|"hug"}})}><option value="fixed">Fixed</option>{n.parentId&&<option value="fill">Fill</option>}{n.type==="frame"&&n.layout!=="free"&&<option value="hug">Hug</option>}</select></label>)}
-            <div className="v2-inspector-grid">{(["minWidth","maxWidth","minHeight","maxHeight"] as const).map(key=><label key={key}>{({minWidth:"min W",maxWidth:"max W",minHeight:"min H",maxHeight:"max H"})[key]}<input type="number" min={1} max={20000} value={sizing[key]??""} placeholder={key.startsWith("min")?"1":"20000"} onChange={e=>editLayout(n.id,{sizing:{...sizing,[key]:e.target.value===""?undefined:Number(e.target.value)}})}/></label>)}</div>
+            <div className="v2-inspector-grid">{(["minWidth","maxWidth","minHeight","maxHeight"] as const).map(key=><label key={key}>{({minWidth:"min W",maxWidth:"max W",minHeight:"min H",maxHeight:"max H"})[key]}<StudioNumberInput min={1} max={20000} value={sizing[key]??""} placeholder={key.startsWith("min")?"1":"20000"} onChange={e=>editLayout(n.id,{sizing:{...sizing,[key]:e.target.value===""?undefined:Number(e.target.value)}})}/></label>)}</div>
             {n.parentId&&parent?.type==="frame"&&parent.layout==="free"&&(["x","y"] as const).map(axis=><label key={axis} className="v2-layout-field">Anchor {axis.toUpperCase()}<select value={n.anchors?.[axis]??"start"} onChange={e=>editLayout(n.id,{anchors:{x:"start",y:"start",...n.anchors,[axis]:e.target.value as "start"|"center"|"end"|"stretch"}})}><option value="start">Начало</option><option value="center">Центр</option><option value="end">Конец</option><option value="stretch">Растянуть</option></select></label>)}
             </>;
           })()}
@@ -882,12 +892,12 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
           <div className="v2-device-switch">{(["desktop","tablet","mobile"] as const).map(d=><button key={d} aria-pressed={device===d} onClick={()=>setDevice(d)}>{({desktop:"Desktop",tablet:"Tablet",mobile:"Mobile"})[d]}</button>)}</div>
           {selected&&currentProfile&&<>
             <label className="v2-layout-field">Режим<select disabled={!!editing} value={currentProfile.mode} onChange={e=>updateProfile({mode:e.target.value as "scale"|"reflow"})}><option value="scale">Масштаб</option><option value="reflow">Reflow</option></select></label>
-            <div className="v2-inspector-grid">{(["width","height"] as const).map(axis=><label key={axis}>{axis==="width"?"W":"H"}<input type="number" min={1} max={20000} disabled={!!editing||axis==="height"&&currentProfile.mode==="scale"} value={currentProfile[axis]} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=20000)updateProfile({[axis]:v});}}/></label>)}</div>
+            <div className="v2-inspector-grid">{(["width","height"] as const).map(axis=><label key={axis}>{axis==="width"?"W":"H"}<StudioNumberInput min={1} max={20000} disabled={!!editing||axis==="height"&&currentProfile.mode==="scale"} value={currentProfile[axis]} onChange={e=>{const v=Number(e.target.value);if(v>=1&&v<=20000)updateProfile({[axis]:v});}}/></label>)}</div>
             <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setPageProfile",id:selected.id,device,profile:null})}>Сбросить профиль</button>
           </>}
           {authoredNode&&<>
             <p className="v2-placeholder">Настройки слоя для {device}; основной холст не изменяется.</p>
-            <div className="v2-inspector-grid">{(["x","y","width","height"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H"})[key]}<input type="number" disabled={!!editing} value={currentOverride[key]??""} placeholder={String(authoredNode[key])} onChange={e=>{const raw=e.target.value,v=Number(raw);if(raw===""){updateOverride({[key]:undefined});return;}if(Number.isFinite(v)&&(key==="width"||key==="height"?v>=1&&v<=20000:Math.abs(v)<=1000000))updateOverride({[key]:v});}}/></label>)}</div>
+            <div className="v2-inspector-grid">{(["x","y","width","height"] as const).map(key=><label key={key}>{({x:"X",y:"Y",width:"W",height:"H"})[key]}<StudioNumberInput disabled={!!editing} value={currentOverride[key]??""} placeholder={String(authoredNode[key])} onChange={e=>{const raw=e.target.value,v=Number(raw);if(raw===""){updateOverride({[key]:undefined});return;}if(Number.isFinite(v)&&(key==="width"||key==="height"?v>=1&&v<=20000:Math.abs(v)<=1000000))updateOverride({[key]:v});}}/></label>)}</div>
             <label className="v2-layout-field">Видимый<input type="checkbox" checked={currentOverride.visible??authoredNode.visible} disabled={!!editing} onChange={e=>updateOverride({visible:e.target.checked})}/></label>
             <button className="v2-inspector-button" disabled={!!editing} onClick={()=>libraryCommands({kind:"setResponsiveOverride",id:authoredNode.id,device,patch:null})}>Сбросить слой</button>
           </>}
