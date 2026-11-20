@@ -87,6 +87,24 @@ try{
   await photo.hover();
   await page.locator(".v2-hover-measure").waitFor({state:"visible"});
   assert.match(await page.locator(".v2-hover-measure").textContent(),/908\s*×\s*640\s*px/);
+  // Numeric inspector must let authors clear 0, write negative coordinates,
+  // replace the selection on focus, and use explicit small stepper controls.
+  const xValue=page.getByRole("spinbutton",{name:"Координата X"});
+  await xValue.waitFor({state:"visible"});
+  const oldX=Number(await xValue.inputValue());
+  await xValue.focus();
+  await xValue.press("ControlOrMeta+A");
+  await xValue.press("Backspace");
+  assert.equal(await xValue.inputValue(),"","Clearing an input must not instantly restore 0");
+  await xValue.fill("-24.5");
+  await xValue.press("Enter");
+  await page.waitForFunction(()=>document.querySelector('input[aria-label="Координата X"]')?.value==="-24.5");
+  const stepper=page.locator(".v2-inspector-grid label").filter({has:xValue})
+    .getByRole("button",{name:"Увеличить значение"});
+  await stepper.click();
+  assert.equal(Number(await xValue.inputValue()),-24.4,"Stepper must move X in 0.1px increments");
+  await xValue.fill(String(oldX));await xValue.press("Enter");
+  assert.equal(Number(await xValue.inputValue()),oldX,"Original layer position must be restorable");
   const stageCanvas=page.locator(".v2-stage");
   const panBefore=await page.locator(".v2-world").evaluate(el=>el.style.transform);
   const unmodifiedZoom=await page.locator(".v2-canvas-actions").textContent();
