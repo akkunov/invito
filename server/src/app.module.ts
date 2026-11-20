@@ -7,9 +7,10 @@ import {JwtAuthGuard} from "./modules/auth/jwt-auth.guard.js";
 import {WorkspacesModule} from "./modules/workspaces/workspaces.module.js";
 import {DocumentsModule} from "./modules/documents/documents.module.js";
 import {MediaModule} from "./modules/media/media.module.js";
+import {PublicationsModule} from "./modules/publications/publications.module.js";
 
 @Module({
-  imports: [PrismaModule, AuthModule, WorkspacesModule, DocumentsModule, MediaModule],
+  imports: [PrismaModule, AuthModule, WorkspacesModule, DocumentsModule, MediaModule, PublicationsModule],
   controllers: [HealthController],
   providers: [{provide: APP_GUARD, useClass: JwtAuthGuard}],
 })

@@ -228,9 +228,11 @@ model Publication {
   project       StudioProject     @relation(fields: [projectId], references: [id], onDelete: Restrict)
   releases      PublicationRelease[]
   responses     RsvpResponse[]
+  rsvpThrottle  RsvpThrottle[]
 
   @@index([workspaceId, updatedAt])
   @@index([projectId])
+  @@unique([projectId])
 }
 
 model PublicationRelease {
@@ -255,6 +257,8 @@ model RsvpResponse {
   id            String      @id @default(uuid()) @db.Uuid
   publicationId String      @db.Uuid
   guestName     String      @db.VarChar(120)
+  nodeId        String      @default("") @db.VarChar(80)
+  requestId     String?     @db.Uuid
   attendance    Attendance
   guestCount    Int         @default(1)
   message       String?     @db.VarChar(2000)
@@ -262,6 +266,17 @@ model RsvpResponse {
   publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Restrict)
 
   @@index([publicationId, createdAt])
+  @@unique([publicationId, requestId])
+}
+
+model RsvpThrottle {
+  publicationId String @db.Uuid
+  bucket        DateTime @db.Timestamptz(0)
+  count         Int @default(0)
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@id([publicationId, bucket])
+  @@index([bucket])
 }
 
 model AuditEvent {

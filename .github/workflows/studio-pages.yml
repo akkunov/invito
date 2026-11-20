@@ -42,7 +42,7 @@ jobs:
           NEXT_PUBLIC_PAGES_BASE_PATH: /invito
         run: |
           set -euo pipefail
-          rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor'
+          rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor' 'src/app/[locale]/i'
           rm 'src/app/[locale]/page.tsx'
           cat > next.config.ts <<'CONFIG'
           import type { NextConfig } from "next";

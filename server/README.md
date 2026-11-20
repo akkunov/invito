@@ -85,3 +85,9 @@ Quota: 500 MiB per workspace, 20 pending uploads, 15-minute server completion wi
 Cloud save in Studio v2 uses `prepareCloudSnapshot` to upload local images when the user explicitly clicks Save. It does **not** replace IndexedDB records or delete local image blobs. Studio v2 music widgets support an explicit MP3 upload button when an OIDC workspace session is provided. Their `block.source` holds `asset:UUID`, checked against READY audio/mpeg records in the same workspace, rather than reusing image-only `ProjectDocumentV2.assets`. Guest playback for public publications remains #29.5.
 
 **Deployment:** Existing #29.3 build includes shared Studio schema files from `../src`; the backend still needs the monorepo root in its Vercel build context. Production R2 credentials and CORS must be configured manually; CI fakes the R2 object boundary and verifies server logic against a disposable PostgreSQL 17 database, not a real R2 bucket.
+
+## #29.5 — Publishing and RSVP
+
+Publishing is transactional and append-only. Each project has one stable public slug, with versioned releases and optimistic `expectedRelease`. Owner/ADMIN may publish; EDITOR may review private RSVPs. The anonymous guest API serves only the ACTIVE release, via no-store and short-lived private media links. See `docs/backend/ADR-029-05-PUBLISHING.md` for REST requests, data protection, anti-spam policy and deployment steps.
+
+Set `RSVP_TURNSTILE_SITE_KEY` and `RSVP_TURNSTILE_SECRET` on the backend for **production** RSVP. Without both, anonymous submissions return 503 in production. On the frontend set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SITE_URL`, deploy on an actual Next.js server runtime (GitHub Pages static export cannot host dynamic invitation slugs), and connect real OIDC `remoteSettings` to expose the Studio Publishing panel. No production data is migrated automatically.

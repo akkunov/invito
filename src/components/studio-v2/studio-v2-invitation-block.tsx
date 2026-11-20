@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useId,useRef,useState,type CSSProperties,type FormEvent} from "react";
 import Image from "next/image";
+import {StudioTurnstile} from "./studio-v2-turnstile";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {countdownParts,countdownTarget,locationAddress,mapUrl,submitGuestResponse,type GuestMode,type WidgetNode} from "@/features/studio-v2/core/invitation-behavior.ts";
 type Props={node:WidgetNode;document:ProjectDocumentV2;guest:GuestMode;mediaUrls?:Readonly<Record<string,string>>};
@@ -20,20 +21,34 @@ function Rsvp({node,document,guest}:Props){
 function RsvpForm({block,nodeId,locale,guest}:{block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
  const id=useId(),w=words[locale],nameRef=useRef<HTMLInputElement>(null);
  const [name,setName]=useState(""),[attendance,setAttendance]=useState<"yes"|"no">("yes"),[guests,setGuests]=useState(1),[status,setStatus]=useState<"idle"|"sending"|"preview"|"sent"|"error">("idle");
+ const [challengeToken,setChallengeToken]=useState(""),[challengeReset,setChallengeReset]=useState(0);
+ const honeypot=useRef<HTMLInputElement>(null);
  const busy=useRef(false);const [now,setNow]=useState<number|null>(null);useEffect(()=>{const tick=()=>setNow(Date.now());tick();const timer=window.setInterval(tick,30000);return()=>window.clearInterval(timer);},[]);
  const closed=now!==null&&!!block.deadline&&now>=Date.parse(block.deadline);
- const unavailable=guest.mode==="live"&&!guest.submitRsvp;
- const disabled=guest.mode==="studio"||closed||unavailable||status==="sending"||status==="sent";
+ const unavailable=guest.mode==="live"&&(!guest.submitRsvp||guest.rsvpEnabled===false);
+ const challengeSiteKey=guest.mode==="live"?guest.turnstileSiteKey:undefined;
+ const disabled=guest.mode==="studio"||closed||unavailable||status==="sending"||status==="sent"||
+   (!!challengeSiteKey&&!challengeToken);
  async function submit(e:FormEvent){
   e.preventDefault();if(disabled||busy.current)return;
   if(!name.trim()){setStatus("error");nameRef.current?.focus();return;}
   busy.current=true;setStatus("sending");
-  try{setStatus(await submitGuestResponse(guest,nodeId,{name,attendance,guests:attendance==="yes"?guests:0},block.maxGuests,block.deadline));}catch{setStatus("error");}finally{busy.current=false;}
+  try{
+   setStatus(await submitGuestResponse(guest,nodeId,
+     {name,attendance,guests:attendance==="yes"?guests:0},block.maxGuests,block.deadline,
+     Date.now(),challengeToken,honeypot.current?.value??""));
+  }catch{
+   setStatus("error");setChallengeToken("");setChallengeReset(v=>v+1);
+  }finally{busy.current=false;}
  }
  return <form className="v2-guest-form" noValidate onSubmit={submit}>
   <label>{w.name}<input ref={nameRef} autoComplete="name" disabled={disabled} value={name} maxLength={120} required aria-invalid={status==="error"&&!name.trim()} aria-describedby={id} onChange={e=>{setName(e.target.value);setStatus("idle");}}/></label>
   <div className="v2-guest-options" role="group" aria-label={block.title[locale]}>{(["yes","no"] as const).map(v=><label key={v}><input type="radio" name={id} checked={attendance===v} disabled={disabled} onChange={()=>{setAttendance(v);setStatus("idle");}}/>{w[v]}</label>)}</div>
   {attendance==="yes"&&<label>{w.guests}<select value={Math.min(guests,block.maxGuests)} disabled={disabled} onChange={e=>setGuests(Number(e.target.value))}>{Array.from({length:block.maxGuests},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}</select></label>}
+  <label className="v2-guest-honeypot" aria-hidden="true">Website<input ref={honeypot}
+     name="website" tabIndex={-1} autoComplete="off"/></label>
+  {challengeSiteKey&&<StudioTurnstile siteKey={challengeSiteKey} onToken={setChallengeToken}
+    resetKey={challengeReset}/>}
   <button type="submit" disabled={disabled}>{status==="sending"?w.sending:w.submit}</button>
   <div id={id} className="v2-guest-status" role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?w.sent:status==="error"?w.error:guest.mode==="preview"?w.previewOnly:""}</div>
  </form>;
