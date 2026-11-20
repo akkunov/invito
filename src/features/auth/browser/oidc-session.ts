@@ -17,6 +17,7 @@ type TokenResponse = {
 type Session = {accessToken: string; refreshToken?: string; expiresAt: number; idToken?: string};
 let session: Session | null = null;
 let refreshPromise: Promise<string | null> | null = null;
+let callbackPromise: Promise<boolean> | null = null;
 const pendingKey = "invito:oidc-pkce:v1";
 
 export function configuredOidc(): OidcConfig | null {
@@ -74,9 +75,15 @@ export async function beginOidcLogin(config: OidcConfig): Promise<void> {
   url.searchParams.set("code_challenge_method", "S256");
   location.assign(url.toString());
 }
-export async function finishOidcLogin(config: OidcConfig): Promise<boolean> {
+export function finishOidcLogin(config: OidcConfig): Promise<boolean> {
+  if (callbackPromise) return callbackPromise;
   const url = new URL(location.href);
-  if (!url.searchParams.has("code") && !url.searchParams.has("error")) return false;
+  if (!url.searchParams.has("code") && !url.searchParams.has("error")) return Promise.resolve(false);
+  callbackPromise = processOidcCallback(config);
+  return callbackPromise;
+}
+async function processOidcCallback(config: OidcConfig): Promise<boolean> {
+  const url = new URL(location.href);
   const code = url.searchParams.get("code");
   const returnedState = url.searchParams.get("state");
   const error = url.searchParams.get("error");
