@@ -1,4 +1,5 @@
 "use client";
+import {StudioNumberInput} from "./studio-number-input";
 import {useState,useRef,type PointerEvent} from "react";
 import {ColorPicker,type PaletteColor} from "./studio-v2-color-picker";
 import {InspectorGroup} from "./studio-v2-inspector-shell";
@@ -10,7 +11,7 @@ import type {VisualProperties} from "@/features/studio-v2/core/appearance.schema
 import {uniformCorners,ZERO_CORNERS,appearanceCss,contentTransform} from "@/features/studio-v2/core/appearance.ts";
 type Props={node:ProjectNodeV2;authoredNode?:ProjectNodeV2;palette?:PaletteColor[];onUnlink?:(slot:TokenSlot)=>void;document:ProjectDocumentV2;mediaUrls:Record<string,string>;onChange:(v:VisualProperties)=>void;disabled?:boolean};
 function NumberField({label,value,min,max,step=1,onChange}:{label:string;value:number;min:number;max:number;step?:number;onChange:(n:number)=>void}){
- return <label className="v2-widget-field">{label}<input type="number" min={min} max={max} step={step} value={value} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
+ return <label className="v2-widget-field">{label}<StudioNumberInput  min={min} max={max} step={step} value={value} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
 }
 function CropPreview({node,document,mediaUrls,onChange}:{node:Extract<ProjectNodeV2,{type:"image"}>;document:ProjectDocumentV2;mediaUrls:Record<string,string>;onChange:(crop:NonNullable<VisualProperties["imageCrop"]>)=>void}){
  const crop=node.visual?.imageCrop??{zoom:1,x:node.focalX,y:node.focalY};

@@ -1,4 +1,5 @@
 "use client";
+import {StudioNumberInput} from "./studio-number-input";
 import {useState} from "react";
 import {ColorPicker,type PaletteColor} from "./studio-v2-color-picker";
 import {InspectorGroup} from "./studio-v2-inspector-shell";
@@ -10,7 +11,7 @@ import {fillCss,uniformCorners} from "@/features/studio-v2/core/appearance.ts";
 const kinds:Record<StyleToken["kind"],string>={color:"Цвет",fill:"Заливка / градиент",typography:"Типографика",stroke:"Обводка",effect:"Эффекты",corners:"Скругление"};
 const labels:Record<TokenSlot,string>={fill:"Стиль заливки",textColor:"Цвет текста",typography:"Стиль текста",stroke:"Стиль обводки",effect:"Стиль эффектов",corners:"Стиль углов"};
 function NumberField({label,value,min,max,step=1,onChange}:{label:string;value:number;min:number;max:number;step?:number;onChange:(n:number)=>void}){
- return <label className="v2-widget-field">{label}<input type="number" value={value} min={min} max={max} step={step} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
+ return <label className="v2-widget-field">{label}<StudioNumberInput  value={value} min={min} max={max} step={step} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
 }
 function TokenEditor({token,onChange,palette}:{token:StyleToken;onChange:(token:StyleToken)=>void;palette:PaletteColor[]}){
  switch(token.kind){
