@@ -42,7 +42,8 @@
     "test:customer-editor-browser": "node scripts/test-customer-editor-browser.mjs",
     "test:backend-contract": "node --experimental-strip-types scripts/test-backend-contract.mjs",
     "test:studio-v2-remote-sync": "node --experimental-strip-types scripts/test-studio-v2-remote-sync.mjs",
-    "test:studio-v2-cloud-media": "node --experimental-strip-types scripts/test-studio-v2-cloud-media.mjs"
+    "test:studio-v2-cloud-media": "node --experimental-strip-types scripts/test-studio-v2-cloud-media.mjs",
+    "test:studio-v2-route-audit": "node scripts/audit-studio-routes.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
