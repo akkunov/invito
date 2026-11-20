@@ -135,3 +135,21 @@ export function StudioCloudPanel({settings, document, onOpenLocalCopy, onClose}:
     </section>
   </div>;
 }
+
+/** Visible feature affordance while the tenant identity provider is not connected.
+ * No unauthenticated upload, fake session or silent IndexedDB migration occurs. */
+export function StudioCloudUnavailable({onClose}:{onClose:()=>void}){
+ return <div className="v2-preview-overlay" role="dialog" aria-modal="true" aria-label="Облачная синхронизация">
+  <header className="v2-preview-header">
+   <strong>Облачная синхронизация</strong>
+   <button aria-label="Закрыть облачную синхронизацию" onClick={onClose}><StudioIcon name="close"/> Закрыть</button>
+  </header>
+  <section className="v2-cloud-panel">
+   <h2>Облако INVITO</h2>
+   <p>Модуль облачной синхронизации реализован, но в этом окружении ещё не подключена авторизация OIDC и Workspace.</p>
+   <p>После настройки аккаунта, PostgreSQL и приватного Cloudflare R2 здесь будут доступны загрузка медиа, сохранение ревизий и восстановление конфликтующих версий.</p>
+   <p role="status">Сейчас макеты и фотографии остаются на этом устройстве. Ничего не отправляется на сервер автоматически.</p>
+   <div className="v2-cloud-actions"><button onClick={onClose}>Вернуться в Studio</button></div>
+  </section>
+ </div>;
+}

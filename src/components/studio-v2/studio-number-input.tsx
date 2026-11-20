@@ -1,5 +1,5 @@
 "use client";
-import {useLayoutEffect,useRef,useState,type ChangeEvent,type InputHTMLAttributes, type KeyboardEvent} from "react";
+import {useLayoutEffect,useRef,useState,type ChangeEvent,type FocusEvent,type InputHTMLAttributes, type KeyboardEvent} from "react";
 
 /**
  * Studio's native number input.
@@ -52,14 +52,15 @@ export function StudioNumberInput({
   if(onValueChange)onValueChange(Number(raw));
   else onChange?.(event);
  }
- function blur(event:React.FocusEvent<HTMLInputElement>){
+ function blur(event:FocusEvent<HTMLInputElement>){
   const input=event.currentTarget;
   // A transient empty value is never converted to zero by Number("").
   if(!allowEmpty&&input.value.trim()===""||input.value!==""&&!usable(input.value)){
     input.value=persisted;
     setInvalid(true);
   }else{
-    input.value=persisted;
+    // Valid edits may still be committing through the editor state reducer.
+    // Do not overwrite their visible value with an older render on blur.
     setInvalid(false);
   }
   onBlur?.(event);

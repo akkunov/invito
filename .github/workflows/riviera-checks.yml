@@ -52,6 +52,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm run test:public-routes
+      - run: npm run test:studio-v2-route-audit
       - name: Install Chromium
         run: bash scripts/install-studio-browser.sh
       - name: Test actual public customer editor in Chromium

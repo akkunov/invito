@@ -18,7 +18,7 @@ function pageNodes(doc:ProjectDocumentV2,root:string){
  const result:ProjectNodeV2[]=[];function visit(id:string){const n=doc.nodes[id];if(!n)return;result.push(n);if(n.type==="frame")n.children.forEach(visit);}visit(root);return result;
 }
 function NumberField({label,value,placeholder,min,max,step=1,onChange,disabled}:{label:string;value:number|undefined;placeholder?:number;min:number;max:number;step?:number;onChange:(n:number|undefined)=>void;disabled?:boolean}){
- return <label className="v2-widget-field">{label}<StudioNumberInput  min={min} max={max} step={step} value={value??""} placeholder={placeholder===undefined?undefined:String(Math.round(placeholder*100)/100)} disabled={disabled} onChange={e=>{const v=e.target.value;if(v===""){onChange(undefined);return;}const n=Number(v);if(Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
+ return <label className="v2-widget-field">{label}<StudioNumberInput min={min} max={max} step={step} allowEmpty value={value??""} placeholder={placeholder===undefined?undefined:String(Math.round(placeholder*100)/100)} disabled={disabled} onChange={e=>{const v=e.target.value;if(v===""){onChange(undefined);return;}const n=Number(v);if(Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
 }
 type Props={document:ProjectDocumentV2;initialPageId:string|null;initialNodeId:string|null;initialDevice:Device;mediaUrls:Record<string,string>;onCommand:(command:StudioCommand)=>void;onUndo:(redo?:boolean)=>void;canUndo:boolean;canRedo:boolean;onClose:()=>void};
 type Gesture={pointer:number;id:string;x:number;y:number;scale:number;resolved:ProjectDocumentV2;source:ProjectDocumentV2;resize:boolean;command:StudioCommand|null};

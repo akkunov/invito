@@ -56,6 +56,14 @@ try{
   assert.match(await publishSetup.textContent(),/авторизацию OIDC/);
   await publishSetup.getByRole("button",{name:"Закрыть"}).click();
   assert.equal(await publishSetup.count(),0);
+  const cloudAction=page.getByRole("button",{name:"Синхронизация с сервером",exact:true});
+  assert.equal(await cloudAction.isVisible(),true,"Cloud action must be reachable without OIDC");
+  await cloudAction.click();
+  const cloudSetup=page.getByRole("dialog",{name:"Облачная синхронизация"});
+  await cloudSetup.waitFor({state:"visible"});
+  assert.match(await cloudSetup.textContent(),/OIDC/);
+  await cloudSetup.getByRole("button",{name:"Закрыть облачную синхронизацию"}).click();
+  assert.equal(await cloudSetup.count(),0);
   const rows=page.locator(".v2-page-item");
   const initial=await rows.allTextContents();
   await rows.nth(4).dragTo(rows.nth(0));
@@ -87,6 +95,29 @@ try{
   await photo.hover();
   await page.locator(".v2-hover-measure").waitFor({state:"visible"});
   assert.match(await page.locator(".v2-hover-measure").textContent(),/908\s*×\s*640\s*px/);
+  // Numeric inspector must let authors clear 0, write negative coordinates,
+  // replace the selection on focus, and use explicit small stepper controls.
+  const xValue=page.getByRole("spinbutton",{name:"Координата X"});
+  await xValue.waitFor({state:"visible"});
+  const oldX=Number(await xValue.inputValue());
+  await xValue.focus();
+  await xValue.press("ControlOrMeta+A");
+  await xValue.press("Backspace");
+  assert.equal(await xValue.inputValue(),"","Clearing an input must not instantly restore 0");
+  await xValue.fill("-24.5");
+  await xValue.press("Enter");
+  const enteredX=await xValue.inputValue();
+  const transformError=await page.locator(".v2-inspector-error").allTextContents();
+  assert.equal(enteredX,"-24.5","Numeric X should persist: "+JSON.stringify({oldX,enteredX,transformError}));
+  const stepper=page.locator(".v2-inspector-grid label").filter({has:xValue})
+    .getByRole("button",{name:"Увеличить значение"});
+  await stepper.click();
+  assert.equal(Number(await xValue.inputValue()),-24.4,"Stepper must move X in 0.1px increments");
+  await xValue.fill(String(oldX));await xValue.press("Enter");
+  assert.equal(Number(await xValue.inputValue()),oldX,"Original layer position must be restorable");
+  // The next regression verifies canvas wheel panning. Restore mouse location
+  // from the Inspector to the canvas before dispatching the wheel.
+  await photo.hover();
   const stageCanvas=page.locator(".v2-stage");
   const panBefore=await page.locator(".v2-world").evaluate(el=>el.style.transform);
   const unmodifiedZoom=await page.locator(".v2-canvas-actions").textContent();
