@@ -1,4 +1,5 @@
 "use client";
+import {StudioNumberInput} from "./studio-number-input";
 import {useState} from "react";
 import type {EditableField,PersonalizedValue} from "@/features/studio-v2/core/personalization.schema";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
@@ -12,8 +13,7 @@ function DateInput({value,onChange,locale}:{value:string|null;onChange:(date:str
  return <><input type="datetime-local" value={value?localizedDate(value):""} onChange={e=>onChange(toInstant(e.target.value))}/><small>{copy(locale,"Время Бишкека (UTC+6)","Бишкек убактысы (UTC+6)")}</small></>;
 }
 function NumberInput({value,min,max,onChange}:{value:number;min:number;max:number;onChange:(n:number)=>void}){
- const [raw,setRaw]=useState<string|null>(null);
- return <input type="number" min={min} max={max} value={raw??value} onChange={e=>{const s=e.target.value;setRaw(s);const n=Number(s);if(s.trim()&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}} onBlur={()=>setRaw(null)}/>;
+ return <StudioNumberInput min={min} max={max} value={value} onValueChange={value=>{if(value!==undefined)onChange(value);}}/>;
 }
 export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={},onChange}:Props){
  const t=(ru:string,ky:string)=>copy(locale,ru,ky),title=f.label[locale];

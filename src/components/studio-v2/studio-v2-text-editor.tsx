@@ -1,4 +1,5 @@
 "use client";
+import {StudioNumberInput} from "./studio-number-input";
 import {useLayoutEffect,useRef,type KeyboardEvent} from "react";
 import {plainText,reconcileText,rangeStyle,replaceRange,sanitizePlainText,type TextNode,type TextRun,type TextRange,type TextStyle} from "@/features/studio-v2/core/rich-text-engine.ts";
 import {ColorPicker,type PaletteColor} from "./studio-v2-color-picker";
@@ -79,14 +80,14 @@ export function TextControls({node,editing,onStyle,onNode,onFinish,palette=[],do
  return <section className="v2-inspector-section v2-type-controls">
  <h3>Типографика</h3>
  <label className="v2-layout-field">Шрифт<select disabled={!!typography} value={style.fontFamily} onChange={e=>onStyle({fontFamily:e.target.value as TextStyle["fontFamily"]})}><option value="sans">Arial</option><option value="serif">Georgia</option></select></label>
- <div className="v2-type-grid"><label className="v2-widget-field">Размер<input type="number" min={6} max={400} disabled={!!typography} value={style.fontSize} onChange={e=>{const n=Number(e.target.value);if(n>=6&&n<=400)onStyle({fontSize:n});}}/></label>
+ <div className="v2-type-grid"><label className="v2-widget-field">Размер<StudioNumberInput  min={6} max={400} disabled={!!typography} value={style.fontSize} onChange={e=>{const n=Number(e.target.value);if(n>=6&&n<=400)onStyle({fontSize:n});}}/></label>
  <label className="v2-widget-field">Насыщенность<select disabled={!!typography} value={style.fontWeight} onChange={e=>onStyle({fontWeight:Number(e.target.value)})}>{[100,200,300,400,500,600,700,800,900].map(w=><option key={w} value={w}>{({100:"Thin",200:"Extra Light",300:"Light",400:"Regular",500:"Medium",600:"Semi Bold",700:"Bold",800:"Extra Bold",900:"Black"} as Record<number,string>)[w]}</option>)}</select></label></div>
  <div className="v2-icon-strip">{(["bold","italic","underline","strike"] as const).map(key=><button key={key} title={key} aria-label={key} disabled={key==="bold"&&!!typography} aria-pressed={key==="bold"?style.fontWeight>=700:style[key]} onMouseDown={e=>e.preventDefault()} onClick={()=>onStyle(key==="bold"?{fontWeight:style.fontWeight>=700?400:700}:{[key]:!style[key]})}><StudioIcon name={key}/></button>)}
  <span className="v2-icon-strip-divider"/>
  {(["left","center","right"] as const).map(align=><button key={align} title={align} aria-label={align} aria-pressed={node.textAlign===align} onClick={()=>onNode({textAlign:align})}><StudioIcon name={align==="left"?"textLeft":align==="center"?"textCenter":"textRight"}/></button>)}</div>
  <ColorPicker label="Цвет текста" value={style.color} palette={palette} onChange={color=>onStyle({color})} linkedLabel={linked?.name} onUnlink={editing?undefined:onUnlink} disabled={node.locked}/>
- <div className="v2-type-grid"><label className="v2-widget-field">Интерлиньяж<input type="number" min={0.8} max={4} step={0.05} disabled={!!typography} value={resolved.lineHeight??1.14} onChange={e=>{const n=Number(e.target.value);if(n>=0.8&&n<=4)onNode({lineHeight:n});}}/></label>
- <label className="v2-widget-field">Трекинг<input type="number" min={-10} max={60} disabled={!!typography} value={resolved.letterSpacing??0} onChange={e=>{const n=Number(e.target.value);if(n>=-10&&n<=60)onNode({letterSpacing:n});}}/></label></div>
+ <div className="v2-type-grid"><label className="v2-widget-field">Интерлиньяж<StudioNumberInput  min={0.8} max={4} step={0.05} disabled={!!typography} value={resolved.lineHeight??1.14} onChange={e=>{const n=Number(e.target.value);if(n>=0.8&&n<=4)onNode({lineHeight:n});}}/></label>
+ <label className="v2-widget-field">Трекинг<StudioNumberInput  min={-10} max={60} disabled={!!typography} value={resolved.letterSpacing??0} onChange={e=>{const n=Number(e.target.value);if(n>=-10&&n<=60)onNode({letterSpacing:n});}}/></label></div>
  <label className="v2-layout-field">Автовысота<input type="checkbox" checked={!!node.autoHeight} onChange={e=>onNode({autoHeight:e.target.checked})}/></label>
  {editing&&<><p className="v2-placeholder">Выделено: {editing.range.end-editing.range.start} · Esc — отмена, Ctrl/⌘+Enter — готово</p><button className="v2-inspector-button" onClick={onFinish}>Готово</button></>}
  </section>;

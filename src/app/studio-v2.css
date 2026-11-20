@@ -646,3 +646,18 @@
 .v2-publish-replies>div{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;font-size:12px;border-bottom:1px solid #eee}
 .v2-publish-replies>div:last-child{border-bottom:0}
 @media(max-width:660px){.v2-publish-scroll{padding:12px}.v2-publish-panel{padding:16px}}
+
+/* Native, editable numerical inspector inputs: active focus, optional +/- steppers. */
+.studio-v2 input[type=number]{font-variant-numeric:tabular-nums}
+.studio-v2 input[type=number]:focus{outline:2px solid var(--v2-blue);outline-offset:1px;caret-color:var(--v2-blue)}
+.studio-v2 input[type=number][aria-invalid=true]{box-shadow:inset 0 0 0 1px #b42318}
+.v2-number-shell{display:flex;flex:1;align-items:stretch;gap:3px;min-width:0;max-width:100%}
+.v2-number-shell>input[type=number]{flex:1;min-width:0;width:100%;appearance:textfield;-moz-appearance:textfield}
+.v2-number-shell>input::-webkit-inner-spin-button,.v2-number-shell>input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.v2-number-steppers{display:flex;flex-direction:column;justify-content:center;gap:1px;flex:none}
+.v2-number-steppers>button{padding:0!important;min-height:10px!important;height:11px!important;width:16px!important;line-height:10px!important;background:#e8ebf0!important;color:#344054!important;border-radius:3px;font-size:11px!important;user-select:none}
+.v2-number-steppers>button:hover{background:#d8e0ef!important}
+.v2-layout-field .v2-number-shell{width:58%;flex:0 1 58%}
+.v2-widget-field .v2-number-shell{width:100%}
+.v2-inspector-grid .v2-number-shell{width:100%;flex:1}
+@media(max-width:700px){.v2-number-steppers>button{height:15px!important}}

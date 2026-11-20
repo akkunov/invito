@@ -1,4 +1,5 @@
 "use client";
+import {StudioNumberInput} from "./studio-number-input";
 import {useEffect,useRef,useState} from "react";
 import {StudioIcon,type StudioIconName} from "./studio-icon";
 import type {ProjectDocumentV2,ProjectNodeV2} from "@/features/studio-v2/core/document.schema.ts";
@@ -8,7 +9,7 @@ import type {StudioCommand} from "@/features/studio-v2/core/command-engine.ts";
 const names:Record<MotionSpec["preset"],string>={fade:"Появление", "slide-up":"Снизу вверх","slide-left":"Справа налево",scale:"Масштаб",reveal:"Раскрытие маски",parallax:"Параллакс"};
 const triggers:Record<MotionSpec["trigger"],string>={load:"При открытии",viewport:"При появлении на экране",hover:"При наведении",click:"При нажатии",scroll:"При прокрутке"};
 function NumberField({label,value,min,max,step=1,onChange}:{label:string;value:number;min:number;max:number;step?:number;onChange:(n:number)=>void}){
- return <label className="v2-widget-field">{label}<input type="number" value={value} min={min} max={max} step={step} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
+ return <label className="v2-widget-field">{label}<StudioNumberInput  value={value} min={min} max={max} step={step} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==""&&Number.isFinite(n)&&n>=min&&n<=max)onChange(n);}}/></label>;
 }
 export function MotionControls({document,node,ids,disabled,onCommand,onPreview}:{document:ProjectDocumentV2;node:ProjectNodeV2|null;ids:readonly string[];disabled:boolean;onCommand:(c:StudioCommand|StudioCommand[])=>void;onPreview:()=>void}){
  const [interval,setInterval]=useState(160),[sequenceStart,setSequenceStart]=useState(0),[sequencePreset,setSequencePreset]=useState<MotionSpec["preset"]>("slide-up");
