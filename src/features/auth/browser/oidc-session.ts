@@ -61,6 +61,7 @@ function setSession(data: TokenResponse, previousRefresh?: string) {
   };
 }
 export async function beginOidcLogin(config: OidcConfig): Promise<void> {
+  callbackPromise = null;
   const verifier = randomString();
   const challenge = encodeBase64Url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
   const state = randomString();
@@ -139,6 +140,7 @@ export async function getOidcAccessToken(config: OidcConfig): Promise<string | n
   return refreshPromise;
 }
 export function endOidcLogin(config: OidcConfig): void {
+  callbackPromise = null;
   const idToken = session?.idToken;
   session = null;
   sessionStorage.removeItem(pendingKey);
