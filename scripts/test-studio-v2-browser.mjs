@@ -106,7 +106,9 @@ try{
   assert.equal(await xValue.inputValue(),"","Clearing an input must not instantly restore 0");
   await xValue.fill("-24.5");
   await xValue.press("Enter");
-  await page.waitForFunction(()=>document.querySelector('input[aria-label="Координата X"]')?.value==="-24.5");
+  const enteredX=await xValue.inputValue();
+  const transformError=await page.locator(".v2-inspector-error").allTextContents();
+  assert.equal(enteredX,"-24.5","Numeric X should persist: "+JSON.stringify({oldX,enteredX,transformError}));
   const stepper=page.locator(".v2-inspector-grid label").filter({has:xValue})
     .getByRole("button",{name:"Увеличить значение"});
   await stepper.click();
