@@ -1,6 +1,5 @@
 "use client";
 import {StudioNumberInput} from "./studio-number-input";
-import {useState} from "react";
 import type {EditableField,PersonalizedValue} from "@/features/studio-v2/core/personalization.schema";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 
