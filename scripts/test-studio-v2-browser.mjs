@@ -56,6 +56,14 @@ try{
   assert.match(await publishSetup.textContent(),/авторизацию OIDC/);
   await publishSetup.getByRole("button",{name:"Закрыть"}).click();
   assert.equal(await publishSetup.count(),0);
+  const cloudAction=page.getByRole("button",{name:"Синхронизация с сервером",exact:true});
+  assert.equal(await cloudAction.isVisible(),true,"Cloud action must be reachable without OIDC");
+  await cloudAction.click();
+  const cloudSetup=page.getByRole("dialog",{name:"Облачная синхронизация"});
+  await cloudSetup.waitFor({state:"visible"});
+  assert.match(await cloudSetup.textContent(),/OIDC/);
+  await cloudSetup.getByRole("button",{name:"Закрыть облачную синхронизацию"}).click();
+  assert.equal(await cloudSetup.count(),0);
   const rows=page.locator(".v2-page-item");
   const initial=await rows.allTextContents();
   await rows.nth(4).dragTo(rows.nth(0));
