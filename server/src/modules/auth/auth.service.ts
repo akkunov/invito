@@ -7,6 +7,17 @@ function uniqueViolation(error: unknown): boolean {
   return !!error && typeof error === "object" && "code" in error && error.code === "P2002";
 }
 
+const supabaseUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Trusted only AFTER JOSE has verified a project-specific JWT signature and issuer. */
+export function assertSupabaseUserClaims(payload: JWTPayload): void {
+  if (payload.role !== "authenticated" || payload.is_anonymous === true ||
+      typeof payload.sub !== "string" || !supabaseUuid.test(payload.sub) ||
+      typeof payload.session_id !== "string" || !supabaseUuid.test(payload.session_id)) {
+    throw new UnauthorizedException("INVALID_SUPABASE_SESSION");
+  }
+}
+
 @Injectable()
 export class AuthService {
   private readonly issuer = process.env.AUTH_ISSUER;
@@ -70,16 +81,7 @@ export class AuthService {
       throw new UnauthorizedException("INVALID_TOKEN_CLAIMS");
     }
 
-    if (this.isSupabase) {
-      // The Supabase publishable/anon JWT and service role must NEVER be accepted as a user.
-      // The session_id is issued by GoTrue for real signed-in user sessions.
-      const isUuid = (value: unknown): value is string =>
-        typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-      if (payload.role !== "authenticated" || payload.is_anonymous === true ||
-          !isUuid(payload.sub) || !isUuid(payload.session_id)) {
-        throw new UnauthorizedException("INVALID_SUPABASE_SESSION");
-      }
-    }
+    if (this.isSupabase) assertSupabaseUserClaims(payload);
 
     const where = {provider_subject: {provider: this.provider, subject: payload.sub}};
     const current = await this.prisma.authIdentity.findUnique({where, include: {user: true}});
