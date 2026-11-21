@@ -89,6 +89,19 @@ jobs:
             cat /tmp/invito-api.log
             exit 1
           fi
+          curl --fail --silent http://127.0.0.1:4000/api/v1/openapi.json > /tmp/invito-openapi.json
+          node -e '
+            const fs=require("fs");
+            const doc=JSON.parse(fs.readFileSync("/tmp/invito-openapi.json","utf8"));
+            if(!doc.openapi?.startsWith("3.") ||
+               !doc.components?.securitySchemes?.BearerAuth ||
+               !doc.paths?.["/api/v1/projects/{id}/revisions"]?.put ||
+               !doc.paths?.["/api/v1/public/invitations/{slug}/rsvp"]?.post ||
+               Object.keys(doc.paths||{}).length < 20) process.exit(1);
+            const pub=doc.paths["/api/v1/public/invitations/{slug}/rsvp"].post;
+            if(pub.security?.length) process.exit(1);
+            console.log("OpenAPI JSON verified: "+Object.keys(doc.paths).length+" paths");
+          '
  
   frontend-contract:
     runs-on: ubuntu-latest
