@@ -28,6 +28,8 @@
 .invito-landing .site-header-inner { min-height: 88px; gap: 30px; }
 .invito-landing .brand-wordmark { font-family: var(--font-public), Arial, sans-serif; font-weight: 750; letter-spacing: -.07em; font-size: 29px; }
 .invito-landing .brand-icon { color: var(--ed-blue); }
+.invito-landing .brand-logo { width:180px; }
+.invito-landing .site-footer .brand-logo { filter:none; }
 .invito-landing .desktop-nav a { color: var(--ed-muted); }
 .invito-landing .desktop-nav a:hover { color: var(--ed-blue); }
 .invito-landing .language-switcher { border-color: var(--ed-line); }

@@ -1,8 +1,2 @@
-export function BrandMark() {
-  return (
-    <svg width="29" height="29" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="M16 2 23 9 16 16 9 9 16 2Zm0 14 7 7-7 7-7-7 7-7ZM2 16l7-7 7 7-7 7-7-7Zm14 0 7-7 7 7-7 7-7-7Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="M16 8v16M8 16h16" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  );
-}
+/** eventiq symbol, based on the approved vector brand mark. */
+export function BrandMark(){return <svg width="29" height="23" viewBox="0 0 388 287" aria-hidden="true"><path fill="currentColor" fillRule="evenodd" d="M2 284 L160 284 L166 281 L216 220 L59 220 L53 224 Z M381 97 L373 75 L360 54 L340 33 L318 18 L292 7 L268 2 L234 2 L209 7 L178 19 L141 44 L106 82 L18 192 L344 189 L365 178 L380 158 L385 136 Z M321 124 L319 133 L309 139 L153 138 L171 114 L195 91 L220 77 L246 71 L274 74 L295 84 L314 104 Z"/></svg>}

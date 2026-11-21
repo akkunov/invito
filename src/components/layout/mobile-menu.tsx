@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { Menu, X } from "lucide-react";
 import { routes } from "@/constants/routes";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -38,7 +39,7 @@ export function MobileMenu({ locale }: { locale: Locale }) {
       </button>
       {isOpen && (
         <nav id="mobile-navigation" className="mobile-menu-panel" aria-label={ru ? "Мобильная навигация" : "Мобилдик навигация"}>
-          <Link href={routes.home(locale)} onClick={() => setIsOpen(false)}>INVITO</Link>
+          <BrandWordmark locale={locale} />
           <Link href={routes.templates(locale)} onClick={() => setIsOpen(false)}>{dict.nav.templates}</Link>
           <Link href={`${routes.home(locale)}#features`} onClick={() => setIsOpen(false)}>{dict.nav.benefits}</Link>
           <Link href={`${routes.home(locale)}#how`} onClick={() => setIsOpen(false)}>{dict.nav.how}</Link>
