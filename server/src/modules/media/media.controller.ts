@@ -5,7 +5,7 @@ import {MediaService} from "./media.service.js";
 import {UPLOAD_MIMES} from "./media-policy.js";
 import {parseInput, pagingInput} from "../documents/documents-input.js";
 
-const startUploadInput = z.strictObject({
+export const startUploadInput = z.strictObject({
   name: z.string().trim().min(1).max(200).refine(v => !/[\\/<>\u0000-\u001f]/.test(v)),
   mimeType: z.enum(UPLOAD_MIMES),
   bytes: z.number().int().positive().safe(),

@@ -100,6 +100,18 @@ jobs:
                Object.keys(doc.paths||{}).length < 20) process.exit(1);
             const pub=doc.paths["/api/v1/public/invitations/{slug}/rsvp"].post;
             if(pub.security?.length) process.exit(1);
+            const create=doc.paths["/api/v1/workspaces"].post.requestBody.content["application/json"].schema;
+            const invite=doc.paths["/api/v1/public/invitations/{slug}/rsvp"].post.requestBody.content["application/json"].schema;
+            const upload=doc.paths["/api/v1/workspaces/{workspaceId}/media/uploads"].post.requestBody.content["application/json"].schema;
+            const params=doc.paths["/api/v1/projects/{id}/revisions/{number}"].get.parameters;
+            if(!create.required.includes("name") || create.properties.name.maxLength!==120 ||
+               !create.properties.slug.pattern || create.additionalProperties!==false ||
+               !invite.properties.attendance.enum.includes("yes") ||
+               invite.properties.guests.maximum!==10 || !invite.required.includes("nodeId") ||
+               !upload.properties.mimeType.enum.includes("audio/mpeg") ||
+               !params.some(p=>p.name==="number" && p.required && p.schema.minimum===1) ||
+               !params.some(p=>p.name==="id" && p.required && p.schema.format==="uuid")) process.exit(1);
+            console.log("OpenAPI request contracts verified against Zod validators");
             console.log("OpenAPI JSON verified: "+Object.keys(doc.paths).length+" paths");
           '
  
