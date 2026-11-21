@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, Download, FileUp, ImagePlus, Plus, Redo2, Save, Trash2, Type, Undo2, Square, MousePointer2, Move, Grid2X2, Ruler, Magnet, Upload, Hand, ZoomIn, ZoomOut } from "lucide-react";
 import { StudioCanvas } from "@/components/studio/studio-canvas";
 import { StudioTextToolbar } from "@/components/studio/studio-text-toolbar";
@@ -235,7 +236,7 @@ export function TemplateStudio({locale}:{locale:Locale}){
       }}/></label>;
   return <main className="studio" lang={locale}>
     <header className="studio-toolbar">
-      <div className="studio-top-left"><Link href={`/${locale}`} aria-label="На главную"><ArrowLeft size={20}/></Link><strong>INVITO <span>Studio</span></strong><span className="studio-beta">LOCAL MVP</span></div>
+      <div className="studio-top-left"><Link href={`/${locale}`} aria-label="На главную"><ArrowLeft size={20}/></Link><strong className="studio-brand-title"><NextImage className="studio-brand-logo" src="/brand/eventiq-logo.svg" alt="eventiq" width={1170} height={287}/><span>Studio</span></strong><span className="studio-beta">LOCAL MVP</span></div>
       <div className="studio-toolbar-actions">
         <button onClick={undoOnce} disabled={!undo.length} title="Отменить" aria-label="Отменить"><Undo2 size={18}/></button>
         <button onClick={redoOnce} disabled={!redo.length} title="Повторить" aria-label="Повторить"><Redo2 size={18}/></button>

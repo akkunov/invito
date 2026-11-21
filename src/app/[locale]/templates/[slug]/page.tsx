@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const template = findTemplateById(slug);
   if (!template) notFound();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return { title: `${template.name[locale]} — INVITO`, description: template.description[locale], alternates: { canonical: `${siteUrl}/${locale}/templates/${slug}`, languages: { ru: `${siteUrl}/ru/templates/${slug}`, ky: `${siteUrl}/ky/templates/${slug}` } } };
+  return { title: `${template.name[locale]} — eventiq`, description: template.description[locale], alternates: { canonical: `${siteUrl}/${locale}/templates/${slug}`, languages: { ru: `${siteUrl}/ru/templates/${slug}`, ky: `${siteUrl}/ky/templates/${slug}` } } };
 }
 
 export default async function TemplateDetailPage({ params, searchParams }: { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ preview?: string }> }) {

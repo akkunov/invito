@@ -17,7 +17,7 @@ export function HeroSection({ locale }: { locale: Locale }) {
     </div>
     <div className="ed-hero-grid">
       <div className="ed-hero-copy">
-        <h1 id="ed-hero-title">{ru ? <>Ваш день.<br/>Ваша история.<br/><span className="ed-title-accent">Ваше INVITO.</span></> : <>Сиздин күн.<br/>Сиздин окуя.<br/><span className="ed-title-accent">Сиздин INVITO.</span></>}</h1>
+        <h1 id="ed-hero-title">{ru ? <>Ваш день.<br/>Ваша история.<br/><span className="ed-title-accent">Ваше eventiq.</span></> : <>Сиздин күн.<br/>Сиздин окуя.<br/><span className="ed-title-accent">Сиздин eventiq.</span></>}</h1>
         <div className="ed-hero-support">
           <p>{ru ? "Приглашение, с которого начинается ваше событие. Выберите дизайн, добавьте фотографии и расскажите гостям всё важное." : "Өзгөчө күнүңүз чакыруудан башталат. Дизайн тандап, сүрөттөрдү кошуп, конокторго маанилүү маалыматты айтып бериңиз."}</p>
           <div className="ed-hero-actions">

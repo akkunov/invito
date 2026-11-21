@@ -16,7 +16,7 @@ export function HeroShowcase({ locale }: { locale: Locale }) {
   return <div className="ed-hero-feature">
     <div className="ed-showcase-stage">
       <span className="ed-stage-label">{ru ? "ВАША ИСТОРИЯ В НОВОЙ ФОРМЕ" : "ОКУЯҢЫЗ ЖАҢЫ ФОРМАТТА"}</span>
-      <div className="ed-stage-orbit" aria-hidden="true">INVITO</div>
+      <div className="ed-stage-orbit" aria-hidden="true">eventiq</div>
       <Link key={active.id} href={routes.template(locale, active.id)} className="ed-showcase-invitation"
         aria-label={`${ru ? "Открыть" : "Ачуу"}: ${active.name[locale]}`}>
         <TemplateArtwork template={active} locale={locale} />

@@ -6,7 +6,7 @@ import { findTemplateById } from "@/features/invitations/seed-templates";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isLocale } from "@/i18n/locales";
 
-export const metadata: Metadata = { title: "Редактор приглашений — INVITO", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Редактор приглашений — eventiq", robots: { index: false, follow: false } };
 
 export default async function EditorPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ template?: string }> }) {
   const { locale } = await params;

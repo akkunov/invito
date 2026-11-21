@@ -1,4 +1,4 @@
-/* INVITO Studio MVP. Isolated tool UI; public catalog and invitation styles untouched. */
+/* eventiq Studio MVP. Isolated tool UI; public catalog and invitation styles untouched. */
 .studio{--st-bg:#111416;--st-panel:#191c1e;--st-border:#33383b;--st-text:#f1f2ed;--st-muted:#999f9e;--st-accent:#d2e6c2;min-height:100dvh;background:var(--st-bg);color:var(--st-text);font:400 13px/1.5 var(--font-ui),Arial,sans-serif;}
 .studio *{box-sizing:border-box;}
 .studio button{border:0;background:none;color:inherit;cursor:pointer;}
@@ -141,3 +141,6 @@
 .studio-viewport-choices button:nth-child(2){min-width:64px}
 @media(max-width:830px){.studio-modebar{flex-wrap:wrap}.studio-workspace .studio-canvas-scroll{padding:28px 12px;min-height:420px;max-height:700px}.studio-selection-count{flex-basis:100%;margin-left:0}}
 @media(max-width:530px){.studio-modebar button{min-height:44px}.studio-workspace .studio-canvas-scroll{padding-inline:8px}.studio-modebar{gap:6px;padding:8px}.studio-viewport-choices button{min-height:40px}}
+
+.studio-top-left .studio-brand-title { display:inline-flex; align-items:center; gap:8px; }
+.studio-brand-logo { display:block; width:112px; height:auto; filter:invert(1); }

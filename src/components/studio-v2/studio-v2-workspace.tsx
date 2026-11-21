@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import type { Locale } from "@/i18n/locales";
 import { AssetLibrary, ImageControls, useMediaUrls, useCloudAssetUrls } from "./studio-v2-assets";
 import { loadLocalProjectWithRecovery, saveLocalProject, type LocalProjectLoad } from "@/features/studio-v2/browser/media-store";
@@ -690,7 +691,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
     <header className="v2-topbar" inert={!loaded}>
       <div className="v2-brand">
         <Link href={`/${locale}`} aria-label="На главную"><StudioIcon name="back" size={16}/></Link>
-        <strong>INVITO <span>Studio 2.0</span></strong>
+        <strong><NextImage className="v2-brand-logo" src="/brand/eventiq-logo.svg" alt="eventiq" width={1170} height={287}/><span>Studio 2.0</span></strong>
         <button className="v2-project-title" aria-label="Менеджер шаблонов" disabled={!loaded||!!editing||!!session.transaction} onClick={()=>setTemplateManagerOpen(true)}>Шаблоны <StudioIcon name="down" size={13}/></button>
         <span className="v2-draft-state" role="status">{storageStatus}</span>
       </div>

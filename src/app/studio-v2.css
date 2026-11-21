@@ -1,4 +1,4 @@
-/* INVITO Studio v2: isolated light editor shell, approved spacious multi-artboard direction. */
+/* eventiq Studio v2: isolated light editor shell, approved spacious multi-artboard direction. */
 .studio-v2{
   --v2-blue:#2549d9; --v2-ink:#20242b; --v2-secondary:#68717e; --v2-border:#e3e6ee;
   --v2-panel:#fff; --v2-stage:#f5f6fa;
@@ -14,7 +14,8 @@
 .v2-topbar{height:58px;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 18px;background:#fff;border-bottom:1px solid var(--v2-border);z-index:14}
 .v2-brand{display:flex;align-items:center;gap:12px;min-width:0;white-space:nowrap}
 .v2-brand>a{width:28px;height:32px;display:grid;place-items:center;color:var(--v2-secondary)}
-.v2-brand strong{font-size:17px;font-weight:800;letter-spacing:-.055em;white-space:nowrap}
+.v2-brand strong{display:inline-flex;align-items:center;gap:8px;font-size:17px;font-weight:800;letter-spacing:-.055em;white-space:nowrap}
+.v2-brand-logo{display:block;width:104px;height:auto;flex-shrink:0}
 .v2-brand strong span{color:var(--v2-blue)}
 .v2-project-title{display:flex;align-items:center;gap:5px;margin-left:14px;padding-left:16px;border-left:1px solid var(--v2-border);font-size:12px;font-weight:650;overflow:hidden;text-overflow:ellipsis}
 .v2-draft-state{font-size:11px;color:#87909f}
@@ -442,7 +443,7 @@
 
 .v2-personalization-config{margin-top:16px;border-top:1px solid var(--v2-border);padding-top:12px}.v2-personalization-config summary{font-size:12px;font-weight:600;cursor:pointer;padding:8px 0}.v2-client-field{border-bottom:1px solid var(--v2-border);padding:5px 0}.v2-client-field-options{padding:6px 8px;background:#f6f6f8;border-radius:4px;margin-bottom:6px}
 
-/* INVITO customer editor — a focused content-first two-pane experience.
+/* eventiq customer editor — a focused content-first two-pane experience.
    Styles apply to editor chrome only; invitation pages use the shared renderer. */
 .se-shell{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:#f7f7f4;color:#161616;color-scheme:light;font:400 14px/1.45 Arial,Helvetica,sans-serif;--se-line:#e8e7e3;--se-muted:#77756e;--se-accent:#ff4a0a}
 .se-shell *{box-sizing:border-box}

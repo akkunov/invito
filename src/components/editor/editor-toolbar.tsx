@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { ArrowLeft, Check, RotateCcw, RotateCw, Save } from "lucide-react";
 import { routes } from "@/constants/routes";
 import type { InvitationEditorController } from "@/features/invitations/use-invitation-editor";
@@ -12,7 +13,7 @@ export function EditorToolbar({ locale, editor }: { locale: Locale; editor: Invi
   return (
     <header className="editor-toolbar">
       <Link className="editor-back" href={routes.template(locale, editor.document.templateId)} aria-label={dict.actions.back}><ArrowLeft size={19} /></Link>
-      <div className="editor-toolbar-heading"><strong>INVITO</strong><span>{dict.editor.title}</span></div>
+      <div className="editor-toolbar-heading"><strong><NextImage className="editor-brand-logo" src="/brand/eventiq-logo.svg" alt="eventiq" width={1170} height={287}/></strong><span>{dict.editor.title}</span></div>
       <span className="editor-save-status" role="status">{editor.saveError ? (locale === "ru" ? "Недостаточно места в браузере" : "Браузерде орун жетишсиз") : editor.isSaved ? <><Check size={14} />{dict.editor.saved}</> : dict.editor.autosave}</span>
       <div className="editor-toolbar-actions">
         <button type="button" className="icon-button" onClick={editor.undo} disabled={!editor.canUndo} title="Undo" aria-label="Undo"><RotateCcw size={19} /></button>

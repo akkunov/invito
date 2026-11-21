@@ -90,7 +90,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
         if (!selected || !/^[a-f\d-]{36}$/i.test(selected.id)) throw new Error("WORKSPACE_INVALID");
         if (!cancelled && id === requestId) {
           setWorkspace(selected);
-          setDisplayName(me.displayName || "INVITO");
+          setDisplayName(me.displayName || "eventiq");
           setStatus("ready");
         }
       } catch (error) {
@@ -175,7 +175,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
   }
 
   return <>
-    {config && <div role="region" aria-label="Учётная запись INVITO" style={{
+    {config && <div role="region" aria-label="Учётная запись eventiq" style={{
       display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10,
       padding:"9px 18px", background:"#151515", color:"#F7F7F4", font:"500 13px/1.5 system-ui",
       borderBottom:"1px solid #333",
@@ -190,7 +190,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
         {status === "error" && <span role="alert" style={{color:"#ffb3a1",maxWidth:540}}>{message}</span>}
         {status === "anonymous" &&
           <button type="button" onClick={() => {setFormMessage("");setDialogOpen(true);}}
-            style={buttonStyle}>Войти в INVITO</button>}
+            style={buttonStyle}>Войти в eventiq</button>}
         {status === "error" && <>
           <button type="button" onClick={() => window.location.reload()}
             style={buttonStyle}>Повторить</button>
@@ -218,7 +218,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
         boxShadow:"0 24px 80px rgba(0,0,0,.6)",font:"400 14px/1.5 system-ui"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
           <h2 id="invito-auth-title" style={{font:"600 24px/1.2 system-ui",letterSpacing:"-.03em",margin:0}}>
-            {mode === "sign-in" ? "Вход в INVITO" : "Создать аккаунт"}
+            {mode === "sign-in" ? "Вход в eventiq" : "Создать аккаунт"}
           </h2>
           <button type="button" aria-label="Закрыть" onClick={() => setDialogOpen(false)} disabled={submitting}
             style={{border:0,color:"#F7F7F4",background:"transparent",fontSize:25,cursor:"pointer"}}>×</button>
