@@ -198,7 +198,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
             style={{border:"1px solid #666",borderRadius:6,padding:"8px 14px",color:"inherit",background:"transparent",cursor:"pointer"}}>
             Выйти
           </button>
-        </>}}
+        </>}
         {status === "ready" &&
           <button type="button" onClick={() => {void signOut();}}
             style={{border:"1px solid #666",borderRadius:6,padding:"8px 14px",color:"inherit",background:"transparent",cursor:"pointer"}}>
