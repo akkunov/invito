@@ -188,9 +188,17 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
       </span>
       <div style={{display:"flex", gap:8, alignItems:"center"}}>
         {status === "error" && <span role="alert" style={{color:"#ffb3a1",maxWidth:540}}>{message}</span>}
-        {(status === "anonymous" || status === "error") &&
+        {status === "anonymous" &&
           <button type="button" onClick={() => {setFormMessage("");setDialogOpen(true);}}
             style={buttonStyle}>Войти в INVITO</button>}
+        {status === "error" && <>
+          <button type="button" onClick={() => window.location.reload()}
+            style={buttonStyle}>Повторить</button>
+          <button type="button" onClick={() => {void signOut();}}
+            style={{border:"1px solid #666",borderRadius:6,padding:"8px 14px",color:"inherit",background:"transparent",cursor:"pointer"}}>
+            Выйти
+          </button>
+        </>}}
         {status === "ready" &&
           <button type="button" onClick={() => {void signOut();}}
             style={{border:"1px solid #666",borderRadius:6,padding:"8px 14px",color:"inherit",background:"transparent",cursor:"pointer"}}>

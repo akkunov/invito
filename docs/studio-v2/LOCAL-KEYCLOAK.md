@@ -1,3 +1,5 @@
+> **Историческая документация.** Основной вход INVITO переключён на Supabase Auth. См. [актуальную инструкцию](./SUPABASE-AUTH.md). Keycloak больше не используется текущим frontend Studio.
+
 # Local Keycloak Studio v2 login (Windows, no Docker)
 
 1. Start local Keycloak at `http://localhost:8080` (`C:\\keycloak-26.8.2\\bin\\kc.bat start-dev`).

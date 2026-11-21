@@ -66,7 +66,7 @@ const endpoints: Endpoint[] = [
     responseExample:{status:"ready"},
     responseSchema:object({status:{type:"string",enum:["ready"]}},["status"]),errors:[503]},
   {method:"get",path:"/api/v1/me",tag:"Identity",summary:"Профиль текущего пользователя",
-    description:"Проверяет RS256 JWT по issuer, audience и JWKS. При первом запросе регистрирует проверенную OIDC-личность в PostgreSQL.",
+    description:"Проверяет JWT Supabase Auth (ES256/RS256) по issuer, audience и JWKS. При первом запросе регистрирует проверенную личность в PostgreSQL. Принимаются только user-сессии role=authenticated, anon/service_role отклоняются.",
     responseExample:{id:"00000000-0000-4000-8000-000000000001",displayName:"INVITO user",email:null},
     responseSchema:object({id:uuid,displayName:{type:"string"},email:{type:"string",nullable:true}},["id","displayName","email"]),errors:[401,403,503]},
   {method:"get",path:"/api/v1/me/workspaces",tag:"Workspaces",summary:"Мои рабочие пространства",
@@ -209,13 +209,13 @@ export function setupOpenApi(app: INestApplication): void {
     .setTitle("INVITO API")
     .setDescription([
       "REST API конструктора приглашений INVITO (NestJS 12, Prisma 7, PostgreSQL, Cloudflare R2).",
-      "Версионирование: /api/v1. Контракт JWT: RS256, issuer + audience + JWKS; роли Workspace проверяются сервером.",
+      "Версионирование: /api/v1. Контракт Supabase JWT: ES256/RS256, issuer + audience + JWKS; роли Workspace проверяются сервером.",
       "Все операции со Studio v2-документами валидируются серверными Zod-схемами. OpenAPI не заменяет runtime-валидацию.",
       "Авторизованные запросы: Bearer access token, не ID token. Публичные приглашения и RSVP не требуют авторизации.",
       "Локальные файлы загружаются через 180-секундный подписанный R2 PUT, затем проверяются сервером перед сохранением."
     ].join("\n\n"))
     .setVersion("1.0.0")
-    .addBearerAuth({type:"http",scheme:"bearer",bearerFormat:"JWT",description:"OIDC access token с aud=invito-api"}, "BearerAuth")
+    .addBearerAuth({type:"http",scheme:"bearer",bearerFormat:"JWT",description:"Supabase Auth access_token с aud=authenticated; не используйте publishable key как Bearer"}, "BearerAuth")
     .addTag("System","Health и readiness")
     .addTag("Identity","OIDC-пользователь")
     .addTag("Workspaces","Мультиарендность, членство, роли")

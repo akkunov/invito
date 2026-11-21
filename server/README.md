@@ -5,7 +5,7 @@ NestJS 12 + Prisma 7.10.1 + PostgreSQL. Source lives in the **same repo** as the
 ## Prerequisites
 
 - Node.js >= 22.18, npm, Docker (or a disposable PostgreSQL 17 database)
-- A trustworthy OIDC provider that issues **RS256 signed JWT access tokens** with `iss`, `aud`, `sub`, `iat` and `exp`. Opaque OAuth tokens are not supported by this API.
+- The INVITO Supabase project configured with **asymmetric ES256 or RS256 JWT Signing Keys**, issuer and JWKS. Only signed user-session tokens with `role=authenticated` and `session_id` may call private routes. Opaque tokens and legacy HS256 are not supported.
 - A separate DB and identity provider for development, preview, and production.
 
 ## Local setup
@@ -37,7 +37,7 @@ PATCH http://localhost:4000/api/v1/workspaces/:workspaceId
 
 ## Authorization security
 
-- Only JWTs verified against `AUTH_JWKS_URL` with the configured `AUTH_ISSUER` and `AUTH_AUDIENCE`, `RS256`, and a maximum token age of 15 minutes are accepted.
+- Supabase Auth JWTs are checked against the project's HTTPS JWKS, exact `AUTH_ISSUER`, `AUTH_AUDIENCE=authenticated`, `ES256/RS256`, signature, expiry, role and verified user-session ID. The older generic OIDC test provider still uses RS256.
 - Valid identity is persisted in `AuthIdentity(provider, subject)`. Unverified email is *not* used for account linking, and accounts with DISABLED status get 403.
 - `WorkspaceMember` is queried on every protected workspace operation; client-supplied roles and identity fields are ignored.
 - Nonmembers get 404 (tenant existence not disclosed). Authenticated VIEWERs receive 403 for ADMIN actions.
@@ -91,3 +91,7 @@ Cloud save in Studio v2 uses `prepareCloudSnapshot` to upload local images when 
 Publishing is transactional and append-only. Each project has one stable public slug, with versioned releases and optimistic `expectedRelease`. Owner/ADMIN may publish; EDITOR may review private RSVPs. The anonymous guest API serves only the ACTIVE release, via no-store and short-lived private media links. See `docs/backend/ADR-029-05-PUBLISHING.md` for REST requests, data protection, anti-spam policy and deployment steps.
 
 Set `RSVP_TURNSTILE_SITE_KEY` and `RSVP_TURNSTILE_SECRET` on the backend for **production** RSVP. Without both, anonymous submissions return 503 in production. On the frontend set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SITE_URL`, deploy on an actual Next.js server runtime (GitHub Pages static export cannot host dynamic invitation slugs), and connect real OIDC `remoteSettings` to expose the Studio Publishing panel. No production data is migrated automatically.
+
+## Current cloud login (Supabase Auth)
+
+The Keycloak setup has been superseded. See [Supabase Auth for Studio v2](../docs/studio-v2/SUPABASE-AUTH.md) for the signing-key setup, frontend publishable-key variables, backend JWT issuer/JWKS, sign-up confirmation and troubleshooting. No service_role or JWT secret is needed in the Next.js frontend. Existing local Studio drafts remain independent of cloud sessions.
