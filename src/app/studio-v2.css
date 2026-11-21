@@ -661,3 +661,7 @@
 .v2-widget-field .v2-number-shell{width:100%}
 .v2-inspector-grid .v2-number-shell{width:100%;flex:1}
 @media(max-width:700px){.v2-number-steppers>button{height:15px!important}}
+
+/* Supabase Auth dialog: native top-layer focus handling, readable dark UI. */
+.invito-auth-dialog::backdrop { background: rgba(0, 0, 0, .78); }
+.invito-auth-dialog { color-scheme: dark; }

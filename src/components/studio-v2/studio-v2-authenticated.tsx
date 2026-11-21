@@ -34,6 +34,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
   const [submitting, setSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState("");
   const emailRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const accessToken = useCallback(async () => config ? getSupabaseAccessToken(config) : null, [config]);
 
   const remoteSettings = useMemo<RemoteSyncSettings | undefined>(() =>
@@ -117,13 +118,16 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
   }, [client, config]);
 
   useEffect(() => {
-    if (dialogOpen) {
+    // Native modal dialog provides focus trapping, Escape handling and accessibility.
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (dialogOpen && !dialog.open) {
+      dialog.showModal();
       emailRef.current?.focus();
-      const closeOnEscape = (event: KeyboardEvent) => {if (event.key === "Escape" && !submitting) setDialogOpen(false);};
-      window.addEventListener("keydown", closeOnEscape);
-      return () => window.removeEventListener("keydown", closeOnEscape);
+    } else if (!dialogOpen && dialog.open) {
+      dialog.close();
     }
-  }, [dialogOpen, submitting]);
+  }, [dialogOpen]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -197,14 +201,13 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
 
     <StudioV2Workspace locale={locale} remoteSettings={remoteSettings}/>
 
-    {config && dialogOpen && <div style={{
-      position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.78)",display:"flex",
-      alignItems:"center",justifyContent:"center",padding:16,
-    }}>
-      <div role="dialog" aria-modal="true" aria-labelledby="invito-auth-title"
-        style={{background:"#101010",border:"1px solid #373737",color:"#F7F7F4",
-          borderRadius:12,width:"100%",maxWidth:420,padding:28,
-          boxShadow:"0 24px 80px rgba(0,0,0,.6)",font:"400 14px/1.5 system-ui"}}>
+    {config && <dialog ref={dialogRef} aria-labelledby="invito-auth-title"
+      onClose={() => setDialogOpen(false)}
+      onCancel={event => {if (submitting) event.preventDefault();}}
+      className="invito-auth-dialog"
+      style={{background:"#101010",border:"1px solid #373737",color:"#F7F7F4",
+        borderRadius:12,width:"calc(100% - 32px)",maxWidth:420,padding:28,
+        boxShadow:"0 24px 80px rgba(0,0,0,.6)",font:"400 14px/1.5 system-ui"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
           <h2 id="invito-auth-title" style={{font:"600 24px/1.2 system-ui",letterSpacing:"-.03em",margin:0}}>
             {mode === "sign-in" ? "Вход в INVITO" : "Создать аккаунт"}
@@ -226,7 +229,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
           </label>
           {formMessage && <p role="status" aria-live="polite" style={{color:"#FFAE96",margin:0}}>{formMessage}</p>}
           <button type="submit" disabled={submitting} style={{...buttonStyle,padding:"13px 16px",
-            opacity:submitting?.65:1}}>
+            opacity:submitting ? 0.65 : 1}}>
             {submitting ? "Отправляем…" : mode === "sign-in" ? "Войти" : "Зарегистрироваться"}
           </button>
         </form>
@@ -235,7 +238,6 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
             color:"#F7F7F4",textDecoration:"underline",textUnderlineOffset:4,cursor:"pointer"}}>
           {mode === "sign-in" ? "Нет аккаунта? Создать" : "Уже есть аккаунт? Войти"}
         </button>
-      </div>
-    </div>}
+    </dialog>}
   </>;
 }
