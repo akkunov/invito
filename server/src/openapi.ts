@@ -1,6 +1,11 @@
 import type {INestApplication} from "@nestjs/common";
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
 import type {OpenAPIObject} from "@nestjs/swagger";
+import {z} from "zod";
+import {createSchema as createWorkspaceSchema, renameSchema} from "./modules/workspaces/workspaces.controller.js";
+import {startUploadInput} from "./modules/media/media.controller.js";
+import {createTemplateInput, createVersionInput, createProjectInput, createRevisionInput} from "./modules/documents/documents-input.js";
+import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/publications/publications-input.js";
 
 /**
  * INVITO API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
@@ -9,6 +14,12 @@ import type {OpenAPIObject} from "@nestjs/swagger";
  * Production Swagger UI / JSON are opt-in (API_DOCS_ENABLED=true).
  */
 const jsonObject = {type: "object", additionalProperties: true};
+/** Swagger receives the same input contracts that Zod validates in controllers. */
+function schema(validator: z.ZodType): Record<string, unknown> {
+  const result = z.toJSONSchema(validator, {target: "openapi-3.0", io: "input", unrepresentable: "any"}) as Record<string, unknown>;
+  delete result.$schema;
+  return result;
+}
 const uuid = {type: "string", format: "uuid"};
 const pagination = [
   {name: "page", in: "query", required: false, description: "Page number, starting at 1 (default 1).", schema: {type: "integer", minimum: 1, maximum: 10000, default: 1}},
@@ -49,45 +60,38 @@ const endpoints: Endpoint[] = [
     description:"Только пространства, где пользователь состоит в WorkspaceMember. Роль вычисляется на сервере.",errors:[401]},
   {method:"post",path:"/api/v1/workspaces",tag:"Workspaces",summary:"Создать рабочее пространство",
     description:"Создаёт Workspace с текущим пользователем в роли OWNER. Slug уникален.",
-    requestBody:body(object({slug:{type:"string",minLength:3,maxLength:80,pattern:"^[a-z0-9]+(?:-[a-z0-9]+)*$"},name:{type:"string",minLength:1,maxLength:120}},["slug","name"]),{slug:"my-studio",name:"Моя студия"}),errors:[400,401,409]},
+    requestBody:body(schema(createWorkspaceSchema),{slug:"my-studio",name:"Моя студия"}),errors:[400,401,409]},
   {method:"get",path:"/api/v1/workspaces/{workspaceId}",tag:"Workspaces",summary:"Получить рабочее пространство",
     description:"Доступ только участникам. Несуществующие и недоступные пространства возвращают 404.",errors:[401,403,404]},
   {method:"patch",path:"/api/v1/workspaces/{workspaceId}",tag:"Workspaces",summary:"Переименовать рабочее пространство",
-    description:"Требуется роль ADMIN или OWNER.",requestBody:body(object({name:{type:"string",minLength:1,maxLength:120}},["name"]),{name:"Новая студия"}),errors:[400,401,403,404]},
+    description:"Требуется роль ADMIN или OWNER.",requestBody:body(schema(renameSchema),{name:"Новая студия"}),errors:[400,401,403,404]},
   {method:"get",path:"/api/v1/workspaces/{workspaceId}/templates",tag:"Templates",summary:"Список шаблонов Workspace",
     description:"Постраничный список шаблонов, доступных текущему участнику.",parameters:pagination,errors:[401,403,404]},
   {method:"post",path:"/api/v1/workspaces/{workspaceId}/templates",tag:"Templates",summary:"Создать шаблон",
     description:"Требуется роль редактора. Document и personalization проверяются на сервере по каноническим Studio v2-контрактам.",
-    requestBody:body(object({
-      slug:{type:"string",minLength:3,maxLength:80},name:{type:"string",maxLength:100},description:str,
-      category:{type:"string",enum:["WEDDING","KYZ_UZATUU","BIRTHDAY","ANNIVERSARY","CORPORATE","OTHER"]},
-      tags:{type:"array",items:str,maxItems:12},coverPageId:str,document:jsonObject,personalization:jsonObject,
-    },["slug","name","coverPageId","document"]),undefined),errors:[400,401,403,409,422]},
+    requestBody:body(schema(createTemplateInput)),errors:[400,401,403,409,422]},
   {method:"get",path:"/api/v1/templates/{id}",tag:"Templates",summary:"Получить шаблон",
     description:"Возвращает доступный шаблон с метаданными и версией.",errors:[401,404]},
   {method:"get",path:"/api/v1/templates/{id}/versions/{number}",tag:"Templates",summary:"Получить версию шаблона",
     description:"Номер версии — положительное целое число. История версий неизменяема.",errors:[401,404]},
   {method:"post",path:"/api/v1/templates/{id}/versions",tag:"Templates",summary:"Добавить версию шаблона",
     description:"Оптимистичная блокировка по expectedVersion; при несовпадении — 409. Не перезаписывает старую версию.",
-    requestBody:body(object({expectedVersion:positive,note:{type:"string",maxLength:300},document:jsonObject,personalization:jsonObject},["expectedVersion","document"])),errors:[400,401,403,409,422]},
+    requestBody:body(schema(createVersionInput)),errors:[400,401,403,409,422]},
   {method:"get",path:"/api/v1/workspaces/{workspaceId}/projects",tag:"Projects",summary:"Список проектов Workspace",
     description:"Постраничный список; проверка членства обязательна.",parameters:pagination,errors:[401,403,404]},
   {method:"post",path:"/api/v1/workspaces/{workspaceId}/projects",tag:"Projects",summary:"Создать проект",
     description:"Создаёт первую неизменяемую ревизию Studio v2. Cloud assets должны принадлежать текущему Workspace и быть READY.",
-    requestBody:body(object({title:{type:"string",minLength:1,maxLength:120},sourceTemplateVersionId:uuid,document:jsonObject},["title","document"])),errors:[400,401,403,422]},
+    requestBody:body(schema(createProjectInput)),errors:[400,401,403,422]},
   {method:"get",path:"/api/v1/projects/{id}",tag:"Projects",summary:"Получить проект",
     description:"Текущий снимок и latestRevision проекта. Проверяется доступ к Workspace.",errors:[401,404]},
   {method:"get",path:"/api/v1/projects/{id}/revisions/{number}",tag:"Projects",summary:"Получить неизменяемую ревизию",
     description:"Возвращает точную историческую версию документа, используемую для публикации.",errors:[401,404]},
   {method:"put",path:"/api/v1/projects/{id}/revisions",tag:"Projects",summary:"Сохранить новую ревизию (CAS)",
     description:"Compare-and-swap: expectedRevision обязан совпадать с актуальным номером. Конфликт 409 не уничтожает локальный черновик.",
-    requestBody:body(object({expectedRevision:positive,document:jsonObject},["expectedRevision","document"])),errors:[400,401,403,409,422]},
+    requestBody:body(schema(createRevisionInput)),errors:[400,401,403,409,422]},
   {method:"post",path:"/api/v1/workspaces/{workspaceId}/media/uploads",tag:"Media",summary:"Получить подписанный URL для загрузки R2",
     description:"Инициирует PENDING-upload и выдаёт 180-секундный presigned PUT URL. Браузер загружает сырой Blob напрямую в приватный R2 без Bearer токена.",
-    requestBody:body(object({
-      name:{type:"string",minLength:1,maxLength:200},mimeType:{type:"string",enum:["image/jpeg","image/png","image/webp","audio/mpeg"]},
-      bytes:{type:"integer",minimum:1},sha256:{type:"string",pattern:"^[a-f0-9]{64}$"},
-    },["name","mimeType","bytes","sha256"]),{name:"cover.webp",mimeType:"image/webp",bytes:204800,sha256:"0".repeat(64)}),errors:[400,401,403,409,413,503]},
+    requestBody:body(schema(startUploadInput),{name:"cover.webp",mimeType:"image/webp",bytes:204800,sha256:"0".repeat(64)}),errors:[400,401,403,409,413,503]},
   {method:"post",path:"/api/v1/workspaces/{workspaceId}/media/{assetId}/complete",tag:"Media",summary:"Проверить и завершить R2-загрузку",
     description:"Сервер сверяет SHA-256, MIME, декодируемость и размер; переносит объект из staging в immutable READY. Не передавайте сюда тело файла.",errors:[401,403,404,409,422,503]},
   {method:"get",path:"/api/v1/workspaces/{workspaceId}/media",tag:"Media",summary:"Список проверенных медиа",
@@ -98,10 +102,10 @@ const endpoints: Endpoint[] = [
     description:"Возвращает активную/снятую публикацию, адрес и номер релиза. Только авторизованным участникам.",errors:[401,403,404]},
   {method:"post",path:"/api/v1/projects/{projectId}/publish",tag:"Publications",summary:"Опубликовать неизменяемую ревизию",
     description:"OWNER/ADMIN. Публикация фиксирует projectRevisionId; optimistic concurrency через expectedRelease и безопасный повтор через idempotencyKey.",
-    requestBody:body(object({slug:{type:"string",minLength:3,maxLength:80},projectRevisionId:uuid,expectedRelease:{type:"integer",minimum:0},idempotencyKey:{type:"string",minLength:16,maxLength:120}},["slug","projectRevisionId","expectedRelease","idempotencyKey"])),errors:[400,401,403,404,409,422]},
+    requestBody:body(schema(createPublicationSchema)),errors:[400,401,403,404,409,422]},
   {method:"post",path:"/api/v1/projects/{projectId}/unpublish",tag:"Publications",summary:"Снять приглашение с публикации",
     description:"Не удаляет историю релизов и ответов гостей. Требует точный expectedRelease.",
-    requestBody:body(object({expectedRelease:positive},["expectedRelease"]),{expectedRelease:1}),errors:[400,401,403,404,409]},
+    requestBody:body(schema(unpublishSchema),{expectedRelease:1}),errors:[400,401,403,404,409]},
   {method:"get",path:"/api/v1/projects/{projectId}/rsvp",tag:"RSVP",summary:"Ответы гостей (приватно)",
     description:"Только участникам проекта с соответствующими правами. Не кешировать; ответы содержат персональные данные.",parameters:pagination,errors:[401,403,404]},
   {method:"get",path:"/api/v1/projects/{projectId}/rsvp/summary",tag:"RSVP",summary:"Агрегированная статистика RSVP",
@@ -111,12 +115,7 @@ const endpoints: Endpoint[] = [
   {method:"post",path:"/api/v1/public/invitations/{slug}/rsvp",tag:"Guest Invitations",summary:"Подтвердить участие (RSVP)",
     description:"Публичный endpoint: idempotency через requestId, серверная проверка лимитов, honeypot и Cloudflare Turnstile в production. Поле website должно быть пустым.",
     public:true,
-    requestBody:body(object({
-      requestId:uuid,nodeId:{type:"string",pattern:"^[a-zA-Z][a-zA-Z0-9_-]{0,79}$"},name:{type:"string",minLength:1,maxLength:120},
-      attendance:{type:"string",enum:["yes","no"]},guests:{type:"integer",minimum:0,maximum:10},
-      turnstileToken:{type:"string",maxLength:2048},website:{type:"string",maxLength:100,default:""},
-    },["requestId","nodeId","name","attendance","guests"]),
-    {requestId:"00000000-0000-4000-8000-000000000001",nodeId:"rsvp-1",name:"Гость",attendance:"yes",guests:1,website:""}),errors:[400,403,404,409,429,503]},
+    requestBody:body(schema(rsvpSchema),{requestId:"00000000-0000-4000-8000-000000000001",nodeId:"rsvp-1",name:"Гость",attendance:"yes",guests:1,website:""}),errors:[400,403,404,409,429,503]},
 ];
 
 function decorateDocument(document: OpenAPIObject): OpenAPIObject {

@@ -5,11 +5,11 @@ import {WorkspaceAccessGuard} from "./workspace-access.guard.js";
 import {MinimumWorkspaceRole} from "./workspace-role.decorator.js";
 import {WorkspacesService} from "./workspaces.service.js";
 
-const createSchema = z.strictObject({
+export const createSchema = z.strictObject({
   slug: z.string().min(3).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   name: z.string().trim().min(1).max(120),
 });
-const renameSchema = z.strictObject({name: z.string().trim().min(1).max(120)});
+export const renameSchema = z.strictObject({name: z.string().trim().min(1).max(120)});
 
 function parse<T extends z.ZodType>(schema: T, data: unknown): z.output<T> {
   const result = schema.safeParse(data);
