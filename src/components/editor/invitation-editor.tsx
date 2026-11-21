@@ -40,7 +40,7 @@ export function InvitationEditor({locale,initialDocument}:{locale:Locale;initial
     <button type="button" className="editor-open-preview" onClick={openPreview}>{t("Посмотреть изменения","Өзгөртүүлөрдү көрүү")}<ArrowRight size={17}/></button>
    </section>
    <main className="editor-stage" aria-label={t("Живой предпросмотр","Жандуу алдын ала көрүү")}>
-    <div className="editor-stage-header"><div><small>INVITO / LIVE</small><strong>{t("Ваше приглашение","Сиздин чакырууңуз")}</strong></div><span className="editor-stage-badge">{dict.editor.draft}</span></div>
+    <div className="editor-stage-header"><div><small>eventiq / LIVE</small><strong>{t("Ваше приглашение","Сиздин чакырууңуз")}</strong></div><span className="editor-stage-badge">{dict.editor.draft}</span></div>
     <div className="editor-preview-space"><div className="editor-phone" ref={previewRef} tabIndex={0} role="region" aria-label={t("Прокручиваемый предпросмотр приглашения","Чакыруу алдын ала көрүү аймагы")}>
      <InvitationCanvas document={editor.document} musicSrc={editor.audioUrl} musicName={editor.audioName??undefined}/>
     </div></div>

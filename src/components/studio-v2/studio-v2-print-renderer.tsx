@@ -133,7 +133,7 @@ export async function prepareProfessionalPrint(source:ProjectDocumentV2,pageId:s
  return professionalPrintSource(artwork,widthMm,bleedMm,title);
 }
 export async function openVectorPrint(source:PrintSource){
- const frame=document.createElement("iframe");frame.setAttribute("sandbox","allow-same-origin allow-modals");frame.setAttribute("title","Печать INVITO");Object.assign(frame.style,{position:"fixed",left:"-100000px",top:"0",width:source.geometry.widthMm+"mm",height:source.geometry.heightMm+"mm",border:"0"});
+ const frame=document.createElement("iframe");frame.setAttribute("sandbox","allow-same-origin allow-modals");frame.setAttribute("title","Печать eventiq");Object.assign(frame.style,{position:"fixed",left:"-100000px",top:"0",width:source.geometry.widthMm+"mm",height:source.geometry.heightMm+"mm",border:"0"});
  const loaded=new Promise<void>((resolve,reject)=>{frame.onload=()=>resolve();frame.onerror=()=>reject(Error("Не удалось открыть печать"));});
  frame.srcdoc=source.html;document.body.append(frame);
  try{await loaded;const win=frame.contentWindow,doc=frame.contentDocument;if(!win||!doc)throw Error("Печать недоступна");

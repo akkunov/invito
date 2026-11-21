@@ -13,7 +13,7 @@ export type PublicInvitation={
 export function invitationApiBase():string {
   const configured=process.env.NEXT_PUBLIC_API_URL;
   if(!configured){
-    if(process.env.NODE_ENV==="production")throw new Error("INVITO_PUBLIC_API_NOT_CONFIGURED");
+    if(process.env.NODE_ENV==="production")throw new Error("eventiq_PUBLIC_API_NOT_CONFIGURED");
     return "http://localhost:4000/api/v1";
   }
   const url=new URL(configured);

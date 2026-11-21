@@ -27,7 +27,7 @@ export function TemplatePreviewButton({ id, name, locale }: { id: string; name: 
     <dialog ref={dialog} className="template-preview-dialog" aria-labelledby={titleId}
       onClose={() => setOpen(false)}>
       <div className="preview-dialog-head">
-        <div><small>INVITO / {ru ? "ПРЕВЬЮ" : "КӨРҮҮ"}</small><h2 id={titleId}>{name}</h2></div>
+        <div><small>eventiq / {ru ? "ПРЕВЬЮ" : "КӨРҮҮ"}</small><h2 id={titleId}>{name}</h2></div>
         <button type="button" className="icon-button" onClick={() => dialog.current?.close()}
           aria-label={ru ? "Закрыть просмотр" : "Көрүүнү жабуу"}><X size={22} aria-hidden="true" /></button>
       </div>

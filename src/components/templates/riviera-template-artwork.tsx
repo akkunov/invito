@@ -20,7 +20,7 @@ export function RivieraTemplateArtwork({ template, locale }: {
       <Image src="/images/riviera/couple.webp" alt="" fill sizes="(max-width: 700px) 50vw, 320px" />
     </div>
     <div className="riviera-card-topbar">
-      <span>INVITO</span>
+      <span>eventiq</span>
       <span className="riviera-card-rule"/>
       <span className="riviera-card-music"><Play fill="currentColor" strokeWidth={1.4}/></span>
     </div>

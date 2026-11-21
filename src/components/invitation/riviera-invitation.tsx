@@ -69,7 +69,7 @@ export function RivieraInvitation({ document, musicSrc }: { document: Invitation
         <Image src={image} alt={ru ? "Фотография пары" : "Жубайлардын сүрөтү"} fill priority sizes="(max-width: 700px) 100vw, 60vw" unoptimized={image.startsWith("data:")} style={{ objectPosition: `center ${media?.focalY ?? 50}%` }} />
       </div>
       <header className="riviera-topbar">
-        <span className="riviera-brand">INVITO</span>
+        <span className="riviera-brand">eventiq</span>
         <span className="riviera-topbar-rule" aria-hidden="true" />
         <div className="riviera-music-control">
           {musicSrc && <audio ref={audioRef} src={musicSrc} preload="auto" loop autoPlay

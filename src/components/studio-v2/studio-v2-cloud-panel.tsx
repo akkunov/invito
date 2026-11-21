@@ -145,7 +145,7 @@ export function StudioCloudUnavailable({onClose}:{onClose:()=>void}){
    <button aria-label="Закрыть облачную синхронизацию" onClick={onClose}><StudioIcon name="close"/> Закрыть</button>
   </header>
   <section className="v2-cloud-panel">
-   <h2>Облако INVITO</h2>
+   <h2>Облако eventiq</h2>
    <p>Модуль облачной синхронизации реализован, но в этом окружении ещё не подключена авторизация OIDC и Workspace.</p>
    <p>После настройки аккаунта, PostgreSQL и приватного Cloudflare R2 здесь будут доступны загрузка медиа, сохранение ревизий и восстановление конфликтующих версий.</p>
    <p role="status">Сейчас макеты и фотографии остаются на этом устройстве. Ничего не отправляется на сервер автоматически.</p>
