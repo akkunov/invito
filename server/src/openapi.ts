@@ -21,6 +21,15 @@ function schema(validator: z.ZodType): Record<string, unknown> {
   return result;
 }
 const uuid = {type: "string", format: "uuid"};
+const pathParams: Record<string, Record<string, unknown>> = {
+  workspaceId: {type: "string", format: "uuid", description: "Идентификатор рабочего пространства (UUID)"},
+  assetId: {type: "string", format: "uuid", description: "Идентификатор медиафайла (UUID)"},
+  projectId: {type: "string", format: "uuid", description: "Идентификатор проекта (UUID)"},
+  id: {type: "string", format: "uuid", description: "Идентификатор ресурса (UUID)"},
+  number: {type: "integer", minimum: 1, description: "Положительный номер версии / ревизии"},
+  slug: {type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", minLength: 3, maxLength: 80,
+    description: "Публичный URL-slug"},
+};
 const pagination = [
   {name: "page", in: "query", required: false, description: "Page number, starting at 1 (default 1).", schema: {type: "integer", minimum: 1, maximum: 10000, default: 1}},
   {name: "limit", in: "query", required: false, description: "Items per page (default 20, maximum 50).", schema: {type: "integer", minimum: 1, maximum: 50, default: 20}},
@@ -44,6 +53,8 @@ type Endpoint = {
   requestBody?: ReturnType<typeof body>;
   parameters?: Array<Record<string, unknown>>;
   responseExample?: Record<string, unknown>;
+  responseSchema?: Record<string, unknown>;
+  successStatus?: 200 | 201;
   errors?: number[];
 };
 const endpoints: Endpoint[] = [
@@ -52,10 +63,12 @@ const endpoints: Endpoint[] = [
     responseExample:{status:"ok",service:"invito-api"}},
   {method:"get",path:"/api/v1/health/ready",tag:"System",summary:"Проверка готовности PostgreSQL",
     description:"Readiness. Выполняет SELECT 1 через PrismaPg. При недоступности базы возвращает 503 без раскрытия деталей подключения.",public:true,
-    responseExample:{status:"ready"},errors:[503]},
+    responseExample:{status:"ready"},
+    responseSchema:object({status:{type:"string",enum:["ready"]}},["status"]),errors:[503]},
   {method:"get",path:"/api/v1/me",tag:"Identity",summary:"Профиль текущего пользователя",
     description:"Проверяет RS256 JWT по issuer, audience и JWKS. При первом запросе регистрирует проверенную OIDC-личность в PostgreSQL.",
-    responseExample:{id:"00000000-0000-4000-8000-000000000001",displayName:"INVITO user",email:null},errors:[401,403,503]},
+    responseExample:{id:"00000000-0000-4000-8000-000000000001",displayName:"INVITO user",email:null},
+    responseSchema:object({id:uuid,displayName:{type:"string"},email:{type:"string",nullable:true}},["id","displayName","email"]),errors:[401,403,503]},
   {method:"get",path:"/api/v1/me/workspaces",tag:"Workspaces",summary:"Мои рабочие пространства",
     description:"Только пространства, где пользователь состоит в WorkspaceMember. Роль вычисляется на сервере.",errors:[401]},
   {method:"post",path:"/api/v1/workspaces",tag:"Workspaces",summary:"Создать рабочее пространство",
@@ -115,12 +128,18 @@ const endpoints: Endpoint[] = [
   {method:"post",path:"/api/v1/public/invitations/{slug}/rsvp",tag:"Guest Invitations",summary:"Подтвердить участие (RSVP)",
     description:"Публичный endpoint: idempotency через requestId, серверная проверка лимитов, honeypot и Cloudflare Turnstile в production. Поле website должно быть пустым.",
     public:true,
-    requestBody:body(schema(rsvpSchema),{requestId:"00000000-0000-4000-8000-000000000001",nodeId:"rsvp-1",name:"Гость",attendance:"yes",guests:1,website:""}),errors:[400,403,404,409,429,503]},
+    requestBody:body(schema(rsvpSchema),{requestId:"00000000-0000-4000-8000-000000000001",nodeId:"rsvp-1",name:"Гость",attendance:"yes",guests:1,website:""}),
+    responseSchema:object({accepted:{type:"boolean"},receiptId:uuid},["accepted","receiptId"]),
+    errors:[400,403,404,409,429,503]},
 ];
 
 function decorateDocument(document: OpenAPIObject): OpenAPIObject {
   const paths = document.paths as unknown as Record<string, Record<string, Record<string, unknown>>>;
+  const documentedOperations = new Set<string>();
   for (const endpoint of endpoints) {
+    const key = `${endpoint.method.toUpperCase()} ${endpoint.path}`;
+    if (documentedOperations.has(key)) throw new Error(`Duplicate Swagger operation: ${key}`);
+    documentedOperations.add(key);
     const operation = paths[endpoint.path]?.[endpoint.method];
     if (!operation) {
       throw new Error(`Swagger route mismatch: ${endpoint.method.toUpperCase()} ${endpoint.path}`);
@@ -133,11 +152,21 @@ function decorateDocument(document: OpenAPIObject): OpenAPIObject {
     if (!endpoint.public) operation.security = [{BearerAuth: []}];
     else operation.security = [];
     if (endpoint.requestBody) operation.requestBody = endpoint.requestBody;
-    if (endpoint.parameters) operation.parameters = [...((operation.parameters as Array<unknown>) ?? []), ...endpoint.parameters];
+    const routeParameters = [...endpoint.path.matchAll(/\\{([^}]+)\\}/g)].map((match) => {
+      const name = match[1]!;
+      const definition = pathParams[name];
+      if (!definition) throw new Error(`Missing Swagger path parameter schema: ${name}`);
+      const {description, ...paramSchema} = definition;
+      return {name, in: "path", required: true, description, schema: paramSchema};
+    });
+    operation.parameters = [
+      ...routeParameters,
+      ...(endpoint.parameters ?? []),
+    ];
     const responses = {...(operation.responses as Record<string, unknown> ?? {})};
-    responses[endpoint.method === "post" ? "201" : "200"] = {
+    responses[endpoint.successStatus ?? (endpoint.method === "post" ? 201 : 200)] = {
       description: "Успешное выполнение операции",
-      content: {"application/json": {schema: jsonObject, ...(endpoint.responseExample ? {example: endpoint.responseExample} : {})}},
+      content: {"application/json": {schema: endpoint.responseSchema ?? jsonObject, ...(endpoint.responseExample ? {example: endpoint.responseExample} : {})}},
     };
     for (const status of endpoint.errors ?? []) {
       responses[String(status)] = {
@@ -152,6 +181,15 @@ function decorateDocument(document: OpenAPIObject): OpenAPIObject {
       };
     }
     operation.responses = responses;
+  }
+  // Fail startup / CI if someone adds a controller route but forgets its API contract.
+  const httpMethods = ["get", "post", "put", "patch", "delete", "head", "options"];
+  for (const [path, item] of Object.entries(paths)) {
+    for (const method of httpMethods) {
+      if (item[method] && !documentedOperations.has(`${method.toUpperCase()} ${path}`)) {
+        throw new Error(`Undocumented API route: ${method.toUpperCase()} ${path}`);
+      }
+    }
   }
   return document;
 }
@@ -183,7 +221,11 @@ export function setupOpenApi(app: INestApplication): void {
   const document = decorateDocument(SwaggerModule.createDocument(app,config));
   SwaggerModule.setup("api/v1/docs",app,document,{
     jsonDocumentUrl:"api/v1/openapi.json",
-    swaggerOptions:{persistAuthorization:false,displayRequestDuration:true,filter:true},
+    swaggerOptions:{
+      persistAuthorization:false,displayRequestDuration:true,filter:true,
+      deepLinking:true,docExpansion:"none",defaultModelsExpandDepth:1,
+      tryItOutEnabled:false,syntaxHighlight:{activate:true,theme:"obsidian"},
+    },
     customSiteTitle:"INVITO API · Swagger",
   });
 }
