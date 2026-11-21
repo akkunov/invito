@@ -4,7 +4,7 @@
 - Local Swagger UI: `http://localhost:4000/api/v1/docs`
 - Machine-readable OpenAPI JSON: `http://localhost:4000/api/v1/openapi.json`
 - Public docs are enabled by default in nonproduction only. `API_DOCS_ENABLED=false` disables them. In production, **disabled by default**; enable explicitly with `API_DOCS_ENABLED=true` only behind appropriate infrastructure access controls.
-- All protected endpoints use HTTP Bearer JWT. Swagger UI **Authorize** accepts the OIDC **access token**, which must include the API audience (`invito-api`). Swagger UI does not perform OAuth itself and never stores the token with `persistAuthorization`.
+- All protected endpoints use HTTP Bearer JWT. Swagger UI **Authorize** accepts the Supabase Auth **access token**, which must include `aud=authenticated` (not a publishable key). Swagger UI does not perform OAuth itself and never stores the token with `persistAuthorization`.
 - Swagger paths, human-readable descriptions, response schemas and error statuses are maintained in `server/src/openapi.ts`. **JSON request body schemas are automatically generated using Zod 4 `z.toJSONSchema(..., {target: "openapi-3.0", io: "input"})` from the actual controller validators**; never copy those schemas by hand.
 - Path IDs, numbers and slugs are declared as typed required parameters, and Swagger startup rejects **both** stale documented operations and newly added controller routes omitted from OpenAPI. A new API endpoint must have an explicit tag, description, security mode and response contract.
 - Zod `superRefine` invariants (e.g. RSVP attendance vs guest count, media magic-byte verification) cannot be fully expressed as static OpenAPI constraints. Describe them in endpoint prose and keep server-side validation authoritative.
@@ -44,4 +44,4 @@ Cloudflare R2 credentials do not affect PostgreSQL readiness. OIDC is not requir
 4. Run `npm run build` and `npm test`; CI starts NestJS with a disposable database, downloads live `/api/v1/openapi.json` and checks actual request schema constraints and Bearer protection.
 5. Avoid examples containing production PII or secrets. A presigned R2 URL is a **short-lived credential**, not a permanent asset address.
 
-Swagger UI defaults to collapsed operations and searchable tags. It has deep links and request timing, does not persist JWTs and does not enable Try it out automatically. The live PostgreSQL readiness endpoint is safe for anonymous status checks; never expose connection strings in its response.
+Swagger UI defaults to collapsed operations and searchable tags. It has deep links and request timing, does not persist JWTs and does not enable Try it out automatically. The live PostgreSQL readiness endpoint is safe for anonymous status checks; never expose connection strings in its response. For Supabase Auth configuration refer to `docs/studio-v2/SUPABASE-AUTH.md`.

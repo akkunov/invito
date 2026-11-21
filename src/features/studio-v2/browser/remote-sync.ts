@@ -1,6 +1,6 @@
 /**
  * #29.3 Remote Studio transport. No automatic upload or replacement of IndexedDB data.
- * The caller owns the short-lived OIDC access token and may keep it in memory only.
+ * The caller supplies a short-lived, verified Supabase Auth access token. This module never persists it.
  * Network failures, revision conflicts and missing assets never modify local drafts.
  */
 import {parseProjectV2, type ProjectDocumentV2} from "../core/document.schema.ts";
