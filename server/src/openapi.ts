@@ -160,7 +160,7 @@ function decorateDocument(document: OpenAPIObject): OpenAPIObject {
     if (!endpoint.public) operation.security = [{BearerAuth: []}];
     else operation.security = [];
     if (endpoint.requestBody) operation.requestBody = endpoint.requestBody;
-    const routeParameters = [...endpoint.path.matchAll(/\\{([^}]+)\\}/g)].map((match) => {
+    const routeParameters = [...endpoint.path.matchAll(/\{([^}]+)\}/g)].map((match) => {
       const name = match[1]!;
       const definition = pathParams[name];
       if (!definition) throw new Error(`Missing Swagger path parameter schema: ${name}`);

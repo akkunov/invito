@@ -104,7 +104,6 @@ jobs:
             const invite=doc.paths["/api/v1/public/invitations/{slug}/rsvp"].post.requestBody.content["application/json"].schema;
             const upload=doc.paths["/api/v1/workspaces/{workspaceId}/media/uploads"].post.requestBody.content["application/json"].schema;
             const params=doc.paths["/api/v1/projects/{id}/revisions/{number}"].get.parameters;
-            console.log("Swagger schema snapshot:",JSON.stringify({create,invite,upload,params}).slice(0,6500));
             if(!create.required.includes("name") || create.properties.name.maxLength!==120 ||
                !create.properties.slug.pattern || create.additionalProperties!==false ||
                !invite.properties.attendance.enum.includes("yes") ||
