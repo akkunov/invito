@@ -50,7 +50,7 @@ export function SimpleEditor({source,contract,name,version,onClose}:Props){
   <div className="se-mobile-switch" role="group" aria-label={t("Режим редактора","Редактор режими")}><button aria-pressed={mode==="edit"} onClick={()=>setMode("edit")}>{t("Редактирование","Өзгөртүү")}</button><button aria-pressed={mode==="preview"} onClick={()=>setMode("preview")}>{t("Предпросмотр","Алдын ала көрүү")}</button></div>
   <div className="se-body" data-mode={mode}>
    <div className="se-editor-panel">
-   <aside className="se-navigation"><div className="se-nav-title"><small>INVITO / {t("НАСТРОЙКА","ЖӨНДӨӨ")}</small><h2>{t("Ваше приглашение","Сиздин чакырууңуз")}</h2><p>{t("Заполняйте по шагам. Любое изменение видно справа.","Кадам сайын толтуруңуз. Өзгөртүүлөр оң жакта көрүнөт.")}</p>
+   <aside className="se-navigation"><div className="se-nav-title"><small>eventiq / {t("НАСТРОЙКА","ЖӨНДӨӨ")}</small><h2>{t("Ваше приглашение","Сиздин чакырууңуз")}</h2><p>{t("Заполняйте по шагам. Любое изменение видно справа.","Кадам сайын толтуруңуз. Өзгөртүүлөр оң жакта көрүнөт.")}</p>
      <div className="se-progress-caption"><span>{t("Шаг","Кадам")} {Math.max(0,index+1)} / {available.length}</span><span>{stepProgress}%</span></div>
      <div className="se-progress-track" role="progressbar" aria-label={t("Прогресс по разделам","Бөлүмдөр боюнча прогресс")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={stepProgress}><span style={{width:stepProgress+"%"}}/></div>
     </div>

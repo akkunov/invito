@@ -8,7 +8,7 @@ import {createTemplateInput, createVersionInput, createProjectInput, createRevis
 import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/publications/publications-input.js";
 
 /**
- * INVITO API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
+ * eventiq API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
  * public request semantics without exposing application internals or secrets.
  *
  * Production Swagger UI / JSON are opt-in (API_DOCS_ENABLED=true).
@@ -67,7 +67,7 @@ const endpoints: Endpoint[] = [
     responseSchema:object({status:{type:"string",enum:["ready"]}},["status"]),errors:[503]},
   {method:"get",path:"/api/v1/me",tag:"Identity",summary:"Профиль текущего пользователя",
     description:"Проверяет JWT Supabase Auth (ES256/RS256) по issuer, audience и JWKS. При первом запросе регистрирует проверенную личность в PostgreSQL. Принимаются только user-сессии role=authenticated, anon/service_role отклоняются.",
-    responseExample:{id:"00000000-0000-4000-8000-000000000001",displayName:"INVITO user",email:null},
+    responseExample:{id:"00000000-0000-4000-8000-000000000001",displayName:"eventiq user",email:null},
     responseSchema:object({id:uuid,displayName:{type:"string"},email:{type:"string",nullable:true}},["id","displayName","email"]),errors:[401,403,503]},
   {method:"get",path:"/api/v1/me/workspaces",tag:"Workspaces",summary:"Мои рабочие пространства",
     description:"Только пространства, где пользователь состоит в WorkspaceMember. Роль вычисляется на сервере.",
@@ -206,9 +206,9 @@ export function setupOpenApi(app: INestApplication): void {
   if (process.env.API_DOCS_ENABLED === "false" ||
       (process.env.NODE_ENV === "production" && process.env.API_DOCS_ENABLED !== "true")) return;
   const config = new DocumentBuilder()
-    .setTitle("INVITO API")
+    .setTitle("eventiq API")
     .setDescription([
-      "REST API конструктора приглашений INVITO (NestJS 12, Prisma 7, PostgreSQL, Cloudflare R2).",
+      "REST API конструктора приглашений eventiq (NestJS 12, Prisma 7, PostgreSQL, Cloudflare R2).",
       "Версионирование: /api/v1. Контракт Supabase JWT: ES256/RS256, issuer + audience + JWKS; роли Workspace проверяются сервером.",
       "Все операции со Studio v2-документами валидируются серверными Zod-схемами. OpenAPI не заменяет runtime-валидацию.",
       "Авторизованные запросы: Bearer access token, не ID token. Публичные приглашения и RSVP не требуют авторизации.",
@@ -234,6 +234,6 @@ export function setupOpenApi(app: INestApplication): void {
       deepLinking:true,docExpansion:"none",defaultModelsExpandDepth:1,
       tryItOutEnabled:false,syntaxHighlight:{activate:true,theme:"obsidian"},
     },
-    customSiteTitle:"INVITO API · Swagger",
+    customSiteTitle:"eventiq API · Swagger",
   });
 }

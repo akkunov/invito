@@ -1,11 +1,11 @@
-# INVITO API — #29.2 Backend Core
+# eventiq API — #29.2 Backend Core
 
 NestJS 12 + Prisma 7.10.1 + PostgreSQL. Source lives in the **same repo** as the Next.js frontend, but installs/builds independently in `server/`.
 
 ## Prerequisites
 
 - Node.js >= 22.18, npm, Docker (or a disposable PostgreSQL 17 database)
-- The INVITO Supabase project configured with **asymmetric ES256 or RS256 JWT Signing Keys**, issuer and JWKS. Only signed user-session tokens with `role=authenticated` and `session_id` may call private routes. Opaque tokens and legacy HS256 are not supported.
+- The eventiq Supabase project configured with **asymmetric ES256 or RS256 JWT Signing Keys**, issuer and JWKS. Only signed user-session tokens with `role=authenticated` and `session_id` may call private routes. Opaque tokens and legacy HS256 are not supported.
 - A separate DB and identity provider for development, preview, and production.
 
 ## Local setup

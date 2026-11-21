@@ -20,11 +20,11 @@ omitted:
     reason: "Runtime component recipes remain canonical; see Components."
 ---
 
-# INVITO — invitation gallery
+# eventiq — invitation gallery
 
 ## Overview
 
-INVITO helps Russian- and Kyrgyz-speaking hosts choose an invitation, personalize it,
+eventiq helps Russian- and Kyrgyz-speaking hosts choose an invitation, personalize it,
 and retain a local browser draft. The public site is a gallery; the editor is a tool.
 Awwwards is a reference for typographic scale, generous media and gallery rhythm,
 not a source of copied assets or claims of awards. Existing invitation photography,

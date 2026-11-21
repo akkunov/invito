@@ -1,4 +1,4 @@
-# INVITO — Riviera-only frontend
+# eventiq — платформа сайтов-приглашений
 
 The catalog deliberately contains **one approved invitation**: `editorial-riviera-wedding`.
 All gradient starters, earlier birthday/editorial/reference approximations, national mockups

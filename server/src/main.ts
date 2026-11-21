@@ -27,6 +27,6 @@ export async function bootstrap() {
   return app;
 }
 void bootstrap().catch(error => {
-  console.error("INVITO API startup failed", error);
+  console.error("eventiq API startup failed", error);
   process.exitCode = 1;
 });

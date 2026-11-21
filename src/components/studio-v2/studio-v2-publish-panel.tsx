@@ -118,7 +118,7 @@ export function StudioPublishUnavailable({onClose}:{onClose:()=>void}){
   <header className="v2-preview-header"><strong><StudioIcon name="share" size={18}/> Публикация</strong>
    <button onClick={onClose}><StudioIcon name="close"/> Закрыть</button></header>
   <div className="v2-publish-scroll"><section className="v2-publish-panel">
-   <h2>Публикация в INVITO</h2>
+   <h2>Публикация в eventiq</h2>
    <p>Создание публичных ссылок и сбор RSVP уже реализованы на сервере. Чтобы публиковать из Studio, нужно подключить авторизацию OIDC, PostgreSQL и Cloudflare R2, затем войти в Workspace.</p>
    <p>Сейчас редактор работает с локальными проектами. Ваши фотографии, макеты и черновики не отправляются автоматически.</p>
    <button className="v2-inspector-button" onClick={onClose}>Продолжить редактирование</button>

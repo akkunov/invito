@@ -1,4 +1,4 @@
-# INVITO public gallery behavior
+# eventiq public gallery behavior
 
 Visual language: [DESIGN.md](DESIGN.md). This contract covers the public shell changed
 by the gallery redesign. Existing editor document/history/storage behavior is retained.
