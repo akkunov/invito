@@ -47,6 +47,12 @@ export class CustomerInvitationsService {
     const workspaceId=await this.personalWorkspace(userId);
     return this.media.startUpload(userId,workspaceId,input);
   }
+  async photoUrl(userId:string,id:string){
+    const workspaceId=await this.personalWorkspace(userId);
+    const asset=await this.db.mediaAsset.findFirst({where:{id,workspaceId,uploadedById:userId,status:"READY"},select:{id:true}});
+    if(!asset)throw new NotFoundException("CUSTOMER_MEDIA_NOT_FOUND");
+    return this.media.readUrl(userId,workspaceId,id);
+  }
   async completePhoto(userId:string,id:string){
     const workspaceId=await this.personalWorkspace(userId);
     return this.media.completeUpload(userId,workspaceId,id);
