@@ -77,6 +77,7 @@ model User {
   mediaUploads      MediaAsset[]         @relation("MediaUploader")
   publicationReleases PublicationRelease[] @relation("PublicationReleaseAuthor")
   auditEntries      AuditEvent[]         @relation("AuditActor")
+  invitationDrafts  InvitationDraft[]
 }
 
 model AuthIdentity {
