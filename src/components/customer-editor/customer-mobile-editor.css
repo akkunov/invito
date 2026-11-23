@@ -186,3 +186,18 @@
  .ce-save-state span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){.ce-completion-track span{transition:none}}
+
+
+.ce-cloud{background:#faf9f5;border:1px solid #e4e0d5;box-shadow:0 6px 18px #302c2210;padding:18px}
+.ce-cloud>h3{letter-spacing:-.02em}
+.ce-cloud-group{display:grid;gap:12px;padding:16px;background:#fff;border:1px solid #eae7de;border-radius:13px}
+.ce-cloud-group-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ce-cloud-group-head strong{font-size:13px;font-weight:750;display:flex;align-items:center;gap:8px;color:#272823}
+.ce-cloud-group-head small{font-size:10px;color:#828078}
+.ce-cloud-group .ce-language{margin:0}
+.ce-cloud-group .ce-cloud-actions>*{flex:1}
+.ce-cloud .ce-upload-button{min-height:64px;gap:10px;border:1px dashed #b8b5a6;background:#fbfaf4;color:#393d35;transition:border-color .15s,background .15s}
+.ce-cloud .ce-upload-button:hover{border-color:#ff4a0a;background:#fff7f2}
+.ce-cloud .ce-upload-button:focus-within{outline:2px solid #ff4a0a;outline-offset:3px}
+.ce-cloud .ce-upload-button input:focus-visible{outline:0}
+@media(max-width:550px){.ce-cloud-group{padding:13px}.ce-cloud-group-head{display:grid;gap:4px}}
