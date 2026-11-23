@@ -19,7 +19,7 @@ const trustedAssets=new Set([
 ]);
 
 for(const {version,data:packageData} of packages){
-test(`Editorial Ivory ${version} — versioned import envelope and 6 editorial sections",()=>{
+test(`Editorial Ivory ${version} — versioned import envelope and 6 editorial sections`,()=>{
   assert.equal(packageData.format,"eventiq-template");
   assert.equal(packageData.version,1);
   assert.equal(packageData.manifest.slug,"editorial-ivory");
@@ -29,7 +29,7 @@ test(`Editorial Ivory ${version} — versioned import envelope and 6 editorial s
   assert.deepEqual(packageData.personalization.locales,["ru","ky"]);
 });
 
-test(`Editorial Ivory ${version} — canonical Studio v2 snapshot, allowed fields and trusted media",()=>{
+test(`Editorial Ivory ${version} — canonical Studio v2 snapshot, allowed fields and trusted media`,()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);
   assert.ok(contract.fields.length>=10);
@@ -42,7 +42,7 @@ test(`Editorial Ivory ${version} — canonical Studio v2 snapshot, allowed field
   assert.ok(Object.values(snapshot.nodes).some(node=>node.type==="widget"&&node.block.kind==="location"));
 });
 
-test(`Editorial Ivory ${version} — publishing validates initial personalization and RU/KY variants",()=>{
+test(`Editorial Ivory ${version} — publishing validates initial personalization and RU/KY variants`,()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);
   assert.equal(finalizePersonalization(snapshot,contract,{values:{}}).locale,"ru");
@@ -52,7 +52,7 @@ test(`Editorial Ivory ${version} — publishing validates initial personalizatio
   assert.equal(bound.nodes.rsvpHeading.runs[0].text,"Биз менен болосузбу?");
 });
 
-test(`Editorial Ivory ${version} — only approved guest fields can change",()=>{
+test(`Editorial Ivory ${version} — only approved guest fields can change`,()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);
   assert.throws(()=>finalizePersonalization(snapshot,contract,{
