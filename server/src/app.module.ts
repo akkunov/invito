@@ -9,9 +9,10 @@ import {DocumentsModule} from "./modules/documents/documents.module.js";
 import {MediaModule} from "./modules/media/media.module.js";
 import {PublicationsModule} from "./modules/publications/publications.module.js";
 import {CatalogModule} from "./modules/catalog/catalog.module.js";
+import {CustomerInvitationsModule} from "./modules/customer-invitations/customer-invitations.module.js";
 
 @Module({
-  imports: [PrismaModule, AuthModule, WorkspacesModule, DocumentsModule, MediaModule, PublicationsModule, CatalogModule],
+  imports: [PrismaModule, AuthModule, WorkspacesModule, DocumentsModule, MediaModule, PublicationsModule, CatalogModule, CustomerInvitationsModule],
   controllers: [HealthController],
   providers: [{provide: APP_GUARD, useClass: JwtAuthGuard}],
 })
