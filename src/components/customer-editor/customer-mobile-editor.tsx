@@ -14,6 +14,8 @@ import {
 import {StudioV2ProjectRenderer} from "@/components/studio-v2/studio-v2-project-renderer";
 import {SimpleField} from "@/components/studio-v2/studio-v2-simple-fields";
 import type {Locale} from "@/i18n/locales";
+import {CustomerCloudControls} from "./customer-cloud-controls";
+import type {VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import "./customer-mobile-editor.css";
 
 type Step="main"|"event"|"appearance"|"publish";
@@ -75,6 +77,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
   const [status,setStatus]=useState("");
   const [review,setReview]=useState(false);
   const [previewRun,setPreviewRun]=useState(0);
+  const [customerAssets,setCustomerAssets]=useState<VerifiedCustomerAsset[]>([]);
+  const [customerUrls,setCustomerUrls]=useState<Record<string,string>>({});
   const cacheKey=draftStorageKey(versionId);
 
   useEffect(()=>{
@@ -82,7 +86,11 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
       const stored=window.localStorage.getItem(cacheKey);
       if(stored){
         const parsed=personalizationPatchSchema.parse(JSON.parse(stored));
-        personalizeDocument(source,contract,parsed);
+        const storedAssets=window.localStorage.getItem(cacheKey+":assets");
+        const parsedAssets=storedAssets?JSON.parse(storedAssets) as VerifiedCustomerAsset[]:[];
+        if(!Array.isArray(parsedAssets))throw Error("INVALID_ASSET_CACHE");
+        personalizeDocument(source,contract,parsed,parsedAssets,true);
+        setCustomerAssets(parsedAssets);
         setPatch(parsed);
         setStatus(dictionary[locale].restore);
       }
@@ -96,14 +104,17 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
     try {
       if(Object.keys(patch.values).length || patch.locale){
         window.localStorage.setItem(cacheKey,JSON.stringify(patch));
+        window.localStorage.setItem(cacheKey+":assets",JSON.stringify(customerAssets));
       }else{
         window.localStorage.removeItem(cacheKey);
+        window.localStorage.removeItem(cacheKey+":assets");
       }
       setStatus(dictionary[locale].saveLocal);
     }catch{setWarning(dictionary[locale].storageError);}
-  },[cacheKey,patch,hydrated,locale]);
+  },[cacheKey,patch,customerAssets,hydrated,locale]);
 
-  const document=useMemo(()=>personalizeDocument(source,contract,patch),[source,contract,patch]);
+  const document=useMemo(()=>personalizeDocument(source,contract,patch,customerAssets,true),[source,contract,patch,customerAssets]);
+  const mergedUrls=useMemo(()=>({...mediaUrls,...customerUrls}),[mediaUrls,customerUrls]);
   const issues=useMemo(()=>personalizationIssues(document,contract),[document,contract]);
   const grouped=useMemo(()=>contract.fields.reduce<Record<Step,EditableField[]>>((acc,field)=>{
     acc[sectionToStep[field.section]].push(field);
@@ -113,19 +124,19 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
   const fields=grouped[step];
   const update=(id:string,value:PersonalizedValue)=>{
     const candidate={...patch,values:{...patch.values,[id]:value}};
-    try{personalizeDocument(source,contract,candidate);setPatch(candidate);setWarning("");setReview(false);}
+    try{personalizeDocument(source,contract,candidate,customerAssets,true);setPatch(candidate);setWarning("");setReview(false);}
     catch(error){setWarning(error instanceof Error?error.message:"Invalid value");}
   };
   const changeLocale=(lang:"ru"|"ky")=>{
     try {
       const candidate={...patch,locale:lang};
-      personalizeDocument(source,contract,candidate);
+      personalizeDocument(source,contract,candidate,customerAssets,true);
       setPatch(candidate);setWarning("");
     }catch(error){setWarning(error instanceof Error?error.message:"Invalid locale");}
   };
   const reset=()=>{
     if(!window.confirm(t.resetConfirm))return;
-    setPatch(blank());setReview(false);setWarning("");setStep("main");setMode("edit");
+    setPatch(blank());setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");
   };
   const forward=()=>{
     if(step!=="publish"){
@@ -133,13 +144,13 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
       return;
     }
     setReview(true);
-    try{finalizePersonalization(source,contract,patch);setWarning("");}
+    try{finalizePersonalization(source,contract,patch,customerAssets);setWarning("");}
     catch{setWarning(t.required);}
   };
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
   const hasFields=contract.fields.length>0;
   const preview=<StudioV2ProjectRenderer
-    key={previewRun} document={document} mediaUrls={mediaUrls}
+    key={previewRun} document={document} mediaUrls={mergedUrls}
     device="mobile" guest={{mode:"preview"}}/>;
 
   return <main className="ce-shell">
@@ -197,9 +208,33 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
               <div className={review&&fieldError.has(field.id)?"ce-field-invalid":""} key={field.id}>
                 <SimpleField field={field} value={readPersonalizedValue(document,field)}
                   document={document} locale={locale} locales={contract.locales}
-                  urls={mediaUrls} onChange={value=>update(field.id,value)}/>
+                  urls={mergedUrls} onChange={value=>update(field.id,value)}/>
               </div>):
               <p className="ce-empty">{hasFields?t.noFields:t.unsupported}</p>}
+          {step==="appearance"||step==="publish"?<CustomerCloudControls
+            locale={locale} templateVersionId={versionId} patch={patch}
+            imageFieldId={step==="appearance"?grouped.appearance.find(f=>f.kind==="image")?.id??null:null}
+            imageLimits={step==="appearance"?(()=>{
+              const field=grouped.appearance.find(f=>f.kind==="image");
+              return field?.kind==="image"?{minWidth:field.minWidth,minHeight:field.minHeight}:null;
+            })():null}
+            onLoad={(remote,assets,urls)=>{
+              try{
+                personalizeDocument(source,contract,remote,assets,true);
+                setCustomerAssets(assets);setCustomerUrls(urls);setPatch(remote);
+                setWarning("");setStatus(t.restore);
+              }catch{setWarning(t.invalidDraft);}
+            }}
+            onUploaded={(fieldId,asset,url)=>{
+              const nextAssets=[...customerAssets.filter(a=>a.id!==asset.id),asset];
+              const nextPatch={...patch,values:{...patch.values,[fieldId]:{kind:"image" as const,assetId:asset.id}}};
+              try{
+                personalizeDocument(source,contract,nextPatch,nextAssets,true);
+                setCustomerAssets(nextAssets);setCustomerUrls(v=>({...v,[asset.storageKey]:url}));
+                setPatch(nextPatch);setWarning("");
+              }catch{setWarning(t.invalidDraft);}
+            }}
+          />:null}
           <p className="ce-security-note">{t.original}</p>
           {warning&&<p className="ce-warning" role="alert">{warning}</p>}
         </div>
