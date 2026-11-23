@@ -213,11 +213,11 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
               <p className="ce-empty">{hasFields?t.noFields:t.unsupported}</p>}
           {step==="appearance"||step==="publish"?<CustomerCloudControls
             locale={locale} templateVersionId={versionId} patch={patch}
-            imageFieldId={step==="appearance"?grouped.appearance.find(f=>f.kind==="image")?.id??null:null}
-            imageLimits={step==="appearance"?(()=>{
-              const field=grouped.appearance.find(f=>f.kind==="image");
-              return field?.kind==="image"?{minWidth:field.minWidth,minHeight:field.minHeight}:null;
-            })():null}
+            uploadTargets={step==="appearance"?grouped.appearance.flatMap(f=>
+              f.kind==="image"?[{id:f.id,label:f.label[locale],kind:"image" as const,
+                minWidth:f.minWidth,minHeight:f.minHeight}]:
+              f.kind==="gallery"?[{id:f.id,label:f.label[locale],kind:"gallery" as const,
+                minWidth:1,minHeight:1}]:[]):[]}
             onLoad={(remote,assets,urls)=>{
               try{
                 personalizeDocument(source,contract,remote,assets,true);
@@ -227,7 +227,12 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
             }}
             onUploaded={(fieldId,asset,url)=>{
               const nextAssets=[...customerAssets.filter(a=>a.id!==asset.id),asset];
-              const nextPatch={...patch,values:{...patch.values,[fieldId]:{kind:"image" as const,assetId:asset.id}}};
+              const field=contract.fields.find(f=>f.id===fieldId);
+              const current=field?readPersonalizedValue(document,field):undefined;
+              const nextValue=field?.kind==="gallery"?
+                {kind:"gallery" as const,assetIds:[...(current?.kind==="gallery"?current.assetIds:[]),asset.id]}:
+                {kind:"image" as const,assetId:asset.id};
+              const nextPatch={...patch,values:{...patch.values,[fieldId]:nextValue}};
               try{
                 personalizeDocument(source,contract,nextPatch,nextAssets,true);
                 setCustomerAssets(nextAssets);setCustomerUrls(v=>({...v,[asset.storageKey]:url}));
