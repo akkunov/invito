@@ -23,7 +23,7 @@ export function contractIssues(doc:ProjectDocumentV2,contract:PersonalizationCon
   if("key" in f){if(!own(doc.variables,f.key)||doc.variables[f.key].type!==f.kind||!bindingIsUsed(doc,f.key))add(f,"Переменная отсутствует, не используется или имеет другой тип");continue;}
   if(f.kind==="theme"){if(f.themeIds.some(id=>!own(doc.themes??{},id)))add(f,"Тема отсутствует");continue;}
   const node=own(doc.nodes,f.nodeId)?doc.nodes[f.nodeId]:undefined;
-  if(!node||(f.kind==="image"?node.type!=="image":node.type!=="widget"||node.block.kind!==f.kind))add(f,"Слой отсутствует или изменил тип");
+  if(!node||(f.kind==="image"?node.type!=="image":f.kind==="textStyle"?node.type!=="text":node.type!=="widget"||node.block.kind!==f.kind))add(f,"Слой отсутствует или изменил тип");
  }
  return issues;
 }
@@ -32,6 +32,11 @@ export function readPersonalizedValue(doc:ProjectDocumentV2,f:EditableField):Per
  if(f.kind==="theme")return {kind:"theme",themeId:doc.activeThemeId??null};
  const n=doc.nodes[f.nodeId];if(!n)return;
  if(f.kind==="image"&&n.type==="image")return {kind:"image",assetId:n.assetId};
+ if(f.kind==="textStyle"&&n.type==="text"){
+  const style=n.runs[0]?.style;
+  if(!style)return;
+  return {kind:"textStyle",fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,color:style.color,textAlign:n.textAlign};
+ }
  if(n.type!=="widget")return;
  const b=n.block;
  switch(b.kind){
@@ -53,6 +58,11 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
   return;
  }
  switch(f.kind){
+  case "textStyle":{
+   if(v.kind!=="textStyle")return reject("Неверный тип");
+   if(v.fontSize<f.minFontSize||v.fontSize>f.maxFontSize||!f.allowedFonts.includes(v.fontFamily)||!f.allowedWeights.includes(v.fontWeight)||!f.allowedColors.some(color=>color.toLowerCase()===v.color.toLowerCase()))reject("Стиль текста не разрешён автором");
+   break;
+  }
   case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
   case "gallery":if(v.kind!=="gallery")return reject("Неверный тип");if(v.assetIds.length>f.maxPhotos||complete&&f.required&&!v.assetIds.length)reject("Недопустимое количество фото");v.assetIds.forEach(asset);break;
   case "schedule":if(v.kind!=="schedule")return reject("Неверный тип");if(v.items.length>f.maxItems||complete&&f.required&&!v.items.length)reject("Недопустимое количество событий");for(const item of v.items)requiredText(item.label);break;
@@ -87,6 +97,13 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
   checkValue(f,v,doc,contract.locales,false);
   if("key" in f&&v.kind==="binding"){doc.values??={};doc.values[f.key]=structuredClone(v.value);continue;}
   if(f.kind==="theme"&&v.kind==="theme"){doc.activeThemeId=v.themeId;continue;}
+  if(f.kind==="textStyle"&&v.kind==="textStyle"){
+   const node=doc.nodes[f.nodeId];
+   if(node.type!=="text")invalid("Invalid text style target");
+   node.runs=node.runs.map(run=>({...run,style:{...run.style,fontFamily:v.fontFamily,fontSize:v.fontSize,fontWeight:v.fontWeight,color:v.color,italic:false}}));
+   node.textAlign=v.textAlign;
+   continue;
+  }
   if(!("nodeId" in f))return invalid("Invalid target");
   const node=doc.nodes[f.nodeId];
   if(f.kind==="image"&&v.kind==="image"&&node.type==="image"){
