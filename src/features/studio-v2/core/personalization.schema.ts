@@ -42,6 +42,6 @@ export const personalizedValueSchema=z.discriminatedUnion("kind",[
  z.strictObject({kind:z.literal("rsvp"),deadline:instantSchema.nullable(),maxGuests:z.number().int().min(1).max(10)}),
  z.strictObject({kind:z.literal("theme"),themeId:id.nullable()}),
 ]);
-export const personalizationPatchSchema=z.strictObject({locale:z.enum(["ru","ky"]).optional(),values:z.record(id,personalizedValueSchema).refine(v=>Object.keys(v).length<=100,"Too many values"),sections:z.strictObject({order:distinctPageIds.min(1),hidden:distinctPageIds}).optional()});
+export const personalizationPatchSchema=z.strictObject({locale:z.enum(["ru","ky"]).optional(),values:z.record(id,personalizedValueSchema).refine(v=>Object.keys(v).length<=100,"Too many values"),sections:z.strictObject({order:distinctPageIds.refine(ids=>ids.length>=1,"Section order required"),hidden:distinctPageIds}).optional()});
 export type PersonalizedValue=z.infer<typeof personalizedValueSchema>;
 export type PersonalizationPatch=z.infer<typeof personalizationPatchSchema>;
