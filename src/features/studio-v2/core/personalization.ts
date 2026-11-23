@@ -66,7 +66,7 @@ export function personalizationIssues(doc:ProjectDocumentV2,contract:Personaliza
  * Asset descriptors are supplied by a trusted upload/storage adapter, NEVER taken from the patch.
  * A locked layer protects geometry in Studio; explicit field permission may change its content.
  */
-export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown,rawPatch:unknown,uploadedAssets:readonly Asset[]=[]):ProjectDocumentV2{
+export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown,rawPatch:unknown,uploadedAssets:readonly Asset[]=[],trustedCloudAssets=false):ProjectDocumentV2{
  const base=parseProjectV2(source),contract=personalizationSchema.parse(rawContract),patch=personalizationPatchSchema.parse(rawPatch),fields=indexBy(contract.fields);
  const problems=contractIssues(base,contract);if(problems.length)invalid("Invalid personalization contract: "+problems[0].fieldId);
  const doc=structuredClone(base);
@@ -74,7 +74,7 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
  else if(!contract.locales.includes(doc.locale))invalid("Locale not allowed");
  const used=new Set<string>();
  for(const v of Object.values(patch.values)){if(v.kind==="image")used.add(v.assetId);if(v.kind==="gallery")v.assetIds.forEach(id=>used.add(id));}
- for(const raw of uploadedAssets){const a=mediaAssetRefSchema.parse(raw);if(!used.has(a.id)||own(doc.assets,a.id))invalid("Unexpected or colliding uploaded asset");if(a.mimeType==="image/svg+xml"||!a.pixelWidth||!a.pixelHeight||!a.sizeBytes||!a.storageKey.startsWith("local:"))invalid("Unverified uploaded image");doc.assets[a.id]=a;}
+ for(const raw of uploadedAssets){const a=mediaAssetRefSchema.parse(raw);if(!used.has(a.id)||own(doc.assets,a.id))invalid("Unexpected or colliding uploaded asset");if(a.mimeType==="image/svg+xml"||!a.pixelWidth||!a.pixelHeight||!a.sizeBytes||!(a.storageKey.startsWith("local:")||trustedCloudAssets&&/^asset:[0-9a-f-]{36}$/i.test(a.storageKey)))invalid("Unverified uploaded image");doc.assets[a.id]=a;}
  for(const [id,v] of Object.entries(patch.values)){
   const f=fields.get(id);if(!f)invalid("Field not allowed: "+id);
   checkValue(f,v,doc,contract.locales,false);
