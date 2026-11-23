@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useRef,useState,type MouseEvent} from "react";
-import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,RotateCw,Save,X,Type,Image as ImageIcon,Layers,Palette,Music2,Send,Cloud,ChevronDown,LockKeyhole,MoreHorizontal} from "lucide-react";
+import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,RotateCw,Save,X,Type,Image as ImageIcon,Layers,Palette,Music2,Send,Cloud,ChevronDown,LockKeyhole,MoreHorizontal,EyeOff,ArrowUp,ArrowDown,Plus} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
   finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,
@@ -186,6 +186,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
 
   const document=useMemo(()=>personalizeDocument(source,contract,patch,customerAssets,true),[source,contract,patch,customerAssets]);
   const mergedUrls=useMemo(()=>({...templateUrls,...customerUrls}),[templateUrls,customerUrls]);
+  const visiblePages=useMemo(()=>document.pages.filter(page=>document.nodes[page.rootNodeId]?.visible!==false),[document]);
+  const activePageIndex=Math.min(activeMobilePage,Math.max(0,visiblePages.length-1));
   const issues=useMemo(()=>personalizationIssues(document,contract),[document,contract]);
   const grouped=useMemo(()=>contract.fields.reduce<Record<Step,EditableField[]>>((acc,field)=>{
     acc[sectionToStep[field.section]].push(field);
@@ -221,14 +223,43 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     setPast(old=>[...old,patch].slice(-30));
     setPatch(future[0]);setFuture(old=>old.slice(1));
   };
-  const pageLabel=(index:number)=>{
-    const page=source.pages[index];if(!page)return "";
+  const pageLabel=(pageId:string)=>{
+    const page=document.pages.find(item=>item.id===pageId);if(!page)return "";
     const names:Record<string,{ru:string;ky:string}>={
       cover:{ru:"Обложка",ky:"Мукаба"},letter:{ru:"Приглашение",ky:"Чакыруу"},
       details:{ru:"Дата и место",ky:"Күнү жана жери"},program:{ru:"Программа",ky:"Программа"},
       memories:{ru:"Галерея",ky:"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
     };
     return names[page.id]?.[locale]??(page.name.includes("/")?page.name.split("/").slice(1).join("/").trim():page.name);
+  };
+  const sectionOrder=patch.sections?.order??source.pages.map(page=>page.id);
+  const hiddenSections=patch.sections?.hidden??[];
+  const canHide=(id:string)=>Boolean(contract.sectionEditing?.hideablePageIds.includes(id));
+  const canMove=(id:string)=>Boolean(contract.sectionEditing?.reorderablePageIds.includes(id));
+  const saveSections=(order:string[],hidden:string[])=>{
+    const candidate:PersonalizationPatch={...patch,sections:{order,hidden}};
+    try{
+      personalizeDocument(source,contract,candidate,customerAssets,true);
+      const currentId=visiblePages[activePageIndex]?.id;
+      const visibleNext=order.filter(id=>!hidden.includes(id));
+      setActiveMobilePage(Math.max(0,visibleNext.indexOf(currentId??"")));
+      commitPatch(candidate);setWarning("");
+    }catch(error){setWarning(error instanceof Error?error.message:"Invalid sections");}
+  };
+  const toggleSection=(id:string)=>{
+    if(!canHide(id))return;
+    saveSections([...sectionOrder],hiddenSections.includes(id)?
+      hiddenSections.filter(key=>key!==id):[...hiddenSections,id]);
+  };
+  const moveSection=(id:string,direction:-1|1)=>{
+    if(!canMove(id))return;
+    const current=sectionOrder.indexOf(id);
+    let target=current+direction;
+    while(target>=0&&target<sectionOrder.length&&!canMove(sectionOrder[target]))target+=direction;
+    if(target<0||target>=sectionOrder.length)return;
+    const order=[...sectionOrder];
+    [order[current],order[target]]=[order[target],order[current]];
+    saveSections(order,[...hiddenSections]);
   };
   const openTool=(tool:"text"|"photo"|"style"|"music",button?:HTMLButtonElement)=>{
     mobileTriggerRef.current=button??null;
@@ -294,8 +325,9 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
   const hasFields=contract.fields.length>0;
   const jumpPreview=(pageId:string)=>{
-    const pageIndex=source.pages.findIndex(page=>page.id===pageId);
-    if(pageIndex>=0)setActiveMobilePage(pageIndex);
+    const pageIndex=visiblePages.findIndex(page=>page.id===pageId);
+    if(pageIndex<0)return;
+    setActiveMobilePage(pageIndex);
     setMobileSectionsOpen(false);setMode("preview");
     window.requestAnimationFrame(()=>{
       const section=Array.from(mobileCanvasRef.current?.querySelectorAll<HTMLElement>("[data-preview-page]")??[])
@@ -314,7 +346,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   },[document,contract,selectedFieldId,activeMobilePage,mobileSheetOpen]);
   const preview=<StudioV2ProjectRenderer
     key={previewRun} document={document} mediaUrls={mergedUrls}
-    device="mobile" pageFilter={isMobileViewport?source.pages[activeMobilePage]?.id:undefined}
+    device="mobile" pageFilter={isMobileViewport?visiblePages[activePageIndex]?.id:undefined}
     guest={{mode:"preview"}}/>;
 
   return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>
@@ -448,9 +480,9 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         <div ref={mobileCanvasRef} className="ce-preview-screen" onClickCapture={selectCanvasField}>{preview}</div>
         <div className="ce-mobile-canvas-caption"><span>{t.mobileHint}</span></div>
         <nav className="ce-mobile-page-nav" aria-label={t.mobilePage}>
-          <button type="button" disabled={activeMobilePage===0} onClick={()=>jumpPreview(source.pages[activeMobilePage-1].id)} aria-label={t.back}><ArrowLeft size={18}/></button>
-          <button type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(true);setMobileSheetOpen(false);}}>{activeMobilePage+1} / {source.pages.length} <strong>{pageLabel(activeMobilePage)}</strong><ChevronDown size={16}/></button>
-          <button type="button" disabled={activeMobilePage>=source.pages.length-1} onClick={()=>jumpPreview(source.pages[activeMobilePage+1].id)} aria-label={t.next}><ArrowRight size={18}/></button>
+          <button type="button" disabled={activePageIndex===0} onClick={()=>jumpPreview(visiblePages[activePageIndex-1].id)} aria-label={t.back}><ArrowLeft size={18}/></button>
+          <button type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(true);setMobileSheetOpen(false);}}>{activePageIndex+1} / {visiblePages.length} <strong>{pageLabel(visiblePages[activePageIndex]?.id??"")}</strong><ChevronDown size={16}/></button>
+          <button type="button" disabled={activePageIndex>=visiblePages.length-1} onClick={()=>jumpPreview(visiblePages[activePageIndex+1].id)} aria-label={t.next}><ArrowRight size={18}/></button>
         </nav>
         <nav className="ce-mobile-dock" aria-label={t.mobileEdit}>
           <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="text"} onClick={e=>openTool("text",e.currentTarget)}><Type size={22}/><span>{t.toolText}</span></button>
@@ -463,20 +495,38 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     </div>
     {mobileSheetOpen&&<button type="button" className="ce-mobile-backdrop" onClick={closeMobileSheet} aria-label={t.mobileClose}/>}
     {mobileSectionsOpen&&<section className="ce-mobile-sections-screen" aria-label={t.mobileSectionsTitle}>
-      <header><button type="button" aria-label={t.back} onClick={()=>setMobileSectionsOpen(false)}><ArrowLeft size={21}/></button><h2>{t.mobileSectionsTitle}</h2><span><LockKeyhole size={18}/></span></header>
+      <header>
+        <button type="button" aria-label={t.back} onClick={()=>{setMobileSectionsOpen(false);mobileTriggerRef.current?.focus();}}><ArrowLeft size={21}/></button>
+        <h2>{t.mobileSectionsTitle}</h2>
+        <button type="button" className="ce-mobile-section-add" disabled={!hiddenSections.length} title={hiddenSections.length?t.sections:t.mobileLocked}
+          aria-label={locale==="ru"?"Показать скрытую секцию":"Жашырылган бөлүмдү көрсөтүү"}
+          onClick={()=>{const id=hiddenSections[0];if(id)toggleSection(id);}}><Plus size={20}/></button>
+      </header>
       <div className="ce-mobile-sections-list">
-        {source.pages.map((page,index)=>{
-          const root=source.nodes[page.rootNodeId];
+        {document.pages.map((page,index)=>{
+          const root=document.nodes[page.rootNodeId];
           const firstImage=root?.type==="frame"?root.children.map(id=>document.nodes[id]).find(node=>node?.type==="image"):undefined;
           const photo=firstImage?.type==="image"?document.assets[firstImage.assetId]:undefined;
           const url=photo?.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+photo.storageKey:photo?mergedUrls[photo.storageKey]:undefined;
-          return <div className={"ce-mobile-section-card"+(activeMobilePage===index?" active":"")} key={page.id}>
-            <button type="button" className="ce-mobile-section-select" onClick={()=>jumpPreview(page.id)}>
+          const hidden=root?.visible===false;
+          const canReorder=canMove(page.id);
+          const firstMovable=document.pages.findIndex(item=>canMove(item.id));
+          const lastMovable=document.pages.findLastIndex(item=>canMove(item.id));
+          return <div className={"ce-mobile-section-card"+(visiblePages[activePageIndex]?.id===page.id?" active":"")+(hidden?" is-hidden":"")} key={page.id}>
+            <button type="button" className="ce-mobile-section-select" onClick={()=>hidden&&canHide(page.id)?toggleSection(page.id):jumpPreview(page.id)}>
               <span className="ce-mobile-section-thumbnail">{url?<img src={url} alt="" loading="lazy"/>:<Layers size={21}/>}</span>
-              <span className="ce-mobile-section-title"><small>{String(index+1).padStart(2,"0")}</small>{pageLabel(index)}</span>
+              <span className="ce-mobile-section-title"><small>{String(index+1).padStart(2,"0")}</small>{pageLabel(page.id)}</span>
             </button>
-            <button type="button" className="ce-mobile-section-eye" aria-label={t.mobileViewPage+": "+pageLabel(index)} onClick={()=>jumpPreview(page.id)}><Eye size={20}/></button>
-            <button type="button" className="ce-mobile-section-more" aria-label={pageLabel(index)+": "+t.mobileLocked} disabled title={t.mobileLocked}><MoreHorizontal size={20}/></button>
+            <button type="button" className="ce-mobile-section-eye"
+              aria-label={(hidden?(locale==="ru"?"Показать":"Көрсөтүү"):canHide(page.id)?(locale==="ru"?"Скрыть":"Жашыруу"):t.mobileViewPage)+": "+pageLabel(page.id)}
+              aria-pressed={!hidden}
+              onClick={()=>canHide(page.id)?toggleSection(page.id):jumpPreview(page.id)}>
+              {hidden?<EyeOff size={20}/>:<Eye size={20}/>}
+            </button>
+            <div className="ce-mobile-section-reorder">
+              <button type="button" disabled={!canReorder||index<=firstMovable} onClick={()=>moveSection(page.id,-1)} aria-label={(locale==="ru"?"Выше":"Жогору")+": "+pageLabel(page.id)}><ArrowUp size={15}/></button>
+              <button type="button" disabled={!canReorder||index>=lastMovable} onClick={()=>moveSection(page.id,1)} aria-label={(locale==="ru"?"Ниже":"Төмөн")+": "+pageLabel(page.id)}><ArrowDown size={15}/></button>
+            </div>
           </div>;
         })}
         <p className="ce-mobile-sections-help"><LockKeyhole size={16}/>{t.mobileSectionsHint}</p>
