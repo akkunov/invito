@@ -41,6 +41,13 @@ export async function customerApi<T>(path:string,method="GET",payload?:unknown):
   }
   return response.json() as Promise<T>;
 }
+export type CustomerDraftListItem={
+  id:string;revision:number;templateVersionId:string;updatedAt:string;
+  templateVersion:{template:{name:string;publicSlug:string|null}};
+};
+export async function listCustomerDrafts(){
+  return customerApi<CustomerDraftListItem[]>("/customer/invitations");
+}
 export async function createCustomerDraft(templateVersionId:string){
   return customerApi<{id:string;revision:number;templateVersionId:string}>(
     "/customer/invitations","POST",{templateVersionId});
