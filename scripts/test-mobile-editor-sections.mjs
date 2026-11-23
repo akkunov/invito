@@ -58,3 +58,24 @@ test("approved color themes render actual paper and ink changes without geometry
     values:{colorTheme:{kind:"theme",themeId:"notApproved"}},
   }));
 });
+
+
+test("cover typography editing is restricted to the exact author-approved range",()=>{
+  const value={kind:"textStyle",fontFamily:"sans",fontSize:52,fontWeight:700,
+    color:"#606B52",textAlign:"left"};
+  const document=personalizeDocument(source.document,source.personalization,{
+    values:{coverTypography:value},
+  });
+  const resolved=resolveStyleDocument(document);
+  assert.equal(resolved.nodes.coverNames.runs[0].style.fontSize,52);
+  assert.equal(resolved.nodes.coverNames.runs[0].style.fontWeight,700);
+  assert.equal(resolved.nodes.coverNames.runs[0].style.color,"#606B52");
+  assert.equal(resolved.nodes.coverNames.textAlign,"left");
+  assert.equal(resolved.nodes.coverNames.width,source.document.nodes.coverNames.width);
+  assert.throws(()=>personalizeDocument(source.document,source.personalization,{
+    values:{coverTypography:{...value,fontSize:120}},
+  }));
+  assert.throws(()=>personalizeDocument(source.document,source.personalization,{
+    values:{coverTypography:{...value,color:"#FF00FF"}},
+  }));
+});
