@@ -8,7 +8,7 @@ test("publication owner lookup only queries drafts belonging to user",async()=>{
   const db={invitationDraft:{findFirst:async(args:{where:unknown})=>{
     where=args.where;return null;
   }}};
-  const service=new CustomerPublicationService(db as never,{} as never,{} as never);
+  const service=new CustomerPublicationService(db as never,{} as never,{} as never,{} as never);
   await assert.rejects(()=>service.getOwner("owner-1","draft-1"),NotFoundException);
   assert.deepEqual(where,{id:"draft-1",ownerId:"owner-1"});
 });
@@ -18,7 +18,7 @@ test("publishing a foreign draft cannot read its content",async()=>{
   const db={invitationDraft:{findFirst:async(args:{where:unknown})=>{
     where=args.where;return null;
   }}};
-  const service=new CustomerPublicationService(db as never,{} as never,{} as never);
+  const service=new CustomerPublicationService(db as never,{} as never,{} as never,{} as never);
   await assert.rejects(()=>service.publish("owner-1","draft-2",{
     slug:"private-event",expectedRevision:1,expectedRelease:0,
   }),NotFoundException);
@@ -30,7 +30,7 @@ test("unpublishing enforces owner, release CAS and ACTIVE status",async()=>{
   const db={customerPublication:{updateMany:async(args:{where:unknown})=>{
     where=args.where;return {count:0};
   }}};
-  const service=new CustomerPublicationService(db as never,{} as never,{} as never);
+  const service=new CustomerPublicationService(db as never,{} as never,{} as never,{} as never);
   await assert.rejects(()=>service.unpublish("owner-1","draft-2",7),ConflictException);
   assert.deepEqual(where,{
     draftId:"draft-2",ownerId:"owner-1",latestRelease:7,status:"ACTIVE",
@@ -41,6 +41,6 @@ test("anonymous access refuses unpublished or missing customer releases",async()
   const db={customerPublication:{findUnique:async()=>({
     status:"UNPUBLISHED",latestRelease:3,
   })}};
-  const service=new CustomerPublicationService(db as never,{} as never,{} as never);
+  const service=new CustomerPublicationService(db as never,{} as never,{} as never,{} as never);
   await assert.rejects(()=>service.getPublic("example-event"),NotFoundException);
 });
