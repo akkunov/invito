@@ -42,3 +42,40 @@ modal keyboard, reduced-motion and visual comparison in a real browser.
 ## Studio v2 invitation blocks
 
 The canonical guest form and widget renderer is InvitationBlockView, with RSVP validation and guest-mode isolation in invitation-behavior.ts. Native inputs/selects use platform semantics; date settings use typed ISO instants with explicit time zones. Preview validates locally and does not send or persist guest responses. Live requires an injected transport, not a simulated success state. See [ADR-009](docs/studio-v2/INVITATION-BEHAVIOR.md). Browser interaction and accessibility verification remain required.
+
+
+## Customer Mobile Editor 3.0 — Stage 1
+
+The customer editor's existing canonical owners remain:
+`CustomerMobileEditor` for the workflow,
+`SimpleField` for typed/validated customer controls,
+`CustomerCloudControls` for account drafts/media/publication, and
+`StudioV2ProjectRenderer` for the document preview. This section applies
+to **phone viewports at or below 850px** only, not Admin Studio v2 or
+desktop customer editing.
+
+- Render the current invitation page as the primary editing surface.
+  Section navigation chooses which page is visible. The desktop
+  renderer still shows all pages by default.
+- A tap on a Studio node resolves to an explicit permitted
+  `PersonalizationContract` field before opening a bottom sheet. Never
+  grant permission merely because a node is rendered or locked.
+- Native bottom-dock buttons can always open the full guided form,
+  including when a visual element has no direct selectable binding.
+- Opening and closing sheets must not mutate the Studio document,
+  publish an invitation or reset a cloud draft revision.
+- Local autosave and authenticated cloud-save have separate status
+  and must not imply remote synchronization succeeded.
+- The mobile panel has an accessible close button and Escape behavior.
+  Reduced motion, OS keyboard and safe-area insets are supported.
+- A photo selection uses the same verified R2 uploader and asset
+  validation. Unpermitted edits remain forbidden by the server.
+
+### Pending verification and later stages
+
+Before release, perform real-device QA for 320–430px viewports,
+keyboard, native date controls, 200% zoom, RU/KY and failure states.
+Stage 2 will address focus restoration, more elaborate photo
+interactions and refined section navigation. No section
+visibility/order, duplication or destructive manipulation is granted
+by the current personalization contract.
