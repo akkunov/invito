@@ -79,3 +79,34 @@ Stage 2 will address focus restoration, more elaborate photo
 interactions and refined section navigation. No section
 visibility/order, duplication or destructive manipulation is granted
 by the current personalization contract.
+
+
+## Mobile Editor 3.0 — approved reference implementation
+
+At <=850px, a local seeded template uses `LegacyMobileWorkspace` and
+a server template uses `CustomerMobileEditor`. Both have a top bar,
+the invitation canvas, previous/next navigation, a five-tool bottom
+dock and an accessible property drawer. The desktop customer editor
+and admin Studio v2 remain as before.
+
+For server templates, content selection is allowed **only** through
+the authoritative PersonalizationContract. The optional
+`sectionEditing` capability may grant specific page IDs the right to
+hide/reorder through `PersonalizationPatch.sections`. Default: NO
+section editing. Publishing performs the same server-side validation,
+and no upload or publication is reported successful before its
+authenticated action completes.
+
+For legacy seeded templates, section order/visibility and undo/redo
+are already implemented in the local invitation document. Legacy
+publication is unavailable until those templates have proper server
+versions; never display a fake live share link.
+
+Editor color themes use the established Studio v2 theme-token
+mechanism, rather than arbitrary text-style patches. Audio sources
+must be approved; no auto-generated copyrighted music is added.
+
+Verification: `npm run typecheck`,
+`npm run test:mobile-editor-v3`,
+`npm run test:editorial-ivory`, mobile Safari/Chrome behavior, keyboard
+and unpublished→published real customer flow.
