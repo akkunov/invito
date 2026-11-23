@@ -297,20 +297,33 @@ export function CustomerCloudControls({
         </div>}
         {activeRelease!==null&&<button className="ce-secondary" type="button" disabled={loading} onClick={()=>void hidePublication()}>{ru?"Закрыть доступ гостям":"Конокторго кирүүнү жабуу"}</button>}
       </div>}
-      <div className="ce-cloud-actions">
-        <button type="button" className="ce-primary" disabled={loading} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить в облако":"Булутка сактоо"}</button>
-        <button type="button" className="ce-secondary" disabled={loading} onClick={()=>void load()}>{ru?"Открыть облачную копию":"Булуттагы көчүрмө"}</button>
+      {!publishMode&&target&&<div className="ce-cloud-group">
+        <div className="ce-cloud-group-head">
+          <strong><ImagePlus size={16}/>{ru?"Ваши фотографии":"Сиздин сүрөттөрүңүз"}</strong>
+          <small>{ru?"JPEG, PNG, WebP · до 20 МБ":"JPEG, PNG, WebP · 20 МБ чейин"}</small>
+        </div>
+        {uploadTargets.length>1&&<label className="ce-language">
+          <span>{ru?"Что заменить на приглашении":"Чакыруу кайсы сүрөтүн алмаштыруу"}</span>
+          <select value={target.id} onChange={e=>setSelectedTarget(e.target.value)}>
+            {uploadTargets.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+        </label>}
+        <label className="ce-upload-button">
+          <ImagePlus size={17}/>{fileBusy?"…":ru?"Выбрать фотографию":"Сүрөт тандоо"}
+          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={fileBusy}
+            onChange={e=>{const file=e.target.files?.[0];if(file)void photo(file);e.target.value="";}}/>
+        </label>
+      </div>}
+      <div className="ce-cloud-group">
+        <div className="ce-cloud-group-head">
+          <strong><CloudUpload size={16}/>{ru?"Сохранение в аккаунте":"Аккаунтта сактоо"}</strong>
+          <small>{ru?"Для доступа с других устройств":"Башка түзмөктөрдөн ачуу үчүн"}</small>
+        </div>
+        <div className="ce-cloud-actions">
+          <button type="button" className="ce-primary" disabled={loading} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить":"Сактоо"}</button>
+          <button type="button" className="ce-secondary" disabled={loading} onClick={()=>void load()}>{ru?"Загрузить сохранённое":"Сакталганын жүктөө"}</button>
+        </div>
       </div>
-      {uploadTargets.length>1&&<label className="ce-language"><span>{ru?"Куда добавить фотографию":"Сүрөт кайда кошулат"}</span>
-        <select value={target?.id??""} onChange={e=>setSelectedTarget(e.target.value)}>
-          {uploadTargets.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}
-        </select>
-      </label>}
-      {target&&<label className="ce-upload-button">
-        <ImagePlus size={17}/>{fileBusy?"…":ru?"Загрузить своё фото":"Өз сүрөтүңүздү жүктөө"}
-        <input type="file" accept="image/png,image/jpeg,image/webp" disabled={fileBusy}
-          onChange={e=>{const file=e.target.files?.[0];if(file)void photo(file);e.target.value="";}}/>
-      </label>}
     </>}
     {info&&<p role="status" className="ce-cloud-info">{info}</p>}
   </section>;
