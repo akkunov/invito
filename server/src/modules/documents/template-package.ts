@@ -10,8 +10,8 @@ export const templatePackageSchema = z.strictObject({
   format: z.literal("eventiq-template"),
   version: z.literal(1),
   manifest: createTemplateInput.omit({document:true,personalization:true}),
-  document: z.unknown(),
-  personalization: z.unknown(),
+  document: z.unknown().refine(value => value !== undefined, "Document required"),
+  personalization: z.unknown().refine(value => value !== undefined, "Personalization contract required"),
 });
 
 export type TemplatePackageV1 = z.output<typeof templatePackageSchema>;
