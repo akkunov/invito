@@ -18,9 +18,10 @@ type Props={
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
   onUploaded:(fieldId:string,asset:VerifiedCustomerAsset,url:string)=>void;
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>;
+  preferredUploadTargetId?:string;
 };
 export function CustomerCloudControls({
-  locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,publishMode=false,canPublish=false,
+  locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,publishMode=false,canPublish=false,
 }:Props){
   const cfg=useMemo(configuredSupabase,[]);
   const supabase=useMemo(()=>cfg?getSupabaseBrowserClient(cfg):null,[cfg]);
@@ -38,6 +39,9 @@ export function CustomerCloudControls({
   const [availableDrafts,setAvailableDrafts]=useState<CustomerDraftListItem[]>([]);
   const target=uploadTargets.find(f=>f.id===selectedTarget)??uploadTargets[0]??null;
   const ru=locale==="ru";
+  useEffect(()=>{
+    if(preferredUploadTargetId&&uploadTargets.some(item=>item.id===preferredUploadTargetId))setSelectedTarget(preferredUploadTargetId);
+  },[preferredUploadTargetId,uploadTargets]);
   const personalKey=userId?"eventiq:cloud-draft:v1:"+userId+":"+templateVersionId:null;
 
   useEffect(()=>{
