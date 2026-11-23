@@ -4,6 +4,7 @@ import {StudioDocumentsService} from "./documents.service.js";
 import {parseInput, createTemplateInput, createVersionInput, createProjectInput,
   createRevisionInput, pagingInput} from "./documents-input.js";
 import {NotFoundException} from "@nestjs/common";
+import {templatePackageSchema} from "./template-package.js";
 
 function versionNumber(value: string): number {
   if (!/^[1-9]\d*$/.test(value)) throw new NotFoundException();
@@ -25,6 +26,20 @@ export class DocumentsController {
   @Post("workspaces/:workspaceId/templates")
   createTemplate(@Req() req: AuthenticatedRequest, @Param("workspaceId") workspaceId: string, @Body() body: unknown) {
     return this.service.createTemplate(req.user.id, workspaceId, parseInput(createTemplateInput, body));
+  }
+
+  /**
+   * JSON-only import for pre-uploaded, verified R2 assets.
+   * Workspace ADMIN/OWNER may import; source Studio templates remain untouched.
+   */
+  @Post("workspaces/:workspaceId/template-packages/import")
+  async importTemplatePackage(
+    @Req() req: AuthenticatedRequest,
+    @Param("workspaceId") workspaceId: string,
+    @Body() body: unknown,
+  ) {
+    const pack = parseInput(templatePackageSchema, body);
+    return this.service.importTemplatePackage(req.user.id, workspaceId, pack);
   }
 
   @Get("templates/:id")
