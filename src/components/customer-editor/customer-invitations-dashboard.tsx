@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,CalendarDays,Check,Copy,Eye,Link2,RefreshCw,Users,X} from "lucide-react";
+import {ArrowLeft,CalendarDays,Check,Copy,Eye,RefreshCw,Users,X} from "lucide-react";
 import {configuredSupabase,getSupabaseBrowserClient} from "@/features/auth/browser/supabase-session";
 import {customerApi,listCustomerDrafts,getCustomerPublication,unpublishCustomerInvitation,
   type CustomerDraftListItem,type CustomerPublication} from "@/features/invitations/customer-cloud";
@@ -118,7 +118,7 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
             <div><X size={16}/><strong>{summary?.declined??0}</strong><small>{ru?"Не придут":"Келбейт"}</small></div>
           </div>
           <div className="ci-actions">
-            {slug&&<Link href={`/${locale}/editor?template=${encodeURIComponent(slug)}`}>{ru?"Редактировать":"Түзөтүү"}</Link>}
+            {slug&&<Link href={`/${locale}/editor?template=${encodeURIComponent(slug)}&draft=${encodeURIComponent(draft.id)}`}>{ru?"Редактировать":"Түзөтүү"}</Link>}
             {isActive&&<a target="_blank" rel="noopener noreferrer" href={`/${locale}/c/${publication.slug}`}><Eye size={15}/>{ru?"Открыть":"Ачуу"}</a>}
             {isActive&&<button type="button" onClick={()=>void copy(publication.slug)}><Copy size={15}/>{ru?"Ссылка":"Шилтеме"}</button>}
           </div>
