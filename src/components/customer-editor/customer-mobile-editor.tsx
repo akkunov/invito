@@ -316,7 +316,17 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     device="mobile" pageFilter={isMobileViewport?source.pages[activeMobilePage]?.id:undefined}
     guest={{mode:"preview"}}/>;
 
-  return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>\n    <div className="ce-mobile-topbar">\n      <Link href={`/${locale}/catalog/${slug}`} aria-label={t.back}><ArrowLeft size={19}/></Link>\n      <strong>Eventiq<span>.</span></strong>\n      <div className="ce-mobile-top-actions">\n        <button type="button" aria-label={t.mobileUndo} disabled={!past.length} onClick={undo}><RotateCcw size={19}/></button>\n        <button type="button" aria-label={t.mobileRedo} disabled={!future.length} onClick={redo}><RotateCw size={19}/></button>\n        <span className="ce-mobile-cloud-status" role="status" aria-label={hydrated?status||t.mobileSaved:t.mobileSaving} title={hydrated?status||t.mobileSaved:t.mobileSaving}><Cloud size={19}/></span>\n        <button className="ce-mobile-publish-top" type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(false);openMobileStep("publish");}}>{t.publishAction}</button>\n      </div>\n    </div>
+  return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>
+    <div className="ce-mobile-topbar">
+      <Link href={`/${locale}/catalog/${slug}`} aria-label={t.back}><ArrowLeft size={19}/></Link>
+      <strong>Eventiq<span>.</span></strong>
+      <div className="ce-mobile-top-actions">
+        <button type="button" aria-label={t.mobileUndo} disabled={!past.length} onClick={undo}><RotateCcw size={19}/></button>
+        <button type="button" aria-label={t.mobileRedo} disabled={!future.length} onClick={redo}><RotateCw size={19}/></button>
+        <span className="ce-mobile-cloud-status" role="status" aria-label={hydrated?status||t.mobileSaved:t.mobileSaving} title={hydrated?status||t.mobileSaved:t.mobileSaving}><Cloud size={19}/></span>
+        <button className="ce-mobile-publish-top" type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(false);openMobileStep("publish");}}>{t.publishAction}</button>
+      </div>
+    </div>
     <header className="ce-header">
       <Link aria-label={t.back} href={`/${locale}/catalog/${slug}`} className="ce-icon"><ArrowLeft size={20}/></Link>
       <Link href={`/${locale}`} className="ce-logo">eventiq<span>.</span></Link>
