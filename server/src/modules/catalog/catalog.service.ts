@@ -1,4 +1,4 @@
-import {Inject, Injectable, NotFoundException, UnprocessableEntityException} from "@nestjs/common";
+import {ConflictException, Inject, Injectable, NotFoundException, UnprocessableEntityException} from "@nestjs/common";
 import {PrismaService} from "../../database/prisma.service.js";
 import {MediaObjectStore} from "../media/media-object-store.js";
 import {DocumentsAccessService, validUuid} from "../documents/documents-access.service.js";
@@ -90,8 +90,14 @@ export class CatalogService {
     if(!contract||contract.fields.length===0)throw new UnprocessableEntityException("PERSONALIZATION_CONTRACT_REQUIRED");
     if(!snapshot.pages.some(page=>page.id===row.coverPageId))throw new UnprocessableEntityException("COVER_PAGE_NOT_FOUND");
     await verifyAssets(this.db,workspaceId,snapshot);
-    return this.db.template.update({where:{id:templateId},
-      data:{status:"PUBLISHED",publicSlug},
-      select:{id:true,publicSlug:true,status:true,latestVersion:true}});
+    try {
+      return await this.db.template.update({where:{id:templateId},
+        data:{status:"PUBLISHED",publicSlug},
+        select:{id:true,publicSlug:true,status:true,latestVersion:true}});
+    } catch(error) {
+      if(error&&typeof error==="object"&&"code" in error&&error.code==="P2002")
+        throw new ConflictException("TEMPLATE_PUBLIC_SLUG_TAKEN");
+      throw error;
+    }
   }
 }
