@@ -76,7 +76,7 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
       <nav className="lm3-pager" aria-label={ru?"Навигация по приглашению":"Чакыруу боюнча багыттоо"}>
         <button type="button" disabled={current===0} onClick={()=>navigate(blocks[current-1].id)} aria-label={ru?"Предыдущая секция":"Мурунку бөлүм"}><ArrowLeft size={19}/></button>
         <button type="button" onClick={e=>open("sections",e.currentTarget)}>{current+1} / {blocks.length} <strong>{name(blocks[current]?.id??"cover")}</strong><ChevronDown size={16}/></button>
-        <button type="button" disabled={current===blocks.length-1} onClick={()=>navigate(blocks[current+1].id)} aria-label={ru?"Следующая секция":"Кийинки бөлүм"}><ArrowRight size={19}/></button>
+        <button type="button" disabled={!blocks.length||current>=blocks.length-1} onClick={()=>{if(blocks[current+1])navigate(blocks[current+1].id);}} aria-label={ru?"Следующая секция":"Кийинки бөлүм"}><ArrowRight size={19}/></button>
       </nav>
     </main>
     <nav className="lm3-dock" aria-label={ru?"Инструменты":"Куралдар"}>
