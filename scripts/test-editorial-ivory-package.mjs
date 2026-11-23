@@ -6,7 +6,7 @@ import {validatedTemplateVersion,assertReadyAssets} from "../server/domain/persi
 import {finalizePersonalization,personalizationIssues} from "../src/features/studio-v2/core/personalization.ts";
 import {bindDocument} from "../src/features/studio-v2/core/invitation-behavior.ts";
 
-const packages=["v1","v2"].map(version=>{
+const packages=["v1","v2","v3"].map(version=>{
   const path=fileURLToPath(new URL("../templates/packages/editorial-ivory."+version+".json",import.meta.url));
   return {version,data:JSON.parse(readFileSync(path,"utf8"))};
 });
@@ -27,6 +27,7 @@ test(`Editorial Ivory ${version} — versioned import envelope and 6 editorial s
   assert.equal(packageData.document.pages.length,6);
   assert.equal(packageData.personalization.version,1);
   assert.deepEqual(packageData.personalization.locales,["ru","ky"]);
+  if(version==="v3")assert.deepEqual(packageData.personalization.sectionEditing?.hideablePageIds,["letter","program","memories"]);
 });
 
 test(`Editorial Ivory ${version} — canonical Studio v2 snapshot, allowed fields and trusted media`,()=>{
