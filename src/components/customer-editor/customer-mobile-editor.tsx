@@ -332,7 +332,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         </div>
         <nav className="ce-preview-sections" aria-label={t.sections}>
           {source.pages.map((page,index)=><button key={page.id} type="button" onClick={()=>jumpPreview(page.id)}
-            title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.replace(/^[0-9]+\\s*\\/\\s*/, "")}</span></button>)}
+            title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
         </nav>
         <div className="ce-preview-screen">{preview}</div>
       </aside>
