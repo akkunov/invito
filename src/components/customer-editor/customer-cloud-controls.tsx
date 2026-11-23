@@ -51,7 +51,10 @@ export function CustomerCloudControls({
     let id:string|null=null;
     try{id=window.localStorage.getItem(personalKey);}catch{}
     setCloudId(id);
-    setRevision(null);
+    try {
+      const rev=window.localStorage.getItem(personalKey+":revision");
+      setRevision(rev&&Number.isSafeInteger(Number(rev))&&Number(rev)>=1?Number(rev):null);
+    }catch{setRevision(null);}
   },[personalKey]);
 
   async function login(e:FormEvent){
@@ -87,14 +90,17 @@ export function CustomerCloudControls({
         }
         setCloudId(id);
       }else if(rev===null){
-        rev=(await getCustomerDraft(id)).revision;
+        throw new Error("CLOUD_REVISION_NOT_LOADED");
       }
       if(!id||rev===null)throw new Error("CLOUD_REVISION_UNAVAILABLE");
       const saved=await saveCustomerDraft(id,rev,patch);
       setRevision(saved.revision);
+      if(personalKey)window.localStorage.setItem(personalKey+":revision",String(saved.revision));
       setInfo(ru?"Сохранено в вашем аккаунте.":"Аккаунтуңузга сакталды.");
     }catch(e){
-      setInfo(e instanceof CustomerCloudError&&e.status===409
+      setInfo(e instanceof Error&&e.message==="CLOUD_REVISION_NOT_LOADED"
+        ?ru?"Сначала откройте облачную копию, чтобы избежать потери изменений.":"Өзгөрүүлөр жоголбошу үчүн адегенде булуттагы көчүрмөнү ачыңыз."
+        :e instanceof CustomerCloudError&&e.status===409
         ?ru?"Конфликт версий: откройте облачную копию перед сохранением.":"Версиялар дал келбейт: булуттагы көчүрмөнү ачыңыз."
         :e instanceof CustomerCloudError&&e.status===401
         ?ru?"Войдите в аккаунт ещё раз.":"Аккаунтка кайра кириңиз."
@@ -112,6 +118,7 @@ export function CustomerCloudControls({
       if(remote.templateVersionId!==templateVersionId)throw new Error("TEMPLATE_VERSION_MISMATCH");
       onLoad(remote.patch,remote.assets,remote.mediaUrls);
       setCloudId(id);setRevision(remote.revision);
+      window.localStorage.setItem(personalKey+":revision",String(remote.revision));
       setInfo(ru?"Облачная версия загружена.":"Булуттагы версия жүктөлдү.");
     }catch{setInfo(ru?"Не удалось загрузить облачный черновик.":"Булуттагы черновик ачылган жок.");}
     finally{setLoading(false);}
