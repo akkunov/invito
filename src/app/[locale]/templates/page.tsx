@@ -6,6 +6,8 @@ import {CatalogSearch} from "@/components/templates/catalog-search";
 import {SiteHeader} from "@/components/layout/site-header";
 import {SiteFooter} from "@/components/layout/site-footer";
 import {TemplateCard} from "@/components/templates/template-card";
+import {ServerCatalogGrid} from "@/components/templates/server-catalog-grid";
+import {getPublicCatalog} from "@/features/invitations/server-catalog";
 import {routes} from "@/constants/routes";
 import {templates, categories} from "@/features/invitations/seed-templates";
 import {getDictionary} from "@/i18n/dictionaries";
@@ -40,6 +42,7 @@ export default async function TemplatesPage({params, searchParams}: {
     if (!isLocale(locale)) notFound();
     const filters = await searchParams;
     const dict = getDictionary(locale);
+    const cloud = await getPublicCatalog({search:filters.search,category:filters.category?.toUpperCase(),limit:24}).catch(() => null);
     const search = (filters.search ?? "").trim().toLocaleLowerCase();
     const filtered = templates.filter((template) => {
         if (filters.category && filters.category !== template.category) return false;
@@ -51,7 +54,7 @@ export default async function TemplatesPage({params, searchParams}: {
         <main className="catalog-main page-container">
             <div className="catalog-intro">
                 <div><h1>{dict.catalog.title}</h1><p>{dict.catalog.description}</p></div>
-                <span className="catalog-total">{templates.length}</span></div>
+                <span className="catalog-total">{templates.length+(cloud?.total??0)}</span></div>
             <form noValidate action={routes.templates(locale)} method="get" className="catalog-toolbar">
                 <CatalogSearch key={filters.search ?? ""} initialValue={filters.search ?? ""} label={dict.catalog.search}
                   clearLabel={locale === "ru" ? "Очистить поиск" : "Издөөнү тазалоо"}/>
@@ -70,6 +73,7 @@ export default async function TemplatesPage({params, searchParams}: {
                 </select></label>
                 <button className="button-primary" type="submit">{locale === "ru" ? "Найти" : "Издөө"}</button>
             </form>
+            {cloud?.items.length ? <ServerCatalogGrid locale={locale} items={cloud.items}/> : null}
             <div className="catalog-summary">
                 <span>{locale === "ru" ? "Найдено" : "Табылды"}: {filtered.length}</span>{(filters.search || filters.category || filters.price) &&
                 <Link href={routes.templates(locale)}>{dict.catalog.emptyAction}</Link>}</div>
