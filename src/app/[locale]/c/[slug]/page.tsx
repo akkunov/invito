@@ -27,11 +27,12 @@ export default async function CustomerInvitationPage({params}:{
   if(!response.ok)throw Error("CUSTOMER_INVITATION_UNAVAILABLE");
   const data=await response.json() as {
     slug:string;release:number;sha256:string;document:unknown;
-    mediaUrls:Record<string,string>;
+    mediaUrls:Record<string,string>;rsvpEnabled:boolean;turnstileSiteKey:string|null;
   };
   if(data.slug!==slug)notFound();
   return <CustomerPublicInvitation locale={locale} initial={{
     slug:data.slug,release:data.release,sha256:data.sha256,
     document:parseProjectV2(data.document),mediaUrls:data.mediaUrls,
+    rsvpEnabled:data.rsvpEnabled,turnstileSiteKey:data.turnstileSiteKey,
   }}/>;
 }
