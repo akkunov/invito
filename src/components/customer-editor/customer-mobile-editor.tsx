@@ -308,6 +308,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     if(!root)return;
     for(const node of root.querySelectorAll<HTMLElement>("[data-studio-node]")){
       const f=editableFieldForNode(document,contract.fields,node.dataset.studioNode??"");
+      node.classList.toggle("ce-mobile-editable-node",Boolean(f));
       node.classList.toggle("ce-mobile-selected-node",!!selectedFieldId&&f?.id===selectedFieldId);
     }
   },[document,contract,selectedFieldId,activeMobilePage,mobileSheetOpen]);
