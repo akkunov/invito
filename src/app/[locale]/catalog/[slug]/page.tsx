@@ -38,10 +38,10 @@ export default async function CatalogTemplatePage({params}:{params:Promise<{loca
           <h1>{item.name}</h1>
           <p>{item.description}</p>
           <p className="detail-note">{locale==="ru"?
-            "Предпросмотр серверного шаблона. Личный мобильный редактор подключим следующим этапом.":
-            "Сервердеги шаблондун алдын ала көрүнүшү. Жеке редактор кийинки этапта кошулат."}</p>
-          <Link href={`/${locale}/templates`} className="button-primary button-large">
-            {locale==="ru"?"Выбрать другой дизайн":"Башка дизайн тандоо"}
+            "Измените имена, дату и оформление в удобном мобильном редакторе. Черновик сохраняется на этом устройстве.":
+            "Аты-жөндөрдү, күндү жана жасалгалоону мобилдик редактордо өзгөртүңүз. Черновик ушул түзмөктө сакталат."}</p>
+          <Link href={`/${locale}/editor?template=${encodeURIComponent(slug)}`} className="button-primary button-large">
+            {locale==="ru"?"Использовать шаблон":"Шаблонду колдонуу"}
           </Link>
         </div>
         <div className="detail-preview" style={{maxWidth:460,marginInline:"auto",width:"100%"}}>
