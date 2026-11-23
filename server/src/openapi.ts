@@ -10,7 +10,6 @@ import {templatePackageSchema} from "./modules/documents/template-package.js";
 import {catalogPublishSchema} from "./modules/catalog/catalog.controller.js";
 import {createCustomerInvitationSchema,updateCustomerInvitationSchema,customerPhotoSchema} from "./modules/customer-invitations/customer-invitations.controller.js";
 import {publishCustomerSchema,unpublishCustomerSchema} from "./modules/customer-invitations/customer-publication.controller.js";
-import {rsvpSchema as guestCustomerRsvpSchema} from "./modules/publications/publications-input.js";
 
 /**
  * eventiq API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
@@ -141,12 +140,12 @@ const endpoints: Endpoint[] = [
     requestBody:body(schema(unpublishCustomerSchema)),errors:[400,401,404,409]},
   {method:"get",path:"/api/v1/public/customer-invitations/{slug}",tag:"Customer Invitations",
     summary:"Публичная страница гостевого приглашения",public:true,
-    description:"Анонимный доступ только к ACTIVE неизменяемому релизу. RSVP пока не поддерживается для личных релизов.",
+    description:"Анонимный доступ только к ACTIVE неизменяемому релизу. RSVP доступен при настроенной защите Turnstile.",
     errors:[400,404,503]},
   {method:"post",path:"/api/v1/public/customer-invitations/{slug}/rsvp",tag:"Customer Invitations",
     public:true,summary:"Подтверждение участия гостем",
     description:"Только активный неизменяемый релиз; Turnstile требуется в production, проверяются дедлайн, лимиты и requestId.",
-    requestBody:body(schema(guestCustomerRsvpSchema)),errors:[400,403,404,409,422,429,503]},
+    requestBody:body(schema(rsvpSchema)),errors:[400,403,404,409,422,429,503]},
   {method:"get",path:"/api/v1/customer/invitations/{id}/rsvp/summary",tag:"Customer Invitations",
     summary:"Сводка RSVP для владельца",description:"Ответы доступны только владельцу личного приглашения.",errors:[400,401,404]},
   {method:"get",path:"/api/v1/customer/invitations/{id}/rsvp",tag:"Customer Invitations",
