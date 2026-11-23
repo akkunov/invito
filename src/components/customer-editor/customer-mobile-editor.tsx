@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useEffect,useMemo,useState,type MouseEvent} from "react";
+import {useEffect,useMemo,useRef,useState,type MouseEvent} from "react";
 import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save,X,Type,Image as ImageIcon,Layers,CalendarDays,Send} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
@@ -78,6 +78,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>("main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
+  const mobileFormRef=useRef<HTMLDivElement>(null);
   const [isMobileViewport,setIsMobileViewport]=useState(false);
   const [mobileSheetOpen,setMobileSheetOpen]=useState(false);
   const [selectedFieldId,setSelectedFieldId]=useState<string|null>(null);
@@ -198,11 +199,12 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const displayedFields=selectedFieldId?fields.filter(field=>field.id===selectedFieldId):fields;
   const openMobileStep=(next:Step,fieldId:string|null=null)=>{
     setStep(next);setSelectedFieldId(fieldId);setMode("edit");setMobileSheetOpen(true);
+    mobileFormRef.current?.scrollTo({top:0,behavior:"instant"});
   };
   const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);};
   useEffect(()=>{
     if(!mobileSheetOpen)return;
-    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape")closeMobileSheet();};
+    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMobileSheetOpen(false);setSelectedFieldId(null);}};
     window.addEventListener("keydown",onKey);
     return()=>window.removeEventListener("keydown",onKey);
   },[mobileSheetOpen]);
@@ -300,7 +302,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           <button className={mode==="edit"?"active":""} aria-pressed={mode==="edit"} onClick={()=>setMode("edit")}><Pencil size={16}/>{t.edit}</button>
           <button className={mode==="preview"?"active":""} aria-pressed={mode==="preview"} onClick={()=>setMode("preview")}><Eye size={16}/>{t.preview}</button>
         </div>
-        <div className={mode==="preview"?"ce-form ce-mobile-hidden":"ce-form"}>
+        <div ref={mobileFormRef} className={mode==="preview"?"ce-form ce-mobile-hidden":"ce-form"}>
           <div className="ce-step-heading">
             <p>{t.step} {currentIndex+1} {t.stepOf} 4</p>
             <h2>{step==="publish"?t.publishTitle:t[step]}</h2>
