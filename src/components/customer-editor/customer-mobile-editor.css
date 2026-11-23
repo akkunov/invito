@@ -441,3 +441,10 @@
  .ce-mobile-text-modes button.active{background:#fffefa;color:#2e3927;box-shadow:0 2px 6px #25282110}
  .ce-mobile-text-modes button:focus-visible{outline:2px solid #ff4a0a;outline-offset:2px}
 }
+
+
+@media(max-width:850px){
+ .ce-cloud .ce-upload-counter{margin:0;color:#626d5d;font-size:12px;font-weight:700}
+ .ce-cloud .ce-upload-button.ce-upload-disabled{border-color:#d6d3c9;background:#f3f1ed;color:#8b8a80;cursor:not-allowed;opacity:.72}
+ .ce-cloud .ce-upload-button.ce-upload-disabled input{cursor:not-allowed}
+}
