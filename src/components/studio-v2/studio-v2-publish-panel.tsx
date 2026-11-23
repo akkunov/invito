@@ -34,15 +34,48 @@ export function StudioPublishPanel({document,settings,locale,onClose}:{
  useEffect(()=>{
   if(!projectId)return;
   let active=true;
-  void Promise.all([client.getProject(projectId),client.getPublication(projectId)]).then(async([project,pub])=>{
+  setLatestRevision(null);
+  setPublication(null);
+  setError("");
+  const describeFailure=(operation:string,reason:unknown)=>{
+   console.error("[Eventiq Publish] "+operation+" failed",reason);
+   if(reason instanceof RemoteRequestError){
+    if(reason.status===401)return operation+": сессия истекла. Войдите снова.";
+    if(reason.status===403)return operation+": недостаточно прав в Workspace.";
+    if(reason.status===404)return operation+": проект или публикация не найдены.";
+    return operation+": ошибка API (HTTP "+reason.status+").";
+   }
+   return operation+": неверный ответ сервера или ошибка сети. Проверьте Console.";
+  };
+  void (async()=>{
+   const [projectResult,publicationResult]=await Promise.allSettled([
+    client.getProject(projectId),client.getPublication(projectId),
+   ]);
    if(!active)return;
-   setLatestRevision(project.latestRevision);setPublication(pub);if(pub)setSlug(pub.slug);
+   if(projectResult.status==="rejected"||publicationResult.status==="rejected"){
+    // Do not allow publishing while current release state is unknown.
+    setLatestRevision(null);
+    const failures=[
+     ...(projectResult.status==="rejected"?[describeFailure("Загрузка проекта",projectResult.reason)]:[]),
+     ...(publicationResult.status==="rejected"?[describeFailure("Загрузка публикации",publicationResult.reason)]:[]),
+    ];
+    setError(failures.join(" "));
+    return;
+   }
+   const project=projectResult.value,pub=publicationResult.value;
+   setLatestRevision(project.latestRevision);
+   setPublication(pub);
+   if(pub)setSlug(pub.slug);
+   setError("");
    if(!pub)return;
    try{
     const [stats,results]=await Promise.all([client.rsvpSummary(projectId),client.listRsvp(projectId)]);
     if(active){setSummary(stats);setReplies(results.items);}
-   }catch{if(active){setSummary(null);setReplies([]);}}
-  }).catch(()=>{if(active)setError("Не удалось загрузить публикацию. Проверьте авторизацию и Workspace.");});
+   }catch(reason){
+    console.warn("[Eventiq Publish] RSVP data unavailable",reason);
+    if(active){setSummary(null);setReplies([]);}
+   }
+  })();
   return()=>{active=false;};
  },[client,projectId]);
  const base=(process.env.NEXT_PUBLIC_SITE_URL|| (typeof window==="undefined"?"":window.location.origin)).replace(/\/$/,"");
@@ -67,6 +100,7 @@ export function StudioPublishPanel({document,settings,locale,onClose}:{
    setLatestRevision(remote.latestRevision);pending.current=null;
    setMessage("Релиз "+saved.latestRelease+" опубликован.");
   }catch(e){
+   console.error("[Eventiq Publish] Publish request failed",e);
    setError(e instanceof RemoteRequestError&&e.status===403?
     "Для публикации требуется роль ADMIN или OWNER.":e instanceof RemoteRequestError&&e.status===409?
     "Адрес занят или релиз изменился. Закройте панель и откройте снова.":
