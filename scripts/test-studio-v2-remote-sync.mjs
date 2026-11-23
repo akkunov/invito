@@ -62,4 +62,22 @@ const denied = await noToken.sync(id, 1, doc);
 assert.equal(denied.kind, "rejected");
 assert.equal(denied.reason, "auth");
 await assert.rejects(() => noToken.getProject(id), error => error instanceof RemoteRequestError && error.status === 401);
+const unpublishedClient = createStudioRemoteClient({
+  apiBaseUrl: "https://api.invito.test/api/v1", workspaceId,
+  accessToken: async () => "temporary-JWT",
+  fetcher: async () => new Response(null, {status: 200}),
+});
+assert.equal(await unpublishedClient.getPublication(id), null);
+
+const publishedClient = createStudioRemoteClient({
+  apiBaseUrl: "https://api.invito.test/api/v1", workspaceId,
+  accessToken: async () => "temporary-JWT",
+  fetcher: async () => Response.json({
+    id: "00000000-0000-4000-8000-000000000003",
+    slug: "my-invitation", status: "ACTIVE", latestRelease: 1,
+  }),
+});
+assert.equal((await publishedClient.getPublication(id))?.slug, "my-invitation");
+await assert.rejects(() => unpublishedClient.getProject(id), SyntaxError);
+console.log("Studio publication transport: empty and populated responses passed");
 console.log("Studio remote sync transport: success, conflict, offline and denied paths passed");
