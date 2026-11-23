@@ -9,6 +9,7 @@ import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/pu
 import {templatePackageSchema} from "./modules/documents/template-package.js";
 import {catalogPublishSchema} from "./modules/catalog/catalog.controller.js";
 import {createCustomerInvitationSchema,updateCustomerInvitationSchema,customerPhotoSchema} from "./modules/customer-invitations/customer-invitations.controller.js";
+import {publishCustomerSchema,unpublishCustomerSchema} from "./modules/customer-invitations/customer-publication.controller.js";
 
 /**
  * eventiq API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
@@ -129,6 +130,18 @@ const endpoints: Endpoint[] = [
     summary:"Проверить и завершить загрузку фотографии",errors:[400,401,404,409,422,503]},
   {method:"get",path:"/api/v1/customer/media/{id}/read-url",tag:"Customer Invitations",
     summary:"Получить временный URL своей фотографии",errors:[400,401,404,503]},
+  {method:"get",path:"/api/v1/customer/invitations/{id}/publication",tag:"Customer Invitations",
+    summary:"Моя публикация",description:"Текущий статус публикации собственного черновика; null, если ещё не опубликован.",errors:[400,401,404]},
+  {method:"post",path:"/api/v1/customer/invitations/{id}/publish",tag:"Customer Invitations",
+    summary:"Создать неизменяемый клиентский релиз",description:"Проверяет владельца, expectedRevision, expectedRelease, контракт и media ownership. Slug фиксирован после первого релиза.",
+    requestBody:body(schema(publishCustomerSchema)),errors:[400,401,404,409,422,503]},
+  {method:"post",path:"/api/v1/customer/invitations/{id}/unpublish",tag:"Customer Invitations",
+    summary:"Снять личное приглашение с публикации",
+    requestBody:body(schema(unpublishCustomerSchema)),errors:[400,401,404,409]},
+  {method:"get",path:"/api/v1/public/customer-invitations/{slug}",tag:"Customer Invitations",
+    summary:"Публичная страница гостевого приглашения",public:true,
+    description:"Анонимный доступ только к ACTIVE неизменяемому релизу. RSVP пока не поддерживается для личных релизов.",
+    errors:[400,404,503]},
   {method:"get",path:"/api/v1/templates/{id}",tag:"Templates",summary:"Получить шаблон",
     description:"Возвращает доступный шаблон с метаданными и версией.",errors:[401,404]},
   {method:"get",path:"/api/v1/templates/{id}/versions/{number}",tag:"Templates",summary:"Получить версию шаблона",
