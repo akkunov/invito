@@ -38,6 +38,7 @@
     "test:studio-v2-professional-print": "node --experimental-strip-types scripts/test-studio-v2-professional-print.mjs",
     "test:studio-v2-personalization": "node --experimental-strip-types scripts/test-studio-v2-personalization.mjs",
     "test:editorial-ivory": "node --experimental-strip-types --test scripts/test-editorial-ivory-package.mjs",
+    "test:mobile-editor-v3": "node --experimental-strip-types --test scripts/test-mobile-editor-v3.mjs",
     "test:studio-v2-stress-core": "node --experimental-strip-types scripts/test-studio-v2-stress-core.mjs",
     "test:studio-v2-stress-browser": "node --experimental-strip-types scripts/test-studio-v2-stress-browser.mjs",
     "test:customer-editor-browser": "node scripts/test-customer-editor-browser.mjs",
