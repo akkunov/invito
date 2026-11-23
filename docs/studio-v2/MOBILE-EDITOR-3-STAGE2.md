@@ -117,3 +117,31 @@ designer-owned pages and free styling of any text, plus QR code
 generation. These are **not** authorized by the current customer
 PersonalizationContract and would require a distinct versioned
 capability (and safety/UX requirements), not a DOM-only imitation.
+
+
+## Additional verified-by-code capabilities
+
+The v3 package additionally opts in to `textStyle` personalization
+for the names on the cover only. Supported changes are specifically
+allowlisted serif/sans fonts, weights (400–700 from an enumerated
+set), font size 36–58px, four approved hex colors, and alignment.
+The existing `PersonalizationPatch.values` union handles it;
+unapproved fonts, colors or sizes are rejected before draft persistence.
+The authored layout, positioning, text content and other nodes remain
+protected. For the selected name node, the bottom sheet offers content
+and style tabs.
+
+The R2 photo control now displays upload phases (checking, signing,
+uploading, verifying), checks image dimensions before uploading, and
+blocks additional gallery upload when its author-configured max-photo
+capacity is reached. These statuses indicate progress **stages**, not
+a measured percent transfer.
+
+No licensed audio file is bundled with Editorial Ivory; hence its music
+tool honestly says the template does not offer music selection yet.
+Similarly, old locally stored templates cannot publish through the
+new customer publication API until versioned as server templates.
+
+Do not confuse the **UI design reference image** with a code screenshot:
+the repository changes implement the layout and authorized controls but
+have not been visually compared in a running mobile browser in this chat.
