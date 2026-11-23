@@ -4,6 +4,7 @@ import {fileURLToPath} from "node:url";
 import {test} from "node:test";
 import {personalizeDocument} from "../src/features/studio-v2/core/personalization.ts";
 import {personalizationPatchSchema} from "../src/features/studio-v2/core/personalization.schema.ts";
+import {resolveStyleDocument} from "../src/features/studio-v2/core/style-tokens.ts";
 
 const read=(version)=>JSON.parse(readFileSync(
   fileURLToPath(new URL("../templates/packages/editorial-ivory."+version+".json",import.meta.url)),"utf8"));
@@ -41,5 +42,19 @@ test("v2 template cannot accept section modifications it never permitted",()=>{
   const original=read("v2");
   assert.throws(()=>personalizeDocument(original.document,original.personalization,{
     values:{},sections:{order:original.document.pages.map(p=>p.id),hidden:["letter"]},
+  }));
+});
+
+test("approved color themes render actual paper and ink changes without geometry edits",()=>{
+  const document=personalizeDocument(source.document,source.personalization,{
+    values:{colorTheme:{kind:"theme",themeId:"themeBlush"}},
+  });
+  assert.equal(document.activeThemeId,"themeBlush");
+  const resolved=resolveStyleDocument(document);
+  assert.equal(resolved.nodes.coverRoot.visual.fill.color,"#FDF5F1");
+  assert.equal(resolved.nodes.coverNames.runs[0].style.color,"#49393B");
+  assert.equal(resolved.nodes.coverNames.width,source.document.nodes.coverNames.width);
+  assert.throws(()=>personalizeDocument(source.document,source.personalization,{
+    values:{colorTheme:{kind:"theme",themeId:"notApproved"}},
   }));
 });
