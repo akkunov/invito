@@ -327,7 +327,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 1.5,
-        "bindingKey": null,
+        "bindingKey": "copy_coverInvitation",
         "autoHeight": false
       },
       "coverImage": {
@@ -394,7 +394,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 1.4,
-        "bindingKey": null,
+        "bindingKey": "ceremonyDate",
         "autoHeight": false
       },
       "coverFooter": {
@@ -427,7 +427,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 1.5,
-        "bindingKey": null,
+        "bindingKey": "copy_coverFooter",
         "autoHeight": false
       },
       "letterRoot": {
@@ -542,7 +542,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 0,
-        "bindingKey": null,
+        "bindingKey": "copy_letterHeading",
         "autoHeight": false
       },
       "letterBody": {
@@ -668,7 +668,8 @@
           "detailsVenueLabel",
           "detailsVenueName",
           "detailsAddress",
-          "locationWidget"
+          "locationWidget",
+          "detailsTime"
         ],
         "layout": "free",
         "gap": 0,
@@ -744,7 +745,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 0,
-        "bindingKey": null,
+        "bindingKey": "copy_detailsHeading",
         "autoHeight": false
       },
       "detailsRule": {
@@ -794,7 +795,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 2,
-        "bindingKey": null,
+        "bindingKey": "copy_detailsDateLabel",
         "autoHeight": false
       },
       "detailsDate": {
@@ -906,7 +907,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 2,
-        "bindingKey": null,
+        "bindingKey": "copy_detailsVenueLabel",
         "autoHeight": false
       },
       "detailsVenueName": {
@@ -1101,7 +1102,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 0,
-        "bindingKey": null,
+        "bindingKey": "copy_programHeading",
         "autoHeight": false
       },
       "programRule": {
@@ -1304,7 +1305,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 0,
-        "bindingKey": null,
+        "bindingKey": "copy_galleryHeading",
         "autoHeight": false
       },
       "galleryHero": {
@@ -1451,7 +1452,7 @@
         "textAlign": "center",
         "lineHeight": 1.22,
         "letterSpacing": 0,
-        "bindingKey": null,
+        "bindingKey": "copy_rsvpHeading",
         "autoHeight": false
       },
       "rsvpNote": {
@@ -1484,7 +1485,7 @@
         "textAlign": "center",
         "lineHeight": 1.38,
         "letterSpacing": 0,
-        "bindingKey": null,
+        "bindingKey": "copy_rsvpNote",
         "autoHeight": false
       },
       "rsvpWidget": {
@@ -1565,6 +1566,39 @@
         "letterSpacing": 2,
         "bindingKey": null,
         "autoHeight": false
+      },
+      "detailsTime": {
+        "id": "detailsTime",
+        "type": "text",
+        "parentId": "detailsRoot",
+        "x": 30,
+        "y": 362,
+        "width": 330,
+        "height": 27,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "layerName": "detailsTime",
+        "runs": [
+          {
+            "text": "17:00",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 15,
+              "fontWeight": 450,
+              "italic": false,
+              "underline": false,
+              "strike": false,
+              "color": "#767263"
+            }
+          }
+        ],
+        "textAlign": "center",
+        "lineHeight": 1.2,
+        "letterSpacing": 1.2,
+        "bindingKey": "eventTime",
+        "autoHeight": false
       }
     },
     "assets": {
@@ -1638,6 +1672,83 @@
           "ru": "Финальная подпись",
           "ky": "Акыркы сөз"
         }
+      },
+      "copy_coverInvitation": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст coverInvitation",
+          "ky": "Туруктуу текст coverInvitation"
+        }
+      },
+      "copy_coverFooter": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст coverFooter",
+          "ky": "Туруктуу текст coverFooter"
+        }
+      },
+      "copy_letterHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст letterHeading",
+          "ky": "Туруктуу текст letterHeading"
+        }
+      },
+      "copy_detailsHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст detailsHeading",
+          "ky": "Туруктуу текст detailsHeading"
+        }
+      },
+      "copy_detailsDateLabel": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст detailsDateLabel",
+          "ky": "Туруктуу текст detailsDateLabel"
+        }
+      },
+      "copy_detailsVenueLabel": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст detailsVenueLabel",
+          "ky": "Туруктуу текст detailsVenueLabel"
+        }
+      },
+      "copy_galleryHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст galleryHeading",
+          "ky": "Туруктуу текст galleryHeading"
+        }
+      },
+      "copy_programHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст programHeading",
+          "ky": "Туруктуу текст programHeading"
+        }
+      },
+      "copy_rsvpHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст rsvpHeading",
+          "ky": "Туруктуу текст rsvpHeading"
+        }
+      },
+      "copy_rsvpNote": {
+        "type": "text",
+        "label": {
+          "ru": "Статичный текст rsvpNote",
+          "ky": "Туруктуу текст rsvpNote"
+        }
+      },
+      "eventTime": {
+        "type": "text",
+        "label": {
+          "ru": "Время начала",
+          "ky": "Башталыш убактысы"
+        }
       }
     },
     "values": {
@@ -1678,6 +1789,83 @@
         "value": {
           "ru": "С любовью и благодарностью",
           "ky": "Сүйүү жана ыраазычылык менен"
+        }
+      },
+      "copy_coverInvitation": {
+        "type": "text",
+        "value": {
+          "ru": "ПРИГЛАШЕНИЕ НА СВАДЬБУ",
+          "ky": "ҮЙЛӨНҮҮ ТОЮНА ЧАКЫРУУ"
+        }
+      },
+      "copy_coverFooter": {
+        "type": "text",
+        "value": {
+          "ru": "БИШКЕК  •  КЫРГЫЗСТАН",
+          "ky": "БИШКЕК  •  КЫРГЫЗСТАН"
+        }
+      },
+      "copy_letterHeading": {
+        "type": "text",
+        "value": {
+          "ru": "Дорогие друзья",
+          "ky": "Урматтуу достор"
+        }
+      },
+      "copy_detailsHeading": {
+        "type": "text",
+        "value": {
+          "ru": "Когда и где",
+          "ky": "Качан жана кайда"
+        }
+      },
+      "copy_detailsDateLabel": {
+        "type": "text",
+        "value": {
+          "ru": "ДАТА И ВРЕМЯ",
+          "ky": "КҮНҮ ЖАНА УБАКТЫСЫ"
+        }
+      },
+      "copy_detailsVenueLabel": {
+        "type": "text",
+        "value": {
+          "ru": "МЕСТО ТОРЖЕСТВА",
+          "ky": "ТОЙ ӨТҮҮЧҮ ЖЕР"
+        }
+      },
+      "copy_galleryHeading": {
+        "type": "text",
+        "value": {
+          "ru": "Моменты любви",
+          "ky": "Сүйүү көз ирмемдери"
+        }
+      },
+      "copy_programHeading": {
+        "type": "text",
+        "value": {
+          "ru": "Наш день",
+          "ky": "Биздин күн"
+        }
+      },
+      "copy_rsvpHeading": {
+        "type": "text",
+        "value": {
+          "ru": "Будете с нами?",
+          "ky": "Биз менен болосузбу?"
+        }
+      },
+      "copy_rsvpNote": {
+        "type": "text",
+        "value": {
+          "ru": "Пожалуйста, подтвердите ваше присутствие до 1 июня",
+          "ky": "1-июнга чейин келериңизди ырастаңыз"
+        }
+      },
+      "eventTime": {
+        "type": "text",
+        "value": {
+          "ru": "17:00",
+          "ky": "17:00"
         }
       }
     }
@@ -1826,6 +2014,19 @@
         "section": "rsvp",
         "required": true,
         "maxGuests": 6
+      },
+      {
+        "id": "eventTime",
+        "kind": "text",
+        "key": "eventTime",
+        "label": {
+          "ru": "Время начала",
+          "ky": "Башталыш убактысы"
+        },
+        "section": "date",
+        "required": true,
+        "maxLength": 5,
+        "multiline": false
       }
     ]
   }
