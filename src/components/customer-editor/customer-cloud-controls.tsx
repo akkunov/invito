@@ -10,7 +10,6 @@ import {
   uploadCustomerPhoto,type VerifiedCustomerAsset,type CustomerDraftListItem,
 } from "@/features/invitations/customer-cloud";
 import type {PersonalizationPatch} from "@/features/studio-v2/core/personalization.schema";
-import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import type {Locale} from "@/i18n/locales";
 
 type Props={
@@ -131,6 +130,9 @@ export function CustomerCloudControls({
 
   async function load(){
     if(!userId||!personalKey||loading)return;
+    if(Object.keys(patch.values).length&& !window.confirm(ru?
+      "Заменить локальные изменения облачной версией? Несохранённые правки на устройстве будут потеряны.":
+      "Жергиликтүү өзгөртүүлөр булуттагы версия менен алмаштырылсынбы? Сакталбаган өзгөртүүлөр жоголот."))return;
     setLoading(true);setInfo("");
     try{
       const id=cloudId||window.localStorage.getItem(personalKey);
