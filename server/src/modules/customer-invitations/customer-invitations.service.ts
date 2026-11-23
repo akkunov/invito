@@ -9,7 +9,6 @@ import {personalizeDocument} from "../../../../src/features/studio-v2/core/perso
 import type {ProjectDocumentV2} from "../../../../src/features/studio-v2/core/document.schema.js";
 
 const json=(value:unknown)=>value as Prisma.InputJsonValue;
-const mediaId=/^asset:([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i;
 const mappedId=(id:string)=>"customer_"+id.replace(/-/g,"");
 const EMPTY_PATCH:PersonalizationPatch={values:{}};
 
@@ -80,26 +79,6 @@ export class CustomerInvitationsService {
     }
     return [...ids];
   }
-
-  private async checkedAssets(userId:string,workspaceId:string,source:ProjectDocumentV2,patch:PersonalizationPatch){
-    const ids=this.customerIds(patch,source);
-    const rows=ids.length?await this.db.mediaAsset.findMany({
-      where:{id:{in:ids},workspaceId,uploadedById:userId,status:"READY",mimeType:{in:["image/jpeg","image/png","image/webp"]}},
-      select:{id:true,storageKey:true,name:true,mimeType:true,bytes:true,width:true,height:true},
-    }):[];
-    if(rows.length!==ids.length)throw new UnprocessableEntityException("CUSTOMER_MEDIA_NOT_READY_OR_NOT_OWNED");
-    const assets=rows.map(a=>({
-      id:mappedId(a.id),storageKey:"asset:"+a.id,name:a.name,mimeType:a.mimeType as "image/png"|"image/jpeg"|"image/webp",
-      sizeBytes:Number(a.bytes),pixelWidth:a.width??undefined,pixelHeight:a.height??undefined,
-    }));
-    for(const a of assets)if(!a.pixelWidth||!a.pixelHeight)throw new UnprocessableEntityException("INVALID_IMAGE_DIMENSIONS");
-    // The asset descriptors have just been loaded from the DB and checked against userId.
-    personalizeDocument(source,this.currentContract!,patch,assets,true);
-    return {assets,rows};
-  }
-
-  // The contract is passed explicitly: never use shared mutable service state.
-  private currentContract:null=null;
 
   private async checkPatch(userId:string,workspaceId:string,template:Awaited<ReturnType<CustomerInvitationsService["template"]>>,raw:unknown){
     const patch=personalizationPatchSchema.parse(raw);
