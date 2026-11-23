@@ -104,3 +104,28 @@ Global scrollbar tokens live in globals.css and cover editor and iframe document
 - Do not change invitation art direction through public shell selectors.
 - Verify rendered layouts when an accessible preview is available. Source checks alone
   do not establish visual fidelity or runtime accessibility.
+
+
+## Eventiq Mobile Customer Editor 3.0 (product surface)
+
+The customer editor has **independent product chrome** from the public
+blue-grey gallery. Its canonical runtime owner is
+`src/components/customer-editor/customer-mobile-editor.css`, and
+the accepted mobile controls use the existing variables
+`--ce-ink`, `--ce-muted`, `--ce-border`, and `--ce-orange`.
+Do not import `--ed-*` gallery tokens into invitation artwork.
+
+At phone widths (<=850px), design around a single, fully visible
+invitation page; minimal top header, section-chip navigation, touch
+selection, and a safe-area-aware bottom action dock. Editing controls
+open in the bottom sheet and use `SimpleField` rather than a new
+parallel form. The signature is **an actual invitation as the canvas**,
+not a thumbnail beside a long form. Restrict selection to
+designer-authorized personalization targets.
+
+The artwork is controlled by the versioned template's own tokens and
+may be ivory, national Kyrgyz or modern editorial; do not globally
+restyle it with product UI CSS. The editor interface uses upright
+readable UI type. Preserve native field hit targets, visible focus,
+RU/KY labels and reduced-motion behavior. Desktop remains on its
+existing two-column layout until a separately approved iteration.
