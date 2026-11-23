@@ -7,6 +7,7 @@ import {startUploadInput} from "./modules/media/media.controller.js";
 import {createTemplateInput, createVersionInput, createProjectInput, createRevisionInput} from "./modules/documents/documents-input.js";
 import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/publications/publications-input.js";
 import {templatePackageSchema} from "./modules/documents/template-package.js";
+import {catalogPublishSchema} from "./modules/catalog/catalog.controller.js";
 
 /**
  * eventiq API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
@@ -28,6 +29,7 @@ const pathParams: Record<string, Record<string, unknown>> = {
   projectId: {type: "string", format: "uuid", description: "Идентификатор проекта (UUID)"},
   id: {type: "string", format: "uuid", description: "Идентификатор ресурса (UUID)"},
   number: {type: "integer", minimum: 1, description: "Положительный номер версии / ревизии"},
+  templateId: {type: "string", format:"uuid"},
   slug: {type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", minLength: 3, maxLength: 80,
     description: "Публичный URL-slug"},
 };
@@ -93,6 +95,21 @@ const endpoints: Endpoint[] = [
     requestBody:body(schema(templatePackageSchema)),
     responseSchema:object({id:uuid,workspaceId:uuid,slug:str,name:str,latestVersion:positive},["id","workspaceId","slug","name","latestVersion"]),
     errors:[400,401,403,404,409,422]},
+  {method:"get",path:"/api/v1/catalog/templates",tag:"Catalog",summary:"Опубликованные шаблоны",
+    description:"Публичный постраничный каталог. Только PUBLISHED. Без приватных документов и информации Workspace.",
+    public:true,parameters:[
+      {name:"category",in:"query",required:false,schema:{type:"string",enum:["WEDDING","KYZ_UZATUU","BIRTHDAY","ANNIVERSARY","CORPORATE","OTHER"]}},
+      {name:"search",in:"query",required:false,schema:{type:"string",maxLength:100}},
+      {name:"page",in:"query",required:false,schema:{type:"integer",minimum:1,maximum:10000}},
+      {name:"limit",in:"query",required:false,schema:{type:"integer",minimum:1,maximum:48}},
+    ],errors:[400,503]},
+  {method:"get",path:"/api/v1/catalog/templates/{slug}",tag:"Catalog",summary:"Данные опубликованного шаблона",
+    description:"Неизменяемая версия Studio v2 и разрешённые клиенту поля. Медиа представлены временными подписанными R2-ссылками, которые нельзя кешировать надолго.",
+    public:true,errors:[400,404,503]},
+  {method:"post",path:"/api/v1/workspaces/{workspaceId}/templates/{templateId}/publish",tag:"Catalog",
+    summary:"Разместить шаблон в каталоге",
+    description:"Только Workspace ADMIN/OWNER. Проверяет контракт персонализации, cover page и READY R2-медиа. Публикация шаблона не даёт клиенту админские права.",
+    requestBody:body(schema(catalogPublishSchema)),errors:[400,401,403,404,409,422]},
   {method:"get",path:"/api/v1/templates/{id}",tag:"Templates",summary:"Получить шаблон",
     description:"Возвращает доступный шаблон с метаданными и версией.",errors:[401,404]},
   {method:"get",path:"/api/v1/templates/{id}/versions/{number}",tag:"Templates",summary:"Получить версию шаблона",
@@ -227,6 +244,7 @@ export function setupOpenApi(app: INestApplication): void {
     .addTag("Identity","OIDC-пользователь")
     .addTag("Workspaces","Мультиарендность, членство, роли")
     .addTag("Templates","Шаблоны и неизменяемые версии")
+    .addTag("Catalog","Публичный каталог шаблонов")
     .addTag("Projects","Документы и ревизии Studio v2")
     .addTag("Media","Приватное R2-хранилище")
     .addTag("Publications","Публикации и релизы")
