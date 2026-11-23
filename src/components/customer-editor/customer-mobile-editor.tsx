@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save,X,Type,Image as ImageIcon,Layers,CalendarDays,Send,ChevronUp} from "lucide-react";
+import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save,X,Type,Image as ImageIcon,Layers,CalendarDays,Send} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
   finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,
@@ -226,7 +226,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const forward=()=>{
     if(step!=="publish"){
-      setStep(steps[currentIndex+1]);setMode("edit");window.scrollTo({top:0,behavior:"auto"});
+      setStep(steps[currentIndex+1]);setSelectedFieldId(null);setMode("edit");if(!mobileSheetOpen)window.scrollTo({top:0,behavior:"auto"});
       return;
     }
     setReview(true);
