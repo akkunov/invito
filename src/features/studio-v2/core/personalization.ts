@@ -102,6 +102,8 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
    if(node.type!=="text")invalid("Invalid text style target");
    node.runs=node.runs.map(run=>({...run,style:{...run.style,fontFamily:v.fontFamily,fontSize:v.fontSize,fontWeight:v.fontWeight,color:v.color,italic:false}}));
    node.textAlign=v.textAlign;
+   // Explicit per-text color permission outranks the template theme token for this node only.
+   if(node.tokenRefs)delete node.tokenRefs.textColor;
    continue;
   }
   if(!("nodeId" in f))return invalid("Invalid target");
