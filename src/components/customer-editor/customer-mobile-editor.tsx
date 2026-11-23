@@ -188,7 +188,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
       return;
     }
     setReview(true);
-    try{finalizePersonalization(source,contract,patch,customerAssets);setWarning("");}
+    try{finalizePersonalization(source,contract,patch,customerAssets,true);setWarning("");}
     catch{setWarning(t.required);}
   };
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
