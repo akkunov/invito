@@ -78,6 +78,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>("main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
+  const [isMobileViewport,setIsMobileViewport]=useState(false);
   const [mobileSheetOpen,setMobileSheetOpen]=useState(false);
   const [selectedFieldId,setSelectedFieldId]=useState<string|null>(null);
   const [activeMobilePage,setActiveMobilePage]=useState(0);
@@ -91,6 +92,13 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const [customerUrls,setCustomerUrls]=useState<Record<string,string>>({});
   const [templateUrls,setTemplateUrls]=useState(mediaUrls);
   const cacheKey=draftStorageKey(versionId);
+
+  useEffect(()=>{
+    const media=window.matchMedia("(max-width: 850px)");
+    const sync=()=>setIsMobileViewport(media.matches);
+    sync();media.addEventListener("change",sync);
+    return()=>media.removeEventListener("change",sync);
+  },[]);
 
   useEffect(()=>{
     try {
@@ -247,7 +255,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const preview=<StudioV2ProjectRenderer
     key={previewRun} document={document} mediaUrls={mergedUrls}
-    device="mobile" guest={{mode:"preview"}}/>;
+    device="mobile" pageFilter={isMobileViewport?source.pages[activeMobilePage]?.id:undefined}
+    guest={{mode:"preview"}}/>;
 
   return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>
     <header className="ce-header">
