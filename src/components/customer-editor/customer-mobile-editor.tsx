@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save} from "lucide-react";
+import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save,X,Type,Image as ImageIcon,Layers,CalendarDays,Send,ChevronUp} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
   finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,
@@ -16,6 +16,7 @@ import {SimpleField} from "@/components/studio-v2/studio-v2-simple-fields";
 import type {Locale} from "@/i18n/locales";
 import {CustomerCloudControls} from "./customer-cloud-controls";
 import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
+import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
 import "./customer-mobile-editor.css";
 
 type Step="main"|"event"|"appearance"|"publish";
@@ -41,6 +42,7 @@ const dictionary={
     original:"Дизайн защищён. Можно изменить только разрешённые автором данные.",
     noPublish:"После публикации вы получите ссылку, которой можно поделиться с гостями.",
     filled:"Готово",of:"из",sections:"Секции",photos:"Фотографии",publishAction:"Опубликовать",editorTip:"Изменения сразу появятся в предпросмотре.",
+    mobileHint:"Нажмите на текст или фото, чтобы изменить",mobileEdit:"Редактировать",mobileClose:"Закрыть настройки",mobilePage:"Страница",mobileSelection:"Настройки элемента",mobileCheck:"Проверка и публикация",mobileEvent:"Дата и программа",mobileDesign:"Фото и оформление",
   },
   ky:{
     main:"Негизги маалымат",event:"Күнү жана жери",appearance:"Жасалгалоо",publish:"Текшерүү",
@@ -58,6 +60,7 @@ const dictionary={
     original:"Дизайн корголгон. Автор уруксат берген маалымат гана өзгөрөт.",
     noPublish:"Жарыялагандан кийин конокторго жибере турган шилтеме аласыз.",
     filled:"Даяр",of:"ичинен",sections:"Бөлүмдөр",photos:"Сүрөттөр",publishAction:"Жарыялоо",editorTip:"Өзгөртүүлөр алдын ала көрүүдө дароо көрсөтүлөт.",
+    mobileHint:"Өзгөртүү үчүн текстти же сүрөттү басыңыз",mobileEdit:"Өзгөртүү",mobileClose:"Жөндөөлөрдү жабуу",mobilePage:"Барак",mobileSelection:"Элементтин жөндөөлөрү",mobileCheck:"Текшерүү жана жарыялоо",mobileEvent:"Күнү жана программа",mobileDesign:"Сүрөттөр жана жасалгалоо",
   },
 } as const;
 
@@ -75,6 +78,9 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>("main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
+  const [mobileSheetOpen,setMobileSheetOpen]=useState(false);
+  const [selectedFieldId,setSelectedFieldId]=useState<string|null>(null);
+  const [activeMobilePage,setActiveMobilePage]=useState(0);
   const [patch,setPatch]=useState<PersonalizationPatch>(()=>initialPatch(source,contract));
   const [hydrated,setHydrated]=useState(false);
   const [warning,setWarning]=useState("");
@@ -172,6 +178,36 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const filledCount=contract.fields.length-issues.length;
   const completion=contract.fields.length?Math.max(0,Math.round(filledCount/contract.fields.length*100)):100;
   const fields=grouped[step];
+  const displayedFields=selectedFieldId?fields.filter(field=>field.id===selectedFieldId):fields;
+  const openMobileStep=(next:Step,fieldId:string|null=null)=>{
+    setStep(next);setSelectedFieldId(fieldId);setMode("edit");setMobileSheetOpen(true);
+  };
+  const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);};
+  useEffect(()=>{
+    if(!mobileSheetOpen)return;
+    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape")closeMobileSheet();};
+    window.addEventListener("keydown",onKey);
+    return()=>window.removeEventListener("keydown",onKey);
+  },[mobileSheetOpen]);
+  const selectCanvasField=(event:React.MouseEvent<HTMLDivElement>)=>{
+    if(!window.matchMedia("(max-width: 850px)").matches)return;
+    const target=event.target;
+    if(!(target instanceof Element))return;
+    const root=event.currentTarget;
+    let el:Element|null=target;
+    while(el&&root.contains(el)){
+      const nodeId=el.getAttribute("data-studio-node");
+      if(nodeId){
+        const field=editableFieldForNode(document,contract.fields,nodeId);
+        if(field){
+          event.preventDefault();event.stopPropagation();
+          openMobileStep(sectionToStep[field.section],field.id);
+          return;
+        }
+      }
+      el=el.parentElement;
+    }
+  };
   const update=(id:string,value:PersonalizedValue)=>{
     const candidate={...patch,values:{...patch.values,[id]:value}};
     try{personalizeDocument(source,contract,candidate,customerAssets,true);setPatch(candidate);setWarning("");setReview(false);}
@@ -186,7 +222,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const reset=()=>{
     if(!window.confirm(t.resetConfirm))return;
-    setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");
+    setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);
   };
   const forward=()=>{
     if(step!=="publish"){
@@ -200,6 +236,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
   const hasFields=contract.fields.length>0;
   const jumpPreview=(pageId:string)=>{
+    const pageIndex=source.pages.findIndex(page=>page.id===pageId);
+    if(pageIndex>=0)setActiveMobilePage(pageIndex);
     setMode("preview");
     window.requestAnimationFrame(()=>{
       const section=Array.from(window.document.querySelectorAll<HTMLElement>("[data-preview-page]"))
@@ -211,7 +249,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     key={previewRun} document={document} mediaUrls={mergedUrls}
     device="mobile" guest={{mode:"preview"}}/>;
 
-  return <main className="ce-shell">
+  return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>
     <header className="ce-header">
       <Link aria-label={t.back} href={`/${locale}/catalog/${slug}`} className="ce-icon"><ArrowLeft size={20}/></Link>
       <Link href={`/${locale}`} className="ce-logo">eventiq<span>.</span></Link>
@@ -220,6 +258,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     </header>
     <div className="ce-layout">
       <section className="ce-controls" aria-label={t.title}>
+        <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><span>{selectedFieldId?t.mobileSelection:step==="publish"?t.mobileCheck:t[step]}</span><button type="button" aria-label={t.mobileClose} onClick={closeMobileSheet}><X size={20}/></button></div>
         <div className="ce-intro">
           <p className="ce-eyebrow">{t.template} / {name}</p>
           <h1>{t.title}</h1>
@@ -270,7 +309,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
               <p className="ce-notice">{t.noPublish}</p>
               <button type="button" className="ce-secondary" onClick={()=>{setPreviewRun(n=>n+1);setMode("preview");}}><Eye size={16}/>{t.preview}</button>
             </div>:
-            fields.length?fields.map(field=>
+            displayedFields.length?displayedFields.map(field=>
               <div className={review&&fieldError.has(field.id)?"ce-field-invalid":""} key={field.id}>
                 <SimpleField field={field} value={readPersonalizedValue(document,field)}
                   document={document} locale={locale} locales={contract.locales}
@@ -331,10 +370,18 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           <button className="ce-secondary" aria-label={locale==="ru"?"Перезапустить анимации":"Анимацияны кайра баштоо"} type="button" onClick={()=>setPreviewRun(n=>n+1)}><RotateCcw size={15}/></button>
         </div>
         <nav className="ce-preview-sections" aria-label={t.sections}>
-          {source.pages.map((page,index)=><button key={page.id} type="button" onClick={()=>jumpPreview(page.id)}
+          {source.pages.map((page,index)=><button key={page.id} type="button" aria-current={index===activeMobilePage?"page":undefined} onClick={()=>jumpPreview(page.id)}
             title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
         </nav>
-        <div className="ce-preview-screen">{preview}</div>
+        <div className="ce-preview-screen" onClickCapture={selectCanvasField}>{preview}</div>
+        <div className="ce-mobile-canvas-caption"><span>{t.mobileHint}</span></div>
+        <nav className="ce-mobile-dock" aria-label={t.mobileEdit}>
+          <button type="button" onClick={()=>openMobileStep("main")}><Type size={21}/><span>{t.main}</span></button>
+          <button type="button" onClick={()=>openMobileStep("event")}><CalendarDays size={21}/><span>{t.event}</span></button>
+          <button type="button" onClick={()=>openMobileStep("appearance")}><ImageIcon size={21}/><span>{t.photos}</span></button>
+          <button type="button" onClick={()=>{closeMobileSheet();jumpPreview(source.pages[(activeMobilePage+1)%source.pages.length].id);}}><Layers size={21}/><span>{t.sections}</span></button>
+          <button type="button" className="ce-mobile-dock-publish" onClick={()=>openMobileStep("publish")}><Send size={21}/><span>{t.publishAction}</span></button>
+        </nav>
       </aside>
     </div>
   </main>;
