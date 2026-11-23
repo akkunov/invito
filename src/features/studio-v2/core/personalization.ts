@@ -133,6 +133,7 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
     if(!movable.has(sourceIds[i])&&order[i]!==sourceIds[i])invalid("Section order is locked: "+sourceIds[i]);
   }
   if(hidden.some(id=>!hideable.has(id)))invalid("Section cannot be hidden");
+  if(hidden.length>=sourceIds.length)invalid("At least one section must remain visible");
   const byId=new Map(doc.pages.map(page=>[page.id,page]));
   doc.pages=order.map(id=>byId.get(id)!);
   for(const id of hidden){
