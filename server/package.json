@@ -16,7 +16,8 @@
     "db:migrate:dev": "prisma migrate dev --config prisma.config.ts",
     "db:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
     "db:migrate:status": "prisma migrate status --config prisma.config.ts",
-    "test": "node --import tsx --test test/*.test.ts"
+    "test": "node scripts/run-tests.mjs unit",
+    "test:e2e": "node scripts/run-tests.mjs e2e"
   },
   "dependencies": {
     "@nestjs/common": "^12.1.3",
