@@ -129,7 +129,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
   };
   const forward=()=>{
     if(step!=="publish"){
-      setStep(steps[currentIndex+1]);setMode("edit");window.scrollTo({top:0,behavior:"instant"});
+      setStep(steps[currentIndex+1]);setMode("edit");window.scrollTo({top:0,behavior:"auto"});
       return;
     }
     setReview(true);
@@ -140,7 +140,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
   const hasFields=contract.fields.length>0;
   const preview=<StudioV2ProjectRenderer
     key={previewRun} document={document} mediaUrls={mediaUrls}
-    device="mobile" guest={{mode:"preview"}} motionPlayback={{mode:"paused"}}/>;
+    device="mobile" guest={{mode:"preview"}}/>;
 
   return <main className="ce-shell">
     <header className="ce-header">
