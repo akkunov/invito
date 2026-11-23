@@ -60,7 +60,7 @@ const dictionary={
 } as const;
 
 type Props={
-  locale:Locale;slug:string;name:string;versionId:string;
+  locale:Locale;slug:string;name:string;versionId:string;preferredDraftId?:string;
   source:ProjectDocumentV2;contract:PersonalizationContract;
   mediaUrls:Record<string,string>;
 };
@@ -69,7 +69,7 @@ const initialPatch=(source:ProjectDocumentV2,contract:PersonalizationContract):P
 });
 const draftStorageKey=(id:string)=>"eventiq:customer-draft:v1:"+id;
 
-export function CustomerMobileEditor({locale,slug,name,versionId,source,contract,mediaUrls}:Props){
+export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftId,source,contract,mediaUrls}:Props){
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>("main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
@@ -259,7 +259,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
               </div>):
               <p className="ce-empty">{hasFields?t.noFields:t.unsupported}</p>}
           {step==="appearance"||step==="publish"?<CustomerCloudControls
-            locale={locale} templateVersionId={versionId} patch={patch}
+            locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
             uploadTargets={step==="appearance"?grouped.appearance.flatMap(f=>
               f.kind==="image"?[{id:f.id,label:f.label[locale],kind:"image" as const,
