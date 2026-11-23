@@ -6,8 +6,10 @@ import {validatedTemplateVersion,assertReadyAssets} from "../server/domain/persi
 import {finalizePersonalization,personalizationIssues} from "../src/features/studio-v2/core/personalization.ts";
 import {bindDocument} from "../src/features/studio-v2/core/invitation-behavior.ts";
 
-const path=fileURLToPath(new URL("../templates/packages/editorial-ivory.v1.json",import.meta.url));
-const packageData=JSON.parse(readFileSync(path,"utf8"));
+const packages=["v1","v2"].map(version=>{
+  const path=fileURLToPath(new URL("../templates/packages/editorial-ivory."+version+".json",import.meta.url));
+  return {version,data:JSON.parse(readFileSync(path,"utf8"))};
+});
 const trustedAssets=new Set([
   "/images/riviera/couple.webp",
   "/images/riviera/fabric-left.webp",
@@ -16,7 +18,8 @@ const trustedAssets=new Set([
   "/images/riviera/villa.webp",
 ]);
 
-test("Editorial Ivory — versioned import envelope and 6 editorial sections",()=>{
+for(const {version,data:packageData} of packages){
+test(`Editorial Ivory ${version} — versioned import envelope and 6 editorial sections",()=>{
   assert.equal(packageData.format,"eventiq-template");
   assert.equal(packageData.version,1);
   assert.equal(packageData.manifest.slug,"editorial-ivory");
@@ -26,7 +29,7 @@ test("Editorial Ivory — versioned import envelope and 6 editorial sections",()
   assert.deepEqual(packageData.personalization.locales,["ru","ky"]);
 });
 
-test("Editorial Ivory — canonical Studio v2 snapshot, allowed fields and trusted media",()=>{
+test(`Editorial Ivory ${version} — canonical Studio v2 snapshot, allowed fields and trusted media",()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);
   assert.ok(contract.fields.length>=10);
@@ -39,7 +42,7 @@ test("Editorial Ivory — canonical Studio v2 snapshot, allowed fields and trust
   assert.ok(Object.values(snapshot.nodes).some(node=>node.type==="widget"&&node.block.kind==="location"));
 });
 
-test("Editorial Ivory — publishing validates initial personalization and RU/KY variants",()=>{
+test(`Editorial Ivory ${version} — publishing validates initial personalization and RU/KY variants",()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);
   assert.equal(finalizePersonalization(snapshot,contract,{values:{}}).locale,"ru");
@@ -49,10 +52,12 @@ test("Editorial Ivory — publishing validates initial personalization and RU/KY
   assert.equal(bound.nodes.rsvpHeading.runs[0].text,"Биз менен болосузбу?");
 });
 
-test("Editorial Ivory — only approved guest fields can change",()=>{
+test(`Editorial Ivory ${version} — only approved guest fields can change",()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);
   assert.throws(()=>finalizePersonalization(snapshot,contract,{
     values:{unapprovedGeometry:{kind:"binding",value:{type:"number",value:5}}},
   }));
 });
+
+}
