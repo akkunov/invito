@@ -15,7 +15,7 @@ import {StudioV2ProjectRenderer} from "@/components/studio-v2/studio-v2-project-
 import {SimpleField} from "@/components/studio-v2/studio-v2-simple-fields";
 import type {Locale} from "@/i18n/locales";
 import {CustomerCloudControls} from "./customer-cloud-controls";
-import type {VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
+import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import "./customer-mobile-editor.css";
 
 type Step="main"|"event"|"appearance"|"publish";
@@ -79,6 +79,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
   const [previewRun,setPreviewRun]=useState(0);
   const [customerAssets,setCustomerAssets]=useState<VerifiedCustomerAsset[]>([]);
   const [customerUrls,setCustomerUrls]=useState<Record<string,string>>({});
+  const [templateUrls,setTemplateUrls]=useState(mediaUrls);
   const cacheKey=draftStorageKey(versionId);
 
   useEffect(()=>{
@@ -113,8 +114,51 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
     }catch{setWarning(dictionary[locale].storageError);}
   },[cacheKey,patch,customerAssets,hydrated,locale]);
 
+  useEffect(()=>{
+    // R2 read capabilities expire quickly. Refresh only trusted signed URLs;
+    // do not replace the version-pinned source document while the user edits.
+    const api=process.env.NEXT_PUBLIC_API_URL;
+    if(!api)return;
+    let active=true;
+    const refresh=async()=>{
+      try{
+        const response=await fetch(api.replace(/\\/$/,"")+"/catalog/templates/"+encodeURIComponent(slug),{cache:"no-store"});
+        if(!response.ok)return;
+        const data=await response.json() as {templateVersionId?:string;mediaUrls?:Record<string,string>};
+        if(!active||data.templateVersionId!==versionId||!data.mediaUrls)return;
+        const valid=Object.values(data.mediaUrls).every(raw=>{
+          const url=new URL(raw);
+          return url.protocol==="https:"&&url.hostname.endsWith(".r2.cloudflarestorage.com");
+        });
+        if(valid)setTemplateUrls(data.mediaUrls);
+      }catch{}
+    };
+    const timer=window.setInterval(()=>void refresh(),45_000);
+    return()=>{active=false;window.clearInterval(timer);};
+  },[slug,versionId]);
+
+  useEffect(()=>{
+    if(!customerAssets.length)return;
+    let active=true;
+    const refresh=async()=>{
+      try{
+        const entries=await Promise.all(customerAssets.map(async asset=>{
+          const id=asset.storageKey.slice("asset:".length);
+          const data=await customerApi<{url:string;expiresInSeconds:number}>(
+            "/customer/media/"+encodeURIComponent(id)+"/read-url");
+          const url=new URL(data.url);
+          if(url.protocol!=="https:"||!url.hostname.endsWith(".r2.cloudflarestorage.com"))throw Error("INVALID_URL");
+          return [asset.storageKey,data.url] as const;
+        }));
+        if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries)}));
+      }catch{}
+    };
+    const timer=window.setInterval(()=>void refresh(),45_000);
+    return()=>{active=false;window.clearInterval(timer);};
+  },[customerAssets]);
+
   const document=useMemo(()=>personalizeDocument(source,contract,patch,customerAssets,true),[source,contract,patch,customerAssets]);
-  const mergedUrls=useMemo(()=>({...mediaUrls,...customerUrls}),[mediaUrls,customerUrls]);
+  const mergedUrls=useMemo(()=>({...templateUrls,...customerUrls}),[templateUrls,customerUrls]);
   const issues=useMemo(()=>personalizationIssues(document,contract),[document,contract]);
   const grouped=useMemo(()=>contract.fields.reduce<Record<Step,EditableField[]>>((acc,field)=>{
     acc[sectionToStep[field.section]].push(field);
