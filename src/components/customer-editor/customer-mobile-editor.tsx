@@ -474,8 +474,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           {warning&&<p className="ce-warning" role="alert">{warning}</p>}
         </div>
         <footer className={mode==="preview"?"ce-footer ce-mobile-hidden":"ce-footer"}>
-          <button type="button" className="ce-secondary" onClick={currentIndex?()=>{setStep(steps[currentIndex-1]);setMode("edit");}:reset}>
-            {currentIndex?t.back:t.reset}
+          <button type="button" className="ce-secondary" onClick={isMobileViewport?closeMobileSheet:currentIndex?()=>{setStep(steps[currentIndex-1]);setMode("edit");}:reset}>
+            {isMobileViewport?t.mobileClose:currentIndex?t.back:t.reset}
           </button>
           <button type="button" className="ce-primary" onClick={isMobileViewport&&selectedFieldId?closeMobileSheet:forward}>
             {isMobileViewport&&selectedFieldId?t.mobileDone:step==="publish"?t.review:t.next}<ArrowRight size={17}/>
