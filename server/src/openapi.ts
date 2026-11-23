@@ -6,6 +6,7 @@ import {createSchema as createWorkspaceSchema, renameSchema} from "./modules/wor
 import {startUploadInput} from "./modules/media/media.controller.js";
 import {createTemplateInput, createVersionInput, createProjectInput, createRevisionInput} from "./modules/documents/documents-input.js";
 import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/publications/publications-input.js";
+import {templatePackageSchema} from "./modules/documents/template-package.js";
 
 /**
  * eventiq API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
@@ -86,6 +87,12 @@ const endpoints: Endpoint[] = [
     description:"Требуется роль редактора. Document и personalization проверяются на сервере по каноническим Studio v2-контрактам.",
     requestBody:body(schema(createTemplateInput)),
     responseSchema:object({id:uuid,workspaceId:uuid,slug:{type:"string"},name:{type:"string"},latestVersion:{type:"integer",minimum:1}},["id","workspaceId","slug","name","latestVersion"]),errors:[400,401,403,409,422]},
+  {method:"post",path:"/api/v1/workspaces/{workspaceId}/template-packages/import",tag:"Templates",
+    summary:"Импортировать JSON-пакет шаблона",
+    description:"Только ADMIN/OWNER Workspace. Пакет eventiq-template v1: manifest, Studio v2 document и personalization. Изображения и музыка должны быть заранее загружены и подтверждены как READY в этом Workspace. Импорт создаёт DRAFT и неизменяемую первую версию, но не публикует шаблон.",
+    requestBody:body(schema(templatePackageSchema)),
+    responseSchema:object({id:uuid,workspaceId:uuid,slug:str,name:str,latestVersion:positive},["id","workspaceId","slug","name","latestVersion"]),
+    errors:[400,401,403,404,409,422]},
   {method:"get",path:"/api/v1/templates/{id}",tag:"Templates",summary:"Получить шаблон",
     description:"Возвращает доступный шаблон с метаданными и версией.",errors:[401,404]},
   {method:"get",path:"/api/v1/templates/{id}/versions/{number}",tag:"Templates",summary:"Получить версию шаблона",
