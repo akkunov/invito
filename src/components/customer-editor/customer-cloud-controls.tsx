@@ -17,7 +17,7 @@ type Props={
   publishMode?:boolean;canPublish?:boolean;
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
   onUploaded:(fieldId:string,asset:VerifiedCustomerAsset,url:string)=>void;
-  uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>;
+  uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number;maxPhotos?:number;currentCount?:number}>;
   preferredUploadTargetId?:string;
 };
 export function CustomerCloudControls({
@@ -32,12 +32,14 @@ export function CustomerCloudControls({
   const [cloudId,setCloudId]=useState<string|null>(null);
   const [revision,setRevision]=useState<number|null>(null);
   const [fileBusy,setFileBusy]=useState(false);
+  const [uploadPhase,setUploadPhase]=useState("");
   const [selectedTarget,setSelectedTarget]=useState("");
   const [publicSlug,setPublicSlug]=useState("");
   const [publishedUrl,setPublishedUrl]=useState("");
   const [activeRelease,setActiveRelease]=useState<number|null>(null);
   const [availableDrafts,setAvailableDrafts]=useState<CustomerDraftListItem[]>([]);
   const target=uploadTargets.find(f=>f.id===selectedTarget)??uploadTargets[0]??null;
+  const galleryFull=target?.kind==="gallery"&&typeof target.maxPhotos==="number"&&(target.currentCount??0)>=target.maxPhotos;
   const ru=locale==="ru";
   useEffect(()=>{
     if(preferredUploadTargetId&&uploadTargets.some(item=>item.id===preferredUploadTargetId))setSelectedTarget(preferredUploadTargetId);
@@ -247,7 +249,8 @@ export function CustomerCloudControls({
 
   async function photo(file:File){
     if(!userId||!target||fileBusy)return;
-    setFileBusy(true);setInfo("");
+    if(galleryFull){setInfo(ru?"Галерея заполнена. Удалите одно фото перед добавлением нового.":"Галерея толду. Жаңы сүрөт кошуу үчүн бир сүрөттү өчүрүңүз.");return;}
+    setFileBusy(true);setInfo("");setUploadPhase("checking");
     try{
       if(target){
         const bitmap=await createImageBitmap(file);
@@ -255,14 +258,14 @@ export function CustomerCloudControls({
         bitmap.close();
         if(!valid)throw new Error("IMAGE_TOO_SMALL");
       }
-      const result=await uploadCustomerPhoto(file);
+      const result=await uploadCustomerPhoto(file,phase=>setUploadPhase(phase));
       onUploaded(target.id,result.asset,result.url);
       setInfo(ru?"Фото загружено. Сохраните приглашение в облаке.":"Сүрөт жүктөлдү. Чакырууну булутка сактаңыз.");
     }catch(e){
       setInfo(e instanceof Error&&e.message==="IMAGE_TOO_SMALL"
         ?ru?"Недостаточное разрешение фотографии.":"Сүрөттүн өлчөмү жетишсиз."
         :ru?"Не удалось загрузить фото. Проверьте формат и размер (до 20 МБ).":"Сүрөт жүктөлгөн жок. Форматын жана өлчөмүн текшериңиз (20 МБ чейин).");
-    }finally{setFileBusy(false);}
+    }finally{setFileBusy(false);setUploadPhase("");}
   }
 
   return <section className="ce-cloud" aria-label={ru?"Облачный черновик":"Булуттагы черновик"}>
@@ -312,9 +315,17 @@ export function CustomerCloudControls({
             {uploadTargets.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
         </label>}
-        <label className="ce-upload-button">
-          <ImagePlus size={17}/>{fileBusy?"…":ru?"Выбрать фотографию":"Сүрөт тандоо"}
-          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={fileBusy}
+        {target.kind==="gallery"&&typeof target.maxPhotos==="number"&&
+          <p className="ce-upload-counter">{ru?"Фотографий":"Сүрөттөр"}: {target.currentCount??0} / {target.maxPhotos}</p>}
+        <label className={"ce-upload-button"+(galleryFull?" ce-upload-disabled":"")}>
+          <ImagePlus size={17}/>{galleryFull?(ru?"Галерея заполнена":"Галерея толду"):fileBusy?
+            (uploadPhase==="checking"?(ru?"Проверяем фото":"Сүрөт текшерилүүдө"):
+            uploadPhase==="signing"?(ru?"Подготовка загрузки":"Жүктөөгө даярдалууда"):
+            uploadPhase==="uploading"?(ru?"Загружаем фото":"Сүрөт жүктөлүүдө"):
+            uploadPhase==="verifying"?(ru?"Проверяем загрузку":"Жүктөө текшерилүүдө"):
+            (ru?"Загрузка":"Жүктөө")):
+            (ru?"Выбрать фотографию":"Сүрөт тандоо")}
+          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={fileBusy||galleryFull}
             onChange={e=>{const file=e.target.files?.[0];if(file)void photo(file);e.target.value="";}}/>
         </label>
       </div>}
