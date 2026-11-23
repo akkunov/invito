@@ -222,6 +222,8 @@
   .ce-preview-sections button[aria-current="page"]{border-color:#788264;color:#39452f;background:#f5f6ef}
   .ce-preview-screen{width:min(100%,430px);border:5px solid #fff;border-radius:18px;box-shadow:0 14px 40px #30282017}
   /* The document remains immutable; this only enables event targeting for permitted fields. */
+  /* Before hydration the renderer has every page; show only the first to avoid a long flash. */
+  .ce-preview-screen [data-preview-page]:not(:first-child){display:none}
   .ce-preview-screen [data-studio-node]{pointer-events:auto!important}
   .ce-preview-screen [data-studio-node]:where(:focus-visible){outline:2px solid #ff4a0a}
   .ce-mobile-canvas-caption{display:block;text-align:center;max-width:430px;width:100%;margin:15px auto 0;font-size:12px;color:#73746b;line-height:1.45}
