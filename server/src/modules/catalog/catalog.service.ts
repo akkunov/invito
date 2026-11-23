@@ -33,7 +33,7 @@ export class CatalogService {
         orderBy:[{updatedAt:"desc"},{id:"asc"}],
         skip:(filters.page-1)*filters.limit,take:filters.limit,
         select:{id:true,publicSlug:true,name:true,description:true,category:true,tags:true,
-          latestVersion:true,updatedAt:true,coverPageId:true,
+          latestVersion:true,updatedAt:true,workspaceId:true,coverPageId:true,
           versions:{orderBy:{number:"desc"},take:1,select:{document:true}}},
       }),
     ]);
@@ -42,7 +42,7 @@ export class CatalogService {
       const image=document&&Object.values(document.assets).find(asset=>asset.mimeType.startsWith("image/")&&asset.storageKey.startsWith("asset:"));
       let coverUrl:string|null=null;
       if(image){
-        const asset=await this.db.mediaAsset.findFirst({where:{id:image.storageKey.slice(6),workspaceId:document ? (await this.db.template.findUnique({where:{id:row.id},select:{workspaceId:true}}))?.workspaceId : undefined,status:"READY"},select:{storageKey:true,mimeType:true}});
+        const asset=await this.db.mediaAsset.findFirst({where:{id:image.storageKey.slice(6),workspaceId:row.workspaceId,status:"READY"},select:{storageKey:true,mimeType:true}});
         if(asset)coverUrl=await this.media.signRead(asset.storageKey,asset.mimeType).catch(()=>null);
       }
       return {id:row.id,slug:row.publicSlug!,name:row.name,description:row.description,
