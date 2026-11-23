@@ -22,7 +22,7 @@ type Step="main"|"event"|"appearance"|"publish";
 const steps:readonly Step[]=["main","event","appearance","publish"];
 const sectionToStep:Record<EditableField["section"],Step>={
   main:"main",date:"event",location:"event",schedule:"event",
-  photos:"appearance",music:"appearance",appearance:"appearance",rsvp:"appearance",
+  photos:"appearance",music:"appearance",appearance:"appearance",rsvp:"event",
 };
 const dictionary={
   ru:{
@@ -40,7 +40,7 @@ const dictionary={
     unsupported:"Для редактирования этого шаблона пока не назначены поля.",
     original:"Дизайн защищён. Можно изменить только разрешённые автором данные.",
     noPublish:"После публикации вы получите ссылку, которой можно поделиться с гостями.",
-    filled:"Заполнено",of:"из",sections:"Разделы приглашения",photos:"Фотографии",publishAction:"Опубликовать",editorTip:"Все изменения видны в предпросмотре справа.",
+    filled:"Готово",of:"из",sections:"Секции",photos:"Фотографии",publishAction:"Опубликовать",editorTip:"Изменения сразу появятся в предпросмотре.",
   },
   ky:{
     main:"Негизги маалымат",event:"Күнү жана жери",appearance:"Жасалгалоо",publish:"Текшерүү",
@@ -57,7 +57,7 @@ const dictionary={
     unsupported:"Бул шаблондун өзгөртүү талаалары азырынча көрсөтүлө элек.",
     original:"Дизайн корголгон. Автор уруксат берген маалымат гана өзгөрөт.",
     noPublish:"Жарыялагандан кийин конокторго жибере турган шилтеме аласыз.",
-    filled:"Толтурулду",of:"ичинен",sections:"Чакыруу бөлүмдөрү",photos:"Сүрөттөр",publishAction:"Жарыялоо",editorTip:"Өзгөртүүлөр алдын ала көрүүдө көрсөтүлөт.",
+    filled:"Даяр",of:"ичинен",sections:"Бөлүмдөр",photos:"Сүрөттөр",publishAction:"Жарыялоо",editorTip:"Өзгөртүүлөр алдын ала көрүүдө дароо көрсөтүлөт.",
   },
 } as const;
 
@@ -199,6 +199,14 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
   const hasFields=contract.fields.length>0;
+  const jumpPreview=(pageId:string)=>{
+    setMode("preview");
+    window.requestAnimationFrame(()=>{
+      const section=Array.from(window.document.querySelectorAll<HTMLElement>("[data-preview-page]"))
+        .find(node=>node.dataset.previewPage===pageId);
+      section?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+    });
+  };
   const preview=<StudioV2ProjectRenderer
     key={previewRun} document={document} mediaUrls={mergedUrls}
     device="mobile" guest={{mode:"preview"}}/>;
@@ -322,6 +330,10 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           <div><strong>{t.preview}</strong><small>{name}</small></div>
           <button className="ce-secondary" aria-label={locale==="ru"?"Перезапустить анимации":"Анимацияны кайра баштоо"} type="button" onClick={()=>setPreviewRun(n=>n+1)}><RotateCcw size={15}/></button>
         </div>
+        <nav className="ce-preview-sections" aria-label={t.sections}>
+          {source.pages.map((page,index)=><button key={page.id} type="button" onClick={()=>jumpPreview(page.id)}
+            title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.replace(/^\\d+ \\/ /,"")}</span></button>)}
+        </nav>
         <div className="ce-preview-screen">{preview}</div>
       </aside>
     </div>
