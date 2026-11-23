@@ -48,7 +48,27 @@ export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={}
   const update=(i:number,item:typeof items[number])=>onChange({kind:"schedule",items:items.map((old,j)=>i===j?item:old)});
   control=<div className="se-options">{items.map((item,i)=><div className="se-event" key={i}><label className="se-control"><span>{t("Время","Убакыт")}</span><input type="time" value={item.time} onChange={e=>{if(e.target.value)update(i,{...item,time:e.target.value});}}/></label>{locales.map(l=><label className="se-control" key={l}><span>{langs(l,t("Событие","Окуя"))}</span><input maxLength={500} value={item.label[l]} onChange={e=>update(i,{...item,label:{...item.label,[l]:e.target.value}})}/></label>)}<button className="se-text-button" onClick={()=>onChange({kind:"schedule",items:items.filter((_,j)=>i!==j)})}>{t("Удалить событие","Окуяны өчүрүү")}</button></div>)}<button className="se-secondary" disabled={items.length>=f.maxItems} onClick={()=>onChange({kind:"schedule",items:[...items,{time:"17:00",label:{ru:"",ky:""}}]})}>{t("Добавить событие","Окуя кошуу")}</button></div>;break;
  }
- case "theme":control=<div className="se-theme-grid" role="radiogroup" aria-label={title}>{(f.allowBase?[null,...f.themeIds]:f.themeIds).map((id,i)=><label className="se-theme-option" data-selected={(v?.kind==="theme"?v.themeId:null)===id} key={id??"base"}><input type="radio" aria-label={id===null?t("Исходное оформление","Баштапкы жасалгалоо"):doc.themes?.[id]?.name??id} name={f.id} checked={(v?.kind==="theme"?v.themeId:null)===id} onChange={()=>onChange({kind:"theme",themeId:id})}/><span className="se-theme-sample" aria-hidden="true"><span className="se-theme-sample-heading"/><span className="se-theme-sample-sub"/><span className="se-theme-sample-line"/></span><strong>{id===null?t("Оригинал","Түп нуска"):doc.themes?.[id]?.name??t("Вариант ","Вариант ")+(i+1)}</strong><span className="se-media-selected" aria-hidden="true">✓</span></label>)}</div>;break;
+ case "theme":{
+  const swatch=(themeId:string|null,key:string,fallBack:string)=>{
+    const theme=themeId?doc.themes?.[themeId]?.overrides[key]:undefined;
+    const token=theme??doc.tokens?.[key];
+    return token?.kind==="color"?token.value:fallBack;
+  };
+  control=<div className="se-theme-grid" role="radiogroup" aria-label={title}>
+    {(f.allowBase?[null,...f.themeIds]:f.themeIds).map((id,i)=><label className="se-theme-option"
+      data-selected={(v?.kind==="theme"?v.themeId:null)===id} key={id??"base"}>
+      <input type="radio" aria-label={id===null?t("Исходное оформление","Баштапкы жасалгалоо"):doc.themes?.[id]?.name??id}
+        name={f.id} checked={(v?.kind==="theme"?v.themeId:null)===id} onChange={()=>onChange({kind:"theme",themeId:id})}/>
+      <span className="se-theme-sample" aria-hidden="true" style={{background:swatch(id,"paperTone","#F8F5ED")}}>
+        <span className="se-theme-sample-heading" style={{background:swatch(id,"inkTone","#272821")}}/>
+        <span className="se-theme-sample-sub" style={{background:swatch(id,"accentTone","#657552")}}/>
+        <span className="se-theme-sample-line" style={{background:swatch(id,"warmTone","#EFE9DD")}}/>
+      </span>
+      <strong>{id===null?t("Оригинал","Түп нуска"):doc.themes?.[id]?.name??t("Вариант ","Вариант ")+(i+1)}</strong>
+      <span className="se-media-selected" aria-hidden="true">✓</span>
+    </label>)}
+  </div>;break;
+ }
  }
  return <div className="se-field" data-editor-field={f.id}><h3>{title}{f.required&&<span className="se-required"> *</span>}</h3>{control}</div>;
 }
