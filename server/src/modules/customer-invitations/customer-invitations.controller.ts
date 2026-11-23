@@ -4,11 +4,12 @@ import {parseInput} from "../documents/documents-input.js";
 import {startUploadInput} from "../media/media.controller.js";
 import type {AuthenticatedRequest} from "../auth/auth.types.js";
 import {CustomerInvitationsService} from "./customer-invitations.service.js";
+import {personalizationPatchSchema} from "../../../../src/features/studio-v2/core/personalization.schema.js";
 
 const uuid=z.uuid();
 export const createCustomerInvitationSchema=z.strictObject({templateVersionId:uuid});
-export const updateCustomerInvitationSchema=z.strictObject({expectedRevision:z.number().int().min(1),patch:z.unknown()});
-const customerPhotoSchema=startUploadInput.refine(d=>d.mimeType!=="audio/mpeg", "Images only");
+export const updateCustomerInvitationSchema=z.strictObject({expectedRevision:z.number().int().min(1),patch:personalizationPatchSchema});
+export const customerPhotoSchema=startUploadInput.safeExtend({mimeType:z.enum(["image/jpeg","image/png","image/webp"])});
 
 @Controller("customer")
 export class CustomerInvitationsController {
@@ -42,8 +43,7 @@ export class CustomerInvitationsController {
   @Header("Cache-Control","no-store")
   startPhoto(@Req() request:AuthenticatedRequest,@Body() body:unknown){
     const input=parseInput(customerPhotoSchema,body);
-    if(input.mimeType==="audio/mpeg")throw new Error("UNREACHABLE");
-    return this.service.startPhoto(request.user.id,input as {name:string;mimeType:"image/jpeg"|"image/png"|"image/webp";bytes:number;sha256:string});
+    return this.service.startPhoto(request.user.id,input);
   }
 
   @Post("media/:id/complete")
