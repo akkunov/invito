@@ -1,6 +1,7 @@
 "use client";
 
-import {useRef,useState} from "react";
+import {useEffect,useRef,useState} from "react";
+import {LegacyMobileWorkspace} from "./legacy-mobile-workspace";
 import {ArrowRight,RotateCcw} from "lucide-react";
 import {EditorToolbar} from "@/components/editor/editor-toolbar";
 import {EditorSidebar} from "@/components/editor/editor-sidebar";
@@ -18,6 +19,13 @@ export function InvitationEditor({locale,initialDocument}:{locale:Locale;initial
  const editor=useInvitationEditor(initialDocument);
  const [selected,setSelected]=useState<BlockKind>("cover");
  const [mobileView,setMobileView]=useState<"edit"|"preview">("edit");
+ const [phone,setPhone]=useState(false);
+ useEffect(()=>{
+  const query=window.matchMedia("(max-width: 850px)");
+  const sync=()=>setPhone(query.matches);
+  sync();query.addEventListener("change",sync);
+  return()=>query.removeEventListener("change",sync);
+ },[]);
  const previewRef=useRef<HTMLDivElement>(null);
  const {scrollToBlock}=useEditorSectionSync({previewRef,blocks:editor.document.blocks,onActiveChange:setSelected});
  const dict=getDictionary(locale);
@@ -27,6 +35,7 @@ export function InvitationEditor({locale,initialDocument}:{locale:Locale;initial
  function reset(){
   if(window.confirm(t("Сбросить все локальные изменения этого приглашения?","Чакыруунун бардык жергиликтүү өзгөртүүлөрүн тазалайсызбы?")))editor.reset();
  }
+ if(phone)return <LegacyMobileWorkspace locale={locale} editor={editor} selected={selected} onSelect={setSelected}/>;
  return <div className="editor-app editor-app-modern">
   <EditorToolbar locale={locale} editor={editor}/>
   <div className="editor-view-switch" role="group" aria-label={t("Режим редактора","Редактор режими")}>
