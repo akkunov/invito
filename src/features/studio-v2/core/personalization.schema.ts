@@ -9,6 +9,7 @@ export const editableFieldSchema=z.discriminatedUnion("kind",[
  common.extend({kind:z.literal("date"),key:bindingKeySchema}),
  common.extend({kind:z.literal("number"),key:bindingKeySchema,min:z.number().finite(),max:z.number().finite()}),
  common.extend({kind:z.literal("boolean"),key:bindingKeySchema}),
+ common.extend({kind:z.literal("textStyle"),nodeId:id,minFontSize:z.number().int().min(6).max(400),maxFontSize:z.number().int().min(6).max(400),allowedColors:z.array(z.string().regex(/^#[0-9a-fA-F]{6}$/)).min(1).max(12),allowedFonts:z.array(z.enum(["serif","sans"])).min(1).max(2),allowedWeights:z.array(z.number().int().min(100).max(900)).min(1).max(9)}),
  common.extend({kind:z.literal("image"),nodeId:id,minWidth:z.number().int().min(1).max(4096),minHeight:z.number().int().min(1).max(4096)}),
  common.extend({kind:z.literal("gallery"),nodeId:id,maxPhotos:z.number().int().min(1).max(4)}),
  common.extend({kind:z.literal("schedule"),nodeId:id,maxItems:z.number().int().min(1).max(20)}),
@@ -24,6 +25,7 @@ export const personalizationSchema=z.strictObject({version:z.literal(1),locales:
   const target="key" in f?"binding:"+f.key:"nodeId" in f?"node:"+f.nodeId:"theme";
   if(ids.has(f.id)||targets.has(target))ctx.addIssue({code:"custom",path:["fields",i],message:"Duplicate field or target"});
   if(f.kind==="number"&&f.min>f.max)ctx.addIssue({code:"custom",path:["fields",i],message:"Minimum exceeds maximum"});
+  if(f.kind==="textStyle"&&f.minFontSize>f.maxFontSize)ctx.addIssue({code:"custom",path:["fields",i],message:"Invalid text style font range"});
   if(f.kind==="theme"&&!f.allowBase&&!f.themeIds.length)ctx.addIssue({code:"custom",path:["fields",i],message:"No theme choices"});
   if(f.kind==="music"&&!f.sources.length&&f.required)ctx.addIssue({code:"custom",path:["fields",i],message:"No music choices"});
   ids.add(f.id);targets.add(target);
@@ -35,6 +37,7 @@ export type PersonalizationContract=z.infer<typeof personalizationSchema>;
 const scheduleItem=z.strictObject({time:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),label:z.strictObject({ru:z.string().max(500),ky:z.string().max(500)})});
 export const personalizedValueSchema=z.discriminatedUnion("kind",[
  z.strictObject({kind:z.literal("binding"),value:bindingValueSchema}),
+ z.strictObject({kind:z.literal("textStyle"),fontFamily:z.enum(["sans","serif"]),fontSize:z.number().int().min(6).max(400),fontWeight:z.number().int().min(100).max(900),color:z.string().regex(/^#[0-9a-fA-F]{6}$/),textAlign:z.enum(["left","center","right"])}),
  z.strictObject({kind:z.literal("image"),assetId:id}),
  z.strictObject({kind:z.literal("gallery"),assetIds:z.array(id).max(4).refine(v=>new Set(v).size===v.length,"Duplicate photos")}),
  z.strictObject({kind:z.literal("schedule"),items:z.array(scheduleItem).max(20)}),
