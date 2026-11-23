@@ -41,6 +41,7 @@ export function MobileMenu({ locale }: { locale: Locale }) {
         <nav id="mobile-navigation" className="mobile-menu-panel" aria-label={ru ? "Мобильная навигация" : "Мобилдик навигация"}>
           <BrandWordmark locale={locale} />
           <Link href={routes.templates(locale)} onClick={() => setIsOpen(false)}>{dict.nav.templates}</Link>
+          <Link href={`/${locale}/invitations`} onClick={() => setIsOpen(false)}>{ru ? "Мои приглашения" : "Менин чакырууларым"}</Link>
           <Link href={`${routes.home(locale)}#features`} onClick={() => setIsOpen(false)}>{dict.nav.benefits}</Link>
           <Link href={`${routes.home(locale)}#how`} onClick={() => setIsOpen(false)}>{dict.nav.how}</Link>
           <Link className="button-primary" href={routes.templates(locale)} onClick={() => setIsOpen(false)}>{dict.actions.create}</Link>
