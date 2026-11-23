@@ -203,6 +203,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
     <header className="ce-header">
       <Link aria-label={t.back} href={`/${locale}/catalog/${slug}`} className="ce-icon"><ArrowLeft size={20}/></Link>
       <Link href={`/${locale}`} className="ce-logo">eventiq<span>.</span></Link>
+      <Link className="ce-account-link" href={`/${locale}/invitations`}>{locale==="ru"?"Мои приглашения":"Менин чакырууларым"}</Link>
       <div className="ce-save-state" role="status"><Save size={14}/><span>{hydrated?status||t.saveLocal:t.notSaved}</span></div>
     </header>
     <div className="ce-layout">
