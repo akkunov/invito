@@ -199,7 +199,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const displayedFields=selectedFieldId?fields.filter(field=>field.id===selectedFieldId):fields;
   const openMobileStep=(next:Step,fieldId:string|null=null)=>{
     setStep(next);setSelectedFieldId(fieldId);setMode("edit");setMobileSheetOpen(true);
-    mobileFormRef.current?.scrollTo({top:0,behavior:"instant"});
+    mobileFormRef.current?.scrollTo({top:0,behavior:"auto"});
   };
   const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);};
   useEffect(()=>{
