@@ -12,6 +12,13 @@ export function bindingIsUsed(doc:ProjectDocumentV2,key:string){
 }
 export function contractIssues(doc:ProjectDocumentV2,contract:PersonalizationContract):Issue[]{
  const issues:Issue[]=[];const add=(f:EditableField,message:string)=>issues.push({fieldId:f.id,message});
+ if(contract.sectionEditing){
+  const all=new Set(doc.pages.map(page=>page.id));
+  for(const pageId of [...contract.sectionEditing.hideablePageIds,...contract.sectionEditing.reorderablePageIds]){
+   if(!all.has(pageId))issues.push({fieldId:"sections",message:"Раздел для настройки отсутствует: "+pageId});
+  }
+ }
+
  for(const f of contract.fields){
   if("key" in f){if(!own(doc.variables,f.key)||doc.variables[f.key].type!==f.kind||!bindingIsUsed(doc,f.key))add(f,"Переменная отсутствует, не используется или имеет другой тип");continue;}
   if(f.kind==="theme"){if(f.themeIds.some(id=>!own(doc.themes??{},id)))add(f,"Тема отсутствует");continue;}
@@ -93,6 +100,27 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
    else if(f.kind==="rsvp"&&v.kind==="rsvp"&&b.kind==="rsvp"){b.deadline=v.deadline;b.maxGuests=v.maxGuests;}
    else invalid("Invalid widget field");
   }else invalid("Invalid field target");
+ }
+ if(patch.sections){
+  const allowed=contract.sectionEditing;
+  if(!allowed)invalid("Section editing is not permitted by this template");
+  const sourceIds=base.pages.map(page=>page.id);
+  const order=patch.sections.order,hidden=patch.sections.hidden;
+  if(order.length!==sourceIds.length||new Set(order).size!==sourceIds.length||
+      sourceIds.some(id=>!order.includes(id)))invalid("Invalid section order");
+  const movable=new Set(allowed.reorderablePageIds),hideable=new Set(allowed.hideablePageIds);
+  // Non-movable pages remain at their original index: clients cannot move the cover or RSVP.
+  for(let i=0;i<sourceIds.length;i++){
+    if(!movable.has(sourceIds[i])&&order[i]!==sourceIds[i])invalid("Section order is locked: "+sourceIds[i]);
+  }
+  if(hidden.some(id=>!hideable.has(id)))invalid("Section cannot be hidden");
+  const byId=new Map(doc.pages.map(page=>[page.id,page]));
+  doc.pages=order.map(id=>byId.get(id)!);
+  for(const id of hidden){
+    const page=byId.get(id)!;
+    const root=doc.nodes[page.rootNodeId];
+    if(root)root.visible=false;
+  }
  }
  // Preserve explicit local content overrides for materialized linked instances.
  noteOverrides(base,doc);
