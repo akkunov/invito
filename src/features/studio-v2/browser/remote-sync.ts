@@ -77,6 +77,12 @@ export function createStudioRemoteClient(settings: RemoteSyncSettings) {
     if (!response.ok) {
       throw new RemoteRequestError(response.status, "REMOTE_HTTP_" + response.status);
     }
+    // NestJS/Express sends an empty 200 body when the controller returns null.
+    // Only an absent publication is expected to have an empty successful response.
+    if (method === "GET" && /^\/projects\/[^/]+\/publication$/.test(path)) {
+      const body = await response.text();
+      return (body.trim() ? JSON.parse(body) : null) as T;
+    }
     return await response.json() as T;
   }
   async function getProject(id: string): Promise<RemoteProject> {
