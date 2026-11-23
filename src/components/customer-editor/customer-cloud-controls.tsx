@@ -6,7 +6,7 @@ import {
   configuredSupabase,getSupabaseBrowserClient,
 } from "@/features/auth/browser/supabase-session";
 import {
-  CustomerCloudError,createCustomerDraft,getCustomerDraft,getCustomerPublication,publishCustomerInvitation,listCustomerDrafts,saveCustomerDraft,
+  CustomerCloudError,createCustomerDraft,getCustomerDraft,getCustomerPublication,publishCustomerInvitation,unpublishCustomerInvitation,listCustomerDrafts,saveCustomerDraft,
   uploadCustomerPhoto,type VerifiedCustomerAsset,type CustomerDraftListItem,
 } from "@/features/invitations/customer-cloud";
 import type {PersonalizationPatch} from "@/features/studio-v2/core/personalization.schema";
@@ -34,6 +34,7 @@ export function CustomerCloudControls({
   const [selectedTarget,setSelectedTarget]=useState("");
   const [publicSlug,setPublicSlug]=useState("");
   const [publishedUrl,setPublishedUrl]=useState("");
+  const [activeRelease,setActiveRelease]=useState<number|null>(null);
   const [availableDrafts,setAvailableDrafts]=useState<CustomerDraftListItem[]>([]);
   const target=uploadTargets.find(f=>f.id===selectedTarget)??uploadTargets[0]??null;
   const ru=locale==="ru";
@@ -80,6 +81,36 @@ export function CustomerCloudControls({
     }).catch(()=>{});
     return()=>{active=false;};
   },[userId,templateVersionId,personalKey]);
+
+  useEffect(()=>{
+    if(!userId||!cloudId||!publishMode)return;
+    let active=true;
+    void getCustomerPublication(cloudId).then(value=>{
+      if(!active)return;
+      if(value?.status==="ACTIVE"){
+        setActiveRelease(value.latestRelease);
+        setPublishedUrl(window.location.origin+"/"+locale+"/c/"+value.slug);
+        setPublicSlug(value.slug);
+      }else{
+        setActiveRelease(null);
+        setPublishedUrl("");
+        if(value?.slug)setPublicSlug(value.slug);
+      }
+    }).catch(()=>{});
+    return()=>{active=false;};
+  },[cloudId,userId,publishMode,locale]);
+
+  async function hidePublication(){
+    if(!cloudId||activeRelease===null||loading)return;
+    if(!window.confirm(ru?"Закрыть доступ гостям? Черновик останется в аккаунте.":"Конокторго кирүүнү жабасызбы? Черновик сакталат."))return;
+    setLoading(true);setInfo("");
+    try{
+      await unpublishCustomerInvitation(cloudId,activeRelease);
+      setActiveRelease(null);setPublishedUrl("");
+      setInfo(ru?"Публикация скрыта. Черновик сохранён.":"Чакыруу жабылды. Черновик сакталды.");
+    }catch{setInfo(ru?"Не удалось снять публикацию. Обновите страницу и повторите.":"Жарыялоону жабуу мүмкүн болбоду.");}
+    finally{setLoading(false);}
+  }
 
   async function login(e:FormEvent){
     e.preventDefault();
@@ -184,6 +215,7 @@ export function CustomerCloudControls({
       const url=window.location.origin+"/"+locale+"/c/"+release.slug;
       setPublicSlug(release.slug);
       setPublishedUrl(url);
+      setActiveRelease(release.latestRelease);
       setInfo(ru?"Приглашение опубликовано. Ссылка готова.":"Чакыруу жарыяланды. Шилтеме даяр.");
     }catch(error){
       setInfo(error instanceof CustomerCloudError&&error.status===409
@@ -263,6 +295,7 @@ export function CustomerCloudControls({
             <button className="ce-secondary" type="button" onClick={()=>void share()}><Send size={15}/>{ru?"Поделиться":"Бөлүшүү"}</button>
           </div>
         </div>}
+        {activeRelease!==null&&<button className="ce-secondary" type="button" disabled={loading} onClick={()=>void hidePublication()}>{ru?"Закрыть доступ гостям":"Конокторго кирүүнү жабуу"}</button>}
       </div>}
       <div className="ce-cloud-actions">
         <button type="button" className="ce-primary" disabled={loading} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить в облако":"Булутка сактоо"}</button>
