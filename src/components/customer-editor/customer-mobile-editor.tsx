@@ -64,14 +64,16 @@ type Props={
   source:ProjectDocumentV2;contract:PersonalizationContract;
   mediaUrls:Record<string,string>;
 };
-const blank=():PersonalizationPatch=>({values:{}});
+const initialPatch=(source:ProjectDocumentV2,contract:PersonalizationContract):PersonalizationPatch=>({
+  values:{},...(!contract.locales.includes(source.locale)?{locale:contract.locales[0]}:{})
+});
 const draftStorageKey=(id:string)=>"eventiq:customer-draft:v1:"+id;
 
 export function CustomerMobileEditor({locale,slug,name,versionId,source,contract,mediaUrls}:Props){
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>("main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
-  const [patch,setPatch]=useState<PersonalizationPatch>(blank);
+  const [patch,setPatch]=useState<PersonalizationPatch>(()=>initialPatch(source,contract));
   const [hydrated,setHydrated]=useState(false);
   const [warning,setWarning]=useState("");
   const [status,setStatus]=useState("");
@@ -180,7 +182,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
   };
   const reset=()=>{
     if(!window.confirm(t.resetConfirm))return;
-    setPatch(blank());setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");
+    setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");
   };
   const forward=()=>{
     if(step!=="publish"){
