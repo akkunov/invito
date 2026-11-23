@@ -122,7 +122,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,source,contract
     let active=true;
     const refresh=async()=>{
       try{
-        const response=await fetch(api.replace(/\\/$/,"")+"/catalog/templates/"+encodeURIComponent(slug),{cache:"no-store"});
+        const response=await fetch((api.endsWith("/")?api.slice(0,-1):api)+"/catalog/templates/"+encodeURIComponent(slug),{cache:"no-store"});
         if(!response.ok)return;
         const data=await response.json() as {templateVersionId?:string;mediaUrls?:Record<string,string>};
         if(!active||data.templateVersionId!==versionId||!data.mediaUrls)return;
