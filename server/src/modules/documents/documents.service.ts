@@ -8,6 +8,7 @@ import {
   validatedDocument, validatedTemplate, verifyAssets, snapshotHash,
 } from "./documents-input.js";
 import type {ProjectDocumentV2} from "../../../../src/features/studio-v2/core/document.schema.js";
+import type {TemplatePackageV1} from "./template-package.js";
 
 const json = (document: unknown) => document as Prisma.InputJsonValue;
 function conflict(error: unknown): never {
@@ -28,6 +29,19 @@ export class StudioDocumentsService {
     @Inject(PrismaService) private readonly db: PrismaService,
     @Inject(DocumentsAccessService) private readonly access: DocumentsAccessService,
   ) {}
+
+  async importTemplatePackage(userId: string, workspaceId: string, pack: TemplatePackageV1) {
+    // Package import is an administrator operation, not the normal EDITOR flow.
+    await this.access.member(userId, workspaceId, "ADMIN");
+    // Reuse the canonical Studio v2 document/contract validation and READY
+    // asset ownership checks in createTemplate. Never trust package metadata
+    // to grant Workspace membership or upload unverified media.
+    return this.createTemplate(userId, workspaceId, {
+      ...pack.manifest,
+      document: pack.document,
+      personalization: pack.personalization,
+    });
+  }
 
   async listTemplates(userId: string, workspaceId: string, page: number, limit: number) {
     await this.access.member(userId, workspaceId, "VIEWER");
