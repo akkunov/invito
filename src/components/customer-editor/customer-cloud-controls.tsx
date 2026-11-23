@@ -13,14 +13,14 @@ import type {PersonalizationPatch} from "@/features/studio-v2/core/personalizati
 import type {Locale} from "@/i18n/locales";
 
 type Props={
-  locale:Locale;templateVersionId:string;patch:PersonalizationPatch;
+  locale:Locale;templateVersionId:string;preferredDraftId?:string;patch:PersonalizationPatch;
   publishMode?:boolean;canPublish?:boolean;
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
   onUploaded:(fieldId:string,asset:VerifiedCustomerAsset,url:string)=>void;
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>;
 };
 export function CustomerCloudControls({
-  locale,templateVersionId,patch,onLoad,onUploaded,uploadTargets,publishMode=false,canPublish=false,
+  locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,publishMode=false,canPublish=false,
 }:Props){
   const cfg=useMemo(configuredSupabase,[]);
   const supabase=useMemo(()=>cfg?getSupabaseBrowserClient(cfg):null,[cfg]);
@@ -56,12 +56,12 @@ export function CustomerCloudControls({
     if(!personalKey){setCloudId(null);setRevision(null);return;}
     let id:string|null=null;
     try{id=window.localStorage.getItem(personalKey);}catch{}
-    setCloudId(id);
+    setCloudId(preferredDraftId??id);
     try {
       const rev=window.localStorage.getItem(personalKey+":revision");
-      setRevision(rev&&Number.isSafeInteger(Number(rev))&&Number(rev)>=1?Number(rev):null);
+      setRevision(!preferredDraftId||id===preferredDraftId ? rev&&Number.isSafeInteger(Number(rev))&&Number(rev)>=1?Number(rev):null : null);
     }catch{setRevision(null);}
-  },[personalKey]);
+  },[personalKey,preferredDraftId]);
 
   useEffect(()=>{
     if(!userId){setAvailableDrafts([]);return;}
