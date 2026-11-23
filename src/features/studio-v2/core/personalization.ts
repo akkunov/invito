@@ -125,4 +125,4 @@ export function editableCandidates(doc:ProjectDocumentV2):EditableField[]{
 export function fieldTarget(f:EditableField){return "key" in f?"binding:"+f.key:"nodeId" in f?"node:"+f.nodeId:"theme";}
 
 /** Revalidate the derived snapshot before publish; draft editing permits incomplete required fields. */
-export function finalizePersonalization(source:ProjectDocumentV2,contract:PersonalizationContract,patch:unknown,assets:readonly Asset[]=[]){const doc=personalizeDocument(source,contract,patch,assets);const issues=personalizationIssues(doc,contract);if(issues.length)throw Error(issues.map(i=>i.message).join("; "));return doc;}
+export function finalizePersonalization(source:ProjectDocumentV2,contract:PersonalizationContract,patch:unknown,assets:readonly Asset[]=[],trustedCloudAssets=false){const doc=personalizeDocument(source,contract,patch,assets,trustedCloudAssets);const issues=personalizationIssues(doc,contract);if(issues.length)throw Error(issues.map(i=>i.message).join("; "));return doc;}
