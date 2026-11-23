@@ -2774,6 +2774,35 @@
           "themeBlush"
         ],
         "allowBase": true
+      },
+      {
+        "id": "coverTypography",
+        "kind": "textStyle",
+        "nodeId": "coverNames",
+        "section": "appearance",
+        "required": false,
+        "label": {
+          "ru": "Оформление имён на обложке",
+          "ky": "Мукабадагы ысымдардын жасалгасы"
+        },
+        "minFontSize": 36,
+        "maxFontSize": 58,
+        "allowedFonts": [
+          "serif",
+          "sans"
+        ],
+        "allowedWeights": [
+          400,
+          500,
+          600,
+          700
+        ],
+        "allowedColors": [
+          "#262720",
+          "#606B52",
+          "#9A7C57",
+          "#49393B"
+        ]
       }
     ],
     "sectionEditing": {
