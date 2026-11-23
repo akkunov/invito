@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useRef,useState,type MouseEvent} from "react";
-import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,RotateCw,Save,X,Type,Image as ImageIcon,Layers,Palette,Music2,Send,Cloud,ChevronDown,LockKeyhole,MoreHorizontal,EyeOff,ArrowUp,ArrowDown,Plus} from "lucide-react";
+import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,RotateCw,Save,X,Type,Image as ImageIcon,Layers,Palette,Music2,Cloud,ChevronDown,LockKeyhole,EyeOff,ArrowUp,ArrowDown,Plus} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
   finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,
