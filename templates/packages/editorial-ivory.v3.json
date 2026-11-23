@@ -218,7 +218,10 @@
           "left": 0
         },
         "background": "#F8F5ED",
-        "clip": true
+        "clip": true,
+        "tokenRefs": {
+          "fill": "paperTone"
+        }
       },
       "coverEyebrow": {
         "id": "coverEyebrow",
@@ -251,7 +254,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 2.2,
         "bindingKey": null,
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "accentTone"
+        }
       },
       "coverRuleA": {
         "id": "coverRuleA",
@@ -301,7 +307,10 @@
         "lineHeight": 1.06,
         "letterSpacing": -1.1,
         "bindingKey": "coupleNames",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "coverInvitation": {
         "id": "coverInvitation",
@@ -471,7 +480,10 @@
           "left": 0
         },
         "background": "#EFE9DD",
-        "clip": true
+        "clip": true,
+        "tokenRefs": {
+          "fill": "warmTone"
+        }
       },
       "letterSerial": {
         "id": "letterSerial",
@@ -554,7 +566,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "copy_letterHeading",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "letterBody": {
         "id": "letterBody",
@@ -587,7 +602,10 @@
         "lineHeight": 1.45,
         "letterSpacing": 0,
         "bindingKey": "invitationText",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "letterClosing": {
         "id": "letterClosing",
@@ -695,7 +713,10 @@
           "left": 0
         },
         "background": "#F8F5ED",
-        "clip": true
+        "clip": true,
+        "tokenRefs": {
+          "fill": "paperTone"
+        }
       },
       "detailsEyebrow": {
         "id": "detailsEyebrow",
@@ -728,7 +749,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 2,
         "bindingKey": null,
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "accentTone"
+        }
       },
       "detailsHeading": {
         "id": "detailsHeading",
@@ -761,7 +785,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "copy_detailsHeading",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "detailsRule": {
         "id": "detailsRule",
@@ -844,7 +871,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "ceremonyDate",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "countdownWidget": {
         "id": "countdownWidget",
@@ -956,7 +986,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "venueName",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "detailsAddress": {
         "id": "detailsAddress",
@@ -1055,7 +1088,10 @@
           "left": 0
         },
         "background": "#EFE9DD",
-        "clip": true
+        "clip": true,
+        "tokenRefs": {
+          "fill": "warmTone"
+        }
       },
       "programEyebrow": {
         "id": "programEyebrow",
@@ -1088,7 +1124,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 2,
         "bindingKey": null,
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "accentTone"
+        }
       },
       "programHeading": {
         "id": "programHeading",
@@ -1121,7 +1160,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "copy_programHeading",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "programRule": {
         "id": "programRule",
@@ -1262,7 +1304,10 @@
           "left": 0
         },
         "background": "#F8F5ED",
-        "clip": true
+        "clip": true,
+        "tokenRefs": {
+          "fill": "paperTone"
+        }
       },
       "galleryEyebrow": {
         "id": "galleryEyebrow",
@@ -1295,7 +1340,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 1.7,
         "bindingKey": null,
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "accentTone"
+        }
       },
       "galleryHeading": {
         "id": "galleryHeading",
@@ -1328,7 +1376,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "copy_galleryHeading",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "galleryHero": {
         "id": "galleryHero",
@@ -1412,7 +1463,10 @@
           "left": 0
         },
         "background": "#EFE9DD",
-        "clip": true
+        "clip": true,
+        "tokenRefs": {
+          "fill": "warmTone"
+        }
       },
       "rsvpEyebrow": {
         "id": "rsvpEyebrow",
@@ -1445,7 +1499,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 1.3,
         "bindingKey": null,
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "accentTone"
+        }
       },
       "rsvpHeading": {
         "id": "rsvpHeading",
@@ -1478,7 +1535,10 @@
         "lineHeight": 1.22,
         "letterSpacing": 0,
         "bindingKey": "copy_rsvpHeading",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "rsvpNote": {
         "id": "rsvpNote",
@@ -1511,7 +1571,10 @@
         "lineHeight": 1.38,
         "letterSpacing": 0,
         "bindingKey": "copy_rsvpNote",
-        "autoHeight": false
+        "autoHeight": false,
+        "tokenRefs": {
+          "textColor": "inkTone"
+        }
       },
       "rsvpWidget": {
         "id": "rsvpWidget",
@@ -2418,6 +2481,124 @@
           "ky": "17:00"
         }
       }
+    },
+    "tokens": {
+      "paperTone": {
+        "id": "paperTone",
+        "name": "Основная бумага",
+        "kind": "color",
+        "value": "#F8F5ED"
+      },
+      "warmTone": {
+        "id": "warmTone",
+        "name": "Дополнительная бумага",
+        "kind": "color",
+        "value": "#EFE9DD"
+      },
+      "inkTone": {
+        "id": "inkTone",
+        "name": "Основной текст",
+        "kind": "color",
+        "value": "#262720"
+      },
+      "accentTone": {
+        "id": "accentTone",
+        "name": "Акцентный текст",
+        "kind": "color",
+        "value": "#606B52"
+      }
+    },
+    "themes": {
+      "themeOlive": {
+        "id": "themeOlive",
+        "name": "Olive",
+        "overrides": {
+          "paperTone": {
+            "id": "paperTone",
+            "name": "Основная бумага",
+            "kind": "color",
+            "value": "#F6F6EF"
+          },
+          "warmTone": {
+            "id": "warmTone",
+            "name": "Дополнительная бумага",
+            "kind": "color",
+            "value": "#EAEDE3"
+          },
+          "inkTone": {
+            "id": "inkTone",
+            "name": "Основной текст",
+            "kind": "color",
+            "value": "#303D2C"
+          },
+          "accentTone": {
+            "id": "accentTone",
+            "name": "Акцентный текст",
+            "kind": "color",
+            "value": "#647856"
+          }
+        }
+      },
+      "themeSand": {
+        "id": "themeSand",
+        "name": "Sand",
+        "overrides": {
+          "paperTone": {
+            "id": "paperTone",
+            "name": "Основная бумага",
+            "kind": "color",
+            "value": "#FAF4EA"
+          },
+          "warmTone": {
+            "id": "warmTone",
+            "name": "Дополнительная бумага",
+            "kind": "color",
+            "value": "#F1E5D4"
+          },
+          "inkTone": {
+            "id": "inkTone",
+            "name": "Основной текст",
+            "kind": "color",
+            "value": "#41372D"
+          },
+          "accentTone": {
+            "id": "accentTone",
+            "name": "Акцентный текст",
+            "kind": "color",
+            "value": "#9A7C57"
+          }
+        }
+      },
+      "themeBlush": {
+        "id": "themeBlush",
+        "name": "Blush",
+        "overrides": {
+          "paperTone": {
+            "id": "paperTone",
+            "name": "Основная бумага",
+            "kind": "color",
+            "value": "#FDF5F1"
+          },
+          "warmTone": {
+            "id": "warmTone",
+            "name": "Дополнительная бумага",
+            "kind": "color",
+            "value": "#F5E8E3"
+          },
+          "inkTone": {
+            "id": "inkTone",
+            "name": "Основной текст",
+            "kind": "color",
+            "value": "#49393B"
+          },
+          "accentTone": {
+            "id": "accentTone",
+            "name": "Акцентный текст",
+            "kind": "color",
+            "value": "#A46D6A"
+          }
+        }
+      }
     }
   },
   "personalization": {
@@ -2577,6 +2758,22 @@
         "required": true,
         "maxLength": 5,
         "multiline": false
+      },
+      {
+        "id": "colorTheme",
+        "kind": "theme",
+        "section": "appearance",
+        "required": false,
+        "label": {
+          "ru": "Цветовая тема",
+          "ky": "Түс темасы"
+        },
+        "themeIds": [
+          "themeOlive",
+          "themeSand",
+          "themeBlush"
+        ],
+        "allowBase": true
       }
     ],
     "sectionEditing": {
