@@ -346,6 +346,8 @@ model CustomerPublication {
   draft         InvitationDraft   @relation(fields: [draftId], references: [id], onDelete: Restrict)
   owner         User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   releases      CustomerPublicationRelease[]
+  responses     CustomerRsvpResponse[]
+  rsvpThrottle  CustomerRsvpThrottle[]
 
   @@index([ownerId, updatedAt])
 }
@@ -362,4 +364,30 @@ model CustomerPublicationRelease {
   publication   CustomerPublication @relation(fields: [publicationId], references: [id], onDelete: Restrict)
 
   @@unique([publicationId, number])
+}
+
+/** Customer invitation RSVP belongs to customer publication, never an admin publication. */
+model CustomerRsvpResponse {
+  id            String             @id @default(uuid()) @db.Uuid
+  publicationId String             @db.Uuid
+  requestId     String             @db.Uuid
+  nodeId        String             @db.VarChar(80)
+  guestName     String             @db.VarChar(120)
+  attendance    Attendance
+  guestCount    Int                @default(1)
+  createdAt     DateTime           @default(now())
+  publication   CustomerPublication @relation(fields: [publicationId], references: [id], onDelete: Restrict)
+
+  @@unique([publicationId, requestId])
+  @@index([publicationId, createdAt])
+}
+
+model CustomerRsvpThrottle {
+  publicationId String             @db.Uuid
+  bucket        DateTime           @db.Timestamptz(0)
+  count         Int                @default(0)
+  publication   CustomerPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@id([publicationId, bucket])
+  @@index([bucket])
 }
