@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState,type FormEvent} from "react";
 import {ArrowLeft,CalendarDays,Check,Copy,Eye,RefreshCw,Users,X} from "lucide-react";
 import {configuredSupabase,getSupabaseBrowserClient} from "@/features/auth/browser/supabase-session";
 import {customerApi,listCustomerDrafts,getCustomerPublication,unpublishCustomerInvitation,
@@ -26,6 +26,9 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
   const [replies,setReplies]=useState<Record<string,Reply[]>>({});
   const [next,setNext]=useState<Record<string,number|null>>({});
   const [busy,setBusy]=useState<string|null>(null);
+  const [email,setEmail]=useState("");
+  const [loginBusy,setLoginBusy]=useState(false);
+  const [loginStatus,setLoginStatus]=useState("");
 
   useEffect(()=>{
     if(!client){setLoading(false);return;}
@@ -38,6 +41,20 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
     });
     return()=>{active=false;subscription.unsubscribe();};
   },[client]);
+
+  async function signIn(event:FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    if(!client||loginBusy||!email.trim())return;
+    setLoginBusy(true);setLoginStatus("");
+    try{
+      const {error}=await client.auth.signInWithOtp({
+        email:email.trim(),options:{emailRedirectTo:window.location.href},
+      });
+      if(error)throw error;
+      setLoginStatus(ru?"Ссылка для входа отправлена на email.":"Кирүү шилтемеси email дарегиңизге жөнөтүлдү.");
+    }catch{setLoginStatus(ru?"Не удалось отправить ссылку.":"Шилтемени жөнөтүү мүмкүн болгон жок.");}
+    finally{setLoginBusy(false);}
+  }
 
   async function refresh(){
     if(!signedIn){setLoading(false);return;}
@@ -94,8 +111,14 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
       {!config?<section className="ci-empty">{ru?"Настройте Supabase и API для кабинета.":"Кабинет үчүн Supabase жана API жөндөөлөрүн киргизиңиз."}</section>:
       !signedIn?<section className="ci-empty">
         <Users size={30}/><h2>{ru?"Войдите в Eventiq":"Eventiq аккаунтуна кириңиз"}</h2>
-        <p>{ru?"Откройте любой шаблон и войдите через email. Затем ваши приглашения появятся здесь.":"Шаблонду ачып, email аркылуу кириңиз."}</p>
-        <Link href={`/${locale}/templates`}>{ru?"Перейти к шаблонам":"Шаблондорго өтүү"}</Link>
+        <p>{ru?"Войдите по email, чтобы увидеть свои черновики и ответы гостей.":"Черновиктерди жана коноктордун жоопторун көрүү үчүн email аркылуу кириңиз."}</p>
+        <form className="ci-login" onSubmit={e=>void signIn(e)}>
+          <label htmlFor="ci-login-email">Email</label>
+          <input id="ci-login-email" type="email" required autoComplete="email" value={email}
+            onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/>
+          <button type="submit" disabled={loginBusy}>{ru?"Отправить ссылку":"Шилтеме жөнөтүү"}</button>
+        </form>
+        {loginStatus&&<p role="status">{loginStatus}</p>}
       </section>:loading?<section className="ci-empty" role="status">{ru?"Загружаем приглашения…":"Чакыруулар жүктөлүүдө…"}</section>:
       entries.length===0?<section className="ci-empty"><CalendarDays size={30}/>
         <h2>{ru?"Пока нет приглашений":"Азырынча чакыруулар жок"}</h2>
