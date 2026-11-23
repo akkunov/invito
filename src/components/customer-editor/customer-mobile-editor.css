@@ -418,3 +418,18 @@
  .ce-shell .se-theme-sample-line{display:block;width:76%;height:20px;border-radius:4px}
  .ce-shell .se-theme-option strong{font-size:12px}
 }
+
+
+@media(max-width:850px){
+ .ce-shell .se-text-style{display:grid;gap:18px}
+ .ce-shell .se-text-style-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .ce-shell .se-text-style-row .se-control{min-width:0}
+ .ce-shell .se-text-style-size,.ce-shell .se-text-style-align{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid #ddd9d0;border-radius:12px;background:#fff;overflow:hidden}
+ .ce-shell .se-text-style-size>button,.ce-shell .se-text-style-align>button{min-height:46px;border:0;background:transparent;color:#313a2d;font-size:17px}
+ .ce-shell .se-text-style-size>output{display:grid;place-items:center;font-size:14px;font-weight:700;color:#30372d}
+ .ce-shell .se-text-style-align>button[aria-pressed=true]{background:#edf1e7;color:#3c5533}
+ .ce-shell .se-text-style-colors{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:5px}
+ .ce-shell .se-text-style-colors>button{width:42px;height:42px;border:3px solid #fff;border-radius:50%;outline:1px solid #dedad2;box-shadow:0 1px 5px #0000000a}
+ .ce-shell .se-text-style-colors>button[aria-pressed=true]{outline:2px solid #455c37;outline-offset:2px}
+ .ce-shell .se-text-style-size>button:focus-visible,.ce-shell .se-text-style-align>button:focus-visible,.ce-shell .se-text-style-colors>button:focus-visible{outline:2px solid #ff4a0a;outline-offset:-2px}
+}
