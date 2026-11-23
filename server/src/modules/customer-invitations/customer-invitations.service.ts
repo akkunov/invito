@@ -58,13 +58,13 @@ export class CustomerInvitationsService {
     return this.media.completeUpload(userId,workspaceId,id);
   }
 
-  private async template(versionId:string){
+  private async template(versionId:string,mustBePublished=true){
     const version=await this.db.templateVersion.findUnique({
       where:{id:versionId},
       select:{id:true,number:true,document:true,personalization:true,
         template:{select:{id:true,status:true,publicSlug:true,workspaceId:true}}},
     });
-    if(!version||version.template.status!=="PUBLISHED"||!version.template.publicSlug)
+    if(!version||(mustBePublished&&(version.template.status!=="PUBLISHED"||!version.template.publicSlug)))
       throw new NotFoundException("TEMPLATE_NOT_PUBLISHED");
     const {snapshot,contract}=validatedTemplate(version.document,version.personalization);
     if(!contract||!contract.fields.length)throw new UnprocessableEntityException("TEMPLATE_NOT_PERSONALIZABLE");
@@ -125,7 +125,7 @@ export class CustomerInvitationsService {
     const draft=await this.db.invitationDraft.findFirst({where:{id,ownerId:userId},
       select:{id:true,revision:true,patch:true,workspaceId:true,templateVersionId:true,updatedAt:true}});
     if(!draft)throw new NotFoundException("INVITATION_NOT_FOUND");
-    const template=await this.template(draft.templateVersionId);
+    const template=await this.template(draft.templateVersionId,false);
     const data=await this.checkPatch(userId,draft.workspaceId,template,draft.patch);
     const mediaUrls:Record<string,string>={};
     await Promise.all(data.rows.map(async a=>{mediaUrls["asset:"+a.id]=await this.store.signRead(a.storageKey,a.mimeType);}));
