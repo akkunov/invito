@@ -201,3 +201,81 @@
 .ce-cloud .ce-upload-button:focus-within{outline:2px solid #ff4a0a;outline-offset:3px}
 .ce-cloud .ce-upload-button input:focus-visible{outline:0}
 @media(max-width:550px){.ce-cloud-group{padding:13px}.ce-cloud-group-head{display:grid;gap:4px}}
+
+
+/* Eventiq Mobile Editor 3.0 — phone-only canvas and bottom sheet.
+   The existing desktop editor and private Studio v2 are unchanged. */
+.ce-mobile-sheet-handle,.ce-mobile-canvas-caption,.ce-mobile-dock{display:none}
+@media(max-width:850px){
+  .ce-shell{background:#f5f3ed;min-height:100dvh}
+  .ce-header{position:sticky;top:0;z-index:11;height:57px;padding-inline:14px;background:#fffdf9}
+  .ce-layout{display:block;min-height:calc(100dvh - 57px)}
+  .ce-controls{display:none}
+  .ce-preview.ce-mobile-hidden,.ce-preview{
+    display:flex;position:relative;align-items:center;min-height:calc(100dvh - 57px);
+    padding:12px 12px calc(100px + env(safe-area-inset-bottom));
+    background:#f1eee8;overflow:visible;
+  }
+  .ce-preview-head{display:none}
+  .ce-preview-sections{width:min(100%,460px);gap:7px;margin:0 auto;padding:3px 1px 13px}
+  .ce-preview-sections button{min-height:40px;background:#fffefb;border-color:#e4dfd4}
+  .ce-preview-sections button[aria-current="page"]{border-color:#788264;color:#39452f;background:#f5f6ef}
+  .ce-preview-screen{width:min(100%,430px);border:5px solid #fff;border-radius:18px;box-shadow:0 14px 40px #30282017}
+  /* The document remains immutable; this only enables event targeting for permitted fields. */
+  .ce-preview-screen [data-studio-node]{pointer-events:auto!important}
+  .ce-preview-screen [data-studio-node]:where(:focus-visible){outline:2px solid #ff4a0a}
+  .ce-mobile-canvas-caption{display:block;text-align:center;max-width:430px;width:100%;margin:15px auto 0;font-size:12px;color:#73746b;line-height:1.45}
+  .ce-mobile-dock{
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;
+    position:fixed;bottom:0;left:0;right:0;z-index:12;
+    padding:8px 7px calc(8px + env(safe-area-inset-bottom));
+    background:#fffefa;border-top:1px solid #e8e5dd;box-shadow:0 -10px 28px #3028200c;
+  }
+  .ce-mobile-dock button{
+    min-width:0;min-height:53px;padding:7px 2px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:5px;border:0;background:transparent;
+    color:#555950;font-family:inherit;font-size:10px;font-weight:650;
+    border-radius:9px;cursor:pointer;
+  }
+  .ce-mobile-dock button:active{background:#f0eee7}
+  .ce-mobile-dock button.ce-mobile-dock-publish{color:#b8421a}
+  .ce-mobile-dock button:focus-visible,.ce-mobile-sheet-handle button:focus-visible{
+    outline:2px solid #ff4a0a;outline-offset:-2px;
+  }
+  .ce-mobile-sheet-open .ce-controls{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;
+    width:100%;min-width:0;max-height:min(78dvh,760px);min-height:0;
+    overflow:hidden;border:1px solid #e7e1d7;border-radius:22px 22px 0 0;
+    box-shadow:0 -20px 70px #1d201e28;background:#fffefa;
+  }
+  .ce-mobile-sheet-handle{
+    display:none;flex:none;align-items:center;justify-content:space-between;
+    position:relative;min-height:57px;padding:15px 19px;
+    border-bottom:1px solid #eeebe4;color:#242721;font-size:15px;font-weight:750;
+  }
+  .ce-mobile-sheet-open .ce-mobile-sheet-handle{display:flex}
+  .ce-mobile-grabber{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:38px;height:4px;border-radius:9px;background:#d5d2c9}
+  .ce-mobile-sheet-handle button{width:35px;height:35px;display:grid;place-items:center;background:#f2f1ed;color:#333;border:0;border-radius:10px}
+  .ce-mobile-sheet-open .ce-intro,.ce-mobile-sheet-open .ce-completion,.ce-mobile-sheet-open .ce-progress,.ce-mobile-sheet-open .ce-mobile-tabs{display:none}
+  .ce-mobile-sheet-open .ce-form,.ce-mobile-sheet-open .ce-form.ce-mobile-hidden{
+    display:block;min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;
+    padding:15px 18px 24px;max-width:none;scrollbar-gutter:stable;
+  }
+  .ce-mobile-sheet-open .ce-step-heading{margin-bottom:16px}
+  .ce-mobile-sheet-open .ce-step-heading h2{font-size:20px;margin:5px 0}
+  .ce-mobile-sheet-open .ce-step-hint{margin-bottom:10px}
+  .ce-mobile-sheet-open .ce-footer,.ce-mobile-sheet-open .ce-footer.ce-mobile-hidden{
+    display:flex;flex:none;position:relative;padding:10px 17px calc(11px + env(safe-area-inset-bottom));
+    background:#fffefa;border-top:1px solid #e9e5dd;
+  }
+  .ce-mobile-sheet-open .ce-security-note{margin-top:12px}
+  .ce-mobile-sheet-open .se-field{margin-bottom:12px}
+  .ce-mobile-sheet-open .ce-cloud{margin:14px 0}
+}
+@media(max-width:360px){
+ .ce-mobile-dock button{font-size:9px}
+ .ce-mobile-dock button svg{width:19px;height:19px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ce-mobile-sheet-open .ce-controls{scroll-behavior:auto}
+}
