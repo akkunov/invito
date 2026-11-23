@@ -46,7 +46,7 @@ export function CustomerPublicInvitation({initial,locale}:{
       document={{...publication.document,locale}}
       mediaUrls={publication.mediaUrls}
       device="auto"
-      guest={{mode:"preview"}}
+      guest={{mode:"live",rsvpEnabled:false}}
     />
   </main>;
 }
