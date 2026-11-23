@@ -40,6 +40,7 @@ const dictionary={
     unsupported:"Для редактирования этого шаблона пока не назначены поля.",
     original:"Дизайн защищён. Можно изменить только разрешённые автором данные.",
     noPublish:"После публикации вы получите ссылку, которой можно поделиться с гостями.",
+    filled:"Заполнено",of:"из",sections:"Разделы приглашения",photos:"Фотографии",publishAction:"Опубликовать",editorTip:"Все изменения видны в предпросмотре справа.",
   },
   ky:{
     main:"Негизги маалымат",event:"Күнү жана жери",appearance:"Жасалгалоо",publish:"Текшерүү",
@@ -56,6 +57,7 @@ const dictionary={
     unsupported:"Бул шаблондун өзгөртүү талаалары азырынча көрсөтүлө элек.",
     original:"Дизайн корголгон. Автор уруксат берген маалымат гана өзгөрөт.",
     noPublish:"Жарыялагандан кийин конокторго жибере турган шилтеме аласыз.",
+    filled:"Толтурулду",of:"ичинен",sections:"Чакыруу бөлүмдөрү",photos:"Сүрөттөр",publishAction:"Жарыялоо",editorTip:"Өзгөртүүлөр алдын ала көрүүдө көрсөтүлөт.",
   },
 } as const;
 
@@ -167,6 +169,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     return acc;
   },{main:[],event:[],appearance:[],publish:[]}),[contract]);
   const currentIndex=steps.indexOf(step);
+  const filledCount=contract.fields.length-issues.length;
+  const completion=contract.fields.length?Math.max(0,Math.round(filledCount/contract.fields.length*100)):100;
   const fields=grouped[step];
   const update=(id:string,value:PersonalizedValue)=>{
     const candidate={...patch,values:{...patch.values,[id]:value}};
@@ -213,12 +217,18 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           <h1>{t.title}</h1>
           <p>{t.welcome}</p>
         </div>
+        <div className="ce-completion" role="status" aria-live="polite">
+          <div className="ce-completion-copy"><span>{t.filled}: {filledCount} {t.of} {contract.fields.length}</span><strong>{completion}%</strong></div>
+          <div className="ce-completion-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion} aria-label={t.filled}>
+            <span style={{width:completion+"%"}}/>
+          </div>
+        </div>
         <nav className="ce-progress" aria-label={t.step}>
           {steps.map((item,index)=><button type="button" key={item}
             aria-current={step===item?"step":undefined} onClick={()=>{setStep(item);setMode("edit");}}
             className={index===currentIndex?"ce-progress-current":""}>
             <span className="ce-progress-bar"/>
-            <span className="ce-step-label">{index+1}. {t[item]}</span>
+            <span className="ce-step-label"><span className="ce-step-number">{index<currentIndex?<Check size={12}/>:index+1}</span>{t[item]}</span>
           </button>)}
         </nav>
         <div className="ce-mobile-tabs" role="group" aria-label={t.preview}>
@@ -229,6 +239,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           <div className="ce-step-heading">
             <p>{t.step} {currentIndex+1} {t.stepOf} 4</p>
             <h2>{step==="publish"?t.publishTitle:t[step]}</h2>
+            {step!=="publish"&&<p className="ce-step-hint">{t.editorTip}</p>}
           </div>
           {contract.locales.length>1&&step==="main"&&
             <label className="ce-language"><span>{t.language}</span>
@@ -258,10 +269,11 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                   urls={mergedUrls} onChange={value=>update(field.id,value)}/>
               </div>):
               <p className="ce-empty">{hasFields?t.noFields:t.unsupported}</p>}
-          {step==="appearance"||step==="publish"?<CustomerCloudControls
+          <div className={step==="appearance"||step==="publish"?"ce-cloud-mount":"ce-cloud-mount ce-cloud-mount-hidden"}>
+            <CustomerCloudControls
             locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
-            uploadTargets={step==="appearance"?grouped.appearance.reduce<
+            uploadTargets={grouped.appearance.reduce<
               Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>
             >((targets,f)=>{
               if(f.kind==="image")targets.push({id:f.id,label:f.label[locale],kind:"image",
@@ -269,7 +281,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
               else if(f.kind==="gallery")targets.push({id:f.id,label:f.label[locale],kind:"gallery",
                 minWidth:1,minHeight:1});
               return targets;
-            },[]):[]}
+            },[])}
             onLoad={(remote,assets,urls)=>{
               try{
                 personalizeDocument(source,contract,remote,assets,true);
@@ -291,7 +303,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                 setPatch(nextPatch);setWarning("");
               }catch{setWarning(t.invalidDraft);}
             }}
-          />:null}
+            />
+          </div>
           <p className="ce-security-note">{t.original}</p>
           {warning&&<p className="ce-warning" role="alert">{warning}</p>}
         </div>
@@ -307,7 +320,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
       <aside className={mode==="edit"?"ce-preview ce-mobile-hidden":"ce-preview"} aria-label={t.preview}>
         <div className="ce-preview-head">
           <div><strong>{t.preview}</strong><small>{name}</small></div>
-          <button className="ce-secondary" type="button" onClick={()=>setPreviewRun(n=>n+1)}><RotateCcw size={15}/></button>
+          <button className="ce-secondary" aria-label={locale==="ru"?"Перезапустить анимации":"Анимацияны кайра баштоо"} type="button" onClick={()=>setPreviewRun(n=>n+1)}><RotateCcw size={15}/></button>
         </div>
         <div className="ce-preview-screen">{preview}</div>
       </aside>
