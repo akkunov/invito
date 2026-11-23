@@ -105,3 +105,27 @@ export async function uploadCustomerPhoto(file:File,progress?:(value:string)=>vo
   };
   return {asset,url:read.url};
 }
+
+export type CustomerPublication={
+  id:string;slug:string;status:"ACTIVE"|"UNPUBLISHED";latestRelease:number;
+};
+export async function getCustomerPublication(id:string):Promise<CustomerPublication|null>{
+  const cfg=config(),token=await getSupabaseAccessToken(cfg);
+  if(!token)throw new CustomerCloudError(401,"SIGN_IN_REQUIRED");
+  const response=await fetch(cfg.apiBaseUrl+"/customer/invitations/"+encodeURIComponent(id)+"/publication",{
+    cache:"no-store",credentials:"omit",headers:{Authorization:"Bearer "+token},
+  });
+  if(!response.ok)throw new CustomerCloudError(response.status,"CUSTOMER_API_"+response.status);
+  const text=await response.text();
+  return text.trim()?JSON.parse(text) as CustomerPublication:null;
+}
+export async function publishCustomerInvitation(
+  id:string,input:{slug:string;expectedRevision:number;expectedRelease:number},
+){
+  return customerApi<CustomerPublication & {draftRevision:number}>(
+    "/customer/invitations/"+encodeURIComponent(id)+"/publish","POST",input);
+}
+export async function unpublishCustomerInvitation(id:string,expectedRelease:number){
+  return customerApi<{status:"UNPUBLISHED";latestRelease:number}>(
+    "/customer/invitations/"+encodeURIComponent(id)+"/unpublish","POST",{expectedRelease});
+}
