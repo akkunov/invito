@@ -261,11 +261,15 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           {step==="appearance"||step==="publish"?<CustomerCloudControls
             locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
-            uploadTargets={step==="appearance"?grouped.appearance.flatMap(f=>
-              f.kind==="image"?[{id:f.id,label:f.label[locale],kind:"image" as const,
-                minWidth:f.minWidth,minHeight:f.minHeight}]:
-              f.kind==="gallery"?[{id:f.id,label:f.label[locale],kind:"gallery" as const,
-                minWidth:1,minHeight:1}]:[]):[]}
+            uploadTargets={step==="appearance"?grouped.appearance.reduce<
+              Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>
+            >((targets,f)=>{
+              if(f.kind==="image")targets.push({id:f.id,label:f.label[locale],kind:"image",
+                minWidth:f.minWidth,minHeight:f.minHeight});
+              else if(f.kind==="gallery")targets.push({id:f.id,label:f.label[locale],kind:"gallery",
+                minWidth:1,minHeight:1});
+              return targets;
+            },[]):[]}
             onLoad={(remote,assets,urls)=>{
               try{
                 personalizeDocument(source,contract,remote,assets,true);
