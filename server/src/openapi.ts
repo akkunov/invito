@@ -8,6 +8,7 @@ import {createTemplateInput, createVersionInput, createProjectInput, createRevis
 import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/publications/publications-input.js";
 import {templatePackageSchema} from "./modules/documents/template-package.js";
 import {catalogPublishSchema} from "./modules/catalog/catalog.controller.js";
+import {createCustomerInvitationSchema,updateCustomerInvitationSchema,customerPhotoSchema} from "./modules/customer-invitations/customer-invitations.controller.js";
 
 /**
  * eventiq API contract. Runtime validation remains in Zod; OpenAPI schemas mirror
@@ -110,6 +111,24 @@ const endpoints: Endpoint[] = [
     summary:"Разместить шаблон в каталоге",
     description:"Только Workspace ADMIN/OWNER. Проверяет контракт персонализации, cover page и READY R2-медиа. Публикация шаблона не даёт клиенту админские права.",
     requestBody:body(schema(catalogPublishSchema)),errors:[400,401,403,404,409,422]},
+  {method:"post",path:"/api/v1/customer/invitations",tag:"Customer Invitations",
+    summary:"Создать личное приглашение из опубликованного шаблона",
+    description:"Создаёт приватный черновик текущего пользователя, закреплённый за неизменяемой версией шаблона.",
+    requestBody:body(schema(createCustomerInvitationSchema)),errors:[400,401,404,422]},
+  {method:"get",path:"/api/v1/customer/invitations",tag:"Customer Invitations",
+    summary:"Получить список своих черновиков",description:"Только черновики авторизованного пользователя.",errors:[401]},
+  {method:"get",path:"/api/v1/customer/invitations/{id}",tag:"Customer Invitations",
+    summary:"Загрузить черновик и его фотографии",description:"Проверяет ownerId, возвращает разрешённый patch, verified asset descriptors и временные R2 URL.",errors:[400,401,404,422]},
+  {method:"patch",path:"/api/v1/customer/invitations/{id}",tag:"Customer Invitations",
+    summary:"Сохранить личные изменения CAS",description:"Сервер сверяет права на все новые изображения и контракт текущей версии. expectedRevision защищает от перезаписи.",
+    requestBody:body(schema(updateCustomerInvitationSchema)),errors:[400,401,404,409,422]},
+  {method:"post",path:"/api/v1/customer/media/uploads",tag:"Customer Invitations",
+    summary:"Получить signed PUT URL для собственной фотографии",
+    requestBody:body(schema(customerPhotoSchema)),errors:[400,401,413,503]},
+  {method:"post",path:"/api/v1/customer/media/{id}/complete",tag:"Customer Invitations",
+    summary:"Проверить и завершить загрузку фотографии",errors:[400,401,404,409,422,503]},
+  {method:"get",path:"/api/v1/customer/media/{id}/read-url",tag:"Customer Invitations",
+    summary:"Получить временный URL своей фотографии",errors:[400,401,404,503]},
   {method:"get",path:"/api/v1/templates/{id}",tag:"Templates",summary:"Получить шаблон",
     description:"Возвращает доступный шаблон с метаданными и версией.",errors:[401,404]},
   {method:"get",path:"/api/v1/templates/{id}/versions/{number}",tag:"Templates",summary:"Получить версию шаблона",
@@ -245,6 +264,7 @@ export function setupOpenApi(app: INestApplication): void {
     .addTag("Workspaces","Мультиарендность, членство, роли")
     .addTag("Templates","Шаблоны и неизменяемые версии")
     .addTag("Catalog","Публичный каталог шаблонов")
+    .addTag("Customer Invitations","Личные черновики и фотографии")
     .addTag("Projects","Документы и ревизии Studio v2")
     .addTag("Media","Приватное R2-хранилище")
     .addTag("Publications","Публикации и релизы")
