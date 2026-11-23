@@ -39,9 +39,18 @@ export class CatalogService {
     ]);
     const items=await Promise.all(rows.map(async row=>{
       const document=row.versions[0]?.document as ProjectDocumentV2|undefined;
-      const image=document&&Object.values(document.assets).find(asset=>asset.mimeType.startsWith("image/")&&asset.storageKey.startsWith("asset:"));
+      const trustedStaticCovers=new Set([
+        "/images/riviera/couple.webp",
+        "/images/riviera/fabric-left.webp",
+        "/images/riviera/fabric-right.webp",
+        "/images/riviera/flowers.webp",
+        "/images/riviera/villa.webp",
+      ]);
+      const image=document&&Object.values(document.assets).find(asset=>asset.mimeType.startsWith("image/")&&
+        (asset.storageKey.startsWith("asset:")||trustedStaticCovers.has(asset.storageKey)));
       let coverUrl:string|null=null;
-      if(image){
+      if(image&&trustedStaticCovers.has(image.storageKey))coverUrl=image.storageKey;
+      else if(image){
         const asset=await this.db.mediaAsset.findFirst({where:{id:image.storageKey.slice(6),workspaceId:row.workspaceId,status:"READY"},select:{storageKey:true,mimeType:true}});
         if(asset)coverUrl=await this.media.signRead(asset.storageKey,asset.mimeType).catch(()=>null);
       }
