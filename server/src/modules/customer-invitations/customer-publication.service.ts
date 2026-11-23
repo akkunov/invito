@@ -5,6 +5,7 @@ import {MediaObjectStore} from "../media/media-object-store.js";
 import {validatedDocument,validatedTemplate,snapshotHash} from "../documents/documents-input.js";
 import {finalizePersonalization} from "../../../../src/features/studio-v2/core/personalization.js";
 import {CustomerInvitationsService} from "./customer-invitations.service.js";
+import {RsvpChallengeService} from "../publications/rsvp-challenge.service.js";
 
 const json=(value:unknown)=>value as Prisma.InputJsonValue;
 function conflict(error:unknown):never {
@@ -20,6 +21,7 @@ export class CustomerPublicationService {
     @Inject(PrismaService) private readonly db:PrismaService,
     @Inject(MediaObjectStore) private readonly store:MediaObjectStore,
     @Inject(CustomerInvitationsService) private readonly drafts:CustomerInvitationsService,
+    @Inject(RsvpChallengeService) private readonly challenge:RsvpChallengeService,
   ){}
 
   async getOwner(userId:string,draftId:string){
@@ -156,7 +158,8 @@ export class CustomerPublicationService {
     await Promise.all(rows.map(async asset=>{
       mediaUrls["asset:"+asset.id]=await this.store.signRead(asset.storageKey,asset.mimeType);
     }));
+    const siteKey=this.challenge.siteKey();
     return {slug:publication.slug,release:release.number,sha256:release.sha256,
-      document,mediaUrls,rsvpEnabled:false,turnstileSiteKey:null};
+      document,mediaUrls,rsvpEnabled:!!siteKey||process.env.NODE_ENV!=="production",turnstileSiteKey:siteKey};
   }
 }
