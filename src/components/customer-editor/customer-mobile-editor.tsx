@@ -195,14 +195,18 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     return acc;
   },{main:[],event:[],appearance:[],publish:[]}),[contract]);
   const uploadTargets=useMemo(()=>grouped.appearance.reduce<
-    Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>
+    Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number;maxPhotos?:number;currentCount?:number}>
   >((targets,field)=>{
     if(field.kind==="image")targets.push({id:field.id,label:field.label[locale],kind:"image",
       minWidth:field.minWidth,minHeight:field.minHeight});
-    else if(field.kind==="gallery")targets.push({id:field.id,label:field.label[locale],kind:"gallery",
-      minWidth:1,minHeight:1});
+    else if(field.kind==="gallery"){
+      const value=readPersonalizedValue(document,field);
+      targets.push({id:field.id,label:field.label[locale],kind:"gallery",
+        minWidth:1,minHeight:1,maxPhotos:field.maxPhotos,
+        currentCount:value?.kind==="gallery"?value.assetIds.length:0});
+    }
     return targets;
-  },[]),[grouped,locale]);
+  },[]),[grouped,locale,document]);
   const currentIndex=steps.indexOf(step);
   const filledCount=contract.fields.length-issues.length;
   const completion=contract.fields.length?Math.max(0,Math.round(filledCount/contract.fields.length*100)):100;
