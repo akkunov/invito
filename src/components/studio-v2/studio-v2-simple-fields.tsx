@@ -30,6 +30,52 @@ export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={}
  case "date":control=<label className="se-control"><span>{t("Дата и время","Күнү жана убактысы")}</span><DateInput locale={locale} value={binding?.type==="date"?binding.value:null} onChange={d=>{if(d)onChange({kind:"binding",value:{type:"date",value:d}});}}/></label>;break;
  case "number":control=<label className="se-control"><span>{title}</span><NumberInput min={f.min} max={f.max} value={binding?.type==="number"?binding.value:Math.max(f.min,Math.min(0,f.max))} onChange={n=>onChange({kind:"binding",value:{type:"number",value:n}})}/><small>{f.min} — {f.max}</small></label>;break;
  case "boolean":control=<label className="se-check"><input type="checkbox" checked={binding?.type==="boolean"?binding.value:false} onChange={e=>onChange({kind:"binding",value:{type:"boolean",value:e.target.checked}})}/>{title}</label>;break;
+ case "textStyle":{
+  const node=doc.nodes[f.nodeId];
+  if(!node||node.type!=="text")break;
+  const initial=node.runs[0].style;
+  const current=v?.kind==="textStyle"?v:{
+    kind:"textStyle" as const,fontFamily:initial.fontFamily,fontSize:initial.fontSize,
+    fontWeight:initial.fontWeight,color:initial.color,textAlign:node.textAlign,
+  };
+  const set=(changes:Partial<typeof current>)=>onChange({...current,...changes});
+  control=<div className="se-text-style">
+    <div className="se-text-style-row">
+      <label className="se-control"><span>{t("Шрифт","Арип")}</span>
+        <select value={current.fontFamily} onChange={e=>set({fontFamily:e.target.value as "sans"|"serif"})}>
+          {f.allowedFonts.map(font=><option key={font} value={font}>{font==="serif"?"Serif":"Sans"}</option>)}
+        </select>
+      </label>
+      <label className="se-control"><span>{t("Насыщенность","Калыңдыгы")}</span>
+        <select value={current.fontWeight} onChange={e=>set({fontWeight:Number(e.target.value)})}>
+          {f.allowedWeights.map(weight=><option key={weight} value={weight}>{weight}</option>)}
+        </select>
+      </label>
+    </div>
+    <div className="se-control"><span>{t("Размер текста","Тексттин өлчөмү")}</span>
+      <div className="se-text-style-size">
+        <button type="button" disabled={current.fontSize<=f.minFontSize} onClick={()=>set({fontSize:Math.max(f.minFontSize,current.fontSize-1)})}>−</button>
+        <output>{current.fontSize} px</output>
+        <button type="button" disabled={current.fontSize>=f.maxFontSize} onClick={()=>set({fontSize:Math.min(f.maxFontSize,current.fontSize+1)})}>+</button>
+      </div>
+    </div>
+    <div className="se-control"><span>{t("Выравнивание","Тегиздөө")}</span>
+      <div className="se-text-style-align">
+        {(["left","center","right"] as const).map(align=><button key={align} type="button"
+          aria-label={align==="left"?t("Слева","Сол"):align==="center"?t("По центру","Борборго"):t("Справа","Оң")}
+          aria-pressed={current.textAlign===align} onClick={()=>set({textAlign:align})}>{align==="left"?"☰":align==="center"?"≡":"☷"}</button>)}
+      </div>
+    </div>
+    <div className="se-control"><span>{t("Цвет текста","Тексттин түсү")}</span>
+      <div className="se-text-style-colors">
+        {f.allowedColors.map(color=><button key={color} type="button" aria-label={color}
+          aria-pressed={current.color.toLowerCase()===color.toLowerCase()}
+          style={{backgroundColor:color}} onClick={()=>set({color})}/>)}
+      </div>
+    </div>
+  </div>;
+  break;
+ }
  case "image":{
   const selected=v?.kind==="image"?v.assetId:"";
   control=<><p className="se-media-hint">{t("Выберите фото — результат сразу появится в предпросмотре.","Сүрөттү тандаңыз — өзгөртүү дароо көрүнөт.")}</p><div className="se-media-grid" role="radiogroup" aria-label={title}>{assets.map(a=><label className="se-media-option" key={a.id} data-selected={selected===a.id}><input type="radio" name={f.id} aria-label={a.name} checked={selected===a.id} onChange={()=>onChange({kind:"image",assetId:a.id})}/>{preview(a)}<span className="se-media-name">{a.name}</span><span className="se-media-selected" aria-hidden="true">✓</span></label>)}</div><p className="se-media-hint">{t("Доступны фотографии, подготовленные автором шаблона.","Шаблондун автору тандаган сүрөттөр жеткиликтүү.")}</p></>;break;
