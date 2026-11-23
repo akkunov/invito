@@ -17,10 +17,10 @@ type Props={
   locale:Locale;templateVersionId:string;patch:PersonalizationPatch;
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
   onUploaded:(fieldId:string,asset:VerifiedCustomerAsset,url:string)=>void;
-  imageFieldId:string|null;imageLimits:{minWidth:number;minHeight:number}|null;
+  uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>;
 };
 export function CustomerCloudControls({
-  locale,templateVersionId,patch,onLoad,onUploaded,imageFieldId,imageLimits,
+  locale,templateVersionId,patch,onLoad,onUploaded,uploadTargets,
 }:Props){
   const cfg=useMemo(configuredSupabase,[]);
   const supabase=useMemo(()=>cfg?getSupabaseBrowserClient(cfg):null,[cfg]);
@@ -31,6 +31,8 @@ export function CustomerCloudControls({
   const [cloudId,setCloudId]=useState<string|null>(null);
   const [revision,setRevision]=useState<number|null>(null);
   const [fileBusy,setFileBusy]=useState(false);
+  const [selectedTarget,setSelectedTarget]=useState("");
+  const target=uploadTargets.find(f=>f.id===selectedTarget)??uploadTargets[0]??null;
   const ru=locale==="ru";
   const personalKey=userId?"eventiq:cloud-draft:v1:"+userId+":"+templateVersionId:null;
 
@@ -125,17 +127,17 @@ export function CustomerCloudControls({
   }
 
   async function photo(file:File){
-    if(!userId||!imageFieldId||fileBusy)return;
+    if(!userId||!target||fileBusy)return;
     setFileBusy(true);setInfo("");
     try{
-      if(imageLimits){
+      if(target){
         const bitmap=await createImageBitmap(file);
-        const valid=bitmap.width>=imageLimits.minWidth&&bitmap.height>=imageLimits.minHeight;
+        const valid=bitmap.width>=target.minWidth&&bitmap.height>=target.minHeight;
         bitmap.close();
         if(!valid)throw new Error("IMAGE_TOO_SMALL");
       }
       const result=await uploadCustomerPhoto(file);
-      onUploaded(imageFieldId,result.asset,result.url);
+      onUploaded(target.id,result.asset,result.url);
       setInfo(ru?"Фото загружено. Сохраните приглашение в облаке.":"Сүрөт жүктөлдү. Чакырууну булутка сактаңыз.");
     }catch(e){
       setInfo(e instanceof Error&&e.message==="IMAGE_TOO_SMALL"
@@ -157,7 +159,12 @@ export function CustomerCloudControls({
         <button type="button" className="ce-primary" disabled={loading} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить в облако":"Булутка сактоо"}</button>
         <button type="button" className="ce-secondary" disabled={loading} onClick={()=>void load()}>{ru?"Открыть облачную копию":"Булуттагы көчүрмө"}</button>
       </div>
-      {imageFieldId&&<label className="ce-upload-button">
+      {uploadTargets.length>1&&<label className="ce-language"><span>{ru?"Куда добавить фотографию":"Сүрөт кайда кошулат"}</span>
+        <select value={target?.id??""} onChange={e=>setSelectedTarget(e.target.value)}>
+          {uploadTargets.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}
+        </select>
+      </label>}
+      {target&&<label className="ce-upload-button">
         <ImagePlus size={17}/>{fileBusy?"…":ru?"Загрузить своё фото":"Өз сүрөтүңүздү жүктөө"}
         <input type="file" accept="image/png,image/jpeg,image/webp" disabled={fileBusy}
           onChange={e=>{const file=e.target.files?.[0];if(file)void photo(file);e.target.value="";}}/>
