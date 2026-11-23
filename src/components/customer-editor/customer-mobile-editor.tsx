@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState,type MouseEvent} from "react";
 import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save,X,Type,Image as ImageIcon,Layers,CalendarDays,Send} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
@@ -182,6 +182,15 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     acc[sectionToStep[field.section]].push(field);
     return acc;
   },{main:[],event:[],appearance:[],publish:[]}),[contract]);
+  const uploadTargets=useMemo(()=>grouped.appearance.reduce<
+    Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>
+  >((targets,field)=>{
+    if(field.kind==="image")targets.push({id:field.id,label:field.label[locale],kind:"image",
+      minWidth:field.minWidth,minHeight:field.minHeight});
+    else if(field.kind==="gallery")targets.push({id:field.id,label:field.label[locale],kind:"gallery",
+      minWidth:1,minHeight:1});
+    return targets;
+  },[]),[grouped,locale]);
   const currentIndex=steps.indexOf(step);
   const filledCount=contract.fields.length-issues.length;
   const completion=contract.fields.length?Math.max(0,Math.round(filledCount/contract.fields.length*100)):100;
@@ -197,7 +206,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     window.addEventListener("keydown",onKey);
     return()=>window.removeEventListener("keydown",onKey);
   },[mobileSheetOpen]);
-  const selectCanvasField=(event:React.MouseEvent<HTMLDivElement>)=>{
+  const selectCanvasField=(event:MouseEvent<HTMLDivElement>)=>{
     if(!window.matchMedia("(max-width: 850px)").matches)return;
     const target=event.target;
     if(!(target instanceof Element))return;
@@ -329,15 +338,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             <CustomerCloudControls
             locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
-            uploadTargets={grouped.appearance.reduce<
-              Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>
-            >((targets,f)=>{
-              if(f.kind==="image")targets.push({id:f.id,label:f.label[locale],kind:"image",
-                minWidth:f.minWidth,minHeight:f.minHeight});
-              else if(f.kind==="gallery")targets.push({id:f.id,label:f.label[locale],kind:"gallery",
-                minWidth:1,minHeight:1});
-              return targets;
-            },[])}
+            uploadTargets={uploadTargets}
+            preferredUploadTargetId={selectedFieldId??undefined}
             onLoad={(remote,assets,urls)=>{
               try{
                 personalizeDocument(source,contract,remote,assets,true);
