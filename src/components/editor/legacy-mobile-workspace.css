@@ -61,3 +61,18 @@
 @media(min-width:851px){.lm3{display:none}}
 @media(max-width:365px){.lm3-header{gap:4px;padding-inline:7px}.lm3-header-actions>button:not(.lm3-publish){width:30px}.lm3 .lm3-publish{font-size:10px;padding-inline:7px}.lm3-brand{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.lm3 *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+.lm3-sheet .editor-inspector{padding:0;color:#272a24}
+.lm3-sheet .inspector-language{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:14px;border-bottom:1px solid #e9e6df;margin-bottom:15px}
+.lm3-sheet .inspector-language>span,.lm3-sheet .inspector-fields label,.lm3-sheet .inspector-design label{color:#41453b;font-size:13px}
+.lm3-sheet .inspector-toggle{display:flex;gap:4px}
+.lm3-sheet .inspector-toggle button{padding:8px 12px;border:1px solid #e4dfd5;background:white;color:#333;border-radius:9px;font-size:12px}
+.lm3-sheet .inspector-toggle button.selected{border-color:#71855f;background:#f1f5ee;color:#3f5734}
+.lm3-sheet .inspector-fields input,.lm3-sheet .inspector-fields textarea,.lm3-sheet .inspector-design input,.lm3-sheet .inspector-design textarea{background:#fff;color:#282923;border:1px solid #dedbd3;border-radius:10px;padding:12px}
+.lm3-sheet .inspector-help,.lm3-sheet .inspector-subtitle{color:#77776e}
+.lm3-sheet .inspector-appearance-section{margin-top:18px;border-top:1px solid #e5e1d8;padding-top:12px}
+.lm3-sheet .inspector-appearance-section summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-size:13px;color:#30332c;cursor:pointer}
+.lm3-sheet .inspector-design{border-color:#eae5dd}
+.lm3-sheet .birthday-upload-button,.lm3-sheet .inspector-program-remove,.lm3-sheet .inspector-program button{min-height:42px}
+.lm3-sheet fieldset{border:1px solid #e5e1d8;border-radius:12px;padding:12px}
