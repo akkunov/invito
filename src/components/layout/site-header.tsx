@@ -16,6 +16,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
         <Suspense fallback={<span className="language-switcher" aria-hidden="true">RU　KY</span>}><LanguageSwitcher locale={locale} /></Suspense>
         <nav className="desktop-nav" aria-label={locale === "ru" ? "Главное меню" : "Башкы меню"}>
           <Link href={routes.templates(locale)}>{dict.nav.templates}</Link>
+          <Link href={`/${locale}/invitations`}>{locale === "ru" ? "Мои приглашения" : "Менин чакырууларым"}</Link>
           <Link href={`${routes.home(locale)}#features`}>{dict.nav.benefits}</Link>
           <Link href={`${routes.home(locale)}#how`}>{dict.nav.how}</Link>
         </nav>
