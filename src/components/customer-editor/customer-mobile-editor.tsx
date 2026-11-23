@@ -280,7 +280,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const reset=()=>{
     if(!window.confirm(t.resetConfirm))return;
-    setPast(old=>[...old,patch].slice(-30));setFuture([]);setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);
+    setPast([]);setFuture([]);setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);
   };
   const forward=()=>{
     if(step!=="publish"){
