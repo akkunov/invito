@@ -140,6 +140,7 @@ const endpoints: Endpoint[] = [
     requestBody:body(schema(publishCustomerSchema)),errors:[400,401,404,409,422,503]},
   {method:"post",path:"/api/v1/customer/invitations/{id}/unpublish",tag:"Customer Invitations",
     summary:"Снять личное приглашение с публикации",
+    description:"Владелец приглашения закрывает публичный доступ, сохраняя черновик и историю неизменяемых релизов. Проверяется expectedRelease.",
     requestBody:body(schema(unpublishCustomerSchema)),errors:[400,401,404,409]},
   {method:"get",path:"/api/v1/public/customer-invitations/{slug}",tag:"Customer Invitations",
     summary:"Публичная страница гостевого приглашения",public:true,
