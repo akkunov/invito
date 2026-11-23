@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useRef,useState,type MouseEvent} from "react";
-import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,Save,X,Type,Image as ImageIcon,Layers,CalendarDays,Send} from "lucide-react";
+import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,RotateCw,Save,X,Type,Image as ImageIcon,Layers,Palette,Music2,Send,Cloud,ChevronDown,LockKeyhole,MoreHorizontal} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
   finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,
@@ -43,6 +43,7 @@ const dictionary={
     noPublish:"После публикации вы получите ссылку, которой можно поделиться с гостями.",
     filled:"Готово",of:"из",sections:"Секции",photos:"Фотографии",publishAction:"Опубликовать",editorTip:"Изменения сразу появятся в предпросмотре.",
     mobileHint:"Нажмите на текст или фото, чтобы изменить",mobileEdit:"Редактировать",mobileClose:"Закрыть настройки",mobilePage:"Страница",mobileSelection:"Настройки элемента",mobileCheck:"Проверка и публикация",mobileEvent:"Дата и программа",mobileDesign:"Фото и оформление",
+    toolText:"Текст",toolPhotos:"Фото",toolStyle:"Стиль",toolMusic:"Музыка",mobileDone:"Готово",mobileLocked:"Оформление этой секции зафиксировано дизайнером.",mobileNoMusic:"Для этого шаблона не предусмотрена смена музыки.",mobileStyleHint:"Можно выбрать только оформление, разрешённое автором шаблона.",mobileSectionsHint:"Выберите страницу для редактирования. Порядок и состав страниц задаются автором шаблона.",mobileUndo:"Отменить",mobileRedo:"Повторить",mobileSaved:"Сохранено на устройстве",mobileSaving:"Сохранение...",mobileSectionsTitle:"Секции приглашения",mobileViewPage:"Открыть страницу",
   },
   ky:{
     main:"Негизги маалымат",event:"Күнү жана жери",appearance:"Жасалгалоо",publish:"Текшерүү",
@@ -61,6 +62,7 @@ const dictionary={
     noPublish:"Жарыялагандан кийин конокторго жибере турган шилтеме аласыз.",
     filled:"Даяр",of:"ичинен",sections:"Бөлүмдөр",photos:"Сүрөттөр",publishAction:"Жарыялоо",editorTip:"Өзгөртүүлөр алдын ала көрүүдө дароо көрсөтүлөт.",
     mobileHint:"Өзгөртүү үчүн текстти же сүрөттү басыңыз",mobileEdit:"Өзгөртүү",mobileClose:"Жөндөөлөрдү жабуу",mobilePage:"Барак",mobileSelection:"Элементтин жөндөөлөрү",mobileCheck:"Текшерүү жана жарыялоо",mobileEvent:"Күнү жана программа",mobileDesign:"Сүрөттөр жана жасалгалоо",
+    toolText:"Текст",toolPhotos:"Сүрөт",toolStyle:"Стиль",toolMusic:"Музыка",mobileDone:"Даяр",mobileLocked:"Бул бөлүмдүн жасалгасы автор тарабынан бекитилген.",mobileNoMusic:"Бул шаблондо музыка өзгөртүлбөйт.",mobileStyleHint:"Автор уруксат берген гана жасалгаларды тандоого болот.",mobileSectionsHint:"Өзгөртүү үчүн баракты тандаңыз. Барактардын иретин шаблондун автору аныктайт.",mobileUndo:"Артка кайтаруу",mobileRedo:"Кайталоо",mobileSaved:"Түзмөктө сакталды",mobileSaving:"Сакталууда...",mobileSectionsTitle:"Чакыруу бөлүмдөрү",mobileViewPage:"Баракты ачуу",
   },
 } as const;
 
@@ -79,10 +81,16 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const [step,setStep]=useState<Step>("main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
   const mobileFormRef=useRef<HTMLDivElement>(null);
+  const mobileCanvasRef=useRef<HTMLDivElement>(null);
+  const mobileTriggerRef=useRef<HTMLButtonElement|null>(null);
   const [isMobileViewport,setIsMobileViewport]=useState(false);
   const [mobileSheetOpen,setMobileSheetOpen]=useState(false);
   const [selectedFieldId,setSelectedFieldId]=useState<string|null>(null);
   const [activeMobilePage,setActiveMobilePage]=useState(0);
+  const [mobileTool,setMobileTool]=useState<"text"|"photo"|"style"|"music">("text");
+  const [mobileSectionsOpen,setMobileSectionsOpen]=useState(false);
+  const [past,setPast]=useState<PersonalizationPatch[]>([]);
+  const [future,setFuture]=useState<PersonalizationPatch[]>([]);
   const [patch,setPatch]=useState<PersonalizationPatch>(()=>initialPatch(source,contract));
   const [hydrated,setHydrated]=useState(false);
   const [warning,setWarning]=useState("");
@@ -196,18 +204,47 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const filledCount=contract.fields.length-issues.length;
   const completion=contract.fields.length?Math.max(0,Math.round(filledCount/contract.fields.length*100)):100;
   const fields=grouped[step];
-  const displayedFields=selectedFieldId?fields.filter(field=>field.id===selectedFieldId):fields;
+  const displayedFields=selectedFieldId?fields.filter(field=>field.id===selectedFieldId):
+    isMobileViewport&&step==="appearance"?fields.filter(field=>mobileTool==="photo"
+      ?field.kind==="image"||field.kind==="gallery"
+      :mobileTool==="style"?field.kind==="theme":field.kind==="music"):fields;
+  const commitPatch=(next:PersonalizationPatch)=>{
+    setPast(old=>[...old,patch].slice(-30));setFuture([]);setPatch(next);
+  };
+  const undo=()=>{
+    if(!past.length)return;
+    setFuture(old=>[patch,...old].slice(0,30));
+    setPatch(past[past.length-1]);setPast(old=>old.slice(0,-1));
+  };
+  const redo=()=>{
+    if(!future.length)return;
+    setPast(old=>[...old,patch].slice(-30));
+    setPatch(future[0]);setFuture(old=>old.slice(1));
+  };
+  const pageLabel=(index:number)=>{
+    const page=source.pages[index];if(!page)return "";
+    const names:Record<string,{ru:string;ky:string}>={
+      cover:{ru:"Обложка",ky:"Мукаба"},letter:{ru:"Приглашение",ky:"Чакыруу"},
+      details:{ru:"Дата и место",ky:"Күнү жана жери"},program:{ru:"Программа",ky:"Программа"},
+      memories:{ru:"Галерея",ky:"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
+    };
+    return names[page.id]?.[locale]??(page.name.includes("/")?page.name.split("/").slice(1).join("/").trim():page.name);
+  };
+  const openTool=(tool:"text"|"photo"|"style"|"music",button?:HTMLButtonElement)=>{
+    mobileTriggerRef.current=button??null;
+    setMobileTool(tool);setMobileSectionsOpen(false);openMobileStep(tool==="text"?"main":"appearance");
+  };
   const openMobileStep=(next:Step,fieldId:string|null=null)=>{
     setStep(next);setSelectedFieldId(fieldId);setMode("edit");setMobileSheetOpen(true);
     mobileFormRef.current?.scrollTo({top:0,behavior:"auto"});
   };
-  const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);};
+  const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);window.requestAnimationFrame(()=>mobileTriggerRef.current?.focus());};
   useEffect(()=>{
-    if(!mobileSheetOpen)return;
-    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMobileSheetOpen(false);setSelectedFieldId(null);}};
+    if(!mobileSheetOpen&&!mobileSectionsOpen)return;
+    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMobileSheetOpen(false);setMobileSectionsOpen(false);setSelectedFieldId(null);mobileTriggerRef.current?.focus();}};
     window.addEventListener("keydown",onKey);
     return()=>window.removeEventListener("keydown",onKey);
-  },[mobileSheetOpen]);
+  },[mobileSheetOpen,mobileSectionsOpen]);
   const selectCanvasField=(event:MouseEvent<HTMLDivElement>)=>{
     if(!window.matchMedia("(max-width: 850px)").matches)return;
     const target=event.target;
@@ -220,6 +257,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         const field=editableFieldForNode(document,contract.fields,nodeId);
         if(field){
           event.preventDefault();event.stopPropagation();
+          mobileTriggerRef.current=null;
+          setMobileTool(field.kind==="image"||field.kind==="gallery"?"photo":field.kind==="theme"?"style":field.kind==="music"?"music":"text");
           openMobileStep(sectionToStep[field.section],field.id);
           return;
         }
@@ -229,19 +268,19 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const update=(id:string,value:PersonalizedValue)=>{
     const candidate={...patch,values:{...patch.values,[id]:value}};
-    try{personalizeDocument(source,contract,candidate,customerAssets,true);setPatch(candidate);setWarning("");setReview(false);}
+    try{personalizeDocument(source,contract,candidate,customerAssets,true);commitPatch(candidate);setWarning("");setReview(false);}
     catch(error){setWarning(error instanceof Error?error.message:"Invalid value");}
   };
   const changeLocale=(lang:"ru"|"ky")=>{
     try {
       const candidate={...patch,locale:lang};
       personalizeDocument(source,contract,candidate,customerAssets,true);
-      setPatch(candidate);setWarning("");
+      commitPatch(candidate);setWarning("");
     }catch(error){setWarning(error instanceof Error?error.message:"Invalid locale");}
   };
   const reset=()=>{
     if(!window.confirm(t.resetConfirm))return;
-    setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);
+    setPast(old=>[...old,patch].slice(-30));setFuture([]);setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);
   };
   const forward=()=>{
     if(step!=="publish"){
@@ -257,19 +296,27 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const jumpPreview=(pageId:string)=>{
     const pageIndex=source.pages.findIndex(page=>page.id===pageId);
     if(pageIndex>=0)setActiveMobilePage(pageIndex);
-    setMode("preview");
+    setMobileSectionsOpen(false);setMode("preview");
     window.requestAnimationFrame(()=>{
-      const section=Array.from(window.document.querySelectorAll<HTMLElement>("[data-preview-page]"))
+      const section=Array.from(mobileCanvasRef.current?.querySelectorAll<HTMLElement>("[data-preview-page]")??[])
         .find(node=>node.dataset.previewPage===pageId);
       section?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
     });
   };
+  useEffect(()=>{
+    const root=mobileCanvasRef.current;
+    if(!root)return;
+    for(const node of root.querySelectorAll<HTMLElement>("[data-studio-node]")){
+      const f=editableFieldForNode(document,contract.fields,node.dataset.studioNode??"");
+      node.classList.toggle("ce-mobile-selected-node",!!selectedFieldId&&f?.id===selectedFieldId);
+    }
+  },[document,contract,selectedFieldId,activeMobilePage,mobileSheetOpen]);
   const preview=<StudioV2ProjectRenderer
     key={previewRun} document={document} mediaUrls={mergedUrls}
     device="mobile" pageFilter={isMobileViewport?source.pages[activeMobilePage]?.id:undefined}
     guest={{mode:"preview"}}/>;
 
-  return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>
+  return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>\n    <div className="ce-mobile-topbar">\n      <Link href={`/${locale}/catalog/${slug}`} aria-label={t.back}><ArrowLeft size={19}/></Link>\n      <strong>Eventiq<span>.</span></strong>\n      <div className="ce-mobile-top-actions">\n        <button type="button" aria-label={t.mobileUndo} disabled={!past.length} onClick={undo}><RotateCcw size={19}/></button>\n        <button type="button" aria-label={t.mobileRedo} disabled={!future.length} onClick={redo}><RotateCw size={19}/></button>\n        <span className="ce-mobile-cloud-status" role="status" aria-label={hydrated?status||t.mobileSaved:t.mobileSaving} title={hydrated?status||t.mobileSaved:t.mobileSaving}><Cloud size={19}/></span>\n        <button className="ce-mobile-publish-top" type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(false);openMobileStep("publish");}}>{t.publishAction}</button>\n      </div>\n    </div>
     <header className="ce-header">
       <Link aria-label={t.back} href={`/${locale}/catalog/${slug}`} className="ce-icon"><ArrowLeft size={20}/></Link>
       <Link href={`/${locale}`} className="ce-logo">eventiq<span>.</span></Link>
@@ -335,8 +382,9 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                   document={document} locale={locale} locales={contract.locales}
                   urls={mergedUrls} onChange={value=>update(field.id,value)}/>
               </div>):
-              <p className="ce-empty">{hasFields?t.noFields:t.unsupported}</p>}
-          <div className={step==="appearance"||step==="publish"?"ce-cloud-mount":"ce-cloud-mount ce-cloud-mount-hidden"}>
+              <p className="ce-empty">{isMobileViewport&&step==="appearance"&&mobileTool==="style"?t.mobileStyleHint+" "+t.mobileLocked:
+                isMobileViewport&&step==="appearance"&&mobileTool==="music"?t.mobileNoMusic:hasFields?t.noFields:t.unsupported}</p>}
+          <div className={step==="publish"||step==="appearance"&&(!isMobileViewport||mobileTool==="photo")?"ce-cloud-mount":"ce-cloud-mount ce-cloud-mount-hidden"}>
             <CustomerCloudControls
             locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
@@ -345,7 +393,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             onLoad={(remote,assets,urls)=>{
               try{
                 personalizeDocument(source,contract,remote,assets,true);
-                setCustomerAssets(assets);setCustomerUrls(urls);setPatch(remote);
+                setCustomerAssets(assets);setCustomerUrls(urls);setPast([]);setFuture([]);setPatch(remote);
                 setWarning("");setStatus(t.restore);
               }catch{setWarning(t.invalidDraft);}
             }}
@@ -360,7 +408,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
               try{
                 personalizeDocument(source,contract,nextPatch,nextAssets,true);
                 setCustomerAssets(nextAssets);setCustomerUrls(v=>({...v,[asset.storageKey]:url}));
-                setPatch(nextPatch);setWarning("");
+                commitPatch(nextPatch);setWarning("");
               }catch{setWarning(t.invalidDraft);}
             }}
             />
@@ -372,8 +420,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           <button type="button" className="ce-secondary" onClick={currentIndex?()=>{setStep(steps[currentIndex-1]);setMode("edit");}:reset}>
             {currentIndex?t.back:t.reset}
           </button>
-          <button type="button" className="ce-primary" onClick={forward}>
-            {step==="publish"?t.review:t.next}<ArrowRight size={17}/>
+          <button type="button" className="ce-primary" onClick={isMobileViewport&&selectedFieldId?closeMobileSheet:forward}>
+            {isMobileViewport&&selectedFieldId?t.mobileDone:step==="publish"?t.review:t.next}<ArrowRight size={17}/>
           </button>
         </footer>
       </section>
@@ -386,16 +434,42 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           {source.pages.map((page,index)=><button key={page.id} type="button" aria-current={index===activeMobilePage?"page":undefined} onClick={()=>jumpPreview(page.id)}
             title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
         </nav>
-        <div className="ce-preview-screen" onClickCapture={selectCanvasField}>{preview}</div>
+        <div ref={mobileCanvasRef} className="ce-preview-screen" onClickCapture={selectCanvasField}>{preview}</div>
         <div className="ce-mobile-canvas-caption"><span>{t.mobileHint}</span></div>
+        <nav className="ce-mobile-page-nav" aria-label={t.mobilePage}>
+          <button type="button" disabled={activeMobilePage===0} onClick={()=>jumpPreview(source.pages[activeMobilePage-1].id)} aria-label={t.back}><ArrowLeft size={18}/></button>
+          <button type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(true);setMobileSheetOpen(false);}}>{activeMobilePage+1} / {source.pages.length} <strong>{pageLabel(activeMobilePage)}</strong><ChevronDown size={16}/></button>
+          <button type="button" disabled={activeMobilePage>=source.pages.length-1} onClick={()=>jumpPreview(source.pages[activeMobilePage+1].id)} aria-label={t.next}><ArrowRight size={18}/></button>
+        </nav>
         <nav className="ce-mobile-dock" aria-label={t.mobileEdit}>
-          <button type="button" onClick={()=>openMobileStep("main")}><Type size={21}/><span>{t.main}</span></button>
-          <button type="button" onClick={()=>openMobileStep("event")}><CalendarDays size={21}/><span>{t.event}</span></button>
-          <button type="button" onClick={()=>openMobileStep("appearance")}><ImageIcon size={21}/><span>{t.photos}</span></button>
-          <button type="button" onClick={()=>{closeMobileSheet();jumpPreview(source.pages[(activeMobilePage+1)%source.pages.length].id);}}><Layers size={21}/><span>{t.sections}</span></button>
-          <button type="button" className="ce-mobile-dock-publish" onClick={()=>openMobileStep("publish")}><Send size={21}/><span>{t.publishAction}</span></button>
+          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="text"} onClick={e=>openTool("text",e.currentTarget)}><Type size={22}/><span>{t.toolText}</span></button>
+          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="photo"} onClick={e=>openTool("photo",e.currentTarget)}><ImageIcon size={22}/><span>{t.toolPhotos}</span></button>
+          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="style"} onClick={e=>openTool("style",e.currentTarget)}><Palette size={22}/><span>{t.toolStyle}</span></button>
+          <button type="button" aria-pressed={mobileSectionsOpen} onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSheetOpen(false);setMobileSectionsOpen(true);}}><Layers size={22}/><span>{t.sections}</span></button>
+          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="music"} onClick={e=>openTool("music",e.currentTarget)}><Music2 size={22}/><span>{t.toolMusic}</span></button>
         </nav>
       </aside>
     </div>
+    {mobileSheetOpen&&<button type="button" className="ce-mobile-backdrop" onClick={closeMobileSheet} aria-label={t.mobileClose}/>}
+    {mobileSectionsOpen&&<section className="ce-mobile-sections-screen" aria-label={t.mobileSectionsTitle}>
+      <header><button type="button" aria-label={t.back} onClick={()=>setMobileSectionsOpen(false)}><ArrowLeft size={21}/></button><h2>{t.mobileSectionsTitle}</h2><span><LockKeyhole size={18}/></span></header>
+      <div className="ce-mobile-sections-list">
+        {source.pages.map((page,index)=>{
+          const root=source.nodes[page.rootNodeId];
+          const firstImage=root?.type==="frame"?root.children.map(id=>document.nodes[id]).find(node=>node?.type==="image"):undefined;
+          const photo=firstImage?.type==="image"?document.assets[firstImage.assetId]:undefined;
+          const url=photo?.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+photo.storageKey:photo?mergedUrls[photo.storageKey]:undefined;
+          return <div className={"ce-mobile-section-card"+(activeMobilePage===index?" active":"")} key={page.id}>
+            <button type="button" className="ce-mobile-section-select" onClick={()=>jumpPreview(page.id)}>
+              <span className="ce-mobile-section-thumbnail">{url?<img src={url} alt="" loading="lazy"/>:<Layers size={21}/>}</span>
+              <span className="ce-mobile-section-title"><small>{String(index+1).padStart(2,"0")}</small>{pageLabel(index)}</span>
+            </button>
+            <button type="button" className="ce-mobile-section-eye" aria-label={t.mobileViewPage+": "+pageLabel(index)} onClick={()=>jumpPreview(page.id)}><Eye size={20}/></button>
+            <button type="button" className="ce-mobile-section-more" aria-label={pageLabel(index)+": "+t.mobileLocked} disabled title={t.mobileLocked}><MoreHorizontal size={20}/></button>
+          </div>;
+        })}
+        <p className="ce-mobile-sections-help"><LockKeyhole size={16}/>{t.mobileSectionsHint}</p>
+      </div>
+    </section>}
   </main>;
 }
