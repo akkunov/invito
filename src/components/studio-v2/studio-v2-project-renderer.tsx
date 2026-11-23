@@ -9,7 +9,7 @@ import {deviceForWidth,responsiveDocument,presentationSize,DEVICE_WIDTH,type Dev
 
 /** Shared presentation renderer. The editor uses the same Artboard and layout solver.
  * Public publishing can provide a validated immutable snapshot and asset URL map later. */
-export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",guest={mode:"preview"},motionPlayback={mode:"live"}}:{document:ProjectDocumentV2;mediaUrls?:Readonly<Record<string,string>>;device?:Device|"auto";guest?:GuestMode;motionPlayback?:MotionPlayback}){
+export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",pageFilter,guest={mode:"preview"},motionPlayback={mode:"live"}}:{document:ProjectDocumentV2;mediaUrls?:Readonly<Record<string,string>>;device?:Device|"auto";pageFilter?:string;guest?:GuestMode;motionPlayback?:MotionPlayback}){
  const container=useRef<HTMLDivElement>(null);
  const [width,setWidth]=useState(390);
  const [measured,setMeasured]=useState<Partial<Record<Device,Record<string,number>>>>({});
@@ -20,7 +20,7 @@ export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",guest=
  const available=device==="auto"?width:Math.min(width,DEVICE_WIDTH[actual]);
  return <div ref={container} className="v2-project-renderer" lang={document.locale} style={{width:"100%",minWidth:0}}>
   <div style={{width:"100%",maxWidth:available,margin:"0 auto"}}>
-   {document.pages.map(page=>{
+   {document.pages.filter(page=>!pageFilter||page.id===pageFilter).map(page=>{
     const size=presentationSize(document,resolved,page,actual),scale=Math.min(1,available/size.width)*size.scale;
     const root=resolved.nodes[page.rootNodeId];
     if(!root.visible)return null;
