@@ -34,17 +34,12 @@ export class MediaObjectStore {
         !url.hostname.endsWith(".r2.cloudflarestorage.com")) {
       throw new ServiceUnavailableException("R2_ENDPOINT_INVALID");
     }
-    // Centralize R2 checksum compatibility options to avoid repeated
-    // object-literal keys when the S3 configuration is extended.
-    const checksumOptions = {
-      requestChecksumCalculation: "WHEN_REQUIRED",
-      responseChecksumValidation: "WHEN_REQUIRED",
-    } as const;
     this.bucket = bucket;
     this.client = new S3Client({
       endpoint: url.origin, region: "auto", forcePathStyle: true,
       credentials: {accessKeyId, secretAccessKey},
-      ...checksumOptions,
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
     return {client: this.client, bucket: this.bucket};
   }
