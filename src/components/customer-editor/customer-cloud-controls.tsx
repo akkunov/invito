@@ -1,12 +1,12 @@
 "use client";
 
 import {useEffect,useMemo,useState,type FormEvent} from "react";
-import {CloudUpload,ImagePlus,LogIn} from "lucide-react";
+import {CloudUpload,ImagePlus,LogIn,ExternalLink,Copy,Send} from "lucide-react";
 import {
   configuredSupabase,getSupabaseBrowserClient,
 } from "@/features/auth/browser/supabase-session";
 import {
-  CustomerCloudError,createCustomerDraft,getCustomerDraft,listCustomerDrafts,saveCustomerDraft,
+  CustomerCloudError,createCustomerDraft,getCustomerDraft,getCustomerPublication,publishCustomerInvitation,listCustomerDrafts,saveCustomerDraft,
   uploadCustomerPhoto,type VerifiedCustomerAsset,type CustomerDraftListItem,
 } from "@/features/invitations/customer-cloud";
 import type {PersonalizationPatch} from "@/features/studio-v2/core/personalization.schema";
@@ -14,12 +14,13 @@ import type {Locale} from "@/i18n/locales";
 
 type Props={
   locale:Locale;templateVersionId:string;patch:PersonalizationPatch;
+  publishMode?:boolean;canPublish?:boolean;
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
   onUploaded:(fieldId:string,asset:VerifiedCustomerAsset,url:string)=>void;
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number}>;
 };
 export function CustomerCloudControls({
-  locale,templateVersionId,patch,onLoad,onUploaded,uploadTargets,
+  locale,templateVersionId,patch,onLoad,onUploaded,uploadTargets,publishMode=false,canPublish=false,
 }:Props){
   const cfg=useMemo(configuredSupabase,[]);
   const supabase=useMemo(()=>cfg?getSupabaseBrowserClient(cfg):null,[cfg]);
@@ -31,6 +32,8 @@ export function CustomerCloudControls({
   const [revision,setRevision]=useState<number|null>(null);
   const [fileBusy,setFileBusy]=useState(false);
   const [selectedTarget,setSelectedTarget]=useState("");
+  const [publicSlug,setPublicSlug]=useState("");
+  const [publishedUrl,setPublishedUrl]=useState("");
   const [availableDrafts,setAvailableDrafts]=useState<CustomerDraftListItem[]>([]);
   const target=uploadTargets.find(f=>f.id===selectedTarget)??uploadTargets[0]??null;
   const ru=locale==="ru";
@@ -148,6 +151,64 @@ export function CustomerCloudControls({
     finally{setLoading(false);}
   }
 
+  async function publish(){
+    if(!userId||loading||!canPublish)return;
+    if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(publicSlug)||publicSlug.length<3||publicSlug.length>80){
+      setInfo(ru?"Адрес должен содержать 3–80 строчных латинских букв, цифр или дефисов.":"Дарек 3–80 латын тамгасы, сан же дефис болсун.");
+      return;
+    }
+    setLoading(true);setInfo("");
+    try{
+      let id=cloudId,rev=revision;
+      if(!id){
+        const previous=personalKey?window.localStorage.getItem(personalKey):null;
+        if(previous){
+          throw new Error("CLOUD_REVISION_NOT_LOADED");
+        }
+        const created=await createCustomerDraft(templateVersionId);
+        id=created.id;rev=created.revision;
+        setCloudId(id);
+        if(personalKey)window.localStorage.setItem(personalKey,id);
+      }
+      if(!id||rev===null)throw new Error("CLOUD_REVISION_NOT_LOADED");
+      // Publish only the same patch that was atomically saved to the owner's draft.
+      const saved=await saveCustomerDraft(id,rev,patch);
+      setRevision(saved.revision);
+      if(personalKey)window.localStorage.setItem(personalKey+":revision",String(saved.revision));
+      const current=await getCustomerPublication(id);
+      const release=await publishCustomerInvitation(id,{
+        slug:current?.slug??publicSlug,
+        expectedRevision:saved.revision,
+        expectedRelease:current?.latestRelease??0,
+      });
+      const url=window.location.origin+"/"+locale+"/c/"+release.slug;
+      setPublicSlug(release.slug);
+      setPublishedUrl(url);
+      setInfo(ru?"Приглашение опубликовано. Ссылка готова.":"Чакыруу жарыяланды. Шилтеме даяр.");
+    }catch(error){
+      setInfo(error instanceof CustomerCloudError&&error.status===409
+        ?ru?"Этот адрес занят или изменена версия черновика. Выберите другой адрес либо загрузите облачную копию.":"Дарек колдонулууда же черновик өзгөргөн. Башка дарек тандаңыз."
+        :error instanceof CustomerCloudError&&error.status===422
+        ?ru?"Проверьте обязательные поля и фотографии.":"Милдеттүү талааларды жана сүрөттөрдү текшериңиз."
+        :error instanceof Error&&error.message==="CLOUD_REVISION_NOT_LOADED"
+        ?ru?"Сначала загрузите облачную копию черновика.":"Алгач булуттагы черновикти ачыңыз."
+        :ru?"Не удалось опубликовать. Проверьте подключение и аккаунт.":"Жарыялоо мүмкүн болгон жок. Байланышты жана аккаунтту текшериңиз.");
+    }finally{setLoading(false);}
+  }
+
+  async function share(){
+    if(!publishedUrl)return;
+    try{
+      if(navigator.share)await navigator.share({title:"Eventiq",url:publishedUrl});
+      else {await navigator.clipboard.writeText(publishedUrl);setInfo(ru?"Ссылка скопирована.":"Шилтеме көчүрүлдү.");}
+    }catch{/* Cancelled share is not a publishing failure. */}
+  }
+
+  useEffect(()=>{
+    if(!publishMode||publicSlug)return;
+    setPublicSlug("invitation-"+crypto.randomUUID().slice(0,8));
+  },[publishMode,publicSlug]);
+
   async function photo(file:File){
     if(!userId||!target||fileBusy)return;
     setFileBusy(true);setInfo("");
@@ -186,6 +247,23 @@ export function CustomerCloudControls({
           </option>)}
         </select>
       </label>}
+      {publishMode&&<div className="ce-publish">
+        <label className="ce-language"><span>{ru?"Адрес приглашения":"Чакыруу дареги"}</span>
+          <input aria-label={ru?"Адрес приглашения":"Чакыруу дареги"}
+            value={publicSlug} maxLength={80} onChange={e=>setPublicSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,""))}
+            autoComplete="off" spellCheck={false}/>
+        </label>
+        <button type="button" className="ce-primary" disabled={loading||!canPublish}
+          onClick={()=>void publish()}><Send size={16}/>{loading?"…":ru?"Опубликовать приглашение":"Чакырууну жарыялоо"}</button>
+        {!canPublish&&<p>{ru?"Заполните обязательные поля перед публикацией.":"Жарыялоодон мурда милдеттүү талааларды толтуруңуз."}</p>}
+        {publishedUrl&&<div className="ce-published-link">
+          <a href={publishedUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={15}/>{publishedUrl}</a>
+          <div className="ce-cloud-actions">
+            <button className="ce-secondary" type="button" onClick={()=>void navigator.clipboard.writeText(publishedUrl).then(()=>setInfo(ru?"Ссылка скопирована.":"Шилтеме көчүрүлдү."))}><Copy size={15}/>{ru?"Копировать":"Көчүрүү"}</button>
+            <button className="ce-secondary" type="button" onClick={()=>void share()}><Send size={15}/>{ru?"Поделиться":"Бөлүшүү"}</button>
+          </div>
+        </div>}
+      </div>}
       <div className="ce-cloud-actions">
         <button type="button" className="ce-primary" disabled={loading} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить в облако":"Булутка сактоо"}</button>
         <button type="button" className="ce-secondary" disabled={loading} onClick={()=>void load()}>{ru?"Открыть облачную копию":"Булуттагы көчүрмө"}</button>
