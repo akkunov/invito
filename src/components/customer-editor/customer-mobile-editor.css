@@ -90,3 +90,19 @@
   .ce-save-state{max-width:44%;line-height:1.2}
 }
 @media(prefers-reduced-motion:reduce){.ce-shell *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Authenticated customer uploads and explicit cloud draft controls. */
+.ce-cloud{margin:24px 0 10px;padding:19px;border:1px solid #e5e1dc;border-radius:14px;background:#fbfaf8;display:grid;gap:13px}
+.ce-cloud h3{margin:0;display:flex;align-items:center;gap:9px;font-size:15px;font-weight:750}
+.ce-cloud p{margin:0;font-size:12px;line-height:1.55;color:#65625e}
+.ce-cloud-auth{display:grid;gap:12px}
+.ce-cloud-auth label{display:grid;gap:6px;font-size:12px;font-weight:650}
+.ce-cloud-auth input{min-height:48px;padding:10px 12px;width:100%;font-size:16px;border:1px solid #cfcbc4;border-radius:9px;background:#fff;color:#191919}
+.ce-cloud-actions{display:flex;gap:9px;flex-wrap:wrap}
+.ce-cloud button,.ce-cloud .ce-upload-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+.ce-cloud .ce-primary{background:#ff4a0a;color:#fff;border:1px solid #ff4a0a}
+.ce-cloud .ce-secondary{background:#fff;color:#272420;border:1px solid #d5d1cb}
+.ce-cloud .ce-upload-button{border:1px dashed #f0764d;background:#fff6f2;color:#a13a17;position:relative;overflow:hidden;width:100%}
+.ce-upload-button input{position:absolute;width:100%;height:100%;inset:0;opacity:0;cursor:pointer}
+.ce-cloud .ce-cloud-info{color:#7d4638}
+@media(max-width:550px){.ce-cloud{padding:15px}.ce-cloud-actions>*{flex:1}}
