@@ -13,10 +13,10 @@ import "@/app/studio-v2.css";
 
 export const metadata: Metadata = { title: "Редактор приглашений — eventiq", robots: { index: false, follow: false } };
 
-export default async function EditorPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ template?: string }> }) {
+export default async function EditorPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ template?: string; draft?: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  const { template: slug } = await searchParams;
+  const { template: slug, draft } = await searchParams;
   const template = slug ? findTemplateById(slug) : undefined;
   if (!template && slug) {
     // Server templates use the restricted mobile editor; legacy seeds retain their editor.
@@ -26,6 +26,7 @@ export default async function EditorPage({ params, searchParams }: { params: Pro
     const contract = personalizationSchema.parse(remote.personalization);
     return <CustomerMobileEditor locale={locale} slug={remote.slug}
       name={remote.name} versionId={remote.templateVersionId}
+      preferredDraftId={draft&&/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(draft)?draft:undefined}
       source={source} contract={contract} mediaUrls={remote.mediaUrls}/>;
   }
   if (!template) notFound();
