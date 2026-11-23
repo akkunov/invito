@@ -86,6 +86,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const [isMobileViewport,setIsMobileViewport]=useState(false);
   const [mobileSheetOpen,setMobileSheetOpen]=useState(false);
   const [selectedFieldId,setSelectedFieldId]=useState<string|null>(null);
+  const [selectedNodeId,setSelectedNodeId]=useState<string|null>(null);
   const [activeMobilePage,setActiveMobilePage]=useState(0);
   const [mobileTool,setMobileTool]=useState<"text"|"photo"|"style"|"music">("text");
   const [mobileSectionsOpen,setMobileSectionsOpen]=useState(false);
@@ -209,7 +210,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const displayedFields=selectedFieldId?fields.filter(field=>field.id===selectedFieldId):
     isMobileViewport&&step==="appearance"?fields.filter(field=>mobileTool==="photo"
       ?field.kind==="image"||field.kind==="gallery"
-      :mobileTool==="style"?field.kind==="theme":field.kind==="music"):fields;
+      :mobileTool==="style"?field.kind==="theme"||field.kind==="textStyle":field.kind==="music"):fields;
   const commitPatch=(next:PersonalizationPatch)=>{
     setPast(old=>[...old,patch].slice(-30));setFuture([]);setPatch(next);
   };
@@ -263,16 +264,16 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const openTool=(tool:"text"|"photo"|"style"|"music",button?:HTMLButtonElement)=>{
     mobileTriggerRef.current=button??null;
-    setMobileTool(tool);setMobileSectionsOpen(false);openMobileStep(tool==="text"?"main":"appearance");
+    setMobileTool(tool);setSelectedNodeId(null);setMobileSectionsOpen(false);openMobileStep(tool==="text"?"main":"appearance");
   };
   const openMobileStep=(next:Step,fieldId:string|null=null)=>{
     setStep(next);setSelectedFieldId(fieldId);setMode("edit");setMobileSheetOpen(true);
     mobileFormRef.current?.scrollTo({top:0,behavior:"auto"});
   };
-  const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);window.requestAnimationFrame(()=>mobileTriggerRef.current?.focus());};
+  const closeMobileSheet=()=>{setMobileSheetOpen(false);setSelectedFieldId(null);setSelectedNodeId(null);window.requestAnimationFrame(()=>mobileTriggerRef.current?.focus());};
   useEffect(()=>{
     if(!mobileSheetOpen&&!mobileSectionsOpen)return;
-    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMobileSheetOpen(false);setMobileSectionsOpen(false);setSelectedFieldId(null);mobileTriggerRef.current?.focus();}};
+    const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMobileSheetOpen(false);setMobileSectionsOpen(false);setSelectedFieldId(null);setSelectedNodeId(null);mobileTriggerRef.current?.focus();}};
     window.addEventListener("keydown",onKey);
     return()=>window.removeEventListener("keydown",onKey);
   },[mobileSheetOpen,mobileSectionsOpen]);
@@ -288,7 +289,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         const field=editableFieldForNode(document,contract.fields,nodeId);
         if(field){
           event.preventDefault();event.stopPropagation();
-          mobileTriggerRef.current=null;
+          mobileTriggerRef.current=null;setSelectedNodeId(nodeId);
           setMobileTool(field.kind==="image"||field.kind==="gallery"?"photo":field.kind==="theme"?"style":field.kind==="music"?"music":"text");
           openMobileStep(sectionToStep[field.section],field.id);
           return;
@@ -311,7 +312,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const reset=()=>{
     if(!window.confirm(t.resetConfirm))return;
-    setPast([]);setFuture([]);setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);
+    setPast([]);setFuture([]);setPatch(initialPatch(source,contract));setCustomerAssets([]);setCustomerUrls({});setReview(false);setWarning("");setStep("main");setMode("edit");setSelectedFieldId(null);setSelectedNodeId(null);
   };
   const forward=()=>{
     if(step!=="publish"){
@@ -322,6 +323,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     try{finalizePersonalization(source,contract,patch,customerAssets,true);setWarning("");}
     catch{setWarning(t.required);}
   };
+  const selectedContentField=selectedNodeId?editableFieldForNode(document,contract.fields,selectedNodeId):undefined;
+  const selectedStyleField=selectedNodeId?contract.fields.find(field=>field.kind==="textStyle"&&field.nodeId===selectedNodeId):undefined;
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
   const hasFields=contract.fields.length>0;
   const jumpPreview=(pageId:string)=>{
@@ -341,9 +344,9 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     for(const node of root.querySelectorAll<HTMLElement>("[data-studio-node]")){
       const f=editableFieldForNode(document,contract.fields,node.dataset.studioNode??"");
       node.classList.toggle("ce-mobile-editable-node",Boolean(f));
-      node.classList.toggle("ce-mobile-selected-node",!!selectedFieldId&&f?.id===selectedFieldId);
+      node.classList.toggle("ce-mobile-selected-node",!!selectedNodeId&&node.dataset.studioNode===selectedNodeId||!!selectedFieldId&&f?.id===selectedFieldId);
     }
-  },[document,contract,selectedFieldId,activeMobilePage,mobileSheetOpen]);
+  },[document,contract,selectedFieldId,selectedNodeId,activeMobilePage,mobileSheetOpen]);
   const preview=<StudioV2ProjectRenderer
     key={previewRun} document={document} mediaUrls={mergedUrls}
     device="mobile" pageFilter={isMobileViewport?visiblePages[activePageIndex]?.id:undefined}
@@ -398,6 +401,17 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             <h2>{step==="publish"?t.publishTitle:t[step]}</h2>
             {step!=="publish"&&<p className="ce-step-hint">{t.editorTip}</p>}
           </div>
+          {isMobileViewport&&selectedNodeId&&selectedStyleField&&selectedContentField&&
+            <div className="ce-mobile-text-modes" role="group" aria-label={t.mobileSelection}>
+              <button type="button" className={selectedFieldId===selectedContentField.id?"active":""}
+                onClick={()=>{setMobileTool("text");openMobileStep(sectionToStep[selectedContentField.section],selectedContentField.id);}}>
+                {t.toolText}
+              </button>
+              <button type="button" className={selectedFieldId===selectedStyleField.id?"active":""}
+                onClick={()=>{setMobileTool("style");openMobileStep("appearance",selectedStyleField.id);}}>
+                {t.toolStyle}
+              </button>
+            </div>}
           {contract.locales.length>1&&step==="main"&&
             <label className="ce-language"><span>{t.language}</span>
               <select value={document.locale} onChange={e=>changeLocale(e.target.value as "ru"|"ky")}>
