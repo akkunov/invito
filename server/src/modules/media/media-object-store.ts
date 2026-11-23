@@ -26,8 +26,9 @@ export class MediaObjectStore {
       !accessKeyId || !secretAccessKey) {
       throw new ServiceUnavailableException("R2_NOT_CONFIGURED");
     }
-    const endpoint = process.env.R2_ENDPOINT ?? `https://${accountId}.r2.cloudflarestorage.com`;
-    const url = new URL(endpoint);
+    const endpoint = process.env.R2_ENDPOINT?.trim() || `https://${accountId}.r2.cloudflarestorage.com`;
+    let url: URL;
+    try {url = new URL(endpoint);} catch {throw new ServiceUnavailableException("R2_ENDPOINT_INVALID");}
     if (url.protocol !== "https:" || url.username || url.password || url.pathname !== "/" ||
         url.search || url.hash ||
         !url.hostname.endsWith(".r2.cloudflarestorage.com")) {
@@ -37,6 +38,8 @@ export class MediaObjectStore {
     this.client = new S3Client({
       endpoint: url.origin, region: "auto", forcePathStyle: true,
       credentials: {accessKeyId, secretAccessKey},
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
     return {client: this.client, bucket: this.bucket};
   }
