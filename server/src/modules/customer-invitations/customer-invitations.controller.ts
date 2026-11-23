@@ -46,6 +46,12 @@ export class CustomerInvitationsController {
     return this.service.startPhoto(request.user.id,input);
   }
 
+  @Get("media/:id/read-url")
+  @Header("Cache-Control","no-store")
+  photoUrl(@Req() request:AuthenticatedRequest,@Param("id") id:string){
+    return this.service.photoUrl(request.user.id,parseInput(uuid,id));
+  }
+
   @Post("media/:id/complete")
   @Header("Cache-Control","no-store")
   completePhoto(@Req() request:AuthenticatedRequest,@Param("id") id:string){
