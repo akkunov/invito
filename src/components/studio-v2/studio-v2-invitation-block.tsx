@@ -53,6 +53,36 @@ function RsvpForm({block,nodeId,locale,guest}:{block:Extract<WidgetNode["block"]
   <div id={id} className="v2-guest-status" role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?w.sent:status==="error"?w.error:guest.mode==="preview"?w.previewOnly:""}</div>
  </form>;
 }
+function MosaicGallery({node,document,guest,mediaUrls}:Props){
+ const dialog=useRef<HTMLDialogElement>(null),touchStart=useRef<number|null>(null);
+ const [index,setIndex]=useState(0);
+ const b=node.block;if(b.kind!=="gallery")return null;
+ const assets=b.assetIds.map(id=>document.assets[id]).filter(Boolean);
+ const w=words[document.locale],ru=document.locale==="ru";
+ const url=(asset:typeof assets[number])=>asset.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+asset.storageKey:mediaUrls?.[asset.storageKey];
+ const active=assets[index%Math.max(1,assets.length)];
+ function move(delta:number){if(assets.length)setIndex(i=>(i+delta+assets.length)%assets.length);}
+ if(!active)return <p>{w.noPhotos}</p>;
+ return <>
+   <div className="v2-editorial-mosaic" data-count={assets.length}>
+    {assets.map((asset,i)=><button type="button" key={asset.id} disabled={guest.mode==="studio"} aria-label={(ru?"Открыть фото ":"Сүрөттү ачуу ")+(i+1)}
+      onClick={()=>{setIndex(i);dialog.current?.showModal();}}>
+      {url(asset)?<Image unoptimized fill src={url(asset)!} alt={asset.name} sizes="(max-width: 600px) 50vw, 600px"/>:<span>{asset.name}</span>}
+    </button>)}
+   </div>
+   <dialog ref={dialog} className="v2-editorial-lightbox" aria-label={ru?"Фотогалерея":"Сүрөт галереясы"}
+     onKeyDown={e=>{if(e.key==="ArrowLeft"){e.preventDefault();move(-1);}if(e.key==="ArrowRight"){e.preventDefault();move(1);}}}
+     onClick={e=>{if(e.target===e.currentTarget)dialog.current?.close();}}>
+    <div className="v2-editorial-lightbox-inner">
+     <div className="v2-editorial-lightbox-top"><span>{index%assets.length+1} / {assets.length}</span><button type="button" aria-label={ru?"Закрыть":"Жабуу"} onClick={()=>dialog.current?.close()}>×</button></div>
+     <div className="v2-editorial-lightbox-photo" onTouchStart={e=>{touchStart.current=e.touches[0]?.clientX??null;}} onTouchEnd={e=>{const x=e.changedTouches[0]?.clientX,start=touchStart.current;touchStart.current=null;if(start!==null&&x!==undefined&&Math.abs(x-start)>45)move(x<start?1:-1);}}>
+      {url(active)?<Image unoptimized fill src={url(active)!} alt={active.name} sizes="100vw"/>:<p>{active.name}</p>}
+     </div>
+     <div className="v2-editorial-lightbox-nav"><button type="button" aria-label={w.previous} disabled={assets.length<2} onClick={()=>move(-1)}>←</button><button type="button" aria-label={w.next} disabled={assets.length<2} onClick={()=>move(1)}>→</button></div>
+    </div>
+   </dialog>
+ </>;
+}
 function Gallery({node,document,guest,mediaUrls}:Props){
  const [index,setIndex]=useState(0);const b=node.block;if(b.kind!=="gallery")return null;
  const assets=b.assetIds.map(id=>document.assets[id]).filter(Boolean),w=words[document.locale],active=assets[index%Math.max(1,assets.length)];
@@ -82,8 +112,8 @@ function Music({source,locale,guest}:{source:string;locale:ProjectDocumentV2["lo
 export function InvitationBlockView(props:Props){
  const {node,document,guest}=props,b=node.block,w=words[document.locale],a=node.appearance;
  const style={fontFamily:a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent} as CSSProperties;
- return <div className="v2-guest-block" style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
- <h3>{b.title[document.locale]}</h3>
- {b.kind==="rsvp"?<Rsvp {...props}/>:b.kind==="countdown"?<Countdown target={countdownTarget(document,b)} locale={document.locale}/>:b.kind==="location"?(()=>{const address=locationAddress(document,b);return address.trim()?<><p>{address}</p>{guest.mode==="studio"?<span className="v2-guest-link">{w.map}</span>:<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{w.map}</a>}</>:<p>{w.noAddress}</p>;})():b.kind==="gallery"?<Gallery {...props}/>:b.kind==="music"?<Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source} locale={document.locale} guest={guest}/>:b.kind==="schedule"?<div className="v2-guest-schedule">{b.items.length?b.items.map((item,i)=><div key={i}><time>{item.time}</time><span>{item.label[document.locale]}</span></div>):<p>{w.noSchedule}</p>}</div>:null}
+ return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout==="mosaic"?" v2-guest-block-mosaic":"")} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
+ {b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
+ {b.kind==="rsvp"?<Rsvp {...props}/>:b.kind==="countdown"?<Countdown target={countdownTarget(document,b)} locale={document.locale}/>:b.kind==="location"?(()=>{const address=locationAddress(document,b);return address.trim()?<><p>{address}</p>{guest.mode==="studio"?<span className="v2-guest-link">{w.map}</span>:<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{w.map}</a>}</>:<p>{w.noAddress}</p>;})():b.kind==="gallery"?(b.layout==="mosaic"?<MosaicGallery {...props}/>:<Gallery {...props}/>):b.kind==="music"?<Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source} locale={document.locale} guest={guest}/>:b.kind==="schedule"?<div className="v2-guest-schedule">{b.items.length?b.items.map((item,i)=><div key={i}><time>{item.time}</time><span>{item.label[document.locale]}</span></div>):<p>{w.noSchedule}</p>}</div>:null}
  </div>;
 }
