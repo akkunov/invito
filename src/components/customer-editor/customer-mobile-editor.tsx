@@ -345,6 +345,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const selectedContentField=selectedNodeId?editableFieldForNode(document,contract.fields,selectedNodeId):undefined;
   const selectedStyleField=selectedNodeId?contract.fields.find(field=>field.kind==="textStyle"&&field.nodeId===selectedNodeId):undefined;
+  const renderedFields=isMobileViewport&&selectedContentField&&selectedStyleField&&selectedContentField.id!==selectedStyleField.id?[selectedContentField,selectedStyleField]:displayedFields;
   const fieldError=new Set(issues.map(issue=>issue.fieldId));
   const hasFields=contract.fields.length>0;
   const jumpPreview=(pageId:string)=>{
@@ -401,7 +402,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
         </nav></>}
     settings={<section className="ce-controls" aria-label={t.title}>
-        <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><span>{selectedFieldId?t.mobileSelection:step==="publish"?t.mobileCheck:t[step]}</span><button type="button" aria-label={t.mobileClose} onClick={closeMobileSheet}><X size={20}/></button></div>
+        <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><span>{selectedFieldId?(selectedStyleField?t.toolText:t.mobileSelection):step==="publish"?t.mobileCheck:t[step]}</span><button type="button" aria-label={t.mobileClose} onClick={closeMobileSheet}><X size={20}/></button></div>
         <div className="ce-intro">
           <p className="ce-eyebrow">{t.template} / {name}</p>
           <h1>{t.title}</h1>
@@ -431,17 +432,6 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             <h2>{step==="publish"?t.publishTitle:t[step]}</h2>
             {step!=="publish"&&<p className="ce-step-hint">{t.editorTip}</p>}
           </div>
-          {isMobileViewport&&selectedNodeId&&selectedStyleField&&selectedContentField&&
-            <div className="ce-mobile-text-modes" role="group" aria-label={t.mobileSelection}>
-              <button type="button" className={selectedFieldId===selectedContentField.id?"active":""}
-                onClick={()=>{setMobileTool("text");openMobileStep(sectionToStep[selectedContentField.section],selectedContentField.id);}}>
-                {t.toolText}
-              </button>
-              <button type="button" className={selectedFieldId===selectedStyleField.id?"active":""}
-                onClick={()=>{setMobileTool("style");openMobileStep("appearance",selectedStyleField.id);}}>
-                {t.toolStyle}
-              </button>
-            </div>}
           {contract.locales.length>1&&step==="main"&&
             <label className="ce-language"><span>{t.language}</span>
               <select value={document.locale} onChange={e=>changeLocale(e.target.value as "ru"|"ky")}>
@@ -463,10 +453,10 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
               <p className="ce-notice">{t.noPublish}</p>
               <button type="button" className="ce-secondary" onClick={()=>{setPreviewRun(n=>n+1);setMode("preview");}}><Eye size={16}/>{t.preview}</button>
             </div>:
-            displayedFields.length?displayedFields.map(field=>
+            renderedFields.length?renderedFields.map(field=>
               <div className={review&&fieldError.has(field.id)?"ce-field-invalid":""} key={field.id}>
                 <SimpleField field={field} value={readPersonalizedValue(document,field)}
-                  document={document} locale={locale} locales={contract.locales}
+                  document={document} locale={locale} locales={isMobileViewport&&selectedNodeId&&step==="main"?[document.locale]:contract.locales}
                   urls={mergedUrls} musicLibrary={isMobileViewport} onChange={value=>update(field.id,value)}/>
               </div>):
               <p className="ce-empty">{isMobileViewport&&step==="appearance"&&mobileTool==="style"?t.mobileStyleHint+" "+t.mobileLocked:
