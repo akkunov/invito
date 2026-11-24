@@ -6,7 +6,7 @@ import {validatedTemplateVersion,assertReadyAssets} from "../server/domain/persi
 import {finalizePersonalization,personalizationIssues} from "../src/features/studio-v2/core/personalization.ts";
 import {bindDocument} from "../src/features/studio-v2/core/invitation-behavior.ts";
 
-const packages=["v1","v2","v3"].map(version=>{
+const packages=["v1","v2","v3","v4"].map(version=>{
   const path=fileURLToPath(new URL("../templates/packages/editorial-ivory."+version+".json",import.meta.url));
   return {version,data:JSON.parse(readFileSync(path,"utf8"))};
 });
