@@ -134,6 +134,11 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
     change((document) => ({ ...document, accent }));
   }, [change]);
 
+  const renameBlock=useCallback((id:BlockKind,name:string)=>{
+    const value=name.trim().slice(0,80);if(!value)return;
+    change(document=>({...document,blocks:document.blocks.map(block=>block.id===id?{...block,navigationName:value}:block)}));
+  },[change]);
+
   const toggleBlock = useCallback((id: BlockKind) => {
     change((document) => ({ ...document, blocks: document.blocks.map((block) => block.id === id ? { ...block, enabled: !block.enabled } : block) }));
   }, [change]);
@@ -189,8 +194,8 @@ export function useInvitationEditor(initialDocument: InvitationDocument) {
 
   return useMemo(() => ({
     document: history.present, isHydrated, isSaved, saveError, canUndo: history.past.length > 0, canRedo: history.future.length > 0,
-    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateVenuePhoto, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
-  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateVenuePhoto, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, changeLanguage, undo, redo, saveNow, reset, music]);
+    updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateVenuePhoto, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, renameBlock, changeLanguage, undo, redo, saveNow, reset, ...music,
+  }), [history, isHydrated, isSaved, saveError, updateText, updateLocalized, updateAge, updatePortrait, updateFocalY, updateVenuePhoto, updateGallery, updateProgramTime, updateProgramLocalized, addProgramItem, removeProgramItem, updateAccent, toggleBlock, moveBlock, renameBlock, changeLanguage, undo, redo, saveNow, reset, music]);
 }
 
 export type InvitationEditorController = ReturnType<typeof useInvitationEditor>;
