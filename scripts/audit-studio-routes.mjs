@@ -30,6 +30,11 @@ includes("src/components/studio-v2/studio-v2-invitation-block.tsx","submitGuestR
 includes("scripts/build-studio-pages.sh","'src/app/[locale]/i'","Pages static export excludes dynamic guest route");
 includes(".github/workflows/studio-pages.yml","'src/app/[locale]/i'","GitHub Pages workflow excludes dynamic guest route");
 
+includes("src/app/[locale]/admin/studio/page.tsx","export default StudioV2Page","Legacy Studio URL uses current workspace");
+includes("src/components/studio-v2/studio-v2-template-manager.tsx","<StudioCloudTemplates","Authenticated template library reachable");
+includes("src/components/studio-v2/studio-v2-cloud-templates.tsx","forkTemplateDocument","Cloud template opened as separate copy");
+includes("src/components/studio-v2/studio-v2-authenticated.tsx","Копировать JWT","Explicit CLI token clipboard action");
+
 // Entry points MUST be discoverable, even when no OIDC environment is configured.
 const workspace="src/components/studio-v2/studio-v2-workspace.tsx";
 for(const [action,label] of [
