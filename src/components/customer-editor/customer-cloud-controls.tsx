@@ -256,6 +256,7 @@ export function CustomerCloudControls({
 
   async function photos(files:File[],mode:"replace"|"append"){
     if(!userId||!target||uploadLock.current||loading||!files.length)return;
+    if(!globalThis.crypto?.subtle){setInfo(ru?"Для загрузки фото откройте сайт через HTTPS или localhost.":"Сүрөт жүктөө үчүн сайтты HTTPS же localhost аркылуу ачыңыз.");return;}
     const selected=target;
     const limit=selected.kind==="gallery"?(selected.maxPhotos??4):1;
     const capacity=mode==="append"?Math.max(0,limit-(selected.currentCount??0)):limit;
@@ -272,8 +273,12 @@ export function CustomerCloudControls({
         try{
           const prepared=await prepareCustomerPhoto(file,{minWidth:selected.minWidth,minHeight:selected.minHeight});
           results.push(await uploadCustomerPhoto(prepared,setUploadPhase));
-        }catch{
-          results.push(null);failures.push(file.name);
+        }catch(error){
+          const reason=error instanceof Error?error.message:"";
+          const hint=reason==="IMAGE_INPUT_TOO_LARGE"?(ru?"файл пустой или больше 60 МБ":"файл бош же 60 МБдан чоң"):
+            reason==="IMAGE_UNSUPPORTED"||reason==="IMAGE_DECODE_FAILED"?(ru?"не удалось открыть фото":"сүрөт ачылган жок"):
+            (ru?"ошибка обработки или загрузки":"иштетүү же жүктөө катасы");
+          results.push(null);failures.push(file.name+" ("+hint+")");
         }
       }
       const success=results.filter(Boolean).length;
