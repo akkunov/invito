@@ -546,3 +546,23 @@
  .ue-section-action.danger{border:1px solid #eac0bc;background:#fbf4f2;color:#c72a22}
  .ue-section-hint{font-size:11px;line-height:1.4;color:#858176}
 }
+
+
+@media(max-width:850px){
+ .ue-typography{display:grid;gap:12px}
+ .ue-typo-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;background:#efebe8;border-radius:15px;padding:3px}
+ .ue-typo-tabs button{border:0;border-radius:13px;background:transparent;font-size:12px;min-height:35px;color:#282a26;white-space:nowrap}
+ .ue-typo-tabs button[aria-pressed=true]{font-weight:650;background:#fbf9f7;box-shadow:0 1px 4px #29241d12}
+ .ue-typo-font-row{display:grid;grid-template-columns:1.12fr 1fr;gap:11px}
+ .ue-typo-font-row select,.ue-typo-stepper,.ue-typo-group{min-width:0;min-height:43px;border:1px solid #dcd6d1;border-radius:11px;background:#f8f6f4;color:#171918}
+ .ue-typo-font-row select{width:100%;padding:9px 10px;font-size:15px}
+ .ue-typo-stepper,.ue-typo-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;padding:2px}
+ .ue-typo-stepper button,.ue-typo-group button{border:0;border-radius:8px;background:transparent;min-height:37px;display:grid;place-items:center;color:#20231e}
+ .ue-typo-stepper output{display:grid;place-items:center;font-size:16px;font-variant-numeric:tabular-nums}
+ .ue-typo-group button[aria-pressed=true]{background:#ded9c7;color:#40552e}
+ .ue-typo-emphasis{border:0;gap:9px;background:transparent;padding:0}
+ .ue-typo-emphasis button{border:1px solid #dcd6d1;background:#fbf9f7;min-height:41px}
+ .ue-typo-emphasis button[aria-pressed=true]{background:#526237;color:white;border-color:#526237}
+ .ue-typo-spacing{display:grid;gap:13px}
+ .ue-typo-spacing label{display:grid;gap:7px;font-size:13px}
+}
