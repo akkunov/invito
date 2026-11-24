@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect,useMemo,useState,type FormEvent} from "react";
+import {useEffect,useMemo,useRef,useState,type FormEvent} from "react";
 import {CloudUpload,ImagePlus,LogIn,ExternalLink,Copy,Send} from "lucide-react";
 import {
   configuredSupabase,getSupabaseBrowserClient,
@@ -11,12 +11,15 @@ import {
 } from "@/features/invitations/customer-cloud";
 import type {PersonalizationPatch} from "@/features/studio-v2/core/personalization.schema";
 import type {Locale} from "@/i18n/locales";
+import {prepareCustomerPhoto} from "@/features/invitations/prepare-customer-photo";
+
+type UploadResult={asset:VerifiedCustomerAsset;url:string};
 
 type Props={
   locale:Locale;templateVersionId:string;preferredDraftId?:string;patch:PersonalizationPatch;
   publishMode?:boolean;canPublish?:boolean;
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
-  onUploaded:(fieldId:string,asset:VerifiedCustomerAsset,url:string)=>void;
+  onUploaded:(fieldId:string,results:(UploadResult|null)[],mode:"replace"|"append")=>void;
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number;maxPhotos?:number;currentCount?:number}>;
   preferredUploadTargetId?:string;
 };
@@ -33,6 +36,10 @@ export function CustomerCloudControls({
   const [revision,setRevision]=useState<number|null>(null);
   const [fileBusy,setFileBusy]=useState(false);
   const [uploadPhase,setUploadPhase]=useState("");
+  const [uploadProgress,setUploadProgress]=useState({current:0,total:0});
+  const uploadLock=useRef(false);
+  const latestUpload=useRef(onUploaded);
+  useEffect(()=>{latestUpload.current=onUploaded;},[onUploaded]);
   const [selectedTarget,setSelectedTarget]=useState("");
   const [publicSlug,setPublicSlug]=useState("");
   const [publishedUrl,setPublishedUrl]=useState("");
@@ -247,25 +254,35 @@ export function CustomerCloudControls({
     setPublicSlug("invitation-"+crypto.randomUUID().slice(0,8));
   },[publishMode,publicSlug]);
 
-  async function photo(file:File){
-    if(!userId||!target||fileBusy)return;
-    if(galleryFull){setInfo(ru?"Галерея заполнена. Удалите одно фото перед добавлением нового.":"Галерея толду. Жаңы сүрөт кошуу үчүн бир сүрөттү өчүрүңүз.");return;}
-    setFileBusy(true);setInfo("");setUploadPhase("checking");
+  async function photos(files:File[],mode:"replace"|"append"){
+    if(!userId||!target||uploadLock.current||loading||!files.length)return;
+    const selected=target;
+    const limit=selected.kind==="gallery"?(selected.maxPhotos??4):1;
+    const capacity=mode==="append"?Math.max(0,limit-(selected.currentCount??0)):limit;
+    if(files.length>capacity){
+      setInfo(ru?"Выберите не больше "+capacity+" фото за один раз.":"Бир жолуда "+capacity+" сүрөттөн ашык тандабаңыз.");return;
+    }
+    uploadLock.current=true;setFileBusy(true);setInfo("");
+    const results:(UploadResult|null)[]=[];
+    const failures:string[]=[];
     try{
-      if(target){
-        const bitmap=await createImageBitmap(file);
-        const valid=bitmap.width>=target.minWidth&&bitmap.height>=target.minHeight;
-        bitmap.close();
-        if(!valid)throw new Error("IMAGE_TOO_SMALL");
+      for(const [index,file] of files.entries()){
+        setUploadProgress({current:index+1,total:files.length});
+        setUploadPhase("checking");
+        try{
+          const prepared=await prepareCustomerPhoto(file,{minWidth:selected.minWidth,minHeight:selected.minHeight});
+          results.push(await uploadCustomerPhoto(prepared,setUploadPhase));
+        }catch{
+          results.push(null);failures.push(file.name);
+        }
       }
-      const result=await uploadCustomerPhoto(file,phase=>setUploadPhase(phase));
-      onUploaded(target.id,result.asset,result.url);
-      setInfo(ru?"Фото загружено. Сохраните приглашение в облаке.":"Сүрөт жүктөлдү. Чакырууну булутка сактаңыз.");
-    }catch(e){
-      setInfo(e instanceof Error&&e.message==="IMAGE_TOO_SMALL"
-        ?ru?"Недостаточное разрешение фотографии.":"Сүрөттүн өлчөмү жетишсиз."
-        :ru?"Не удалось загрузить фото. Проверьте формат и размер (до 20 МБ).":"Сүрөт жүктөлгөн жок. Форматын жана өлчөмүн текшериңиз (20 МБ чейин).");
-    }finally{setFileBusy(false);setUploadPhase("");}
+      const success=results.filter(Boolean).length;
+      if(success)latestUpload.current(selected.id,results,mode);
+      setInfo((ru?"Загружено ":"Жүктөлдү ")+success+" / "+files.length+
+        (failures.length?(ru?". Не удалось загрузить: ":". Жүктөлгөн жок: ")+failures.join(", "):"")+
+        (success?(ru?". Сохраните приглашение в аккаунте.":". Чакырууну аккаунтта сактаңыз."):""));
+    }catch{setInfo(ru?"Не удалось применить фотографии. Предыдущие фото сохранены.":"Сүрөттөрдү колдонуу мүмкүн болгон жок. Мурунку сүрөттөр сакталды.");}
+    finally{uploadLock.current=false;setFileBusy(false);setUploadPhase("");setUploadProgress({current:0,total:0});}
   }
 
   return <section className="ce-cloud" aria-label={ru?"Облачный черновик":"Булуттагы черновик"}>
@@ -274,7 +291,7 @@ export function CustomerCloudControls({
     !userId?<form onSubmit={e=>void login(e)} className="ce-cloud-auth">
       <p>{ru?"Войдите по email, чтобы загружать свои фото и хранить приглашение в аккаунте.":"Сүрөт жүктөө жана чакырууну сактоо үчүн email аркылуу кириңиз."}</p>
       <label><span>Email</span><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
-      <button className="ce-primary" type="submit" disabled={loading}><LogIn size={16}/>{ru?"Отправить ссылку":"Шилтеме жөнөтүү"}</button>
+      <button className="ce-primary" type="submit" disabled={loading||fileBusy}><LogIn size={16}/>{ru?"Отправить ссылку":"Шилтеме жөнөтүү"}</button>
     </form>:
     <>
       {availableDrafts.length>0&&<label className="ce-language">
@@ -292,7 +309,7 @@ export function CustomerCloudControls({
             value={publicSlug} maxLength={80} onChange={e=>setPublicSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,""))}
             autoComplete="off" spellCheck={false}/>
         </label>
-        <button type="button" className="ce-primary" disabled={loading||!canPublish}
+        <button type="button" className="ce-primary" disabled={loading||fileBusy||!canPublish}
           onClick={()=>void publish()}><Send size={16}/>{loading?"…":ru?"Опубликовать приглашение":"Чакырууну жарыялоо"}</button>
         {!canPublish&&<p>{ru?"Заполните обязательные поля перед публикацией.":"Жарыялоодон мурда милдеттүү талааларды толтуруңуз."}</p>}
         {publishedUrl&&<div className="ce-published-link">
@@ -302,32 +319,42 @@ export function CustomerCloudControls({
             <button className="ce-secondary" type="button" onClick={()=>void share()}><Send size={15}/>{ru?"Поделиться":"Бөлүшүү"}</button>
           </div>
         </div>}
-        {activeRelease!==null&&<button className="ce-secondary" type="button" disabled={loading} onClick={()=>void hidePublication()}>{ru?"Закрыть доступ гостям":"Конокторго кирүүнү жабуу"}</button>}
+        {activeRelease!==null&&<button className="ce-secondary" type="button" disabled={loading||fileBusy} onClick={()=>void hidePublication()}>{ru?"Закрыть доступ гостям":"Конокторго кирүүнү жабуу"}</button>}
       </div>}
       {!publishMode&&target&&<div className="ce-cloud-group">
         <div className="ce-cloud-group-head">
           <strong><ImagePlus size={16}/>{ru?"Ваши фотографии":"Сиздин сүрөттөрүңүз"}</strong>
-          <small>{ru?"JPEG, PNG, WebP · до 20 МБ":"JPEG, PNG, WebP · 20 МБ чейин"}</small>
+          <small>{ru?"Подберём размер автоматически":"Өлчөм автоматтык тандалат"}</small>
         </div>
         {uploadTargets.length>1&&<label className="ce-language">
           <span>{ru?"Что заменить на приглашении":"Чакыруу кайсы сүрөтүн алмаштыруу"}</span>
-          <select value={target.id} onChange={e=>setSelectedTarget(e.target.value)}>
+          <select disabled={fileBusy||loading} value={target.id} onChange={e=>setSelectedTarget(e.target.value)}>
             {uploadTargets.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
         </label>}
         {target.kind==="gallery"&&typeof target.maxPhotos==="number"&&
           <p className="ce-upload-counter">{ru?"Фотографий":"Сүрөттөр"}: {target.currentCount??0} / {target.maxPhotos}</p>}
-        <label className={"ce-upload-button"+(galleryFull?" ce-upload-disabled":"")}>
-          <ImagePlus size={17}/>{galleryFull?(ru?"Галерея заполнена":"Галерея толду"):fileBusy?
-            (uploadPhase==="checking"?(ru?"Проверяем фото":"Сүрөт текшерилүүдө"):
+        <label className="ce-upload-button">
+          <ImagePlus size={17}/>{fileBusy?
+            (uploadPhase==="checking"?(ru?"Подготавливаем фото":"Сүрөт даярдалууда"):
             uploadPhase==="signing"?(ru?"Подготовка загрузки":"Жүктөөгө даярдалууда"):
             uploadPhase==="uploading"?(ru?"Загружаем фото":"Сүрөт жүктөлүүдө"):
             uploadPhase==="verifying"?(ru?"Проверяем загрузку":"Жүктөө текшерилүүдө"):
             (ru?"Загрузка":"Жүктөө")):
+            target.kind==="gallery"?(ru?"Заменить фотографии галереи":"Галереядагы сүрөттөрдү алмаштыруу"):
             (ru?"Выбрать фотографию":"Сүрөт тандоо")}
-          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={fileBusy||galleryFull}
-            onChange={e=>{const file=e.target.files?.[0];if(file)void photo(file);e.target.value="";}}/>
+          {fileBusy&&<span>{uploadProgress.current} / {uploadProgress.total}</span>}
+          <input type="file" accept="image/*,.heic,.heif" multiple={target.kind==="gallery"} disabled={fileBusy||loading}
+            onChange={e=>{const files=Array.from(e.target.files??[]);e.target.value="";void photos(files,"replace");}}/>
         </label>
+        {target.kind==="gallery"&&!galleryFull&&<label className="ce-upload-button">
+          <ImagePlus size={17}/>{ru?"Добавить фотографии":"Сүрөттөрдү кошуу"}
+          <input type="file" accept="image/*,.heic,.heif" multiple disabled={fileBusy||loading}
+            onChange={e=>{const files=Array.from(e.target.files??[]);e.target.value="";void photos(files,"append");}}/>
+        </label>}
+        <p className="ce-photo-upload-hint">{target.kind==="gallery"?
+          (ru?"Выберите до "+(target.maxPhotos??4)+" снимков сразу. При замене прежние фотографии будут заменены.":"Бир жолуда "+(target.maxPhotos??4)+" сүрөткө чейин тандаңыз. Мурунку сүрөттөр алмаштырылат."):
+          (ru?"Выберите обычное фото с телефона — размер подберётся автоматически.":"Телефондогу сүрөттү тандаңыз — өлчөм автоматтык тандалат.")}</p>
       </div>}
       <div className="ce-cloud-group">
         <div className="ce-cloud-group-head">
@@ -335,8 +362,8 @@ export function CustomerCloudControls({
           <small>{ru?"Для доступа с других устройств":"Башка түзмөктөрдөн ачуу үчүн"}</small>
         </div>
         <div className="ce-cloud-actions">
-          <button type="button" className="ce-primary" disabled={loading} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить":"Сактоо"}</button>
-          <button type="button" className="ce-secondary" disabled={loading} onClick={()=>void load()}>{ru?"Загрузить сохранённое":"Сакталганын жүктөө"}</button>
+          <button type="button" className="ce-primary" disabled={loading||fileBusy} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить":"Сактоо"}</button>
+          <button type="button" className="ce-secondary" disabled={loading||fileBusy} onClick={()=>void load()}>{ru?"Загрузить сохранённое":"Сакталганын жүктөө"}</button>
         </div>
       </div>
     </>}
