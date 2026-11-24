@@ -133,11 +133,13 @@ model Template {
   coverPageId    String          @db.VarChar(80)
   status         TemplateStatus  @default(DRAFT)
   latestVersion  Int             @default(0)
+  publishedVersionId String?     @db.Uuid
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
   createdBy      User            @relation("TemplateAuthor", fields: [createdById], references: [id], onDelete: Restrict)
-  versions       TemplateVersion[]
+  versions       TemplateVersion[] @relation("TemplateVersions")
+  publishedVersion TemplateVersion? @relation("PublishedTemplateVersion", fields: [id, publishedVersionId], references: [templateId, id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([workspaceId, slug])
   @@index([status, updatedAt])
@@ -154,12 +156,14 @@ model TemplateVersion {
   note            String        @default("") @db.VarChar(300)
   createdById     String        @db.Uuid
   createdAt       DateTime      @default(now())
-  template        Template      @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  template        Template      @relation("TemplateVersions", fields: [templateId], references: [id], onDelete: Restrict)
+  publishedBy     Template[]    @relation("PublishedTemplateVersion")
   createdBy       User          @relation("TemplateVersionAuthor", fields: [createdById], references: [id], onDelete: Restrict)
   derivedProjects StudioProject[]
   invitationDrafts InvitationDraft[]
 
   @@unique([templateId, number])
+  @@unique([templateId, id])
   @@index([createdById, createdAt])
 }
 

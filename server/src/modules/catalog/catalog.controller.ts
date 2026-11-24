@@ -12,7 +12,7 @@ export const catalogQuerySchema=z.strictObject({
   limit:z.coerce.number().int().min(1).max(48).default(12),
 });
 const slugSchema=z.string().min(3).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-export const catalogPublishSchema=z.strictObject({publicSlug:slugSchema});
+export const catalogPublishSchema=z.strictObject({publicSlug:slugSchema,expectedVersion:z.number().int().min(1).optional()});
 
 @Controller()
 export class CatalogController {
@@ -34,6 +34,6 @@ export class CatalogController {
   publish(@Req() req:AuthenticatedRequest,@Param("workspaceId") workspaceId:string,
     @Param("templateId") templateId:string,@Body() body:unknown){
     const input=parseInput(catalogPublishSchema,body);
-    return this.catalog.publish(req.user.id,workspaceId,templateId,input.publicSlug);
+    return this.catalog.publish(req.user.id,workspaceId,templateId,input.publicSlug,input.expectedVersion);
   }
 }
