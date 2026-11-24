@@ -8,6 +8,7 @@ import {createTemplateInput, createVersionInput, createProjectInput, createRevis
 import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/publications/publications-input.js";
 import {templatePackageSchema} from "./modules/documents/template-package.js";
 import {catalogPublishSchema} from "./modules/catalog/catalog.controller.js";
+import {musicCatalogSchema} from "../../src/features/invitations/music-catalog.schema.js";
 import {createCustomerInvitationSchema,updateCustomerInvitationSchema,customerPhotoSchema} from "./modules/customer-invitations/customer-invitations.controller.js";
 import {publishCustomerSchema,unpublishCustomerSchema} from "./modules/customer-invitations/customer-publication.controller.js";
 
@@ -97,6 +98,10 @@ const endpoints: Endpoint[] = [
     requestBody:body(schema(templatePackageSchema)),
     responseSchema:object({id:uuid,workspaceId:uuid,slug:str,name:str,latestVersion:positive},["id","workspaceId","slug","name","latestVersion"]),
     errors:[400,401,403,404,409,422]},
+  {method:"get",path:"/api/v1/catalog/music",tag:"Catalog",summary:"Музыкальная библиотека",
+    description:"Публичный каталог разрешённых аудиокомпозиций. Возвращает название, исполнителя, стабильный HTTPS URL аудиофайла и сведения о лицензии. Пустая библиотека возвращает tracks: []. При некорректной конфигурации возвращает 503. Выбор музыки в серверном шаблоне дополнительно ограничен контрактом его версии.",
+    public:true,responseSchema:object({tracks:schema(musicCatalogSchema)},["tracks"]),
+    responseExample:{tracks:[]},errors:[503]},
   {method:"get",path:"/api/v1/catalog/templates",tag:"Catalog",summary:"Опубликованные шаблоны",
     description:"Публичный постраничный каталог. Только PUBLISHED. Без приватных документов и информации Workspace.",
     public:true,parameters:[
