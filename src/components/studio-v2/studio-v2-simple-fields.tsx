@@ -1,6 +1,7 @@
 "use client";
 import {StudioNumberInput} from "./studio-number-input";
 import {MusicLibraryPicker} from "@/components/customer-editor/music-library-picker";
+import {MobileTypographyControls} from "@/components/customer-editor/mobile-typography-controls";
 import type {EditableField,PersonalizedValue} from "@/features/studio-v2/core/personalization.schema";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 
@@ -40,6 +41,7 @@ export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={}
     fontWeight:initial.fontWeight,color:initial.color,textAlign:node.textAlign,
   };
   const set=(changes:Partial<typeof current>)=>onChange({...current,...changes});
+  if(musicLibrary){control=<MobileTypographyControls field={f} value={current} locale={locale} onChange={onChange}/>;break;}
   control=<div className="se-text-style">
     <div className="se-text-style-row">
       <label className="se-control"><span>{t("Шрифт","Арип")}</span>
