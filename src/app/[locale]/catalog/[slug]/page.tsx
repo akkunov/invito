@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import {isLocale} from "@/i18n/locales";
 import {getPublicTemplate} from "@/features/invitations/server-catalog";
 import {parseProjectV2} from "@/features/studio-v2/core/document.schema";
+import {personalizationSchema} from "@/features/studio-v2/core/personalization.schema";
 import {StudioV2ProjectRenderer} from "@/components/studio-v2/studio-v2-project-renderer";
 import {publicFont} from "@/components/layout/public-font";
 import {SiteHeader} from "@/components/layout/site-header";
@@ -29,6 +30,8 @@ export default async function CatalogTemplatePage({params}:{params:Promise<{loca
   const item=await getPublicTemplate(slug);
   if(!item)notFound();
   const document=parseProjectV2(item.document);
+  const contract=personalizationSchema.safeParse(item.personalization);
+  const previewLocale=contract.success&&contract.data.locales.includes(locale)?locale:document.locale;
   return <div className={`invito-landing ${publicFont.variable}`}>
     <SiteHeader locale={locale}/>
     <main className="detail-main page-container">
@@ -45,7 +48,7 @@ export default async function CatalogTemplatePage({params}:{params:Promise<{loca
           </Link>
         </div>
         <div className="detail-preview" style={{maxWidth:460,marginInline:"auto",width:"100%"}}>
-          <StudioV2ProjectRenderer document={document.presentation?{...document,locale}:document} mediaUrls={item.mediaUrls} device="mobile" guest={{mode:"preview"}}/>
+          <StudioV2ProjectRenderer document={{...document,locale:previewLocale}} mediaUrls={item.mediaUrls} device="mobile" guest={{mode:"preview"}}/>
         </div>
       </div>
     </main>

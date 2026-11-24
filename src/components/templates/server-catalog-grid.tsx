@@ -1,15 +1,6 @@
 import Link from "next/link";
 import type {Locale} from "@/i18n/locales";
-import type {CatalogItem} from "@/features/invitations/server-catalog";
-
-const labels:Record<CatalogItem["category"],{ru:string;ky:string}>={
-  WEDDING:{ru:"Свадьба",ky:"Үйлөнүү той"},
-  KYZ_UZATUU:{ru:"Кыз узатуу",ky:"Кыз узатуу"},
-  BIRTHDAY:{ru:"День рождения",ky:"Туулган күн"},
-  ANNIVERSARY:{ru:"Юбилей",ky:"Юбилей"},
-  CORPORATE:{ru:"Мероприятие",ky:"Иш-чара"},
-  OTHER:{ru:"Другое",ky:"Башка"},
-};
+import {catalogCategoryLabels, type CatalogItem} from "@/features/invitations/server-catalog";
 
 export function ServerCatalogGrid({locale,items}:{locale:Locale;items:CatalogItem[]}){
   return <section aria-labelledby="server-catalog-title" style={{marginBlock:"28px 44px"}}>
@@ -32,7 +23,7 @@ export function ServerCatalogGrid({locale,items}:{locale:Locale;items:CatalogIte
         </Link>
         <div className="template-card-meta">
           <h3><Link href={`/${locale}/catalog/${item.slug}`}>{item.name}</Link></h3>
-          <span>{labels[item.category][locale]}</span>
+          <span>{catalogCategoryLabels[item.category][locale]}</span>
         </div>
       </article>)}
     </div>

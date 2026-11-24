@@ -4,6 +4,15 @@ export type CatalogItem={
   category:"WEDDING"|"KYZ_UZATUU"|"BIRTHDAY"|"ANNIVERSARY"|"CORPORATE"|"OTHER";
   tags:string[];version:number;coverUrl:string|null;updatedAt:string;
 };
+export const catalogCategoryLabels:Record<CatalogItem["category"],{ru:string;ky:string}>={
+  WEDDING:{ru:"Свадьба",ky:"Үйлөнүү той"},
+  KYZ_UZATUU:{ru:"Кыз узатуу",ky:"Кыз узатуу"},
+  BIRTHDAY:{ru:"День рождения",ky:"Туулган күн"},
+  ANNIVERSARY:{ru:"Юбилей",ky:"Юбилей"},
+  CORPORATE:{ru:"Мероприятие",ky:"Иш-чара"},
+  OTHER:{ru:"Другое",ky:"Башка"},
+};
+
 export type CatalogList={items:CatalogItem[];total:number;page:number;limit:number;nextPage:number|null};
 export type CatalogDetail=Omit<CatalogItem,"tags"|"coverUrl"|"updatedAt">&{
   templateVersionId:string;document:unknown;personalization:unknown;
