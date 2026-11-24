@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import {readFileSync, statSync} from "node:fs";
+import {readFileSync} from "node:fs";
+import {assertTemplateAssetSize,matchesTemplateAssetSize} from "./template-asset-size.mjs";
 import {test} from "node:test";
 import {assertReadyAssets, validatedTemplateVersion} from "../server/domain/persistence-contract.ts";
 import {bindDocument, countdownTarget} from "../src/features/studio-v2/core/invitation-behavior.ts";
@@ -19,7 +20,7 @@ test("All four authored artboards and static assets pass the import contract",()
  const trusted=new Set([...assetRegistry.matchAll(/"(\/images\/kyrgyz-heritage\/[^"]+)"/g)].map(match=>match[1]));
  assertReadyAssets(snapshot,"00000000-0000-4000-8000-000000000001",[],trusted);
  for(const asset of Object.values(snapshot.assets)){
-  assert.equal(statSync(new URL("../public"+asset.storageKey,import.meta.url)).size,asset.sizeBytes);
+  assertTemplateAssetSize(new URL("../public"+asset.storageKey,import.meta.url),asset);
  }
  assert.deepEqual(snapshot.pages.map(page=>page.id),["cover","invitation","gallery","rsvpPage"]);
  for(const page of snapshot.pages){
@@ -63,4 +64,14 @@ test("Measured content pushes ornaments down at narrow widths",()=>{
  assert.equal(doc.nodes.bottomOrnament.y,1102);
  assert.equal(doc.nodes.mountainIllustration.y,976);
  assert.equal(doc.nodes.rsvpPageRoot.height,1155);
+});
+
+test("SVG line endings do not invalidate canonical package sizes on Windows",()=>{
+ const svg=Buffer.from("<svg/>\n","utf8");
+ const windows=Buffer.from("<svg/>\r\n","utf8");
+ const asset={mimeType:"image/svg+xml",storageKey:"/images/test.svg",sizeBytes:svg.length};
+ assert.equal(matchesTemplateAssetSize(svg,asset),true);
+ assert.equal(matchesTemplateAssetSize(windows,asset),true);
+ assert.equal(matchesTemplateAssetSize(Buffer.from("<svg/>x\r\n"),asset),false);
+ assert.equal(matchesTemplateAssetSize(windows,{...asset,mimeType:"image/webp",storageKey:"/images/test.webp"}),false);
 });
