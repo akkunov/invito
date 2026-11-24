@@ -29,6 +29,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState("");
+  const [tokenMessage,setTokenMessage]=useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<FormMode>("sign-in");
   const [submitting, setSubmitting] = useState(false);
@@ -167,9 +168,19 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
     } finally {setSubmitting(false);}
   }
 
+  async function copyAccessToken(){
+    setTokenMessage("");
+    try{
+      const token=await accessToken();
+      if(!token)throw Error("NO_SESSION");
+      await navigator.clipboard.writeText(token);
+      setTokenMessage("JWT скопирован. Не передавайте его другим лицам.");
+    }catch{setTokenMessage("Не удалось скопировать JWT. Проверьте сессию и разрешение буфера обмена.");}
+  }
+
   async function signOut() {
     if (!client) return;
-    setMessage("");
+    setMessage("");setTokenMessage("");
     const {error} = await client.auth.signOut();
     if (error) setMessage("Не удалось завершить сессию. Попробуйте ещё раз.");
   }
@@ -198,6 +209,10 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
             style={{border:"1px solid #666",borderRadius:6,padding:"8px 14px",color:"inherit",background:"transparent",cursor:"pointer"}}>
             Выйти
           </button>
+        </>}
+        {status === "ready" && <>
+          <button type="button" onClick={()=>void copyAccessToken()} style={buttonStyle} title="Временный JWT для локальных CLI-скриптов. Не передавайте третьим лицам.">Копировать JWT</button>
+          {tokenMessage&&<span role="status" style={{maxWidth:340}}>{tokenMessage}</span>}
         </>}
         {status === "ready" &&
           <button type="button" onClick={() => {void signOut();}}
