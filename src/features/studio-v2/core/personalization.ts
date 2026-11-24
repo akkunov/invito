@@ -14,7 +14,7 @@ export function contractIssues(doc:ProjectDocumentV2,contract:PersonalizationCon
  const issues:Issue[]=[];const add=(f:EditableField,message:string)=>issues.push({fieldId:f.id,message});
  if(contract.sectionEditing){
   const all=new Set(doc.pages.map(page=>page.id));
-  for(const pageId of [...contract.sectionEditing.hideablePageIds,...contract.sectionEditing.reorderablePageIds]){
+  for(const pageId of [...contract.sectionEditing.hideablePageIds,...contract.sectionEditing.reorderablePageIds,...(contract.sectionEditing.renameablePageIds??[])]){
    if(!all.has(pageId))issues.push({fieldId:"sections",message:"Раздел для настройки отсутствует: "+pageId});
   }
  }
@@ -60,7 +60,7 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
  switch(f.kind){
   case "textStyle":{
    if(v.kind!=="textStyle")return reject("Неверный тип");
-   if(v.fontSize<f.minFontSize||v.fontSize>f.maxFontSize||!f.allowedFonts.includes(v.fontFamily)||!f.allowedWeights.includes(v.fontWeight)||!f.allowedColors.some(color=>color.toLowerCase()===v.color.toLowerCase()))reject("Стиль текста не разрешён автором");
+   if(v.fontSize<f.minFontSize||v.fontSize>f.maxFontSize||!f.allowedFonts.includes(v.fontFamily)||!f.allowedWeights.includes(v.fontWeight)||!f.allowedColors.some(color=>color.toLowerCase()===v.color.toLowerCase())&&!(doc.nodes[f.nodeId]?.type==="text"&&doc.nodes[f.nodeId].runs[0]?.style.color.toLowerCase()===v.color.toLowerCase()))reject("Стиль текста не разрешён автором");
    break;
   }
   case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
@@ -136,6 +136,10 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
   if(hidden.length>=sourceIds.length)invalid("At least one section must remain visible");
   const byId=new Map(doc.pages.map(page=>[page.id,page]));
   doc.pages=order.map(id=>byId.get(id)!);
+  for(const [id,name] of Object.entries(patch.sections.names??{})){
+    if(!allowed.renameablePageIds?.includes(id)||!byId.has(id))invalid("Section name is locked");
+    byId.get(id)!.name=name;
+  }
   for(const id of hidden){
     const page=byId.get(id)!;
     const root=doc.nodes[page.rootNodeId];
