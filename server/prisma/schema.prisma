@@ -375,6 +375,7 @@ model CustomerRsvpResponse {
   guestName     String             @db.VarChar(120)
   attendance    Attendance
   guestCount    Int                @default(1)
+  wish          String?            @db.VarChar(500)
   createdAt     DateTime           @default(now())
   publication   CustomerPublication @relation(fields: [publicationId], references: [id], onDelete: Restrict)
 

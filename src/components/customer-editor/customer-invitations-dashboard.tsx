@@ -10,7 +10,7 @@ import type {Locale} from "@/i18n/locales";
 import "./customer-invitations-dashboard.css";
 
 type Summary={responses:number;attending:number;declined:number};
-type Reply={id:string;guestName:string;attendance:"YES"|"NO";guestCount:number;createdAt:string};
+type Reply={id:string;guestName:string;attendance:"YES"|"NO";guestCount:number;wish?:string|null;createdAt:string};
 type ReplyPage={items:Reply[];nextPage:number|null};
 type Entry={draft:CustomerDraftListItem;publication:CustomerPublication|null;summary:Summary|null};
 
@@ -154,7 +154,7 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
           {expanded===draft.id&&<div className="ci-replies">
             {(replies[draft.id]??[]).length===0?<p>{ru?"Ответов пока нет.":"Азырынча жооп жок."}</p>:
             (replies[draft.id]??[]).map(reply=><div key={reply.id} className="ci-reply">
-              <span>{reply.guestName}</span><small>{reply.attendance==="YES"?(ru?"Придёт":"Келет"):(ru?"Не придёт":"Келбейт")} · {reply.guestCount}</small>
+              <span>{reply.guestName}</span><small>{reply.attendance==="YES"?(ru?"Придёт":"Келет"):(ru?"Не придёт":"Келбейт")} · {reply.guestCount}</small>{reply.wish&&<p>{reply.wish}</p>}
             </div>)}
             {next[draft.id]&&<button disabled={busy===draft.id} onClick={()=>void showReplies(draft.id,next[draft.id]??1)}>{ru?"Ещё ответы":"Дагы жооптор"}</button>}
           </div>}

@@ -8,7 +8,7 @@ const own=(obj:object,key:string)=>Object.prototype.hasOwnProperty.call(obj,key)
 function indexBy<T extends {id:string}>(items:readonly T[]){return new Map(items.map(item=>[item.id,item]));}
 /** Designer-approved bindings must actually map to authored content, not arbitrary variable names. */
 export function bindingIsUsed(doc:ProjectDocumentV2,key:string){
- return Object.values(doc.nodes).some(n=>n.type==="text"?n.bindingKey===key:n.type==="widget"&&(n.block.kind==="location"?n.block.addressKey===key:n.block.kind==="countdown"&&n.block.targetKey===key));
+ return Object.values(doc.nodes).some(n=>n.type==="text"?n.bindingKey===key:n.type==="widget"&&(n.block.kind==="location"?n.block.addressKey===key:(n.block.kind==="countdown"||n.block.kind==="calendar")&&n.block.targetKey===key));
 }
 export function contractIssues(doc:ProjectDocumentV2,contract:PersonalizationContract):Issue[]{
  const issues:Issue[]=[];const add=(f:EditableField,message:string)=>issues.push({fieldId:f.id,message});

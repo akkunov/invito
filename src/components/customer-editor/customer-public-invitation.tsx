@@ -50,7 +50,7 @@ export function CustomerPublicInvitation({initial,locale}:{
     const response=await fetch(api+"/public/customer-invitations/"+encodeURIComponent(initial.slug)+"/rsvp",{
       method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",credentials:"omit",
       body:JSON.stringify({requestId,nodeId,name:input.name,attendance:input.attendance,
-        guests:input.guests,website,...(turnstileToken?{turnstileToken}:{})}),
+        guests:input.guests,...(input.wish?{wish:input.wish}:{}),website,...(turnstileToken?{turnstileToken}:{})}),
     });
     if(!response.ok)throw Error("RSVP_HTTP_"+response.status);
   },[base,initial.slug]);

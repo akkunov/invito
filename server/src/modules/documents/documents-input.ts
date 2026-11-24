@@ -6,6 +6,8 @@ import {
 import type {ProjectDocumentV2} from "../../../../src/features/studio-v2/core/document.schema.js";
 import type {PrismaClient} from "../../generated/prisma/client.js";
 
+import {collectionStaticAssets} from "./collection-static-assets.js";
+
 export {snapshotHash};
 export const slug = z.string().trim().min(3).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const uuid = z.uuid();
@@ -50,6 +52,7 @@ export function validatedTemplate(input: unknown, personalization: unknown) {
   catch { throw new UnprocessableEntityException("INVALID_TEMPLATE_DOCUMENT_OR_CONTRACT"); }
 }
 export const staticAssets = new Set([
+  ...collectionStaticAssets,
   "/images/ak-orgo/cover-crown.svg",
   "/images/ak-orgo/invite-crown.svg",
   "/images/ak-orgo/rsvp-crown.svg",

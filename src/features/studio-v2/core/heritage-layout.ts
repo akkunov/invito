@@ -64,3 +64,37 @@ export function layoutHeritagePresentation(document:ProjectDocumentV2,width:numb
  }
  return {...document,nodes};
 }
+
+
+/** Resize authored columns in CSS pixels. Measured blocks and text reserve
+ * their own height before moving later rows. Adjacent columns stay aligned. */
+export function layoutCollection(document: ProjectDocumentV2, width: number, measurements: Record<string, number>): ProjectDocumentV2 {
+ const nodes = {...document.nodes};
+ for (const page of document.pages) {
+  const root = document.nodes[page.rootNodeId];
+  if (root.type !== "frame") continue;
+  const targetWidth = Math.min(width, 500);
+  const ratio = targetWidth / root.width;
+  const children = root.children.map(id => document.nodes[id]);
+  const growth = children.filter(canGrow).map(node => ({
+   bottom: node.y + node.height,
+   extra: Math.max(0, (measurements[node.id] ?? 0) - node.height),
+  })).filter(row => row.extra > 0);
+  let height = root.height;
+  for (const node of children) {
+   const shift = growth.filter(row => row.bottom <= node.y + 1).reduce((sum, row) => sum + row.extra, 0);
+   const next = {...node, x: node.x * ratio, width: node.width * ratio, y: node.y + shift};
+   if (canGrow(node)) next.height = Math.max(node.height, measurements[node.id] ?? 0);
+   if (next.type === "text") {
+    next.runs = next.runs.map(run => ({
+     ...run,
+     style: {...run.style, fontSize: run.style.fontSize * Math.min(1.1, Math.max(.78, ratio))},
+    }));
+   }
+   height = Math.max(height, next.y + next.height, root.height + shift);
+   nodes[node.id] = next;
+  }
+  nodes[root.id] = {...root, width: targetWidth, height};
+ }
+ return {...document, nodes};
+}

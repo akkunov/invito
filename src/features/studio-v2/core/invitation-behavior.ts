@@ -4,7 +4,7 @@ import {rsvpInputSchema} from "./invitation.schema.ts";
 export type WidgetNode=Extract<ProjectNodeV2,{type:"widget"}>;
 export type BlockKind=InvitationBlock["kind"];
 export type Locale=ProjectDocumentV2["locale"];
-export const BLOCK_NAMES:Record<BlockKind,{ru:string;ky:string}>={rsvp:{ru:"Подтверждение участия",ky:"Катышууну ырастоо"},countdown:{ru:"До торжества",ky:"Тойго чейин"},location:{ru:"Место встречи",ky:"Өтчү жер"},gallery:{ru:"Фотогалерея",ky:"Сүрөттөр"},music:{ru:"Музыка",ky:"Музыка"},schedule:{ru:"Программа",ky:"Программа"}};
+export const BLOCK_NAMES:Record<BlockKind,{ru:string;ky:string}>={sectionLink:{ru:"Переход к разделу",ky:"Бөлүмгө өтүү"},calendar:{ru:"Календарь",ky:"Жылнаама"},rsvp:{ru:"Подтверждение участия",ky:"Катышууну ырастоо"},countdown:{ru:"До торжества",ky:"Тойго чейин"},location:{ru:"Место встречи",ky:"Өтчү жер"},gallery:{ru:"Фотогалерея",ky:"Сүрөттөр"},music:{ru:"Музыка",ky:"Музыка"},schedule:{ru:"Программа",ky:"Программа"}};
 export function bindingText(value:BindingValue,locale:Locale):string{
  switch(value.type){
   case "text":return value.value[locale];
@@ -35,7 +35,9 @@ export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
   if(n.type==="text"&&n.bindingKey&&doc.values?.[n.bindingKey]){
    const binding=doc.values[n.bindingKey];
    const longKyrgyzDate=(doc.presentation==="alpine"||doc.presentation==="felt")&&doc.locale==="ky"&&binding.type==="date";
-   const value=doc.presentation&&binding.type==="date"
+   const value=binding.type==="date"&&n.dateFormat
+     ?formatEventDate(binding.value,doc.locale,n.dateFormat)
+     :doc.presentation&&binding.type==="date"
      ?editorialDate(binding.value,doc.locale,longKyrgyzDate)
      :bindingText(binding,doc.locale);
    const style={...n.runs[0].style};
@@ -45,7 +47,22 @@ export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
  }
  return {...doc,nodes};
 }
-export function countdownTarget(doc:ProjectDocumentV2,b:Extract<InvitationBlock,{kind:"countdown"}>){
+const calendarDateTime=new Intl.DateTimeFormat("en-GB",{
+ timeZone:"Asia/Bishkek",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23",
+});
+const weekdayNames={
+ ru:["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"],
+ ky:["Жекшемби","Дүйшөмбү","Шейшемби","Шаршемби","Бейшемби","Жума","Ишемби"],
+};
+export function formatEventDate(instant:string,locale:Locale,format:"date"|"numeric"|"weekday"|"time"|"date-time"):string {
+ if(format==="date")return editorialDate(instant,locale,locale==="ky");
+ const parts=Object.fromEntries(calendarDateTime.formatToParts(new Date(instant)).map(part=>[part.type,part.value]));
+ if(format==="weekday")return weekdayNames[locale][new Date(Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day))).getUTCDay()];
+ const date=`${parts.day}.${parts.month}.${parts.year}`;
+ const time=`${parts.hour}:${parts.minute}`;
+ return format==="time"?time:format==="date-time"?`${date} · ${time}`:date;
+}
+export function countdownTarget(doc:ProjectDocumentV2,b:Extract<InvitationBlock,{kind:"countdown"|"calendar"}>){
  const v=b.targetKey?doc.values?.[b.targetKey]:null;return v?.type==="date"?v.value:b.target;
 }
 export function locationAddress(doc:ProjectDocumentV2,b:Extract<InvitationBlock,{kind:"location"}>){
@@ -72,6 +89,8 @@ export function createWidget(kind:BlockKind,id:string,parentId:string,width:numb
  const title=BLOCK_NAMES[kind];const target=new Date(now+30*86400000).toISOString();
  const blocks:Record<BlockKind,InvitationBlock>={
  rsvp:{kind:"rsvp",title,deadline:null,maxGuests:2},
+  calendar:{kind:"calendar",title,target,targetKey:null,layout:"button"},
+  sectionLink:{kind:"sectionLink",title,destination:"next",style:"outline"},
  countdown:{kind:"countdown",title,target,targetKey:null},
  location:{kind:"location",title,address:{ru:"",ky:""},addressKey:null},
  gallery:{kind:"gallery",title,assetIds:[]},

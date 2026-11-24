@@ -41,11 +41,12 @@ export class CustomerRsvpService {
     if(input.guests>node.block.maxGuests)
       throw new UnprocessableEntityException("RSVP_GUEST_LIMIT");
 
+    if(input.wish&&!node.block.wish)throw new UnprocessableEntityException("RSVP_WISH_UNAVAILABLE");
     const attendance=input.attendance==="yes"?"YES" as const:"NO" as const;
-    const values={guestName:input.name,guestCount:input.guests,attendance,nodeId:input.nodeId};
+    const values={guestName:input.name,guestCount:input.guests,attendance,nodeId:input.nodeId,...(node.block.wish?{wish:input.wish||null}:{})};
     const prior=await this.db.customerRsvpResponse.findUnique({
       where:{publicationId_requestId:{publicationId:publication.id,requestId:input.requestId}},
-      select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true},
+      select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true,wish:true},
     });
     if(prior){
       if(Object.entries(values).some(([key,value])=>prior[key as keyof typeof values]!==value))
@@ -63,7 +64,7 @@ export class CustomerRsvpService {
           throw new NotFoundException("INVITATION_NOT_FOUND");
         const existing=await tx.customerRsvpResponse.findUnique({
           where:{publicationId_requestId:{publicationId:publication.id,requestId:input.requestId}},
-          select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true},
+          select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true,wish:true},
         });
         if(existing){
           if(Object.entries(values).some(([key,value])=>existing[key as keyof typeof values]!==value))
@@ -77,8 +78,7 @@ export class CustomerRsvpService {
         });
         if(rate.count>60)throw new HttpException("RSVP_RATE_LIMIT",429);
         const stored=await tx.customerRsvpResponse.create({
-          data:{publicationId:publication.id,requestId:input.requestId,nodeId:input.nodeId,
-            guestName:input.name,attendance,guestCount:input.guests},
+          data:{publicationId:publication.id,requestId:input.requestId,...values},
           select:{id:true},
         });
         return {accepted:true,receiptId:stored.id};
@@ -116,7 +116,7 @@ export class CustomerRsvpService {
     const rows=await this.db.customerRsvpResponse.findMany({
       where:{publicationId:publication.id},orderBy:[{createdAt:"desc"},{id:"asc"}],
       skip:(page-1)*limit,take:limit+1,
-      select:{id:true,guestName:true,attendance:true,guestCount:true,nodeId:true,createdAt:true},
+      select:{id:true,guestName:true,attendance:true,guestCount:true,nodeId:true,wish:true,createdAt:true},
     });
     return {items:rows.slice(0,limit),nextPage:rows.length>limit?page+1:null};
   }

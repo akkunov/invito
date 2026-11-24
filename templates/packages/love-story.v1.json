@@ -1,0 +1,2327 @@
+{
+  "format": "eventiq-template",
+  "version": 1,
+  "manifest": {
+    "slug": "love-story",
+    "name": "Love Story",
+    "description": "История пары в фотокарточках, билет на свадьбу и почтовый ответ гостя.",
+    "category": "WEDDING",
+    "tags": [
+      "wedding",
+      "collection",
+      "ru",
+      "ky"
+    ],
+    "coverPageId": "cover"
+  },
+  "document": {
+    "schemaVersion": 2,
+    "presentation": "collection",
+    "id": "love-story",
+    "revision": 0,
+    "locale": "ru",
+    "pages": [
+      {
+        "id": "cover",
+        "rootNodeId": "coverRoot",
+        "name": "Приглашение",
+        "placement": {
+          "x": 0,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "story",
+        "rootNodeId": "storyRoot",
+        "name": "Наша история",
+        "placement": {
+          "x": 420,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "details",
+        "rootNodeId": "detailsRoot",
+        "name": "День свадьбы",
+        "placement": {
+          "x": 840,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "rsvpPage",
+        "rootNodeId": "rsvpPageRoot",
+        "name": "Подтверждение участия",
+        "placement": {
+          "x": 1260,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          }
+        }
+      }
+    ],
+    "nodes": {
+      "coverRoot": {
+        "id": "coverRoot",
+        "type": "frame",
+        "name": "Приглашение",
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1045,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "padding": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0
+        },
+        "gap": 0,
+        "layout": "free",
+        "background": "#B8CAD4",
+        "clip": true,
+        "children": [
+          "cover_coverSky",
+          "cover_coverBranches",
+          "cover_coverPhoto",
+          "cover_eyebrow",
+          "cover_eyebrowRule",
+          "cover_names",
+          "cover_date",
+          "cover_storyLink",
+          "cover_scrollIcon"
+        ]
+      },
+      "cover_coverSky": {
+        "id": "cover_coverSky",
+        "parentId": "coverRoot",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 468,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#B8CAD4",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "cover_coverBranches": {
+        "id": "cover_coverBranches",
+        "parentId": "coverRoot",
+        "x": 278,
+        "y": 0,
+        "width": 112,
+        "height": 138,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "cover_coverBranches",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "cover_coverPhoto": {
+        "id": "cover_coverPhoto",
+        "parentId": "coverRoot",
+        "x": 0,
+        "y": 394,
+        "width": 390,
+        "height": 650,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "cover_coverPhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.22
+      },
+      "cover_eyebrow": {
+        "id": "cover_eyebrow",
+        "parentId": "coverRoot",
+        "x": 36,
+        "y": 43,
+        "width": 208,
+        "height": 36,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "cover_eyebrow",
+        "runs": [
+          {
+            "text": "ПРИГЛАШЕНИЕ\nНА СВАДЬБУ",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 13,
+              "fontWeight": 650,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 3,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "cover_eyebrowRule": {
+        "id": "cover_eyebrowRule",
+        "parentId": "coverRoot",
+        "x": 37,
+        "y": 102,
+        "width": 46,
+        "height": 3,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "cover_names": {
+        "id": "cover_names",
+        "parentId": "coverRoot",
+        "x": 34,
+        "y": 144,
+        "width": 335,
+        "height": 171,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "coupleNames",
+        "runs": [
+          {
+            "text": "АЛИБЕК\nИ АЛИНА",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 73,
+              "fontWeight": 550,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": -3,
+        "lineHeight": 0.98,
+        "autoHeight": true
+      },
+      "cover_date": {
+        "id": "cover_date",
+        "parentId": "coverRoot",
+        "x": 40,
+        "y": 348,
+        "width": 302,
+        "height": 33,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "ceremonyDate",
+        "runs": [
+          {
+            "text": "",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 24,
+              "fontWeight": 600,
+              "color": "#791F35",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 3,
+        "lineHeight": 1.12,
+        "autoHeight": true,
+        "dateFormat": "date"
+      },
+      "cover_storyLink": {
+        "id": "cover_storyLink",
+        "parentId": "coverRoot",
+        "x": 106,
+        "y": 928,
+        "width": 216,
+        "height": 29,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "cover_storyLink",
+        "runs": [
+          {
+            "text": "НАША ИСТОРИЯ",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 12,
+              "fontWeight": 500,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "center",
+        "letterSpacing": 3,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "cover_scrollIcon": {
+        "id": "cover_scrollIcon",
+        "parentId": "coverRoot",
+        "x": 184,
+        "y": 963,
+        "width": 46,
+        "height": 48,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "widget",
+        "block": {
+          "kind": "sectionLink",
+          "title": {
+            "ru": "К следующему разделу",
+            "ky": "Кийинки бөлүмгө"
+          },
+          "style": "arrow",
+          "destination": "next"
+        },
+        "appearance": {
+          "fontFamily": "sans",
+          "fontSize": 16,
+          "color": "#302824",
+          "background": "transparent",
+          "accent": "#791F35"
+        }
+      },
+      "storyRoot": {
+        "id": "storyRoot",
+        "type": "frame",
+        "name": "Наша история",
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1045,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "padding": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0
+        },
+        "gap": 0,
+        "layout": "free",
+        "background": "#F6F0E7",
+        "clip": true,
+        "children": [
+          "story_storyRule",
+          "story_storyTitle",
+          "story_storySubtitle",
+          "story_storyLine",
+          "story_meetingDot",
+          "story_meetingDate",
+          "story_meetingTitle",
+          "story_meetingText",
+          "story_meetingMat",
+          "story_meetingPhoto",
+          "story_tripDot",
+          "story_tripDate",
+          "story_tripTitle",
+          "story_tripText",
+          "story_tripMat",
+          "story_tripPhoto",
+          "story_proposalDot",
+          "story_proposalDate",
+          "story_proposalTitle",
+          "story_proposalText",
+          "story_proposalMat",
+          "story_proposalPhoto",
+          "story_landscapeFooter"
+        ]
+      },
+      "story_storyRule": {
+        "id": "story_storyRule",
+        "parentId": "storyRoot",
+        "x": 44,
+        "y": 50,
+        "width": 45,
+        "height": 3,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_storyTitle": {
+        "id": "story_storyTitle",
+        "parentId": "storyRoot",
+        "x": 43,
+        "y": 75,
+        "width": 295,
+        "height": 69,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "story_storyTitle",
+        "runs": [
+          {
+            "text": "НАША\nИСТОРИЯ",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 32,
+              "fontWeight": 550,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 3,
+        "lineHeight": 1,
+        "autoHeight": true
+      },
+      "story_storySubtitle": {
+        "id": "story_storySubtitle",
+        "parentId": "storyRoot",
+        "x": 45,
+        "y": 162,
+        "width": 295,
+        "height": 36,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "story_storySubtitle",
+        "runs": [
+          {
+            "text": "ТРИ ГЛАВЫ, КОТОРЫЕ\nПРИВЕЛИ НАС К ЭТОМУ ДНЮ",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 11,
+              "fontWeight": 650,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 1.5,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_storyLine": {
+        "id": "story_storyLine",
+        "parentId": "storyRoot",
+        "x": 30,
+        "y": 272,
+        "width": 2,
+        "height": 602,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_meetingDot": {
+        "id": "story_meetingDot",
+        "parentId": "storyRoot",
+        "x": 26,
+        "y": 273,
+        "width": 10,
+        "height": 10,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "circle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_meetingDate": {
+        "id": "story_meetingDate",
+        "parentId": "storyRoot",
+        "x": 54,
+        "y": 263,
+        "width": 128,
+        "height": 28,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "meetingDate",
+        "runs": [
+          {
+            "text": "12.06.2022",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 20,
+              "fontWeight": 550,
+              "color": "#791F35",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_meetingTitle": {
+        "id": "story_meetingTitle",
+        "parentId": "storyRoot",
+        "x": 55,
+        "y": 300,
+        "width": 130,
+        "height": 38,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "meetingTitle",
+        "runs": [
+          {
+            "text": "Первая встреча",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 15,
+              "fontWeight": 680,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_meetingText": {
+        "id": "story_meetingText",
+        "parentId": "storyRoot",
+        "x": 55,
+        "y": 352,
+        "width": 130,
+        "height": 78,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "meetingDescription",
+        "runs": [
+          {
+            "text": "Мы познакомились совершенно случайно, но сразу поняли, что это особенная встреча.",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 13,
+              "fontWeight": 500,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_meetingMat": {
+        "id": "story_meetingMat",
+        "parentId": "storyRoot",
+        "x": 190,
+        "y": 221,
+        "width": 196,
+        "height": 237,
+        "rotation": -3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#FFF9F1",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_meetingPhoto": {
+        "id": "story_meetingPhoto",
+        "parentId": "storyRoot",
+        "x": 195,
+        "y": 224,
+        "width": 188,
+        "height": 227,
+        "rotation": -3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "story_meetingPhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "story_tripDot": {
+        "id": "story_tripDot",
+        "parentId": "storyRoot",
+        "x": 26,
+        "y": 508,
+        "width": 10,
+        "height": 10,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "circle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_tripDate": {
+        "id": "story_tripDate",
+        "parentId": "storyRoot",
+        "x": 54,
+        "y": 498,
+        "width": 132,
+        "height": 28,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "tripDate",
+        "runs": [
+          {
+            "text": "18.08.2023",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 20,
+              "fontWeight": 550,
+              "color": "#791F35",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_tripTitle": {
+        "id": "story_tripTitle",
+        "parentId": "storyRoot",
+        "x": 56,
+        "y": 531,
+        "width": 132,
+        "height": 45,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "tripTitle",
+        "runs": [
+          {
+            "text": "Первое путешествие",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 15,
+              "fontWeight": 680,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_tripText": {
+        "id": "story_tripText",
+        "parentId": "storyRoot",
+        "x": 56,
+        "y": 583,
+        "width": 128,
+        "height": 76,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "tripDescription",
+        "runs": [
+          {
+            "text": "Наше первое совместное путешествие научило нас быть ещё ближе.",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 13,
+              "fontWeight": 500,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_tripMat": {
+        "id": "story_tripMat",
+        "parentId": "storyRoot",
+        "x": 189,
+        "y": 468,
+        "width": 198,
+        "height": 233,
+        "rotation": 3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#FFF9F1",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_tripPhoto": {
+        "id": "story_tripPhoto",
+        "parentId": "storyRoot",
+        "x": 193,
+        "y": 472,
+        "width": 191,
+        "height": 223,
+        "rotation": 3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "story_tripPhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "story_proposalDot": {
+        "id": "story_proposalDot",
+        "parentId": "storyRoot",
+        "x": 26,
+        "y": 735,
+        "width": 10,
+        "height": 10,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "circle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_proposalDate": {
+        "id": "story_proposalDate",
+        "parentId": "storyRoot",
+        "x": 55,
+        "y": 725,
+        "width": 129,
+        "height": 28,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "proposalDate",
+        "runs": [
+          {
+            "text": "14.02.2026",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 20,
+              "fontWeight": 550,
+              "color": "#791F35",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_proposalTitle": {
+        "id": "story_proposalTitle",
+        "parentId": "storyRoot",
+        "x": 56,
+        "y": 760,
+        "width": 129,
+        "height": 44,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "proposalTitle",
+        "runs": [
+          {
+            "text": "Она сказала «Да»",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 15,
+              "fontWeight": 680,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_proposalText": {
+        "id": "story_proposalText",
+        "parentId": "storyRoot",
+        "x": 56,
+        "y": 813,
+        "width": 129,
+        "height": 63,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "proposalDescription",
+        "runs": [
+          {
+            "text": "В этот день мы поняли — хотим провести вместе всю жизнь.",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 13,
+              "fontWeight": 500,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "story_proposalMat": {
+        "id": "story_proposalMat",
+        "parentId": "storyRoot",
+        "x": 195,
+        "y": 705,
+        "width": 191,
+        "height": 209,
+        "rotation": -3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#FFF9F1",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "story_proposalPhoto": {
+        "id": "story_proposalPhoto",
+        "parentId": "storyRoot",
+        "x": 201,
+        "y": 711,
+        "width": 182,
+        "height": 198,
+        "rotation": -3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "story_proposalPhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "story_landscapeFooter": {
+        "id": "story_landscapeFooter",
+        "parentId": "storyRoot",
+        "x": 0,
+        "y": 917,
+        "width": 390,
+        "height": 124,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "story_landscapeFooter",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "detailsRoot": {
+        "id": "detailsRoot",
+        "type": "frame",
+        "name": "День свадьбы",
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1045,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "padding": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0
+        },
+        "gap": 0,
+        "layout": "free",
+        "background": "#F6F0E7",
+        "clip": true,
+        "children": [
+          "details_ticketBacking",
+          "details_ticket",
+          "details_ticketEyebrow",
+          "details_ticketDate",
+          "details_ticketLine",
+          "details_ticketDay",
+          "details_ticketTime",
+          "details_calendarAction",
+          "details_dayHeading",
+          "details_program",
+          "details_venuePhoto",
+          "details_venueName",
+          "details_mapAction"
+        ]
+      },
+      "details_ticketBacking": {
+        "id": "details_ticketBacking",
+        "parentId": "detailsRoot",
+        "x": 13,
+        "y": 20,
+        "width": 364,
+        "height": 335,
+        "rotation": -3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "visual": {
+          "corners": {
+            "topLeft": 16,
+            "topRight": 16,
+            "bottomLeft": 16,
+            "bottomRight": 16
+          }
+        },
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#791F35",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "details_ticket": {
+        "id": "details_ticket",
+        "parentId": "detailsRoot",
+        "x": 22,
+        "y": 37,
+        "width": 350,
+        "height": 315,
+        "rotation": -2,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "visual": {
+          "corners": {
+            "topLeft": 13,
+            "topRight": 13,
+            "bottomLeft": 13,
+            "bottomRight": 13
+          }
+        },
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#FFF9F1",
+        "stroke": "#D0B3A1",
+        "strokeWidth": 1
+      },
+      "details_ticketEyebrow": {
+        "id": "details_ticketEyebrow",
+        "parentId": "detailsRoot",
+        "x": 67,
+        "y": 70,
+        "width": 264,
+        "height": 40,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "invitationText",
+        "runs": [
+          {
+            "text": "ПРИГЛАШАЕМ ВАС\nНА НАШУ СВАДЬБУ",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 13,
+              "fontWeight": 650,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "center",
+        "letterSpacing": 2,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "details_ticketDate": {
+        "id": "details_ticketDate",
+        "parentId": "detailsRoot",
+        "x": 66,
+        "y": 129,
+        "width": 283,
+        "height": 52,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "ceremonyDate",
+        "runs": [
+          {
+            "text": "",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 37,
+              "fontWeight": 600,
+              "color": "#791F35",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "center",
+        "letterSpacing": -1,
+        "lineHeight": 1.12,
+        "autoHeight": true,
+        "dateFormat": "date"
+      },
+      "details_ticketLine": {
+        "id": "details_ticketLine",
+        "parentId": "detailsRoot",
+        "x": 55,
+        "y": 190,
+        "width": 280,
+        "height": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#A99B8D",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "details_ticketDay": {
+        "id": "details_ticketDay",
+        "parentId": "detailsRoot",
+        "x": 71,
+        "y": 207,
+        "width": 110,
+        "height": 26,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "ceremonyDate",
+        "runs": [
+          {
+            "text": "",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 14,
+              "fontWeight": 600,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "center",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true,
+        "dateFormat": "weekday"
+      },
+      "details_ticketTime": {
+        "id": "details_ticketTime",
+        "parentId": "detailsRoot",
+        "x": 210,
+        "y": 197,
+        "width": 108,
+        "height": 33,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "ceremonyDate",
+        "runs": [
+          {
+            "text": "",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 23,
+              "fontWeight": 600,
+              "color": "#791F35",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "center",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true,
+        "dateFormat": "time"
+      },
+      "details_calendarAction": {
+        "id": "details_calendarAction",
+        "parentId": "detailsRoot",
+        "x": 141,
+        "y": 262,
+        "width": 210,
+        "height": 48,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "widget",
+        "block": {
+          "kind": "calendar",
+          "title": {
+            "ru": "",
+            "ky": ""
+          },
+          "layout": "button",
+          "target": "2027-05-29T17:00:00+06:00",
+          "targetKey": "ceremonyDate"
+        },
+        "appearance": {
+          "fontFamily": "sans",
+          "fontSize": 16,
+          "color": "#302824",
+          "background": "transparent",
+          "accent": "#791F35"
+        }
+      },
+      "details_dayHeading": {
+        "id": "details_dayHeading",
+        "parentId": "detailsRoot",
+        "x": 97,
+        "y": 394,
+        "width": 209,
+        "height": 33,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "details_dayHeading",
+        "runs": [
+          {
+            "text": "НАШ ДЕНЬ",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 25,
+              "fontWeight": 550,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "center",
+        "letterSpacing": 2,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "details_program": {
+        "id": "details_program",
+        "parentId": "detailsRoot",
+        "x": 26,
+        "y": 441,
+        "width": 338,
+        "height": 189,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "widget",
+        "block": {
+          "kind": "schedule",
+          "title": {
+            "ru": "",
+            "ky": ""
+          },
+          "layout": "rows",
+          "items": [
+            {
+              "time": "16:00",
+              "label": {
+                "ru": "Сбор гостей\nПриветственные напитки",
+                "ky": "Конокторду тосуу\nСуусундуктар"
+              }
+            },
+            {
+              "time": "17:00",
+              "label": {
+                "ru": "Церемония\nТоржественная регистрация",
+                "ky": "Нике салтанаты\nНикени каттоо"
+              }
+            },
+            {
+              "time": "18:30",
+              "label": {
+                "ru": "Праздничный ужин",
+                "ky": "Майрамдык кечки тамак"
+              }
+            },
+            {
+              "time": "22:00",
+              "label": {
+                "ru": "Музыка и танцы",
+                "ky": "Музыка жана бий"
+              }
+            }
+          ]
+        },
+        "appearance": {
+          "fontFamily": "sans",
+          "fontSize": 16,
+          "color": "#302824",
+          "background": "transparent",
+          "accent": "#791F35"
+        }
+      },
+      "details_venuePhoto": {
+        "id": "details_venuePhoto",
+        "parentId": "detailsRoot",
+        "x": 10,
+        "y": 652,
+        "width": 368,
+        "height": 188,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "visual": {
+          "corners": {
+            "topLeft": 12,
+            "topRight": 12,
+            "bottomLeft": 12,
+            "bottomRight": 12
+          }
+        },
+        "type": "image",
+        "assetId": "details_venuePhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "details_venueName": {
+        "id": "details_venueName",
+        "parentId": "detailsRoot",
+        "x": 71,
+        "y": 853,
+        "width": 289,
+        "height": 30,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "venueName",
+        "runs": [
+          {
+            "text": "VILLA TOSCANA",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 22,
+              "fontWeight": 550,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "details_mapAction": {
+        "id": "details_mapAction",
+        "parentId": "detailsRoot",
+        "x": 27,
+        "y": 881,
+        "width": 336,
+        "height": 96,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "widget",
+        "block": {
+          "kind": "location",
+          "title": {
+            "ru": "",
+            "ky": ""
+          },
+          "address": {
+            "ru": "г. Бишкек, ул. Курманжан Датки, 45",
+            "ky": "Бишкек ш., Курманжан Датка көч., 45"
+          },
+          "addressKey": "venueAddress"
+        },
+        "appearance": {
+          "fontFamily": "sans",
+          "fontSize": 16,
+          "color": "#302824",
+          "background": "transparent",
+          "accent": "#791F35"
+        }
+      },
+      "rsvpPageRoot": {
+        "id": "rsvpPageRoot",
+        "type": "frame",
+        "name": "Подтверждение участия",
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1045,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "padding": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0
+        },
+        "gap": 0,
+        "layout": "free",
+        "background": "#F6F0E7",
+        "clip": true,
+        "children": [
+          "rsvpPage_airmailBorder",
+          "rsvpPage_stamp",
+          "rsvpPage_rsvpHeading",
+          "rsvpPage_rsvpIntro",
+          "rsvpPage_rsvpWidget",
+          "rsvpPage_music",
+          "rsvpPage_closingPhoto"
+        ]
+      },
+      "rsvpPage_airmailBorder": {
+        "id": "rsvpPage_airmailBorder",
+        "parentId": "rsvpPageRoot",
+        "x": 1,
+        "y": 0,
+        "width": 389,
+        "height": 47,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "rsvpPage_airmailBorder",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "rsvpPage_stamp": {
+        "id": "rsvpPage_stamp",
+        "parentId": "rsvpPageRoot",
+        "x": 275,
+        "y": 38,
+        "width": 94,
+        "height": 92,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "rsvpPage_stamp",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "rsvpPage_rsvpHeading": {
+        "id": "rsvpPage_rsvpHeading",
+        "parentId": "rsvpPageRoot",
+        "x": 43,
+        "y": 72,
+        "width": 229,
+        "height": 58,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "rsvpPage_rsvpHeading",
+        "runs": [
+          {
+            "text": "ОТПРАВЬТЕ\nСВОЙ ОТВЕТ",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 24,
+              "fontWeight": 550,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 1.4,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "rsvpPage_rsvpIntro": {
+        "id": "rsvpPage_rsvpIntro",
+        "parentId": "rsvpPageRoot",
+        "x": 44,
+        "y": 156,
+        "width": 312,
+        "height": 40,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "rsvpIntro",
+        "runs": [
+          {
+            "text": "Будем рады разделить этот особенный день вместе с вами.",
+            "style": {
+              "fontFamily": "sans",
+              "fontSize": 16,
+              "fontWeight": 500,
+              "color": "#302824",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
+      },
+      "rsvpPage_rsvpWidget": {
+        "id": "rsvpPage_rsvpWidget",
+        "parentId": "rsvpPageRoot",
+        "x": 32,
+        "y": 216,
+        "width": 336,
+        "height": 400,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "widget",
+        "block": {
+          "kind": "rsvp",
+          "title": {
+            "ru": "",
+            "ky": ""
+          },
+          "layout": "inline",
+          "guestControl": "stepper",
+          "wish": true,
+          "maxGuests": 4,
+          "deadline": null
+        },
+        "appearance": {
+          "fontFamily": "sans",
+          "fontSize": 16,
+          "color": "#302824",
+          "background": "transparent",
+          "accent": "#791F35"
+        }
+      },
+      "rsvpPage_music": {
+        "id": "rsvpPage_music",
+        "parentId": "rsvpPageRoot",
+        "x": 35,
+        "y": 644,
+        "width": 332,
+        "height": 75,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "widget",
+        "block": {
+          "kind": "music",
+          "title": {
+            "ru": "",
+            "ky": ""
+          },
+          "source": ""
+        },
+        "appearance": {
+          "fontFamily": "sans",
+          "fontSize": 16,
+          "color": "#302824",
+          "background": "transparent",
+          "accent": "#791F35"
+        }
+      },
+      "rsvpPage_closingPhoto": {
+        "id": "rsvpPage_closingPhoto",
+        "parentId": "rsvpPageRoot",
+        "x": 15,
+        "y": 733,
+        "width": 370,
+        "height": 250,
+        "rotation": -3,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "visual": {
+          "corners": {
+            "topLeft": 9,
+            "topRight": 9,
+            "bottomLeft": 9,
+            "bottomRight": 9
+          }
+        },
+        "type": "image",
+        "assetId": "rsvpPage_closingPhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      }
+    },
+    "assets": {
+      "cover_coverBranches": {
+        "id": "cover_coverBranches",
+        "name": "01-artboard.png",
+        "storageKey": "/images/collection/love-story/cover_coverBranches.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 112,
+        "pixelHeight": 138,
+        "sizeBytes": 5304,
+        "decorative": true
+      },
+      "cover_coverPhoto": {
+        "id": "cover_coverPhoto",
+        "name": "Обложка",
+        "storageKey": "/images/collection/love-story/cover_coverPhoto.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 368,
+        "pixelHeight": 489,
+        "sizeBytes": 37766
+      },
+      "details_venuePhoto": {
+        "id": "details_venuePhoto",
+        "name": "Фотография площадки",
+        "storageKey": "/images/collection/love-story/details_venuePhoto.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 350,
+        "pixelHeight": 168,
+        "sizeBytes": 30518
+      },
+      "rsvpPage_airmailBorder": {
+        "id": "rsvpPage_airmailBorder",
+        "name": "04-artboard.png",
+        "storageKey": "/images/collection/love-story/rsvpPage_airmailBorder.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 387,
+        "pixelHeight": 37,
+        "sizeBytes": 3686,
+        "decorative": true
+      },
+      "rsvpPage_closingPhoto": {
+        "id": "rsvpPage_closingPhoto",
+        "name": "Финальный снимок",
+        "storageKey": "/images/collection/love-story/rsvpPage_closingPhoto.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 300,
+        "pixelHeight": 171,
+        "sizeBytes": 13062
+      },
+      "rsvpPage_stamp": {
+        "id": "rsvpPage_stamp",
+        "name": "04-artboard.png",
+        "storageKey": "/images/collection/love-story/rsvpPage_stamp.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 91,
+        "pixelHeight": 87,
+        "sizeBytes": 4098,
+        "decorative": true
+      },
+      "story_landscapeFooter": {
+        "id": "story_landscapeFooter",
+        "name": "landscape.webp",
+        "storageKey": "/images/collection/love-story/story_landscapeFooter.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 344,
+        "pixelHeight": 85,
+        "sizeBytes": 14932,
+        "decorative": true
+      },
+      "story_meetingPhoto": {
+        "id": "story_meetingPhoto",
+        "name": "Первая встреча — фото",
+        "storageKey": "/images/collection/love-story/story_meetingPhoto.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 145,
+        "pixelHeight": 185,
+        "sizeBytes": 8542
+      },
+      "story_proposalPhoto": {
+        "id": "story_proposalPhoto",
+        "name": "Она сказала «Да» — фото",
+        "storageKey": "/images/collection/love-story/story_proposalPhoto.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 144,
+        "pixelHeight": 152,
+        "sizeBytes": 4244
+      },
+      "story_tripPhoto": {
+        "id": "story_tripPhoto",
+        "name": "Первое путешествие — фото",
+        "storageKey": "/images/collection/love-story/story_tripPhoto.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 147,
+        "pixelHeight": 160,
+        "sizeBytes": 10378
+      }
+    },
+    "variables": {
+      "ceremonyDate": {
+        "type": "date",
+        "label": {
+          "ru": "Дата и время свадьбы",
+          "ky": "Тойдун күнү жана убактысы"
+        }
+      },
+      "cover_eyebrow": {
+        "type": "text",
+        "label": {
+          "ru": "Текст eyebrow",
+          "ky": "Текст eyebrow"
+        }
+      },
+      "coupleNames": {
+        "type": "text",
+        "label": {
+          "ru": "Имена пары",
+          "ky": "Түгөйлөрдүн ысымдары"
+        }
+      },
+      "cover_storyLink": {
+        "type": "text",
+        "label": {
+          "ru": "Текст storyLink",
+          "ky": "Текст storyLink"
+        }
+      },
+      "story_storyTitle": {
+        "type": "text",
+        "label": {
+          "ru": "Текст storyTitle",
+          "ky": "Текст storyTitle"
+        }
+      },
+      "story_storySubtitle": {
+        "type": "text",
+        "label": {
+          "ru": "Текст storySubtitle",
+          "ky": "Текст storySubtitle"
+        }
+      },
+      "meetingDate": {
+        "type": "text",
+        "label": {
+          "ru": "Первая встреча — дата",
+          "ky": "Биринчи жолугушуу — күнү"
+        }
+      },
+      "meetingTitle": {
+        "type": "text",
+        "label": {
+          "ru": "Первая встреча — заголовок",
+          "ky": "Биринчи жолугушуу — аталышы"
+        }
+      },
+      "meetingDescription": {
+        "type": "text",
+        "label": {
+          "ru": "Первая встреча — описание",
+          "ky": "Биринчи жолугушуу — баяны"
+        }
+      },
+      "tripDate": {
+        "type": "text",
+        "label": {
+          "ru": "Первое путешествие — дата",
+          "ky": "Биринчи саякат — күнү"
+        }
+      },
+      "tripTitle": {
+        "type": "text",
+        "label": {
+          "ru": "Первое путешествие — заголовок",
+          "ky": "Биринчи саякат — аталышы"
+        }
+      },
+      "tripDescription": {
+        "type": "text",
+        "label": {
+          "ru": "Первое путешествие — описание",
+          "ky": "Биринчи саякат — баяны"
+        }
+      },
+      "proposalDate": {
+        "type": "text",
+        "label": {
+          "ru": "Она сказала «Да» — дата",
+          "ky": "Ал «ооба» деди — күнү"
+        }
+      },
+      "proposalTitle": {
+        "type": "text",
+        "label": {
+          "ru": "Она сказала «Да» — заголовок",
+          "ky": "Ал «ооба» деди — аталышы"
+        }
+      },
+      "proposalDescription": {
+        "type": "text",
+        "label": {
+          "ru": "Она сказала «Да» — описание",
+          "ky": "Ал «ооба» деди — баяны"
+        }
+      },
+      "invitationText": {
+        "type": "text",
+        "label": {
+          "ru": "Текст приглашения",
+          "ky": "Чакыруу тексти"
+        }
+      },
+      "details_dayHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Текст dayHeading",
+          "ky": "Текст dayHeading"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "label": {
+          "ru": "Название площадки",
+          "ky": "Той өтүүчү жердин аталышы"
+        }
+      },
+      "venueAddress": {
+        "type": "text",
+        "label": {
+          "ru": "Адрес",
+          "ky": "Дарек"
+        }
+      },
+      "rsvpPage_rsvpHeading": {
+        "type": "text",
+        "label": {
+          "ru": "Текст rsvpHeading",
+          "ky": "Текст rsvpHeading"
+        }
+      },
+      "rsvpIntro": {
+        "type": "text",
+        "label": {
+          "ru": "Текст перед формой",
+          "ky": "Анкетанын алдындагы текст"
+        }
+      }
+    },
+    "values": {
+      "ceremonyDate": {
+        "type": "date",
+        "value": "2027-05-29T17:00:00+06:00"
+      },
+      "cover_eyebrow": {
+        "type": "text",
+        "value": {
+          "ru": "ПРИГЛАШЕНИЕ\nНА СВАДЬБУ",
+          "ky": "ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ"
+        }
+      },
+      "coupleNames": {
+        "type": "text",
+        "value": {
+          "ru": "АЛИБЕК\nИ АЛИНА",
+          "ky": "АЛИБЕК\nЖАНА АЛИНА"
+        }
+      },
+      "cover_storyLink": {
+        "type": "text",
+        "value": {
+          "ru": "НАША ИСТОРИЯ",
+          "ky": "БИЗДИН ТАРЫХ"
+        }
+      },
+      "story_storyTitle": {
+        "type": "text",
+        "value": {
+          "ru": "НАША\nИСТОРИЯ",
+          "ky": "БИЗДИН\nТАРЫХ"
+        }
+      },
+      "story_storySubtitle": {
+        "type": "text",
+        "value": {
+          "ru": "ТРИ ГЛАВЫ, КОТОРЫЕ\nПРИВЕЛИ НАС К ЭТОМУ ДНЮ",
+          "ky": "БИЗДИ УШУЛ КҮНГӨ\nАЛЫП КЕЛГЕН ҮЧ БАЯН"
+        }
+      },
+      "meetingDate": {
+        "type": "text",
+        "value": {
+          "ru": "12.06.2022",
+          "ky": "12.06.2022"
+        }
+      },
+      "meetingTitle": {
+        "type": "text",
+        "value": {
+          "ru": "Первая встреча",
+          "ky": "Биринчи жолугушуу"
+        }
+      },
+      "meetingDescription": {
+        "type": "text",
+        "value": {
+          "ru": "Мы познакомились совершенно случайно, но сразу поняли, что это особенная встреча.",
+          "ky": "Күтүүсүз таанышып, бул өзгөчө жолугушуу экенин дароо түшүндүк."
+        }
+      },
+      "tripDate": {
+        "type": "text",
+        "value": {
+          "ru": "18.08.2023",
+          "ky": "18.08.2023"
+        }
+      },
+      "tripTitle": {
+        "type": "text",
+        "value": {
+          "ru": "Первое путешествие",
+          "ky": "Биринчи саякат"
+        }
+      },
+      "tripDescription": {
+        "type": "text",
+        "value": {
+          "ru": "Наше первое совместное путешествие научило нас быть ещё ближе.",
+          "ky": "Биринчи саякатыбыз бизди дагы жакындатты."
+        }
+      },
+      "proposalDate": {
+        "type": "text",
+        "value": {
+          "ru": "14.02.2026",
+          "ky": "14.02.2026"
+        }
+      },
+      "proposalTitle": {
+        "type": "text",
+        "value": {
+          "ru": "Она сказала «Да»",
+          "ky": "Ал «ооба» деди"
+        }
+      },
+      "proposalDescription": {
+        "type": "text",
+        "value": {
+          "ru": "В этот день мы поняли — хотим провести вместе всю жизнь.",
+          "ky": "Ошол күнү өмүр бою бирге болууну чечтик."
+        }
+      },
+      "invitationText": {
+        "type": "text",
+        "value": {
+          "ru": "ПРИГЛАШАЕМ ВАС\nНА НАШУ СВАДЬБУ",
+          "ky": "ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРАБЫЗ"
+        }
+      },
+      "details_dayHeading": {
+        "type": "text",
+        "value": {
+          "ru": "НАШ ДЕНЬ",
+          "ky": "ТОЙ КҮНҮ"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "value": {
+          "ru": "VILLA TOSCANA",
+          "ky": "VILLA TOSCANA"
+        }
+      },
+      "venueAddress": {
+        "type": "text",
+        "value": {
+          "ru": "г. Бишкек, ул. Курманжан Датки, 45",
+          "ky": "Бишкек ш., Курманжан Датка көч., 45"
+        }
+      },
+      "rsvpPage_rsvpHeading": {
+        "type": "text",
+        "value": {
+          "ru": "ОТПРАВЬТЕ\nСВОЙ ОТВЕТ",
+          "ky": "ЖООБУҢУЗДУ\nЖӨНӨТҮҢҮЗ"
+        }
+      },
+      "rsvpIntro": {
+        "type": "text",
+        "value": {
+          "ru": "Будем рады разделить этот особенный день вместе с вами.",
+          "ky": "Бул өзгөчө күндү сиздер менен бирге өткөрүүгө кубанычтабыз."
+        }
+      }
+    }
+  },
+  "personalization": {
+    "version": 1,
+    "locales": [
+      "ru",
+      "ky"
+    ],
+    "fields": [
+      {
+        "id": "ceremonyDate",
+        "label": {
+          "ru": "Дата и время свадьбы",
+          "ky": "Тойдун күнү жана убактысы"
+        },
+        "section": "date",
+        "required": true,
+        "kind": "date",
+        "key": "ceremonyDate"
+      },
+      {
+        "id": "cover_coverPhoto",
+        "label": {
+          "ru": "Обложка",
+          "ky": "Мукаба"
+        },
+        "section": "photos",
+        "required": false,
+        "kind": "image",
+        "nodeId": "cover_coverPhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "coupleNames",
+        "label": {
+          "ru": "Имена пары",
+          "ky": "Түгөйлөрдүн ысымдары"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "coupleNames",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "meetingDate",
+        "label": {
+          "ru": "Первая встреча — дата",
+          "ky": "Биринчи жолугушуу — күнү"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "meetingDate",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "meetingTitle",
+        "label": {
+          "ru": "Первая встреча — заголовок",
+          "ky": "Биринчи жолугушуу — аталышы"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "meetingTitle",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "meetingDescription",
+        "label": {
+          "ru": "Первая встреча — описание",
+          "ky": "Биринчи жолугушуу — баяны"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "meetingDescription",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "story_meetingPhoto",
+        "label": {
+          "ru": "Первая встреча — фото",
+          "ky": "Биринчи жолугушуу — сүрөт"
+        },
+        "section": "photos",
+        "required": false,
+        "kind": "image",
+        "nodeId": "story_meetingPhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "tripDate",
+        "label": {
+          "ru": "Первое путешествие — дата",
+          "ky": "Биринчи саякат — күнү"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "tripDate",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "tripTitle",
+        "label": {
+          "ru": "Первое путешествие — заголовок",
+          "ky": "Биринчи саякат — аталышы"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "tripTitle",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "tripDescription",
+        "label": {
+          "ru": "Первое путешествие — описание",
+          "ky": "Биринчи саякат — баяны"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "tripDescription",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "story_tripPhoto",
+        "label": {
+          "ru": "Первое путешествие — фото",
+          "ky": "Биринчи саякат — сүрөт"
+        },
+        "section": "photos",
+        "required": false,
+        "kind": "image",
+        "nodeId": "story_tripPhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "proposalDate",
+        "label": {
+          "ru": "Она сказала «Да» — дата",
+          "ky": "Ал «ооба» деди — күнү"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "proposalDate",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "proposalTitle",
+        "label": {
+          "ru": "Она сказала «Да» — заголовок",
+          "ky": "Ал «ооба» деди — аталышы"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "proposalTitle",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "proposalDescription",
+        "label": {
+          "ru": "Она сказала «Да» — описание",
+          "ky": "Ал «ооба» деди — баяны"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "proposalDescription",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "story_proposalPhoto",
+        "label": {
+          "ru": "Она сказала «Да» — фото",
+          "ky": "Ал «ооба» деди — сүрөт"
+        },
+        "section": "photos",
+        "required": false,
+        "kind": "image",
+        "nodeId": "story_proposalPhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "invitationText",
+        "label": {
+          "ru": "Текст приглашения",
+          "ky": "Чакыруу тексти"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "invitationText",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "details_program",
+        "label": {
+          "ru": "Программа дня",
+          "ky": "Тойдун программасы"
+        },
+        "section": "schedule",
+        "required": true,
+        "kind": "schedule",
+        "nodeId": "details_program",
+        "maxItems": 20
+      },
+      {
+        "id": "details_venuePhoto",
+        "label": {
+          "ru": "Фотография площадки",
+          "ky": "Той өтүүчү жердин сүрөтү"
+        },
+        "section": "photos",
+        "required": false,
+        "kind": "image",
+        "nodeId": "details_venuePhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "venueName",
+        "label": {
+          "ru": "Название площадки",
+          "ky": "Той өтүүчү жердин аталышы"
+        },
+        "section": "location",
+        "required": true,
+        "kind": "text",
+        "key": "venueName",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "venueAddress",
+        "label": {
+          "ru": "Адрес",
+          "ky": "Дарек"
+        },
+        "section": "location",
+        "required": true,
+        "kind": "text",
+        "key": "venueAddress",
+        "maxLength": 300,
+        "multiline": false
+      },
+      {
+        "id": "rsvpIntro",
+        "label": {
+          "ru": "Текст перед формой",
+          "ky": "Анкетанын алдындагы текст"
+        },
+        "section": "rsvp",
+        "required": true,
+        "kind": "text",
+        "key": "rsvpIntro",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
+        "id": "rsvpPage_rsvpWidget",
+        "label": {
+          "ru": "Подтверждение участия",
+          "ky": "Катышууну ырастоо"
+        },
+        "section": "rsvp",
+        "required": false,
+        "kind": "rsvp",
+        "nodeId": "rsvpPage_rsvpWidget",
+        "maxGuests": 10
+      },
+      {
+        "id": "rsvpPage_music",
+        "label": {
+          "ru": "Музыка",
+          "ky": "Музыка"
+        },
+        "section": "music",
+        "required": false,
+        "kind": "music",
+        "nodeId": "rsvpPage_music",
+        "sources": []
+      },
+      {
+        "id": "rsvpPage_closingPhoto",
+        "label": {
+          "ru": "Финальный снимок",
+          "ky": "Акыркы сүрөт"
+        },
+        "section": "photos",
+        "required": false,
+        "kind": "image",
+        "nodeId": "rsvpPage_closingPhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      }
+    ]
+  }
+}

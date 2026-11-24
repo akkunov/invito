@@ -187,12 +187,13 @@ export class PublicationsService {
       throw new ConflictException("RSVP_CLOSED");
     }
     if(input.guests>node.block.maxGuests)throw new UnprocessableEntityException("RSVP_GUEST_LIMIT");
+    if(input.wish&&!node.block.wish)throw new UnprocessableEntityException("RSVP_WISH_UNAVAILABLE");
     const attendance=input.attendance==="yes"?"YES" as const:"NO" as const;
-    const values={guestName:input.name,guestCount:input.guests,attendance,nodeId:input.nodeId};
+    const values={guestName:input.name,guestCount:input.guests,attendance,nodeId:input.nodeId,...(node.block.wish?{message:input.wish||null}:{})};
     // On network retries the same client requestId must not duplicate a guest.
     const previous=await this.db.rsvpResponse.findUnique({
       where:{publicationId_requestId:{publicationId:pub.id,requestId:input.requestId}},
-      select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true},
+      select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true,message:true},
     });
     if(previous){
       if(Object.entries(values).some(([k,v])=>previous[k as keyof typeof values]!==v)){
@@ -211,7 +212,7 @@ export class PublicationsService {
         }
         const prior=await tx.rsvpResponse.findUnique({
           where:{publicationId_requestId:{publicationId:pub.id,requestId:input.requestId}},
-          select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true},
+          select:{id:true,guestName:true,guestCount:true,attendance:true,nodeId:true,message:true},
         });
         if(prior) {
           if(Object.entries(values).some(([k,v])=>prior[k as keyof typeof values]!==v))throw new ConflictException("RSVP_REQUEST_ID_REUSED");
@@ -224,8 +225,8 @@ export class PublicationsService {
         });
         if(rate.count>MAX_RSVP_PER_MINUTE)throw new HttpException("RSVP_RATE_LIMIT",429);
         const stored=await tx.rsvpResponse.create({data:{
-          publicationId:pub.id,requestId:input.requestId,nodeId:input.nodeId,
-          guestName:input.name,attendance,guestCount:input.guests,
+          publicationId:pub.id,requestId:input.requestId,
+          ...values,
         },select:{id:true}});
         return {accepted:true,receiptId:stored.id};
       },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable});

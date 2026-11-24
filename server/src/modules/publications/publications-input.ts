@@ -1,4 +1,5 @@
 import {z} from "zod";
+import {rsvpWishSchema} from "../../../../src/features/studio-v2/core/invitation.schema.js";
 import {parseInput, pagingInput, slug} from "../documents/documents-input.js";
 
 const uuid=z.uuid();
@@ -15,6 +16,7 @@ export const rsvpSchema=z.strictObject({
   name:z.string().trim().min(1).max(120),
   attendance:z.enum(["yes","no"]),
   guests:z.number().int().min(0).max(10),
+  wish:rsvpWishSchema,
   turnstileToken:z.string().max(2048).optional(),
   // Honeypot must remain empty. It is not a replacement for Turnstile.
   website:z.string().max(100).default(""),

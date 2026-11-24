@@ -30,7 +30,7 @@ function TextContent({node,onMeasure,editorial,heritage}:{node:TextNode;editoria
  },[node.id,node.autoHeight,onMeasure]);
  return <div ref={ref} style={{width:"100%",fontSize:editorial?node.runs[0].style.fontSize:undefined,fontFamily:heritage?(node.runs[0].style.fontFamily==="serif"?"var(--v2-invitation-serif, var(--font-display)), Georgia, serif":"var(--font-ui), Arial, sans-serif"):undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node} editorial={editorial} heritage={heritage}/></div>;
 }
-export type ArtboardTextOptions={motionPlayback?:MotionPlayback;guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
+export type ArtboardTextOptions={sectionLinks?:Partial<Record<"next"|"rsvp",string>>;motionPlayback?:MotionPlayback;guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
   const base: CSSProperties = {
     position: "absolute",
@@ -48,7 +48,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
   const node = document.nodes[id];
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
-  const fluidWidget=(document.presentation==="alpine"||document.presentation==="felt")&&options.guest?.mode!=="studio"&&node.type==="widget"
+  const fluidWidget=(document.presentation==="alpine"||document.presentation==="felt"||document.presentation==="collection")&&options.guest?.mode!=="studio"&&node.type==="widget"
     &&["rsvp","location","schedule"].includes(node.block.kind);
   switch (node.type) {
     case "frame":
@@ -62,7 +62,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
         justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
         whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
       }}>
-        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={isHeritagePresentation(document.presentation)} onMeasure={options.onMeasure}/></div>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={isHeritagePresentation(document.presentation)||document.presentation==="collection"} onMeasure={options.onMeasure}/></div>
         {options.editingId===id&&options.renderEditor?.(node)}
       </div>;
     case "image": {
@@ -78,7 +78,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       </div>;
     }
     case "widget":
-      return <div key={id} data-studio-node={id} style={{...style,overflow:fluidWidget?"visible":"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls} onMeasure={options.onMeasure}/></div>;
+      return <div key={id} data-studio-node={id} style={{...style,overflow:fluidWidget?"visible":"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls} onMeasure={options.onMeasure} sectionLinks={options.sectionLinks}/></div>;
     case "shape":
       return <div key={id} data-studio-node={id} style={{
         ...style, ...(node.visual?.stroke===undefined&&node.stroke?{border:`${node.strokeWidth}px solid ${node.stroke}`,outline:undefined,outlineOffset:undefined}:{}), transform:`rotate(${node.rotation}deg) ${contentTransform(node)}`,
