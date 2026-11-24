@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import {useEffect,useMemo,useState,type FormEvent} from "react";
-import {ArrowLeft,CalendarDays,Check,Copy,Eye,RefreshCw,Users,X} from "lucide-react";
-import {configuredSupabase,getSupabaseBrowserClient} from "@/features/auth/browser/supabase-session";
+import {useCallback,useEffect,useState} from "react";
+import {ArrowLeft,CalendarDays,Check,Copy,Eye,LogOut,RefreshCw,Users,X} from "lucide-react";
+import {useCustomerSession} from "@/features/auth/browser/use-customer-session";
+import {CustomerSignIn} from "./customer-sign-in";
 import {customerApi,listCustomerDrafts,getCustomerPublication,unpublishCustomerInvitation,
   type CustomerDraftListItem,type CustomerPublication} from "@/features/invitations/customer-cloud";
 import type {Locale} from "@/i18n/locales";
@@ -15,10 +16,13 @@ type ReplyPage={items:Reply[];nextPage:number|null};
 type Entry={draft:CustomerDraftListItem;publication:CustomerPublication|null;summary:Summary|null};
 
 export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
+  const session=useCustomerSession();
+  return <InvitationsDashboard key={session.user?.id??session.status} locale={locale} session={session}/>;
+}
+
+function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType<typeof useCustomerSession>}){
   const ru=locale==="ru";
-  const config=useMemo(configuredSupabase,[]);
-  const client=useMemo(()=>config?getSupabaseBrowserClient(config):null,[config]);
-  const [signedIn,setSignedIn]=useState(false);
+  const signedIn=session.status==="signed-in";
   const [entries,setEntries]=useState<Entry[]>([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
@@ -26,53 +30,42 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
   const [replies,setReplies]=useState<Record<string,Reply[]>>({});
   const [next,setNext]=useState<Record<string,number|null>>({});
   const [busy,setBusy]=useState<string|null>(null);
-  const [email,setEmail]=useState("");
-  const [loginBusy,setLoginBusy]=useState(false);
-  const [loginStatus,setLoginStatus]=useState("");
-
-  useEffect(()=>{
-    if(!client){setLoading(false);return;}
-    let active=true;
-    void client.auth.getSession().then(({data})=>{
-      if(active)setSignedIn(!!data.session);
-    }).catch(()=>{if(active)setLoading(false);});
-    const {data:{subscription}}=client.auth.onAuthStateChange((_evt,session)=>{
-      if(active)setSignedIn(!!session);
-    });
-    return()=>{active=false;subscription.unsubscribe();};
-  },[client]);
-
-  async function signIn(event:FormEvent<HTMLFormElement>){
-    event.preventDefault();
-    if(!client||loginBusy||!email.trim())return;
-    setLoginBusy(true);setLoginStatus("");
+  const [signingOut,setSigningOut]=useState(false);
+  const refresh=useCallback(async (signal?:AbortSignal)=>{
+    if(!signedIn)return;
     try{
-      const {error}=await client.auth.signInWithOtp({
-        email:email.trim(),options:{emailRedirectTo:window.location.href},
-      });
-      if(error)throw error;
-      setLoginStatus(ru?"Ссылка для входа отправлена на email.":"Кирүү шилтемеси email дарегиңизге жөнөтүлдү.");
-    }catch{setLoginStatus(ru?"Не удалось отправить ссылку.":"Шилтемени жөнөтүү мүмкүн болгон жок.");}
-    finally{setLoginBusy(false);}
-  }
-
-  async function refresh(){
-    if(!signedIn){setLoading(false);return;}
-    setLoading(true);setError("");
-    try{
-      const drafts=await listCustomerDrafts();
+      const drafts=await listCustomerDrafts(signal);
       const result=await Promise.all(drafts.map(async draft=>{
-        const publication=await getCustomerPublication(draft.id);
+        const publication=await getCustomerPublication(draft.id,signal);
         const summary=publication?await customerApi<Summary>(
-          "/customer/invitations/"+encodeURIComponent(draft.id)+"/rsvp/summary"):null;
+          "/customer/invitations/"+encodeURIComponent(draft.id)+"/rsvp/summary","GET",undefined,signal):null;
         return {draft,publication,summary};
       }));
-      setEntries(result);
+      if(!signal?.aborted)setEntries(result);
     }catch{
-      setError(ru?"Не удалось загрузить приглашения. Повторите попытку.":"Чакырууларды жүктөө мүмкүн болгон жок.");
-    }finally{setLoading(false);}
+      if(!signal?.aborted)setError(ru?"Не удалось загрузить приглашения. Повторите попытку.":"Чакырууларды жүктөө мүмкүн болгон жок.");
+    }finally{if(!signal?.aborted)setLoading(false);}
+  },[signedIn,ru]);
+  useEffect(()=>{
+    const controller=new AbortController();
+    void Promise.resolve().then(()=>{
+      if(!controller.signal.aborted)return refresh(controller.signal);
+    });
+    return ()=>controller.abort();
+  },[refresh]);
+
+  async function signOut() {
+    if (!session.client || signingOut) return;
+    setSigningOut(true);
+    try {
+      const {error:failure} = await session.client.auth.signOut({scope:"local"});
+      if (failure) throw failure;
+    } catch {
+      setError(ru?"Не удалось выйти. Повторите попытку.":"Чыгуу мүмкүн болгон жок. Кайра аракет кылыңыз.");
+    } finally {
+      setSigningOut(false);
+    }
   }
-  useEffect(()=>{void refresh();},[signedIn]); // Refresh when Supabase session changes.
 
   async function showReplies(id:string,page=1){
     setBusy(id);setError("");
@@ -102,23 +95,23 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
   return <main className="ci-page">
     <header className="ci-top"><Link href={`/${locale}`} aria-label={ru?"На главную":"Башкы бет"}><ArrowLeft size={20}/></Link>
       <strong>eventiq<span>.</span></strong><Link className="ci-new" href={`/${locale}/templates`}>{ru?"Выбрать шаблон":"Шаблон тандоо"}</Link>
+      {signedIn&&<button className="ci-refresh" type="button" disabled={signingOut} onClick={()=>void signOut()}>
+        <LogOut size={16}/>{ru?"Выйти":"Чыгуу"}
+      </button>}
     </header>
     <div className="ci-content">
       <div className="ci-heading"><div><p>EVENTIQ / ACCOUNT</p>
         <h1>{ru?"Мои приглашения":"Менин чакырууларым"}</h1>
         <span>{ru?"Редактируйте приглашения и следите за ответами гостей.":"Чакырууларды түзөтүп, коноктордун жоопторун караңыз."}</span>
-      </div><button className="ci-refresh" type="button" disabled={loading} onClick={()=>void refresh()}><RefreshCw size={17}/>{ru?"Обновить":"Жаңыртуу"}</button></div>
-      {!config?<section className="ci-empty">{ru?"Настройте Supabase и API для кабинета.":"Кабинет үчүн Supabase жана API жөндөөлөрүн киргизиңиз."}</section>:
+      </div>{signedIn&&<button className="ci-refresh" type="button" disabled={loading} onClick={()=>{
+        setLoading(true);setError("");void refresh();
+      }}><RefreshCw size={17}/>{ru?"Обновить":"Жаңыртуу"}</button>}</div>
+      {session.status==="loading"?<section className="ci-empty" role="status">{ru?"Проверяем вход…":"Кирүү текшерилүүдө…"}</section>:
+      !session.config||!session.client?<section className="ci-empty">{ru?"Вход в кабинет сейчас недоступен.":"Кабинетке кирүү азыр жеткиликсиз."}</section>:
       !signedIn?<section className="ci-empty">
         <Users size={30}/><h2>{ru?"Войдите в Eventiq":"Eventiq аккаунтуна кириңиз"}</h2>
-        <p>{ru?"Войдите по email, чтобы увидеть свои черновики и ответы гостей.":"Черновиктерди жана коноктордун жоопторун көрүү үчүн email аркылуу кириңиз."}</p>
-        <form className="ci-login" onSubmit={e=>void signIn(e)}>
-          <label htmlFor="ci-login-email">Email</label>
-          <input id="ci-login-email" type="email" required autoComplete="email" value={email}
-            onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/>
-          <button type="submit" disabled={loginBusy}>{ru?"Отправить ссылку":"Шилтеме жөнөтүү"}</button>
-        </form>
-        {loginStatus&&<p role="status">{loginStatus}</p>}
+        <p>{ru?"Войдите, чтобы увидеть свои черновики и ответы гостей.":"Черновиктерди жана коноктордун жоопторун көрүү үчүн кириңиз."}</p>
+        <CustomerSignIn locale={locale} client={session.client} className="ci-login"/>
       </section>:loading?<section className="ci-empty" role="status">{ru?"Загружаем приглашения…":"Чакыруулар жүктөлүүдө…"}</section>:
       entries.length===0?<section className="ci-empty"><CalendarDays size={30}/>
         <h2>{ru?"Пока нет приглашений":"Азырынча чакыруулар жок"}</h2>

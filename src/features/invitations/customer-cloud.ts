@@ -25,11 +25,11 @@ export async function customerToken():Promise<string|null>{
   const cfg=configuredSupabase();
   return cfg?getSupabaseAccessToken(cfg):null;
 }
-export async function customerApi<T>(path:string,method="GET",payload?:unknown):Promise<T>{
+export async function customerApi<T>(path:string,method="GET",payload?:unknown,signal?:AbortSignal):Promise<T>{
   const cfg=config(),token=await getSupabaseAccessToken(cfg);
   if(!token)throw new CustomerCloudError(401,"SIGN_IN_REQUIRED");
   const response=await fetch(cfg.apiBaseUrl+path,{
-    method,cache:"no-store",credentials:"omit",
+    method,signal,cache:"no-store",credentials:"omit",
     headers:{
       Authorization:"Bearer "+token,
       ...(payload===undefined?{}:{"Content-Type":"application/json"}),
@@ -45,8 +45,8 @@ export type CustomerDraftListItem={
   id:string;revision:number;templateVersionId:string;updatedAt:string;
   templateVersion:{template:{name:string;publicSlug:string|null}};
 };
-export async function listCustomerDrafts(){
-  return customerApi<CustomerDraftListItem[]>("/customer/invitations");
+export async function listCustomerDrafts(signal?:AbortSignal){
+  return customerApi<CustomerDraftListItem[]>("/customer/invitations","GET",undefined,signal);
 }
 export async function createCustomerDraft(templateVersionId:string){
   return customerApi<{id:string;revision:number;templateVersionId:string}>(
@@ -109,11 +109,11 @@ export async function uploadCustomerPhoto(file:File,progress?:(value:string)=>vo
 export type CustomerPublication={
   id:string;slug:string;status:"ACTIVE"|"UNPUBLISHED";latestRelease:number;
 };
-export async function getCustomerPublication(id:string):Promise<CustomerPublication|null>{
+export async function getCustomerPublication(id:string,signal?:AbortSignal):Promise<CustomerPublication|null>{
   const cfg=config(),token=await getSupabaseAccessToken(cfg);
   if(!token)throw new CustomerCloudError(401,"SIGN_IN_REQUIRED");
   const response=await fetch(cfg.apiBaseUrl+"/customer/invitations/"+encodeURIComponent(id)+"/publication",{
-    cache:"no-store",credentials:"omit",headers:{Authorization:"Bearer "+token},
+    signal,cache:"no-store",credentials:"omit",headers:{Authorization:"Bearer "+token},
   });
   if(!response.ok)throw new CustomerCloudError(response.status,"CUSTOMER_API_"+response.status);
   const text=await response.text();

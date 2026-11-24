@@ -87,6 +87,16 @@ function assetsForPatch(patch:PersonalizationPatch,assets:readonly VerifiedCusto
   return assets.filter(asset=>ids.has(asset.id));
 }
 
+function persistLocalDraft(cacheKey:string,patch:PersonalizationPatch,assets:VerifiedCustomerAsset[]){
+  if(Object.keys(patch.values).length||patch.locale||patch.sections){
+    window.localStorage.setItem(cacheKey,JSON.stringify(patch));
+    window.localStorage.setItem(cacheKey+":assets",JSON.stringify(assetsForPatch(patch,assets)));
+  }else{
+    window.localStorage.removeItem(cacheKey);
+    window.localStorage.removeItem(cacheKey+":assets");
+  }
+}
+
 export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftId,source,contract,mediaUrls}:Props){
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>("main");
@@ -142,13 +152,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   useEffect(()=>{
     if(!hydrated)return;
     try {
-      if(Object.keys(patch.values).length || patch.locale || patch.sections){
-        window.localStorage.setItem(cacheKey,JSON.stringify(patch));
-        window.localStorage.setItem(cacheKey+":assets",JSON.stringify(assetsForPatch(patch,customerAssets)));
-      }else{
-        window.localStorage.removeItem(cacheKey);
-        window.localStorage.removeItem(cacheKey+":assets");
-      }
+      persistLocalDraft(cacheKey,patch,customerAssets);
       setStatus(dictionary[locale].saveLocal);
     }catch{setWarning(dictionary[locale].storageError);}
   },[cacheKey,patch,customerAssets,hydrated,locale]);
@@ -468,6 +472,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             <CustomerCloudControls
             locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
+            onBeforeSignIn={()=>persistLocalDraft(cacheKey,patch,customerAssets)}
             uploadTargets={uploadTargets}
             preferredUploadTargetId={selectedFieldId??undefined}
             onLoad={(remote,assets,urls)=>{

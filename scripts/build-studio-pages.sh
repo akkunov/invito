@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export NEXT_PUBLIC_PAGES_BASE_PATH=/invito
-rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor' 'src/app/[locale]/i'
+rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor' 'src/app/[locale]/i' 'src/app/[locale]/auth'
 rm -f 'src/app/[locale]/page.tsx' src/app/robots.ts src/app/sitemap.ts
 rm -rf .next out
 cat > next.config.ts <<'CONFIG'

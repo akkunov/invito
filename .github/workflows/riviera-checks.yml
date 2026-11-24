@@ -19,6 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:template-assets
+      - run: npm run test:google-auth
       - run: npm run test:riviera
       - run: npm run test:monochrome
       - run: npm run test:santorini

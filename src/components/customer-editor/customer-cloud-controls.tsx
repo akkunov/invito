@@ -1,10 +1,9 @@
 "use client";
 
-import {useEffect,useMemo,useRef,useState,type FormEvent} from "react";
-import {CloudUpload,ImagePlus,LogIn,ExternalLink,Copy,Send} from "lucide-react";
-import {
-  configuredSupabase,getSupabaseBrowserClient,
-} from "@/features/auth/browser/supabase-session";
+import {useEffect,useRef,useState} from "react";
+import {CloudUpload,ImagePlus,ExternalLink,Copy,Send} from "lucide-react";
+import {useCustomerSession} from "@/features/auth/browser/use-customer-session";
+import {CustomerSignIn} from "./customer-sign-in";
 import {
   CustomerCloudError,createCustomerDraft,getCustomerDraft,getCustomerPublication,publishCustomerInvitation,unpublishCustomerInvitation,listCustomerDrafts,saveCustomerDraft,
   uploadCustomerPhoto,type VerifiedCustomerAsset,type CustomerDraftListItem,
@@ -18,18 +17,22 @@ type UploadResult={asset:VerifiedCustomerAsset;url:string};
 type Props={
   locale:Locale;templateVersionId:string;preferredDraftId?:string;patch:PersonalizationPatch;
   publishMode?:boolean;canPublish?:boolean;
+  onBeforeSignIn:()=>void;
   onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
   onUploaded:(fieldId:string,results:(UploadResult|null)[],mode:"replace"|"append")=>void;
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number;maxPhotos?:number;currentCount?:number}>;
   preferredUploadTargetId?:string;
 };
-export function CustomerCloudControls({
-  locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,publishMode=false,canPublish=false,
-}:Props){
-  const cfg=useMemo(configuredSupabase,[]);
-  const supabase=useMemo(()=>cfg?getSupabaseBrowserClient(cfg):null,[cfg]);
-  const [userId,setUserId]=useState<string|null>(null);
-  const [email,setEmail]=useState("");
+export function CustomerCloudControls(props:Props){
+  const session=useCustomerSession();
+  return <CloudControls key={session.user?.id??session.status} {...props} session={session}/>;
+}
+
+function CloudControls({
+  locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,
+  publishMode=false,canPublish=false,onBeforeSignIn,session,
+}:Props&{session:ReturnType<typeof useCustomerSession>}){
+  const userId=session.user?.id??null;
   const [info,setInfo]=useState("");
   const [loading,setLoading]=useState(false);
   const [cloudId,setCloudId]=useState<string|null>(null);
@@ -52,18 +55,6 @@ export function CustomerCloudControls({
     if(preferredUploadTargetId&&uploadTargets.some(item=>item.id===preferredUploadTargetId))setSelectedTarget(preferredUploadTargetId);
   },[preferredUploadTargetId,uploadTargets]);
   const personalKey=userId?"eventiq:cloud-draft:v1:"+userId+":"+templateVersionId:null;
-
-  useEffect(()=>{
-    if(!supabase)return;
-    let active=true;
-    void supabase.auth.getSession().then(({data})=>{
-      if(active)setUserId(data.session?.user.id??null);
-    });
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{
-      if(active)setUserId(session?.user.id??null);
-    });
-    return()=>{active=false;subscription.unsubscribe();};
-  },[supabase]);
 
   useEffect(()=>{
     if(!personalKey){setCloudId(null);setRevision(null);return;}
@@ -122,21 +113,6 @@ export function CustomerCloudControls({
       setActiveRelease(null);setPublishedUrl("");
       setInfo(ru?"Публикация скрыта. Черновик сохранён.":"Чакыруу жабылды. Черновик сакталды.");
     }catch{setInfo(ru?"Не удалось снять публикацию. Обновите страницу и повторите.":"Жарыялоону жабуу мүмкүн болбоду.");}
-    finally{setLoading(false);}
-  }
-
-  async function login(e:FormEvent){
-    e.preventDefault();
-    if(!supabase||!email.trim())return;
-    setLoading(true);setInfo("");
-    try{
-      const {error}=await supabase.auth.signInWithOtp({
-        email:email.trim(),
-        options:{emailRedirectTo:window.location.href},
-      });
-      if(error)throw error;
-      setInfo(ru?"Проверьте почту: отправлена ссылка для входа.":"Почтаңызды текшериңиз: кирүү шилтемеси жөнөтүлдү.");
-    }catch{setInfo(ru?"Не удалось отправить ссылку.":"Шилтемени жөнөтүү мүмкүн болгон жок.");}
     finally{setLoading(false);}
   }
 
@@ -292,12 +268,12 @@ export function CustomerCloudControls({
 
   return <section className="ce-cloud" aria-label={ru?"Облачный черновик":"Булуттагы черновик"}>
     <h3><CloudUpload size={17}/>{ru?"Ваши фотографии и сохранение":"Сүрөттөр жана сактоо"}</h3>
-    {!cfg?<p>{ru?"Для облачного сохранения настройте Supabase и API в .env.local.":"Булут үчүн Supabase жана API жөндөөлөрү керек."}</p>:
-    !userId?<form onSubmit={e=>void login(e)} className="ce-cloud-auth">
-      <p>{ru?"Войдите по email, чтобы загружать свои фото и хранить приглашение в аккаунте.":"Сүрөт жүктөө жана чакырууну сактоо үчүн email аркылуу кириңиз."}</p>
-      <label><span>Email</span><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
-      <button className="ce-primary" type="submit" disabled={loading||fileBusy}><LogIn size={16}/>{ru?"Отправить ссылку":"Шилтеме жөнөтүү"}</button>
-    </form>:
+    {session.status==="loading"?<p role="status">{ru?"Проверяем вход…":"Кирүү текшерилүүдө…"}</p>:
+    !session.config||!session.client?<p>{ru?"Для облачного сохранения настройте Supabase и API в .env.local.":"Булут үчүн Supabase жана API жөндөөлөрү керек."}</p>:
+    !userId?<div>
+      <p>{ru?"Войдите, чтобы загружать свои фото и хранить приглашение в аккаунте.":"Сүрөт жүктөө жана чакырууну аккаунтта сактоо үчүн кириңиз."}</p>
+      <CustomerSignIn locale={locale} client={session.client} beforeRedirect={onBeforeSignIn} className="ce-cloud-auth" actionClassName="ce-primary"/>
+    </div>:
     <>
       {availableDrafts.length>0&&<label className="ce-language">
         <span>{ru?"Ваши черновики в аккаунте":"Аккаунттагы черновиктер"}</span>
