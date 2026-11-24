@@ -117,6 +117,13 @@ const endpoints: Endpoint[] = [
     summary:"Разместить шаблон в каталоге",
     description:"Только Workspace ADMIN/OWNER. Проверяет контракт персонализации, cover page и READY R2-медиа. Публикация шаблона не даёт клиенту админские права.",
     requestBody:body(schema(catalogPublishSchema)),errors:[400,401,403,404,409,422]},
+  {method:"get",path:"/api/v1/customer/account/overview",tag:"Customer Invitations",
+    summary:"Обзор кабинета владельца",
+    description:"Сводные показатели, страница приглашений и последние ответы текущего пользователя.",
+    parameters:[
+      {name:"page",in:"query",required:false,schema:{type:"integer",minimum:1,maximum:10000}},
+      {name:"limit",in:"query",required:false,schema:{type:"integer",minimum:1,maximum:24}},
+    ],errors:[400,401]},
   {method:"post",path:"/api/v1/customer/invitations",tag:"Customer Invitations",
     summary:"Создать личное приглашение из опубликованного шаблона",
     description:"Создаёт приватный черновик текущего пользователя, закреплённый за неизменяемой версией шаблона.",
