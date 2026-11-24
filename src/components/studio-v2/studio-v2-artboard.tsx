@@ -17,7 +17,7 @@ export function textRunStyle(style:TextStyle):CSSProperties{
  return {fontFamily:fonts[style.fontFamily],fontSize:style.fontSize,fontWeight:style.fontWeight,fontStyle:style.italic?"italic":"normal",textDecoration:[style.underline?"underline":"",style.strike?"line-through":""].filter(Boolean).join(" "),color:style.color};
 }
 export function TextRuns({node,editorial=false,heritage=false}:{node:TextNode;editorial?:boolean;heritage?:boolean}){
- return <>{node.runs.map((run,index)=><span key={index} style={{...textRunStyle(run.style),...(heritage&&run.style.fontFamily==="serif"?{fontFamily:"var(--font-display), Georgia, serif"}:editorial&&run.style.fontFamily==="sans"?{fontFamily:"var(--font-ui), Arial, sans-serif"}:{})}}>{run.text}</span>)}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
+ return <>{node.runs.map((run,index)=><span key={index} style={{...textRunStyle(run.style),...(heritage&&run.style.fontFamily==="serif"?{fontFamily:"var(--v2-invitation-serif, var(--font-display)), Georgia, serif"}:editorial&&run.style.fontFamily==="sans"?{fontFamily:"var(--font-ui), Arial, sans-serif"}:{})}}>{run.text}</span>)}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
 }
 function TextContent({node,onMeasure,editorial,heritage}:{node:TextNode;editorial:boolean;heritage:boolean;onMeasure?:(id:string,height:number)=>void}){
  const ref=useRef<HTMLDivElement>(null);
@@ -27,7 +27,7 @@ function TextContent({node,onMeasure,editorial,heritage}:{node:TextNode;editoria
   measure();const observer=new ResizeObserver(measure);observer.observe(el);
   return()=>observer.disconnect();
  },[node.id,node.autoHeight,onMeasure]);
- return <div ref={ref} style={{width:"100%",fontSize:editorial?node.runs[0].style.fontSize:undefined,fontFamily:heritage?(node.runs[0].style.fontFamily==="serif"?"var(--font-display), Georgia, serif":"var(--font-ui), Arial, sans-serif"):undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node} editorial={editorial} heritage={heritage}/></div>;
+ return <div ref={ref} style={{width:"100%",fontSize:editorial?node.runs[0].style.fontSize:undefined,fontFamily:heritage?(node.runs[0].style.fontFamily==="serif"?"var(--v2-invitation-serif, var(--font-display)), Georgia, serif":"var(--font-ui), Arial, sans-serif"):undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node} editorial={editorial} heritage={heritage}/></div>;
 }
 export type ArtboardTextOptions={motionPlayback?:MotionPlayback;guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
@@ -59,7 +59,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
         justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
         whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
       }}>
-        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={document.presentation==="heritage"} onMeasure={options.onMeasure}/></div>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={document.presentation==="heritage"||document.presentation==="gilded"} onMeasure={options.onMeasure}/></div>
         {options.editingId===id&&options.renderEditor?.(node)}
       </div>;
     case "image": {
@@ -95,8 +95,9 @@ export const StudioV2Artboard=memo(function StudioV2Artboard({ document, rootNod
   return <div ref={motionRef} data-motion-root={rootNodeId} className="studio-v2-artboard-content" data-artboard-presentation={document.presentation} style={{
     width: root.width, height: root.height, position: "relative", ...appearanceCss(root),
     ...(document.presentation==="heritage"?{backgroundImage:`url("${process.env.NEXT_PUBLIC_PAGES_BASE_PATH??""}/images/kyrgyz-heritage/paper-texture.webp")`}:{}),
+    ...(document.presentation==="gilded"?{"--v2-gilded-timeline-marker":`url("${process.env.NEXT_PUBLIC_PAGES_BASE_PATH??""}/images/ak-orgo/timeline-marker.svg")`}:{}),
     overflow: root.clip || (root.visual?.corners && Object.values(root.visual.corners).some(r=>r>0)) ? "hidden" : "visible",
-  }}>
+  } as CSSProperties}>
     {root.children.map(id => renderNode(document, id, options))}
   </div>;
 });

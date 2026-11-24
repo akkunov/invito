@@ -7,6 +7,7 @@ export function fillCss(fill:VisualProperties["fill"],fallback="transparent"){
  return `linear-gradient(${fill.angle}deg, ${fill.stops.map(s=>s.color+" "+s.position+"%").join(", ")})`;
 }
 export function radiusCss(node:ProjectNodeV2){
+ if(node.visual?.mask==="arch")return "50% 50% 0 0 / 37% 37% 0 0";
  const c=node.visual?.corners;
  if(node.type==="shape"&&(node.shape==="circle"||node.shape==="ellipse"))return "50%";
  return c?`${c.topLeft}px ${c.topRight}px ${c.bottomRight}px ${c.bottomLeft}px`:undefined;

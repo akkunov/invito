@@ -830,7 +830,7 @@
   border-radius: 50%;
   color: #72242B;
 }
-[data-artboard-presentation="heritage"] .v2-guest-block[data-heritage-widget] {
+:is([data-artboard-presentation="heritage"],[data-artboard-presentation="gilded"]) .v2-guest-block[data-heritage-widget] {
   padding: 0;
   overflow: visible;
 }
@@ -918,7 +918,7 @@
 [data-heritage-widget="location"] .v2-heritage-location { padding-top: 24px; }
 [data-heritage-widget="location"] p { margin: 0 0 16px 47px; font-size: 16px; line-height: 22px; }
 [data-heritage-widget="location"] .v2-heritage-location > svg { position:absolute; left:0; top:0; color:#72242B; }
-[data-artboard-presentation="heritage"] [data-heritage-widget="location"] .v2-guest-link {
+:is([data-artboard-presentation="heritage"],[data-artboard-presentation="gilded"]) [data-heritage-widget="location"] .v2-guest-link {
   margin: 0 3%;
   gap: 12px;
   min-height: 44px;
@@ -976,7 +976,7 @@
 [data-heritage-widget="rsvp"] .v2-guest-form label:has(select) { position: relative; display: grid; gap: 10px; font-weight: 600; }
 [data-heritage-widget="rsvp"] .v2-guest-form select { appearance:none; font-weight:400; padding-right:44px; }
 .v2-heritage-select-icon { position:absolute; right:18px; bottom:17px; pointer-events:none; }
-[data-artboard-presentation="heritage"] .v2-guest-form button[type="submit"] {
+:is([data-artboard-presentation="heritage"],[data-artboard-presentation="gilded"]) .v2-guest-form button[type="submit"] {
   min-height: 58px;
   margin-top: 32px;
   border: 1px solid #72242B;
@@ -987,7 +987,7 @@
   letter-spacing: .6px;
   text-transform: uppercase;
 }
-[data-artboard-presentation="heritage"] .v2-guest-form button[type="submit"]:active { background: #57191F; }
+:is([data-artboard-presentation="heritage"],[data-artboard-presentation="gilded"]) .v2-guest-form button[type="submit"]:active { background: #57191F; }
 [data-heritage-widget="rsvp"] .v2-guest-status { min-height: 0; margin-top: 8px; font-size: 13px; line-height: 18px; }
 [data-heritage-widget="rsvp"] .v2-guest-status:empty { display: none; }
 [data-heritage-widget="rsvp"] .v2-heritage-error { margin-top: 6px; font-size: 13px; color: #A3262D; }
@@ -1008,3 +1008,187 @@
   outline: 2px solid #72242B;
   outline-offset: 3px;
 }
+
+/* Opt-in gilded invitation variant. Layout and interactions use the shared widgets. */
+@font-face {
+  font-family: "Ak Orgo Serif";
+  src: url("/fonts/ak-orgo/noto-serif-regular.woff2") format("woff2");
+  font-weight: 400 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Ak Orgo Serif";
+  src: url("/fonts/ak-orgo/noto-serif-bold.woff2") format("woff2");
+  font-weight: 600 700;
+  font-display: swap;
+}
+[data-artboard-presentation="gilded"] { --v2-invitation-serif: "Ak Orgo Serif"; }
+.v2-public-invitation:has([data-presentation="gilded"]) {
+  padding: 0;
+  background: #FAF7EF;
+}
+[data-presentation="gilded"] .v2-heritage-advance {
+  width: 47px;
+  height: 47px;
+  border: 1.5px solid #30251D;
+  color: #30251D;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="countdown"] .v2-countdown-grid strong {
+  font-family: var(--v2-invitation-serif), Georgia, serif;
+  font-size: 43px;
+  line-height: 48px;
+  color: #30251D;
+}
+[data-artboard-presentation="gilded"] .v2-countdown-grid > div + div {
+  border-color: #B99048;
+}
+[data-artboard-presentation="gilded"] .v2-countdown-grid span {
+  font-size: clamp(12px, 3.55vw, 14px);
+  line-height: 19px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-schedule > div {
+  grid-template-columns: minmax(60px, 28%) minmax(0, 1fr);
+  padding: 0 0 18px 30px;
+  margin-left: 13px;
+  gap: 11px;
+  min-height: 86px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-schedule > div:nth-child(3) {
+  min-height: 110px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-schedule > div:last-child {
+  min-height: 51px;
+  padding-bottom: 0;
+}
+[data-artboard-presentation="gilded"] .v2-guest-schedule > div::before {
+  top: 4px;
+  left: -10px;
+  width: 20px;
+  height: 20px;
+  background: var(--v2-gilded-timeline-marker) center / contain no-repeat;
+  z-index: 1;
+}
+[data-artboard-presentation="gilded"] .v2-guest-schedule > div::after {
+  border-color: #B99048;
+}
+[data-artboard-presentation="gilded"] .v2-guest-schedule time { font-size: 21px; }
+[data-artboard-presentation="gilded"] .v2-guest-schedule span { font-size: 17px; }
+[data-artboard-presentation="gilded"] .v2-guest-schedule span::first-line { font-size: 20px; line-height: 25px; }
+[data-artboard-presentation="gilded"] [data-layout="stackedMosaic"] {
+  gap: 8px;
+  grid-template-columns: 192fr 167fr;
+}
+[data-artboard-presentation="gilded"] [data-layout="stackedMosaic"][data-count="4"] {
+  grid-template-rows: 206fr 155fr 117fr;
+}
+[data-artboard-presentation="gilded"] [data-layout="stackedMosaic"][data-count="3"] {
+  grid-template-rows: 206fr 155fr;
+}
+[data-artboard-presentation="gilded"] [data-layout="stackedMosaic"] > button {
+  border-radius: 12px;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="location"] .v2-heritage-location {
+  padding-top: 25px;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="location"] p {
+  margin: 0 0 14px 46px;
+  line-height: 21px;
+}
+[data-artboard-presentation="gilded"] .v2-heritage-location > svg {
+  color: #896223;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="location"] .v2-guest-link {
+  margin: 0 9px 0 10px;
+  min-height: 51px;
+  border-radius: 10px;
+  border-color: #30251D;
+  color: #30251D;
+  font-size: 16px;
+  line-height: 22px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-form label {
+  font-size: 17px;
+  line-height: 23px;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="rsvp"] .v2-guest-form :is(input[autocomplete="name"], select) {
+  min-height: 51px;
+  border-color: #ADA393;
+  border-radius: 11px;
+  background: #FCF9F3;
+  padding-inline: 22px;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="rsvp"] .v2-guest-form input[autocomplete="name"] {
+  min-height: 53px;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="rsvp"] .v2-guest-form input[aria-invalid="true"] {
+  border-color: #A3262D;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="rsvp"] .v2-guest-options {
+  gap: 11px;
+  margin: 22px 0 24px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-options strong {
+  font-size: 18px;
+  line-height: 25px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-options label {
+  min-height: 52px;
+  gap: 20px;
+  border-color: #ADA393;
+  border-radius: 11px;
+  background: #FCF9F3;
+}
+[data-artboard-presentation="gilded"] .v2-guest-options input[type="radio"] {
+  flex-basis: 28px;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #ADA393;
+}
+[data-artboard-presentation="gilded"] .v2-guest-options input:checked {
+  border-color: #896223;
+  box-shadow: inset 0 0 0 4px #FCF9F3;
+  background: #896223;
+}
+[data-artboard-presentation="gilded"] .v2-guest-form label:has(select) {
+  font-size: 18px;
+  line-height: 24px;
+}
+[data-artboard-presentation="gilded"] [data-heritage-widget="rsvp"] .v2-guest-form select {
+  font-size: 17px;
+  padding-right: 45px;
+}
+[data-artboard-presentation="gilded"] .v2-heritage-select-icon { right: 16px; bottom: 16px; }
+[data-artboard-presentation="gilded"] .v2-guest-form button[type="submit"] {
+  min-height: 62px;
+  margin-top: 29px;
+  gap: 8px;
+  border-color: #896223;
+  border-radius: 12px;
+  background: #896223;
+  color: #FFFDF8;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: .5px;
+}
+[data-artboard-presentation="gilded"] .v2-guest-form button[type="submit"]:active { background: #73511B; }
+[data-artboard-presentation="gilded"] .v2-guest-status { font-size: 16px; line-height: 24px; }
+[data-artboard-presentation="gilded"] .v2-heritage-error { font-size: 14px; line-height: 20px; }
+[data-artboard-presentation="gilded"] [data-heritage-widget="music"] button {
+  min-width: 44px;
+  min-height: 44px;
+  align-self: center;
+  border: 1px solid #896223;
+  border-radius: 50%;
+  background: #FCF9F3;
+  color: #896223;
+}
+[data-presentation="gilded"] .v2-heritage-advance:focus-visible,
+[data-artboard-presentation="gilded"] :is(button,a,input,select):focus-visible {
+  outline: 2px solid #896223;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .v2-gilded-spinner { animation: v2-gilded-spin 900ms linear infinite; }
+}
+@keyframes v2-gilded-spin { to { transform: rotate(360deg); } }

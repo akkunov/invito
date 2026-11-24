@@ -50,6 +50,22 @@ export function validatedTemplate(input: unknown, personalization: unknown) {
   catch { throw new UnprocessableEntityException("INVALID_TEMPLATE_DOCUMENT_OR_CONTRACT"); }
 }
 export const staticAssets = new Set([
+  "/images/ak-orgo/cover-crown.svg",
+  "/images/ak-orgo/invite-crown.svg",
+  "/images/ak-orgo/rsvp-crown.svg",
+  "/images/ak-orgo/invite-footer.svg",
+  "/images/ak-orgo/gallery-footer.svg",
+  "/images/ak-orgo/divider.svg",
+  "/images/ak-orgo/cover-bottom-mask.svg",
+  "/images/ak-orgo/program-rule.svg",
+  "/images/ak-orgo/rsvp-landscape.webp",
+  "/images/ak-orgo/venue.webp",
+  "/images/ak-orgo/cover.webp",
+  "/images/ak-orgo/gallery-bouquet.webp",
+  "/images/ak-orgo/gallery-rings.webp",
+  "/images/ak-orgo/gallery-landscape.webp",
+  "/images/ak-orgo/gallery-textile.webp",
+  "/images/ak-orgo/cover-mountains.webp",
   "/images/kyrgyz-heritage/border-strip.svg",
   "/images/kyrgyz-heritage/corner.svg",
   "/images/kyrgyz-heritage/cover.webp",
