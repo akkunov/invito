@@ -2,18 +2,34 @@
 
 import Link from "next/link";
 import {useCallback,useEffect,useState} from "react";
-import {ArrowLeft,CalendarDays,Check,Copy,Eye,LogOut,RefreshCw,Users,X} from "lucide-react";
+import {CalendarDays,Check,Copy,Eye,LayoutDashboard,LogOut,Mail,RefreshCw,Settings,Users,X} from "lucide-react";
 import {useCustomerSession} from "@/features/auth/browser/use-customer-session";
 import {CustomerSignIn} from "./customer-sign-in";
-import {customerApi,listCustomerDrafts,getCustomerPublication,unpublishCustomerInvitation,
+import {customerApi,unpublishCustomerInvitation,
   type CustomerDraftListItem,type CustomerPublication} from "@/features/invitations/customer-cloud";
 import type {Locale} from "@/i18n/locales";
+import {BrandWordmark} from "@/components/brand/brand-wordmark";
+import {publicFont} from "@/components/layout/public-font";
+import "@/app/landing-editorial.css";
 import "./customer-invitations-dashboard.css";
 
 type Summary={responses:number;attending:number;declined:number};
 type Reply={id:string;guestName:string;attendance:"YES"|"NO";guestCount:number;wish?:string|null;createdAt:string};
 type ReplyPage={items:Reply[];nextPage:number|null};
 type Entry={draft:CustomerDraftListItem;publication:CustomerPublication|null;summary:Summary|null};
+type Overview={
+  totals:Summary&{drafts:number;active:number};
+  entries:Entry[];
+  recent:Array<Reply&{draftId:string;invitation:string}>;
+  nextPage:number|null;
+};
+const sections=[
+  {id:"overview",icon:LayoutDashboard,ru:"Обзор",ky:"Обзор"},
+  {id:"invitations",icon:Mail,ru:"Приглашения",ky:"Чакыруулар"},
+  {id:"guests",icon:Users,ru:"Гости",ky:"Коноктор"},
+  {id:"profile",icon:Settings,ru:"Профиль",ky:"Профиль"},
+] as const;
+type Section=typeof sections[number]["id"];
 
 export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
   const session=useCustomerSession();
@@ -23,7 +39,10 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
 function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType<typeof useCustomerSession>}){
   const ru=locale==="ru";
   const signedIn=session.status==="signed-in";
-  const [entries,setEntries]=useState<Entry[]>([]);
+  const [overview,setOverview]=useState<Overview|null>(null);
+  const [section,setSection]=useState<Section>("overview");
+  const [page,setPage]=useState(1);
+  const entries=overview?.entries??[];
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
   const [expanded,setExpanded]=useState<string|null>(null);
@@ -34,18 +53,13 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
   const refresh=useCallback(async (signal?:AbortSignal)=>{
     if(!signedIn)return;
     try{
-      const drafts=await listCustomerDrafts(signal);
-      const result=await Promise.all(drafts.map(async draft=>{
-        const publication=await getCustomerPublication(draft.id,signal);
-        const summary=publication?await customerApi<Summary>(
-          "/customer/invitations/"+encodeURIComponent(draft.id)+"/rsvp/summary","GET",undefined,signal):null;
-        return {draft,publication,summary};
-      }));
-      if(!signal?.aborted)setEntries(result);
+      const result=await customerApi<Overview>(
+        "/customer/account/overview?page="+page,"GET",undefined,signal);
+      if(!signal?.aborted)setOverview(result);
     }catch{
       if(!signal?.aborted)setError(ru?"Не удалось загрузить приглашения. Повторите попытку.":"Чакырууларды жүктөө мүмкүн болгон жок.");
     }finally{if(!signal?.aborted)setLoading(false);}
-  },[signedIn,ru]);
+  },[signedIn,ru,page]);
   useEffect(()=>{
     const controller=new AbortController();
     void Promise.resolve().then(()=>{
@@ -92,20 +106,27 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
     try{await navigator.clipboard.writeText(location.origin+"/"+locale+"/c/"+slug);}
     catch{setError(ru?"Не удалось скопировать ссылку.":"Шилтемени көчүрүү мүмкүн болгон жок.");}
   }
-  return <main className="ci-page">
-    <header className="ci-top"><Link href={`/${locale}`} aria-label={ru?"На главную":"Башкы бет"}><ArrowLeft size={20}/></Link>
-      <strong>eventiq<span>.</span></strong><Link className="ci-new" href={`/${locale}/templates`}>{ru?"Выбрать шаблон":"Шаблон тандоо"}</Link>
-      {signedIn&&<button className="ci-refresh" type="button" disabled={signingOut} onClick={()=>void signOut()}>
-        <LogOut size={16}/>{ru?"Выйти":"Чыгуу"}
-      </button>}
+  const title=section==="guests"?(ru?"Ответы гостей":"Коноктордун жооптору"):
+    section==="profile"?"Профиль":(ru?"Мои приглашения":"Менин чакырууларым");
+  const switchPage=(number:number)=>{setLoading(true);setError("");setPage(number);};
+  return <div className={`ci-page invito-landing ${publicFont.variable}`}>
+    <header className="ci-top">
+      <BrandWordmark locale={locale}/>
+      <Link className="ci-top-link" href={`/${locale}/templates`}>{ru?"Шаблоны":"Шаблондор"}</Link>
+      <nav className="ci-locales" aria-label={ru?"Язык":"Тил"}>
+        {(["ru","ky"] as const).map(lang=><Link key={lang} href={`/${lang}/account`} lang={lang}
+          aria-current={lang===locale?"page":undefined}>{lang.toUpperCase()}</Link>)}
+      </nav>
     </header>
-    <div className="ci-content">
-      <div className="ci-heading"><div><p>EVENTIQ / ACCOUNT</p>
-        <h1>{ru?"Мои приглашения":"Менин чакырууларым"}</h1>
-        <span>{ru?"Редактируйте приглашения и следите за ответами гостей.":"Чакырууларды түзөтүп, коноктордун жоопторун караңыз."}</span>
-      </div>{signedIn&&<button className="ci-refresh" type="button" disabled={loading} onClick={()=>{
-        setLoading(true);setError("");void refresh();
-      }}><RefreshCw size={17}/>{ru?"Обновить":"Жаңыртуу"}</button>}</div>
+    {signedIn&&<nav className="ci-tabs" aria-label={ru?"Личный кабинет":"Жеке кабинет"}>
+      {sections.map(({id,icon:Icon,...label})=><button type="button" key={id}
+        aria-current={section===id?"page":undefined} onClick={()=>setSection(id)}><Icon size={20}/>{label[locale]}</button>)}
+    </nav>}
+    <main className="ci-content">
+    {!(signedIn&&section==="profile")?<><div className="ci-heading">
+      <div><h1>{title}</h1>{section!=="guests"&&<p>{ru?"Редактируйте приглашения и следите за ответами гостей.":"Чакырууларды түзөтүп, коноктордун жоопторун караңыз."}</p>}</div>
+      <Link className="ci-new" href={`/${locale}/templates`}>{ru?"Создать приглашение":"Чакыруу түзүү"}</Link>
+    </div>
       {session.status==="loading"?<section className="ci-empty" role="status">{ru?"Проверяем вход…":"Кирүү текшерилүүдө…"}</section>:
       !session.config||!session.client?<section className="ci-empty">{ru?"Вход в кабинет сейчас недоступен.":"Кабинетке кирүү азыр жеткиликсиз."}</section>:
       !signedIn?<section className="ci-empty">
@@ -113,7 +134,14 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
         <p>{ru?"Войдите, чтобы увидеть свои черновики и ответы гостей.":"Черновиктерди жана коноктордун жоопторун көрүү үчүн кириңиз."}</p>
         <CustomerSignIn locale={locale} client={session.client} className="ci-login"/>
       </section>:loading?<section className="ci-empty" role="status">{ru?"Загружаем приглашения…":"Чакыруулар жүктөлүүдө…"}</section>:
-      entries.length===0?<section className="ci-empty"><CalendarDays size={30}/>
+      <>
+      {section==="overview"&&overview&&<dl className="ci-overview">
+        <div><dt>{ru?"Черновики":"Черновиктер"}</dt><dd>{overview.totals.drafts}</dd></div>
+        <div><dt>{ru?"Опубликовано":"Жарыяланды"}</dt><dd>{overview.totals.active}</dd></div>
+        <div><dt>{ru?"Гостей подтвердили":"Келе турган коноктор"}</dt><dd>{overview.totals.attending}</dd></div>
+        <div><dt>{ru?"Отказались":"Келе албайт"}</dt><dd>{overview.totals.declined}</dd></div>
+      </dl>}
+      {entries.length===0&&!error?<section className="ci-empty"><CalendarDays size={30}/>
         <h2>{ru?"Пока нет приглашений":"Азырынча чакыруулар жок"}</h2>
         <p>{ru?"Выберите готовый дизайн, добавьте фотографии и опубликуйте страницу.":"Дизайн тандап, сүрөт кошуп, баракчаны жарыялаңыз."}</p>
         <Link href={`/${locale}/templates`}>{ru?"Выбрать дизайн":"Дизайн тандоо"}</Link>
@@ -124,7 +152,7 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
         const slug=draft.templateVersion.template.publicSlug;
         return <article className="ci-card" key={draft.id}>
           <div className="ci-card-head"><span className={isActive?"ci-status ci-active":"ci-status"}>{isActive?
-            ru?"Опубликовано":"Жарыяланган":ru?"Черновик":"Черновик"}</span>
+            ru?"Опубликовано":"Жарыяланган":publication?(ru?"Закрыто":"Жабылган"):"Черновик"}</span>
             <span className="ci-date">{new Date(draft.updatedAt).toLocaleDateString(ru?"ru-RU":"ky-KG")}</span>
           </div>
           <h2>{draft.templateVersion.template.name}</h2>
@@ -153,7 +181,35 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
           </div>}
         </article>;
       })}</div>}
+      {section!=="invitations"&&overview?.recent.length? <section className="ci-recent" aria-labelledby="ci-recent-title">
+        <h2 id="ci-recent-title">{ru?"Последние ответы":"Акыркы жооптор"}</h2>
+        <ul>{overview.recent.map(reply=><li key={reply.id}>
+          <div><strong>{reply.guestName}</strong><small>{reply.invitation}</small></div>
+          <span className={reply.attendance==="YES"?"ci-status ci-active":"ci-status"}>
+            {reply.attendance==="YES"?(ru?"Придёт":"Келет"):(ru?"Не придёт":"Келбейт")}
+          </span>
+          {reply.attendance==="YES"&&<span aria-label={ru?"Количество гостей":"Коноктордун саны"}>
+            <Users size={16}/>{reply.guestCount}
+          </span>}
+        </li>)}</ul>
+      </section>:null}
+      {overview&&(page>1||overview.nextPage)&&<nav className="ci-pagination" aria-label={ru?"Страницы приглашений":"Чакыруу барактары"}>
+        <button type="button" className="ci-refresh" disabled={page<=1} onClick={()=>switchPage(page-1)}>{ru?"Назад":"Артка"}</button>
+        <span>{page}</span>
+        <button type="button" className="ci-refresh" disabled={!overview.nextPage} onClick={()=>switchPage(overview.nextPage??page)}>{ru?"Далее":"Кийинки"}</button>
+      </nav>}
+      </>}
+      {signedIn&&<button type="button" className="ci-refresh ci-reload" disabled={loading} onClick={()=>{
+        setLoading(true);setError("");void refresh();
+      }}><RefreshCw size={17}/>{ru?"Обновить":"Жаңыртуу"}</button>}
+      </>:<section className="ci-profile">
+        <h1>{title}</h1>
+        <dl><dt>Email</dt><dd>{session.user?.email}</dd></dl>
+        <button className="ci-refresh" type="button" disabled={signingOut} onClick={()=>void signOut()}>
+          <LogOut size={16}/>{ru?"Выйти":"Чыгуу"}
+        </button>
+      </section>}
       {error&&<p className="ci-error" role="alert">{error}</p>}
-    </div>
-  </main>;
+    </main>
+  </div>;
 }

@@ -114,6 +114,52 @@ export class CustomerInvitationsService {
     return created;
   }
 
+  async overview(userId:string,page:number,limit:number){
+    const publicationOwner={ownerId:userId,draft:{ownerId:userId}};
+    const publicationFilter={publication:publicationOwner};
+    const [rows,total,drafts,active,counts,recent]=await Promise.all([
+      this.db.invitationDraft.findMany({where:{ownerId:userId},
+        orderBy:[{updatedAt:"desc"},{id:"asc"}],skip:(page-1)*limit,take:limit,
+        select:{id:true,revision:true,templateVersionId:true,updatedAt:true,
+          templateVersion:{select:{template:{select:{name:true,publicSlug:true}}}},
+          publication:{select:{id:true,slug:true,status:true,latestRelease:true,ownerId:true}}},
+      }),
+      this.db.invitationDraft.count({where:{ownerId:userId}}),
+      this.db.invitationDraft.count({where:{ownerId:userId,publication:null}}),
+      this.db.customerPublication.count({where:{...publicationOwner,status:"ACTIVE"}}),
+      this.db.customerRsvpResponse.groupBy({
+        where:publicationFilter,by:["attendance"],_count:{_all:true},_sum:{guestCount:true},
+      }),
+      this.db.customerRsvpResponse.findMany({
+        where:publicationFilter,orderBy:[{createdAt:"desc"},{id:"asc"}],take:5,
+        select:{id:true,guestName:true,attendance:true,guestCount:true,createdAt:true,
+          publication:{select:{draftId:true,draft:{select:{templateVersion:{select:{template:{select:{name:true}}}}}}}}},
+      }),
+    ]);
+    const ids=rows.flatMap(row=>row.publication?.ownerId===userId?[row.publication.id]:[]);
+    const perInvitation=ids.length?await this.db.customerRsvpResponse.groupBy({
+      where:{...publicationFilter,publicationId:{in:ids}},
+      by:["publicationId","attendance"],_count:{_all:true},_sum:{guestCount:true},
+    }):[];
+    const summarize=(groups:typeof counts)=>({
+      responses:groups.reduce((sum,group)=>sum+group._count._all,0),
+      attending:groups.find(group=>group.attendance==="YES")?._sum.guestCount??0,
+      declined:groups.find(group=>group.attendance==="NO")?._count._all??0,
+    });
+    const entries=rows.map(({publication,...draft})=>{
+      if(!publication||publication.ownerId!==userId)return {draft,publication:null,summary:null};
+      const {id,slug,status,latestRelease}=publication;
+      return {draft,publication:{id,slug,status,latestRelease},
+        summary:summarize(perInvitation.filter(group=>group.publicationId===id))};
+    });
+    return {
+      totals:{drafts,active,...summarize(counts)},
+      entries, nextPage: page*limit<total?page+1:null,
+      recent:recent.map(({publication,...reply})=>({...reply,draftId:publication.draftId,
+        invitation:publication.draft.templateVersion.template.name})),
+    };
+  }
+
   async list(userId:string){
     return this.db.invitationDraft.findMany({where:{ownerId:userId},
       select:{id:true,revision:true,templateVersionId:true,updatedAt:true,

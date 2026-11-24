@@ -1,4 +1,4 @@
-import {Body,Controller,Get,Header,Inject,Param,Patch,Post,Req} from "@nestjs/common";
+import {Body,Controller,Get,Header,Inject,Param,Patch,Post,Query,Req} from "@nestjs/common";
 import {z} from "zod";
 import {parseInput} from "../documents/documents-input.js";
 import {startUploadInput} from "../media/media.controller.js";
@@ -7,6 +7,10 @@ import {CustomerInvitationsService} from "./customer-invitations.service.js";
 import {personalizationPatchSchema} from "../../../../src/features/studio-v2/core/personalization.schema.js";
 
 const uuid=z.uuid();
+export const accountOverviewQuery=z.strictObject({
+  page:z.coerce.number().int().min(1).max(10000).default(1),
+  limit:z.coerce.number().int().min(1).max(24).default(8),
+});
 export const createCustomerInvitationSchema=z.strictObject({templateVersionId:uuid});
 export const updateCustomerInvitationSchema=z.strictObject({expectedRevision:z.number().int().min(1),patch:personalizationPatchSchema});
 export const customerPhotoSchema=startUploadInput.safeExtend({mimeType:z.enum(["image/jpeg","image/png","image/webp"])});
@@ -14,6 +18,13 @@ export const customerPhotoSchema=startUploadInput.safeExtend({mimeType:z.enum(["
 @Controller("customer")
 export class CustomerInvitationsController {
   constructor(@Inject(CustomerInvitationsService) private readonly service:CustomerInvitationsService){}
+
+  @Get("account/overview")
+  @Header("Cache-Control","private, no-store")
+  overview(@Req() request:AuthenticatedRequest,@Query() query:unknown){
+    const {page,limit}=parseInput(accountOverviewQuery,query);
+    return this.service.overview(request.user.id,page,limit);
+  }
 
   @Post("invitations")
   @Header("Cache-Control","no-store")
