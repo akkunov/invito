@@ -35,7 +35,7 @@ export function readPersonalizedValue(doc:ProjectDocumentV2,f:EditableField):Per
  if(f.kind==="textStyle"&&n.type==="text"){
   const style=n.runs[0]?.style;
   if(!style)return;
-  return {kind:"textStyle",fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,color:style.color,textAlign:n.textAlign};
+  return {kind:"textStyle",fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,color:style.color,textAlign:n.textAlign,...(f.allowItalic?{italic:style.italic}:{}),...(f.allowUnderline?{underline:style.underline}:{}),...(f.lineHeightRange?{lineHeight:n.lineHeight??1.2}:{}),...(f.letterSpacingRange?{letterSpacing:n.letterSpacing??0}:{})};
  }
  if(n.type!=="widget")return;
  const b=n.block;
@@ -62,6 +62,9 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
    if(v.kind!=="textStyle")return reject("Неверный тип");
    const original=doc.nodes[f.nodeId];
    if(v.fontSize<f.minFontSize||v.fontSize>f.maxFontSize||!f.allowedFonts.includes(v.fontFamily)||!f.allowedWeights.includes(v.fontWeight)||!f.allowedColors.some(color=>color.toLowerCase()===v.color.toLowerCase())&&!(original?.type==="text"&&original.runs[0]?.style.color.toLowerCase()===v.color.toLowerCase()))reject("Стиль текста не разрешён автором");
+   if(v.italic!==undefined&&!f.allowItalic||v.underline!==undefined&&!f.allowUnderline)reject("Начертание не разрешено");
+   if(v.lineHeight!==undefined&&(!f.lineHeightRange||v.lineHeight<f.lineHeightRange.min||v.lineHeight>f.lineHeightRange.max))reject("Межстрочный интервал вне диапазона");
+   if(v.letterSpacing!==undefined&&(!f.letterSpacingRange||v.letterSpacing<f.letterSpacingRange.min||v.letterSpacing>f.letterSpacingRange.max))reject("Межбуквенный интервал вне диапазона");
    break;
   }
   case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
@@ -101,8 +104,10 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
   if(f.kind==="textStyle"&&v.kind==="textStyle"){
    const node=doc.nodes[f.nodeId];
    if(node.type!=="text")invalid("Invalid text style target");
-   node.runs=node.runs.map(run=>({...run,style:{...run.style,fontFamily:v.fontFamily,fontSize:v.fontSize,fontWeight:v.fontWeight,color:v.color,italic:false}}));
+   node.runs=node.runs.map(run=>({...run,style:{...run.style,fontFamily:v.fontFamily,fontSize:v.fontSize,fontWeight:v.fontWeight,color:v.color,italic:v.italic??run.style.italic,underline:v.underline??run.style.underline}}));
    node.textAlign=v.textAlign;
+   if(v.lineHeight!==undefined)node.lineHeight=v.lineHeight;
+   if(v.letterSpacing!==undefined)node.letterSpacing=v.letterSpacing;
    // Explicit per-text color permission outranks the template theme token for this node only.
    if(node.tokenRefs)delete node.tokenRefs.textColor;
    continue;
