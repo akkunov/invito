@@ -21,6 +21,7 @@ export class CatalogService {
     const where={
       status:"PUBLISHED" as const,
       publicSlug:{not:null},
+      publishedVersionId:{not:null},
       ...(filters.category?{category:filters.category}:{}),
       ...(filters.search?{OR:[
         {name:{contains:filters.search,mode:"insensitive" as const}},
@@ -33,12 +34,12 @@ export class CatalogService {
         orderBy:[{updatedAt:"desc"},{id:"asc"}],
         skip:(filters.page-1)*filters.limit,take:filters.limit,
         select:{id:true,publicSlug:true,name:true,description:true,category:true,tags:true,
-          latestVersion:true,updatedAt:true,workspaceId:true,coverPageId:true,
-          versions:{orderBy:{number:"desc"},take:1,select:{document:true}}},
+          updatedAt:true,workspaceId:true,
+          publishedVersion:{select:{number:true,document:true}}},
       }),
     ]);
     const items=await Promise.all(rows.map(async row=>{
-      const document=row.versions[0]?.document as ProjectDocumentV2|undefined;
+      const document=row.publishedVersion?.document as ProjectDocumentV2|undefined;
       const trustedStaticCovers=staticAssets;
       const image=document&&Object.values(document.assets).find(asset=>asset.mimeType.startsWith("image/")&&
         (asset.storageKey.startsWith("asset:")||trustedStaticCovers.has(asset.storageKey)));
@@ -49,7 +50,7 @@ export class CatalogService {
         if(asset)coverUrl=await this.media.signRead(asset.storageKey,asset.mimeType).catch(()=>null);
       }
       return {id:row.id,slug:row.publicSlug!,name:row.name,description:row.description,
-        category:row.category,tags:row.tags,version:row.latestVersion,
+        category:row.category,tags:row.tags,version:row.publishedVersion!.number,
         coverUrl,updatedAt:row.updatedAt};
     }));
     return {items,total:count,page:filters.page,limit:filters.limit,
@@ -59,11 +60,10 @@ export class CatalogService {
   async detail(slug:string) {
     const row=await this.db.template.findUnique({where:{publicSlug:slug},
       select:{id:true,workspaceId:true,publicSlug:true,name:true,description:true,category:true,
-        status:true,latestVersion:true,versions:{orderBy:{number:"desc"},take:1,
-          select:{id:true,number:true,document:true,personalization:true}}},
+        status:true,publishedVersion:{select:{id:true,number:true,document:true,personalization:true}}},
     });
-    if(!row||row.status!=="PUBLISHED"||!row.versions[0])throw new NotFoundException("TEMPLATE_NOT_FOUND");
-    const version=row.versions[0];
+    if(!row||row.status!=="PUBLISHED"||!row.publishedVersion)throw new NotFoundException("TEMPLATE_NOT_FOUND");
+    const version=row.publishedVersion;
     const {snapshot,contract}=validatedTemplate(version.document,version.personalization);
     if(!contract)throw new NotFoundException("TEMPLATE_NOT_FOUND");
     const ids=[...new Set(Object.values(snapshot.assets).map(a=>a.storageKey).filter(k=>k.startsWith("asset:")).map(k=>k.slice(6)))];
@@ -81,22 +81,30 @@ export class CatalogService {
       document:snapshot,personalization:contract,mediaUrls};
   }
 
-  async publish(userId:string,workspaceId:string,templateId:string,publicSlug:string) {
+  async publish(userId:string,workspaceId:string,templateId:string,publicSlug:string,expectedVersion?:number) {
     await this.access.member(userId,workspaceId,"ADMIN");
     if(!validUuid(templateId))throw new NotFoundException("TEMPLATE_NOT_FOUND");
     const row=await this.db.template.findFirst({where:{id:templateId,workspaceId},
-      select:{id:true,coverPageId:true,latestVersion:true,
-        versions:{orderBy:{number:"desc"},take:1,select:{document:true,personalization:true}}},
+      select:{id:true,coverPageId:true,latestVersion:true,publishedVersionId:true,publicSlug:true,
+        versions:{orderBy:{number:"desc"},take:1,select:{id:true,number:true,document:true,personalization:true}}},
     });
-    if(!row||!row.versions[0])throw new NotFoundException("TEMPLATE_NOT_FOUND");
-    const {snapshot,contract}=validatedTemplate(row.versions[0].document,row.versions[0].personalization);
+    const candidate=row?.versions[0];
+    if(!row||!candidate)throw new NotFoundException("TEMPLATE_NOT_FOUND");
+    if(candidate.number!==row.latestVersion || (expectedVersion!==undefined&&expectedVersion!==candidate.number))
+      throw new ConflictException("TEMPLATE_VERSION_CONFLICT");
+    const {snapshot,contract}=validatedTemplate(candidate.document,candidate.personalization);
     if(!contract||contract.fields.length===0)throw new UnprocessableEntityException("PERSONALIZATION_CONTRACT_REQUIRED");
     if(!snapshot.pages.some(page=>page.id===row.coverPageId))throw new UnprocessableEntityException("COVER_PAGE_NOT_FOUND");
     await verifyAssets(this.db,workspaceId,snapshot);
     try {
-      return await this.db.template.update({where:{id:templateId},
-        data:{status:"PUBLISHED",publicSlug},
-        select:{id:true,publicSlug:true,status:true,latestVersion:true}});
+      const [published]=await this.db.template.updateManyAndReturn({
+        where:{id:templateId,workspaceId,latestVersion:row.latestVersion,
+          publishedVersionId:row.publishedVersionId,publicSlug:row.publicSlug},
+        data:{status:"PUBLISHED",publicSlug,publishedVersionId:candidate.id},
+        select:{id:true,publicSlug:true,status:true,latestVersion:true,publishedVersionId:true},
+      });
+      if(!published)throw new ConflictException("TEMPLATE_VERSION_CONFLICT");
+      return published;
     } catch(error) {
       if(error&&typeof error==="object"&&"code" in error&&error.code==="P2002")
         throw new ConflictException("TEMPLATE_PUBLIC_SLUG_TAKEN");
