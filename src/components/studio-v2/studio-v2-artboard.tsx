@@ -16,10 +16,10 @@ const fonts: Record<string, string> = {
 export function textRunStyle(style:TextStyle):CSSProperties{
  return {fontFamily:fonts[style.fontFamily],fontSize:style.fontSize,fontWeight:style.fontWeight,fontStyle:style.italic?"italic":"normal",textDecoration:[style.underline?"underline":"",style.strike?"line-through":""].filter(Boolean).join(" "),color:style.color};
 }
-export function TextRuns({node}:{node:TextNode}){
- return <>{node.runs.map((run,index)=><span key={index} style={textRunStyle(run.style)}>{run.text}</span>)}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
+export function TextRuns({node,editorial=false}:{node:TextNode;editorial?:boolean}){
+ return <>{node.runs.map((run,index)=><span key={index} style={{...textRunStyle(run.style),...(editorial&&run.style.fontFamily==="sans"?{fontFamily:"var(--font-ui), Arial, sans-serif"}:{})}}>{run.text}</span>)}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
 }
-function TextContent({node,onMeasure}:{node:TextNode;onMeasure?:(id:string,height:number)=>void}){
+function TextContent({node,onMeasure,editorial}:{node:TextNode;editorial:boolean;onMeasure?:(id:string,height:number)=>void}){
  const ref=useRef<HTMLDivElement>(null);
  useLayoutEffect(()=>{
   const el=ref.current;if(!el||!node.autoHeight||!onMeasure)return;
@@ -27,7 +27,7 @@ function TextContent({node,onMeasure}:{node:TextNode;onMeasure?:(id:string,heigh
   measure();const observer=new ResizeObserver(measure);observer.observe(el);
   return()=>observer.disconnect();
  },[node.id,node.autoHeight,onMeasure]);
- return <div ref={ref} style={{width:"100%",whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node}/></div>;
+ return <div ref={ref} style={{width:"100%",fontSize:editorial?node.runs[0].style.fontSize:undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node} editorial={editorial}/></div>;
 }
 export type ArtboardTextOptions={motionPlayback?:MotionPlayback;guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
@@ -59,7 +59,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
         justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
         whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
       }}>
-        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} onMeasure={options.onMeasure}/></div>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={document.presentation==="editorial"} onMeasure={options.onMeasure}/></div>
         {options.editingId===id&&options.renderEditor?.(node)}
       </div>;
     case "image": {
@@ -68,7 +68,8 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       const path = asset.storageKey.startsWith("/images/") ? `${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${asset.storageKey}` : options.mediaUrls?.[asset.storageKey];
       return <div key={id} data-studio-node={id} style={{ ...style, overflow: "hidden",clipPath:maskCss(node) }}>
         {path?<Image unoptimized draggable={false} src={path} alt={asset.name}
-          fill sizes="(max-width: 900px) 300px, 500px"
+          fill loading={document.presentation==="editorial"&&node.parentId===document.pages[0].rootNodeId?"eager":undefined}
+          sizes={document.presentation==="editorial"?"(max-width: 600px) 100vw, 590px":"(max-width: 900px) 300px, 500px"}
           style={{ objectFit: node.fit, objectPosition: `${(node.visual?.imageCrop?.x??node.focalX) * 100}% ${(node.visual?.imageCrop?.y??node.focalY) * 100}%`,transform:contentTransform(node),transformOrigin:`${(node.visual?.imageCrop?.x??node.focalX)*100}% ${(node.visual?.imageCrop?.y??node.focalY)*100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
       </div>;
     }

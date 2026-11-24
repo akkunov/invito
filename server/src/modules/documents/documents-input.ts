@@ -50,6 +50,12 @@ export function validatedTemplate(input: unknown, personalization: unknown) {
   catch { throw new UnprocessableEntityException("INVALID_TEMPLATE_DOCUMENT_OR_CONTRACT"); }
 }
 export const staticAssets = new Set([
+  "/images/eventiq-mobile/cover.webp",
+  "/images/eventiq-mobile/landscape.webp",
+  "/images/eventiq-mobile/bouquet.webp",
+  "/images/eventiq-mobile/rings.webp",
+  "/images/eventiq-mobile/shadows.webp",
+  "/images/eventiq-mobile/venue.webp",
   "/images/monochrome-editorial/cover.webp",
   "/images/monochrome-editorial/landscape.webp",
   "/images/monochrome-editorial/bouquet.webp",

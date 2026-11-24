@@ -13,11 +13,28 @@ export function bindingText(value:BindingValue,locale:Locale):string{
   case "boolean":return value.value?(locale==="ky"?"Ооба":"Да"):(locale==="ky"?"Жок":"Нет");
  }
 }
+const editorialMonths={
+ ru:["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],
+ ky:["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"],
+};
+const editorialDateParts=new Intl.DateTimeFormat("en-US",{
+ day:"numeric",month:"numeric",year:"numeric",timeZone:"Asia/Bishkek",
+});
+function editorialDate(value:string,locale:Locale):string{
+ const parts=editorialDateParts.formatToParts(new Date(value));
+ const day=parts.find(part=>part.type==="day")?.value;
+ const month=Number(parts.find(part=>part.type==="month")?.value);
+ const year=parts.find(part=>part.type==="year")?.value;
+ return `${day}${locale==="ky"?"-":" "}${editorialMonths[locale][month-1]} ${year}`.toLocaleUpperCase(locale);
+}
 export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
  const nodes={...doc.nodes};
  for(const [id,n] of Object.entries(nodes)){
   if(n.type==="text"&&n.bindingKey&&doc.values?.[n.bindingKey]){
-   const value=bindingText(doc.values[n.bindingKey],doc.locale);
+   const binding=doc.values[n.bindingKey];
+   const value=doc.presentation==="editorial"&&binding.type==="date"
+     ?editorialDate(binding.value,doc.locale)
+     :bindingText(binding,doc.locale);
    nodes[id]={...n,runs:[{text:value,style:{...n.runs[0].style}}]};
   }
  }

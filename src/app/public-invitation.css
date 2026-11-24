@@ -18,3 +18,5 @@
  height:auto;min-height:100dvh;max-height:none;overflow:visible;
  display:block;isolation:auto;
 }
+
+.v2-public-invitation:has([data-presentation="editorial"]) {padding-bottom:0;background:#faf5ed}

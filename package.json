@@ -37,6 +37,7 @@
     "print:professional": "node scripts/print-professional.mjs",
     "test:studio-v2-professional-print": "node --experimental-strip-types scripts/test-studio-v2-professional-print.mjs",
     "test:studio-v2-personalization": "node --experimental-strip-types scripts/test-studio-v2-personalization.mjs",
+    "test:eventiq-mobile": "node --experimental-strip-types --test scripts/test-eventiq-mobile-package.mjs",
     "test:monochrome-editorial": "node --experimental-strip-types --test scripts/test-monochrome-editorial-package.mjs",
     "test:editorial-ivory": "node --experimental-strip-types --test scripts/test-editorial-ivory-package.mjs",
     "test:mobile-editor-v3": "node --experimental-strip-types --test scripts/test-mobile-editor-v3.mjs scripts/test-mobile-editor-sections.mjs scripts/test-mobile-editor-routes.mjs scripts/test-universal-editor-music.mjs",

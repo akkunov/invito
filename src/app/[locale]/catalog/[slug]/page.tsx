@@ -45,7 +45,7 @@ export default async function CatalogTemplatePage({params}:{params:Promise<{loca
           </Link>
         </div>
         <div className="detail-preview" style={{maxWidth:460,marginInline:"auto",width:"100%"}}>
-          <StudioV2ProjectRenderer document={document} mediaUrls={item.mediaUrls} device="mobile" guest={{mode:"preview"}}/>
+          <StudioV2ProjectRenderer document={document.presentation==="editorial"?{...document,locale}:document} mediaUrls={item.mediaUrls} device="mobile" guest={{mode:"preview"}}/>
         </div>
       </div>
     </main>
