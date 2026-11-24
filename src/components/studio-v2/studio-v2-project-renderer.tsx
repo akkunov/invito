@@ -21,7 +21,8 @@ export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",pageFi
  useEffect(()=>{const el=container.current;if(!el)return;const update=()=>setWidth(Math.max(1,el.clientWidth));update();const observer=new ResizeObserver(update);observer.observe(el);return()=>observer.disconnect();},[]);
  const measure=useCallback((id:string,height:number)=>setMeasured(old=>old[actual]?.[id]===height?old:{...old,[actual]:{...old[actual],[id]:height}}),[actual]);
  const gilded=document.presentation==="gilded";
- const heritage=document.presentation==="heritage"||gilded;
+ const alpine=document.presentation==="alpine";
+ const heritage=document.presentation==="heritage"||gilded||alpine;
  const resolved=useMemo(()=>{
   const bound=resolveStyleDocument(bindDocument(document));
   const measurements=measured[actual]??{};
@@ -57,7 +58,7 @@ export function StudioV2ProjectRenderer({document,mediaUrls,device="auto",pageFi
     return <section key={page.id} id={editorial||heritage?`${sectionId}-${page.id}`:undefined} aria-label={editorial||heritage?navigationLabels[page.id]??page.name:page.name} data-preview-page={page.id} style={{position:"relative",margin:"0 auto",width:root.width*scale,maxWidth:heritage?"100%":undefined,height:root.height*scale,overflow:"hidden"}}>
       <div style={{position:"absolute",top:0,left:0,transformOrigin:"top left",transform:`scale(${scale})`}}>
        <StudioV2Artboard document={resolved} rootNodeId={page.rootNodeId} mediaUrls={mediaUrls} guest={guest} motionPlayback={guest.mode==="studio"?undefined:motionPlayback} onMeasure={measure}/>
-       {next&&<a href={`#${sectionId}-${next.id}`} className="v2-heritage-advance" style={{top:root.height-(gilded?113:95)}} aria-label={document.locale==="ru"?"К следующему разделу":"Кийинки бөлүмгө"}><ChevronDown size={gilded?22:20}/></a>}
+       {next&&<a href={`#${sectionId}-${next.id}`} className="v2-heritage-advance" style={{top:root.height-(alpine?145:gilded?113:95)}} aria-label={document.locale==="ru"?"К следующему разделу":"Кийинки бөлүмгө"}><ChevronDown size={alpine?24:gilded?22:20}/></a>}
       </div>
     </section>;
    })}

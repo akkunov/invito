@@ -28,13 +28,14 @@ function Countdown({target,locale,editorial,heritage,gilded}:{target:string;edit
 }
 function Rsvp({node,document,guest}:Props){
  const b=node.block;if(b.kind!=="rsvp")return null;
- return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={document.presentation==="heritage"||document.presentation==="gilded"} gilded={document.presentation==="gilded"}/>;
+ return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={document.presentation==="heritage"||document.presentation==="gilded"||document.presentation==="alpine"} gilded={document.presentation==="gilded"} alpine={document.presentation==="alpine"}/>;
 }
-function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded}:{editorial:boolean;heritage:boolean;gilded:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
+function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded,alpine}:{editorial:boolean;heritage:boolean;gilded:boolean;alpine:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
  const id=useId(),w=words[locale],copy=editorialWords[locale],nameRef=useRef<HTMLInputElement>(null);
  const heritageCopy=locale==="ru"
   ?{attendance:"Вы будете присутствовать?",yes:"Да, буду",no:"К сожалению, нет",submit:"Подтвердить участие",required:"Введите ваше имя"}
-  :{attendance:"Тойго келесизби?",yes:gilded?"Ооба, келем":"Ооба, барам",no:gilded?"Тилекке каршы, келбейм":"Тилекке каршы, бара албайм",submit:"Катышууну ырастоо",required:"Атыңызды жазыңыз"};
+  :{attendance:"Тойго келесизби?",yes:gilded||alpine?"Ооба, келем":"Ооба, барам",no:alpine?"Тилекке каршы, келе албайм":gilded?"Тилекке каршы, келбейм":"Тилекке каршы, бара албайм",submit:"Катышууну ырастоо",required:"Атыңызды жазыңыз"};
+ const showSubmitProgress=gilded||alpine;
  const attendanceRef=useRef<HTMLSelectElement>(null);
  const [name,setName]=useState(""),[attendance,setAttendance]=useState<""|"yes"|"no">(editorial?"":"yes"),[guests,setGuests]=useState(1),[status,setStatus]=useState<"idle"|"sending"|"preview"|"sent"|"error">("idle");
  const [challengeToken,setChallengeToken]=useState(""),[challengeReset,setChallengeReset]=useState(0);
@@ -60,18 +61,19 @@ function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded}:{editori
   }finally{busy.current=false;}
  }
  return <form className="v2-guest-form" noValidate onSubmit={submit}>
-  <label className="v2-guest-name">{!editorial&&!heritage&&w.name}<input aria-label={editorial||heritage?w.name:undefined} placeholder={editorial||heritage?w.name:undefined} ref={nameRef} autoComplete="name" disabled={inputDisabled} value={name} maxLength={120} required aria-invalid={status==="error"&&!name.trim()} aria-describedby={gilded&&status==="error"&&!name.trim()?id+"-name-error":id} onChange={e=>{setName(e.target.value);setStatus("idle");}}/></label>
+  <label className="v2-guest-name">{(alpine||!editorial&&!heritage)&&w.name}<input aria-label={!alpine&&(editorial||heritage)?w.name:undefined} placeholder={alpine?heritageCopy.required:editorial||heritage?w.name:undefined} ref={nameRef} autoComplete="name" disabled={inputDisabled} value={name} maxLength={120} required aria-invalid={status==="error"&&!name.trim()} aria-describedby={showSubmitProgress&&status==="error"&&!name.trim()?id+"-name-error":id} onChange={e=>{setName(e.target.value);setStatus("idle");}}/></label>
   {heritage&&status==="error"&&!name.trim()&&<p id={id+"-name-error"} className="v2-heritage-error" role="alert">{heritageCopy.required}</p>}
   {editorial?<select ref={attendanceRef} aria-label={copy.attendance} required aria-invalid={status==="error"&&!attendance} value={attendance} disabled={disabled} onChange={e=>{const value=e.target.value;setAttendance(value==="yes"||value==="no"?value:"");setStatus("idle");}}>
    <option value="" disabled>{copy.attendance}</option><option value="yes">{w.yes}</option><option value="no">{w.no}</option>
   </select>:<div className="v2-guest-options" role="group" aria-label={heritage?heritageCopy.attendance:block.title[locale]}>{heritage&&<strong>{heritageCopy.attendance}</strong>}{(["yes","no"] as const).map(v=><label key={v}><input type="radio" name={id} checked={attendance===v} disabled={inputDisabled} onChange={()=>{setAttendance(v);setStatus("idle");}}/>{heritage?heritageCopy[v]:w[v]}</label>)}</div>}
   {(editorial||attendance==="yes")&&<label>{!editorial&&w.guests}<select aria-label={editorial?w.guests:undefined} value={editorial&&attendance!=="yes"?0:Math.min(guests,block.maxGuests)} disabled={inputDisabled||attendance==="no"} onChange={e=>setGuests(Number(e.target.value))}>{editorial&&<option value={0} disabled>{w.guests}</option>}{Array.from({length:block.maxGuests},(_,i)=><option key={i+1} value={i+1}>{heritage?guestCount(i+1,locale):i+1}</option>)}</select>{heritage&&<ChevronDown size={18} className="v2-heritage-select-icon" aria-hidden="true"/>}</label>}
+  {alpine&&attendance==="no"&&<p className="v2-alpine-decline">{locale==="ru"?"При отказе число гостей не указывается.":"Келбесеңиз, коноктордун саны көрсөтүлбөйт."}</p>}
   <label className="v2-guest-honeypot" aria-hidden="true">Website<input ref={honeypot}
      name="website" tabIndex={-1} autoComplete="off"/></label>
   {challengeSiteKey&&<StudioTurnstile siteKey={challengeSiteKey} onToken={setChallengeToken}
     resetKey={challengeReset}/>}
-  <button type="submit" disabled={disabled} aria-busy={gilded&&status==="sending"?true:undefined}>{gilded&&status==="sending"&&<LoaderCircle size={18} className="v2-gilded-spinner" aria-hidden="true"/>}{status==="sending"?w.sending:heritage?heritageCopy.submit:editorial?copy.submit:w.submit}</button>
-  <div id={id} className="v2-guest-status" role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?w.sent:status==="error"&&(!heritage||name.trim())?w.error:guest.mode==="preview"&&!editorial&&!heritage?w.previewOnly:""}</div>
+  <button type="submit" disabled={disabled} aria-busy={showSubmitProgress&&status==="sending"?true:undefined}>{showSubmitProgress&&status==="sending"&&<LoaderCircle size={18} className="v2-gilded-spinner" aria-hidden="true"/>}{status==="sending"?w.sending:heritage?heritageCopy.submit:editorial?copy.submit:w.submit}</button>
+  <div id={id} className="v2-guest-status" data-error={alpine&&status==="error"&&!!name.trim()?true:undefined} role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?w.sent:status==="error"&&(!heritage||name.trim())?w.error:guest.mode==="preview"&&!editorial&&!heritage?w.previewOnly:""}</div>
  </form>;
 }
 function guestCount(count:number,locale:ProjectDocumentV2["locale"]){
@@ -139,7 +141,8 @@ export function InvitationBlockView(props:Props){
  const {node,document,guest}=props,b=node.block,w=words[document.locale],a=node.appearance;
  const editorial=document.presentation==="editorial";
  const gilded=document.presentation==="gilded";
- const heritage=document.presentation==="heritage"||gilded;
+ const alpine=document.presentation==="alpine";
+ const heritage=document.presentation==="heritage"||gilded||alpine;
  const measureRef=useRef<HTMLDivElement>(null);
  const {onMeasure}=props;
  useLayoutEffect(()=>{
@@ -151,17 +154,17 @@ export function InvitationBlockView(props:Props){
   report();
   return ()=>observer.disconnect();
  },[heritage,node.id,onMeasure]);
- const mapLabel=gilded?<><MapIcon size={24}/>{document.locale==="ru"?"Открыть карту":"Картаны ачуу"}<ExternalLink size={18}/></>:heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
+ const mapLabel=gilded||alpine?<><MapIcon size={alpine?22:24}/>{document.locale==="ru"?"Открыть карту":"Картаны ачуу"}<ExternalLink size={18}/></>:heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
  const style={fontFamily:editorial||heritage?"var(--font-ui), Arial, sans-serif":a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent} as CSSProperties;
  return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout&&b.layout!=="carousel"?" v2-guest-block-mosaic":"")} ref={measureRef} data-heritage-widget={heritage?b.kind:undefined} data-editorial-widget={editorial?b.kind:undefined} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
  {b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
  {b.kind==="rsvp"&&<Rsvp {...props}/>}
- {b.kind==="countdown"&&<Countdown target={countdownTarget(document,b)} locale={document.locale} editorial={editorial} heritage={heritage} gilded={gilded}/>}
+ {b.kind==="countdown"&&<Countdown target={countdownTarget(document,b)} locale={document.locale} editorial={editorial} heritage={heritage} gilded={gilded||alpine}/>}
  {b.kind==="location"&&(()=>{
   const address=locationAddress(document,b);
   if(!address.trim())return <p>{w.noAddress}</p>;
   const location=<>
-   {(editorial||heritage)&&<MapPin size={gilded?35:heritage?32:11} strokeWidth={gilded?1.7:undefined} aria-hidden="true"/>}
+   {(editorial||heritage)&&<MapPin size={alpine?34:gilded?35:heritage?32:11} strokeWidth={gilded?1.7:undefined} aria-hidden="true"/>}
    <p>{address}</p>
    {guest.mode==="studio"
     ?<span className="v2-guest-link">{mapLabel}</span>

@@ -20,11 +20,13 @@ const editorialMonths={
 const editorialDateParts=new Intl.DateTimeFormat("en-US",{
  day:"numeric",month:"numeric",year:"numeric",timeZone:"Asia/Bishkek",
 });
-function editorialDate(value:string,locale:Locale):string{
+const kyrgyzDateMonths=["январы","февралы","марты","апрели","майы","июну","июлу","августу","сентябры","октябры","ноябры","декабры"];
+function editorialDate(value:string,locale:Locale,longKyrgyz:boolean):string{
  const parts=editorialDateParts.formatToParts(new Date(value));
  const day=parts.find(part=>part.type==="day")?.value;
  const month=Number(parts.find(part=>part.type==="month")?.value);
  const year=parts.find(part=>part.type==="year")?.value;
+ if(longKyrgyz)return `${year}-жылдын ${day}-${kyrgyzDateMonths[month-1]}`.toLocaleUpperCase(locale);
  return `${day}${locale==="ky"?"-":" "}${editorialMonths[locale][month-1]} ${year}`.toLocaleUpperCase(locale);
 }
 export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
@@ -32,10 +34,13 @@ export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
  for(const [id,n] of Object.entries(nodes)){
   if(n.type==="text"&&n.bindingKey&&doc.values?.[n.bindingKey]){
    const binding=doc.values[n.bindingKey];
+   const longKyrgyzDate=doc.presentation==="alpine"&&doc.locale==="ky"&&binding.type==="date";
    const value=doc.presentation&&binding.type==="date"
-     ?editorialDate(binding.value,doc.locale)
+     ?editorialDate(binding.value,doc.locale,longKyrgyzDate)
      :bindingText(binding,doc.locale);
-   nodes[id]={...n,runs:[{text:value,style:{...n.runs[0].style}}]};
+   const style={...n.runs[0].style};
+   if(longKyrgyzDate)style.fontSize=Math.min(style.fontSize,19);
+   nodes[id]={...n,...(longKyrgyzDate?{letterSpacing:2}:{}),runs:[{text:value,style}]};
   }
  }
  return {...doc,nodes};

@@ -47,6 +47,8 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
   const node = document.nodes[id];
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
+  const fluidWidget=document.presentation==="alpine"&&options.guest?.mode!=="studio"&&node.type==="widget"
+    &&["rsvp","location","schedule"].includes(node.block.kind);
   switch (node.type) {
     case "frame":
       return <div key={id} data-studio-node={id} style={{
@@ -59,7 +61,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
         justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
         whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
       }}>
-        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={document.presentation==="heritage"||document.presentation==="gilded"} onMeasure={options.onMeasure}/></div>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={document.presentation==="heritage"||document.presentation==="gilded"||document.presentation==="alpine"} onMeasure={options.onMeasure}/></div>
         {options.editingId===id&&options.renderEditor?.(node)}
       </div>;
     case "image": {
@@ -74,7 +76,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       </div>;
     }
     case "widget":
-      return <div key={id} data-studio-node={id} style={{...style,overflow:"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls} onMeasure={options.onMeasure}/></div>;
+      return <div key={id} data-studio-node={id} style={{...style,overflow:fluidWidget?"visible":"hidden",pointerEvents:options.guest&&options.guest.mode!=="studio"?"auto":style.pointerEvents}}><InvitationBlockView node={node} document={document} guest={options.guest??{mode:"studio"}} mediaUrls={options.mediaUrls} onMeasure={options.onMeasure}/></div>;
     case "shape":
       return <div key={id} data-studio-node={id} style={{
         ...style, ...(node.visual?.stroke===undefined&&node.stroke?{border:`${node.strokeWidth}px solid ${node.stroke}`,outline:undefined,outlineOffset:undefined}:{}), transform:`rotate(${node.rotation}deg) ${contentTransform(node)}`,

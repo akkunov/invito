@@ -30,6 +30,11 @@ export function layoutHeritagePresentation(document:ProjectDocumentV2,width:numb
    const extra=expansions.find(source=>source.id===node.id)?.extra??0;
    growth=Math.max(growth,shift+extra);
    const next={...node,x:node.x*ratio,width:node.width*ratio,y:node.y+shift,height:node.height+extra};
+   if(document.presentation==="alpine"&&ratio<1&&node.type==="widget"&&node.block.kind==="rsvp"){
+    const marginAdjustment=Math.round((1-ratio)*40);
+    next.x-=marginAdjustment;
+    next.width+=marginAdjustment*2;
+   }
    if(next.type==="text"){
     const names=next.bindingKey==="coupleNames";
     const advance=names?Math.max(1,...next.runs.flatMap(run=>run.text.split("\n").map(lineAdvance))):1;
@@ -42,6 +47,13 @@ export function layoutHeritagePresentation(document:ProjectDocumentV2,width:numb
     });
    }
    nodes[node.id]=next;
+  }
+  if(document.presentation==="alpine"&&growth>0){
+   for(const node of children){
+    if(node.type==="image"&&node.x===0&&node.y===0&&node.width===root.width&&node.height===root.height){
+     nodes[node.id]={...nodes[node.id],height:node.height+growth};
+    }
+   }
   }
   nodes[root.id]={...root,width:root.width*ratio,height:root.height+growth};
  }
