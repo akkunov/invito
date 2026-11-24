@@ -1,4 +1,5 @@
-import {readFileSync, statSync} from "node:fs";
+import {readFileSync} from "node:fs";
+import {assertTemplateAssetSize} from "./template-asset-size.mjs";
 
 const [workspaceId] = process.argv.slice(2);
 const token = process.env.EVENTIQ_ACCESS_TOKEN;
@@ -19,7 +20,7 @@ if (pack.manifest.slug !== slug) throw new Error("Template package slug mismatch
 
 for (const asset of Object.values(pack.document.assets)) {
   const image = new URL("../public" + asset.storageKey, import.meta.url);
-  if (statSync(image).size !== asset.sizeBytes) throw new Error("Unexpected image size: " + asset.storageKey);
+  assertTemplateAssetSize(image, asset);
 }
 
 const catalog = await fetch(base + "/catalog/music");
