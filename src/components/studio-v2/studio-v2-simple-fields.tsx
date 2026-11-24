@@ -19,7 +19,7 @@ function NumberInput({value,min,max,onChange}:{value:number;min:number;max:numbe
 export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={},musicLibrary=false,onChange}:Props){
  const t=(ru:string,ky:string)=>copy(locale,ru,ky),title=f.label[locale];
  const binding=v?.kind==="binding"?v.value:undefined;
- const assets=Object.values(doc.assets);
+ const assets=Object.values(doc.assets).filter(asset=>!asset.decorative);
  const langs=(label:string,ky:string)=>locales.length>1?(label==="ru"?t("Русский","Орусча"):t("Кыргызский","Кыргызча")):ky;
  const assetURL=(asset:ProjectDocumentV2["assets"][string])=>asset.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+asset.storageKey:urls[asset.storageKey];
  const preview=(asset:ProjectDocumentV2["assets"][string])=><span className="se-media-thumb">{assetURL(asset)?<img loading="lazy" decoding="async" src={assetURL(asset)} alt=""/>:<span>{t("Нет превью","Сүрөт жок")}</span>}</span>;
@@ -95,7 +95,7 @@ export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={}
  case "schedule":{
   const items=v?.kind==="schedule"?v.items:[];
   const update=(i:number,item:typeof items[number])=>onChange({kind:"schedule",items:items.map((old,j)=>i===j?item:old)});
-  control=<div className="se-options">{items.map((item,i)=><div className="se-event" key={i}><label className="se-control"><span>{t("Время","Убакыт")}</span><input type="time" value={item.time} onChange={e=>{if(e.target.value)update(i,{...item,time:e.target.value});}}/></label>{locales.map(l=><label className="se-control" key={l}><span>{langs(l,t("Событие","Окуя"))}</span>{doc.presentation==="editorial"?<textarea rows={2} maxLength={500} value={item.label[l]} onChange={e=>update(i,{...item,label:{...item.label,[l]:e.target.value}})}/>: <input maxLength={500} value={item.label[l]} onChange={e=>update(i,{...item,label:{...item.label,[l]:e.target.value}})}/>}</label>)}<button className="se-text-button" onClick={()=>onChange({kind:"schedule",items:items.filter((_,j)=>i!==j)})}>{t("Удалить событие","Окуяны өчүрүү")}</button></div>)}<button className="se-secondary" disabled={items.length>=f.maxItems} onClick={()=>onChange({kind:"schedule",items:[...items,{time:"17:00",label:{ru:"",ky:""}}]})}>{t("Добавить событие","Окуя кошуу")}</button></div>;break;
+  control=<div className="se-options">{items.map((item,i)=><div className="se-event" key={i}><label className="se-control"><span>{t("Время","Убакыт")}</span><input type="time" value={item.time} onChange={e=>{if(e.target.value)update(i,{...item,time:e.target.value});}}/></label>{locales.map(l=><label className="se-control" key={l}><span>{langs(l,t("Событие","Окуя"))}</span>{doc.presentation?<textarea rows={2} maxLength={500} value={item.label[l]} onChange={e=>update(i,{...item,label:{...item.label,[l]:e.target.value}})}/>: <input maxLength={500} value={item.label[l]} onChange={e=>update(i,{...item,label:{...item.label,[l]:e.target.value}})}/>}</label>)}<button className="se-text-button" onClick={()=>onChange({kind:"schedule",items:items.filter((_,j)=>i!==j)})}>{t("Удалить событие","Окуяны өчүрүү")}</button></div>)}<button className="se-secondary" disabled={items.length>=f.maxItems} onClick={()=>onChange({kind:"schedule",items:[...items,{time:"17:00",label:{ru:"",ky:""}}]})}>{t("Добавить событие","Окуя кошуу")}</button></div>;break;
  }
  case "theme":{
   const swatch=(themeId:string|null,key:string,fallBack:string)=>{

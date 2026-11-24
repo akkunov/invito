@@ -67,8 +67,8 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
    if(v.letterSpacing!==undefined&&(!f.letterSpacingRange||v.letterSpacing<f.letterSpacingRange.min||v.letterSpacing>f.letterSpacingRange.max))reject("Межбуквенный интервал вне диапазона");
    break;
   }
-  case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
-  case "gallery":if(v.kind!=="gallery")return reject("Неверный тип");if(v.assetIds.length>f.maxPhotos||complete&&f.required&&!v.assetIds.length)reject("Недопустимое количество фото");v.assetIds.forEach(asset);break;
+  case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if(a.decorative)reject("Выберите фотографию");if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
+  case "gallery":if(v.kind!=="gallery")return reject("Неверный тип");if(v.assetIds.length>f.maxPhotos||complete&&f.required&&!v.assetIds.length)reject("Недопустимое количество фото");v.assetIds.forEach(id=>{if(asset(id).decorative)reject("Выберите фотографию");});break;
   case "schedule":if(v.kind!=="schedule")return reject("Неверный тип");if(v.items.length>f.maxItems||complete&&f.required&&!v.items.length)reject("Недопустимое количество событий");for(const item of v.items)requiredText(item.label);break;
   case "music":if(v.kind!=="music")return reject("Неверный тип");if(v.source&&!f.sources.includes(v.source)||complete&&f.required&&!v.source)reject("Музыка не входит в разрешённый список");break;
   case "rsvp":if(v.kind!=="rsvp")return reject("Неверный тип");if(v.maxGuests>f.maxGuests)reject("Превышен лимит гостей");break;
@@ -170,7 +170,7 @@ export function editableCandidates(doc:ProjectDocumentV2):EditableField[]{
   if(v.type==="boolean")fields.push({...c,kind:"boolean",key});
  }
  for(const n of Object.values(doc.nodes)){
-  if(n.type==="image"){fields.push({...common(n.layerName??doc.assets[n.assetId]?.name??"Фото","Сүрөт","photos"),kind:"image",nodeId:n.id,minWidth:1,minHeight:1});continue;}
+  if(n.type==="image"){if(doc.assets[n.assetId]?.decorative)continue;fields.push({...common(n.layerName??doc.assets[n.assetId]?.name??"Фото","Сүрөт","photos"),kind:"image",nodeId:n.id,minWidth:1,minHeight:1});continue;}
   if(n.type!=="widget")continue;const b=n.block,c=(section:EditableField["section"])=>common(b.title.ru||b.kind,b.title.ky||b.kind,section);
   if(b.kind==="gallery")fields.push({...c("photos"),kind:"gallery",nodeId:n.id,maxPhotos:4});
   if(b.kind==="schedule")fields.push({...c("schedule"),kind:"schedule",nodeId:n.id,maxItems:20});

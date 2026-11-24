@@ -32,7 +32,7 @@ export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
  for(const [id,n] of Object.entries(nodes)){
   if(n.type==="text"&&n.bindingKey&&doc.values?.[n.bindingKey]){
    const binding=doc.values[n.bindingKey];
-   const value=doc.presentation==="editorial"&&binding.type==="date"
+   const value=doc.presentation&&binding.type==="date"
      ?editorialDate(binding.value,doc.locale)
      :bindingText(binding,doc.locale);
    nodes[id]={...n,runs:[{text:value,style:{...n.runs[0].style}}]};

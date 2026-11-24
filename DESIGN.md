@@ -141,3 +141,12 @@ styles and runtime tokens live in customer-mobile-editor.css:
 --ue-paper #faf8f6, --ue-line #e7e1dc, --ue-ink #171918,
 --ue-olive #526237, --ue-orange #ed713f. Keep desktop and admin unchanged.
 Use the invitation as real artwork, not a flattened reference image.
+
+### Kyrgyz Heritage invitation
+
+The Kyrgyz Heritage package uses four 390 px artboards with a warm paper texture,
+burgundy ornaments, upright Cyrillic serif names, and Onest for body copy.
+Its gallery uses a wide photo, a pair, and a wide photo. Locked ornaments and
+the mountain illustration are excluded from photo personalization.
+The guest form retains full-size controls on narrow screens and pushes the
+illustration down when feedback or localized content needs more room.

@@ -3,7 +3,7 @@ import {readFileSync, statSync} from "node:fs";
 const [workspaceId] = process.argv.slice(2);
 const token = process.env.EVENTIQ_ACCESS_TOKEN;
 if (!workspaceId || !token) {
-  throw new Error("Usage: EVENTIQ_ACCESS_TOKEN=… node scripts/import-eventiq-mobile.mjs <workspaceId>");
+  throw new Error("Usage: EVENTIQ_ACCESS_TOKEN=… node scripts/import-eventiq-mobile.mjs <workspaceId> [packageSlug]");
 }
 
 const api = new URL(process.env.EVENTIQ_API_BASE ?? "http://localhost:4000/api/v1");
@@ -12,7 +12,10 @@ if ((!localHttp && api.protocol !== "https:") || api.username || api.password ||
   throw new Error("Use HTTPS for a remote Eventiq API.");
 }
 const base = api.href.replace(/\/$/, "");
-const pack = JSON.parse(readFileSync(new URL("../templates/packages/eventiq-mobile.v1.json", import.meta.url), "utf8"));
+const slug = process.argv[3] ?? "eventiq-mobile";
+if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Invalid template package slug.");
+const pack = JSON.parse(readFileSync(new URL("../templates/packages/" + slug + ".v1.json", import.meta.url), "utf8"));
+if (pack.manifest.slug !== slug) throw new Error("Template package slug mismatch.");
 
 for (const asset of Object.values(pack.document.assets)) {
   const image = new URL("../public" + asset.storageKey, import.meta.url);
@@ -38,7 +41,7 @@ const response = await fetch(base + "/workspaces/" + encodeURIComponent(workspac
   headers: {"Authorization": "Bearer " + token, "Content-Type": "application/json"},
   body: JSON.stringify(pack),
 });
-if (response.status === 409) throw new Error("The workspace already contains the eventiq-mobile template.");
+if (response.status === 409) throw new Error("The workspace already contains the " + slug + " template.");
 if (!response.ok) throw new Error("Template import returned HTTP " + response.status + ": " + await response.text());
-const {id, slug, latestVersion} = await response.json();
-console.log(JSON.stringify({id, slug, latestVersion}));
+const {id, slug: importedSlug, latestVersion} = await response.json();
+console.log(JSON.stringify({id, slug: importedSlug, latestVersion}));

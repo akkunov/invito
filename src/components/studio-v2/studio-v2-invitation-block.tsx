@@ -1,11 +1,11 @@
 "use client";
-import {useEffect,useId,useRef,useState,type CSSProperties,type FormEvent} from "react";
-import {ExternalLink, MapPin, Music2, Pause} from "lucide-react";
+import {useEffect,useLayoutEffect,useId,useRef,useState,type CSSProperties,type FormEvent} from "react";
+import {ChevronDown, ExternalLink, Map as MapIcon, MapPin, Music2, Pause} from "lucide-react";
 import Image from "next/image";
 import {StudioTurnstile} from "./studio-v2-turnstile";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
 import {countdownParts,countdownTarget,locationAddress,mapUrl,submitGuestResponse,type GuestMode,type WidgetNode} from "@/features/studio-v2/core/invitation-behavior.ts";
-type Props={node:WidgetNode;document:ProjectDocumentV2;guest:GuestMode;mediaUrls?:Readonly<Record<string,string>>};
+type Props={node:WidgetNode;document:ProjectDocumentV2;guest:GuestMode;mediaUrls?:Readonly<Record<string,string>>;onMeasure?:(id:string,height:number)=>void};
 const words={
  ru:{name:"Ваше имя",yes:"Буду",no:"Не смогу",guests:"Количество гостей",submit:"Подтвердить",sending:"Отправка…",preview:"Проверка формы успешна. Ответ не отправлен.",sent:"Спасибо! Ответ принят.",error:"Проверьте имя и количество гостей. Если данные верны, попробуйте позже.",closed:"Приём ответов завершён",unavailable:"Приём ответов пока недоступен",days:"дни",hours:"часы",minutes:"мин",seconds:"сек",map:"Открыть карту",noAddress:"Укажите адрес",noPhotos:"Добавьте фотографии",previous:"Предыдущее фото",next:"Следующее фото",play:"Включить музыку",pause:"Остановить музыку",noMusic:"Добавьте аудиофайл",audioError:"Не удалось воспроизвести музыку",noSchedule:"Добавьте события",previewOnly:"Предпросмотр — данные не отправляются"},
  ky:{name:"Атыңыз",yes:"Келем",no:"Келе албайм",guests:"Коноктордун саны",submit:"Ырастоо",sending:"Жөнөтүлүүдө…",preview:"Форма текшерилди. Жооп жөнөтүлгөн жок.",sent:"Рахмат! Жообуңуз кабыл алынды.",error:"Атыңызды жана коноктордун санын текшериңиз. Маалымат туура болсо, кийин кайра аракет кылыңыз.",closed:"Жооп кабыл алуу аяктады",unavailable:"Азыр жооп кабыл алынбайт",days:"күн",hours:"саат",minutes:"мүн",seconds:"сек",map:"Картаны ачуу",noAddress:"Даректи жазыңыз",noPhotos:"Сүрөттөрдү кошуңуз",previous:"Мурунку сүрөт",next:"Кийинки сүрөт",play:"Музыканы ойнотуу",pause:"Музыканы токтотуу",noMusic:"Аудиофайл кошуңуз",audioError:"Музыканы ойнотуу мүмкүн болгон жок",noSchedule:"Иш-чараларды кошуңуз",previewOnly:"Алдын ала көрүү — маалымат жөнөтүлбөйт"}
@@ -14,17 +14,27 @@ const editorialWords={
  ru:{attendance:"Будете ли вы присутствовать?",submit:"Отправить ответ",days:"дня",hours:"часов",minutes:"минут",seconds:"секунды",map:"Показать на карте"},
  ky:{attendance:"Тойго келесизби?",submit:"Жооп жөнөтүү",days:"күн",hours:"саат",minutes:"мүнөт",seconds:"секунд",map:"Картадан көрүү"},
 };
-function Countdown({target,locale,editorial}:{target:string;editorial:boolean;locale:ProjectDocumentV2["locale"]}){
- const [now,setNow]=useState<number|null>(null);useEffect(()=>{const tick=()=>setNow(Date.now());tick();const timer=window.setInterval(tick,1000);return()=>window.clearInterval(timer);},[]);
- const p=now===null?null:countdownParts(target,now),w=editorial?editorialWords[locale]:words[locale];
+function Countdown({target,locale,editorial,heritage}:{target:string;editorial:boolean;heritage:boolean;locale:ProjectDocumentV2["locale"]}){
+ const [now,setNow]=useState<number|null>(null);
+ useEffect(()=>{
+  const deadline=Date.parse(target);
+  const tick=()=>{const current=Date.now();setNow(current);if(current>=deadline)window.clearInterval(timer);};
+  const timer=window.setInterval(tick,1000);
+  tick();
+  return()=>window.clearInterval(timer);
+ },[target]);
+ const p=now===null?null:countdownParts(target,now),w=heritage?{...editorialWords[locale],days:locale==="ru"?"дней":"күн",seconds:"секунд"}:editorial?editorialWords[locale]:words[locale];
  return <div className="v2-countdown-grid">{(["days","hours","minutes","seconds"] as const).map(key=><div key={key}><strong>{p?String(p[key]).padStart(2,"0"):"–"}</strong><span>{w[key]}</span></div>)}</div>;
 }
 function Rsvp({node,document,guest}:Props){
  const b=node.block;if(b.kind!=="rsvp")return null;
- return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"}/>;
+ return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={document.presentation==="heritage"}/>;
 }
-function RsvpForm({block,nodeId,locale,guest,editorial}:{editorial:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
+function RsvpForm({block,nodeId,locale,guest,editorial,heritage}:{editorial:boolean;heritage:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
  const id=useId(),w=words[locale],copy=editorialWords[locale],nameRef=useRef<HTMLInputElement>(null);
+ const heritageCopy=locale==="ru"
+  ?{attendance:"Вы будете присутствовать?",yes:"Да, буду",no:"К сожалению, нет",submit:"Подтвердить участие",required:"Введите ваше имя"}
+  :{attendance:"Тойго келесизби?",yes:"Ооба, барам",no:"Тилекке каршы, бара албайм",submit:"Катышууну ырастоо",required:"Атыңызды жазыңыз"};
  const attendanceRef=useRef<HTMLSelectElement>(null);
  const [name,setName]=useState(""),[attendance,setAttendance]=useState<""|"yes"|"no">(editorial?"":"yes"),[guests,setGuests]=useState(1),[status,setStatus]=useState<"idle"|"sending"|"preview"|"sent"|"error">("idle");
  const [challengeToken,setChallengeToken]=useState(""),[challengeReset,setChallengeReset]=useState(0);
@@ -33,8 +43,9 @@ function RsvpForm({block,nodeId,locale,guest,editorial}:{editorial:boolean;block
  const closed=now!==null&&!!block.deadline&&now>=Date.parse(block.deadline);
  const unavailable=guest.mode==="live"&&(!guest.submitRsvp||guest.rsvpEnabled===false);
  const challengeSiteKey=guest.mode==="live"?guest.turnstileSiteKey:undefined;
- const disabled=guest.mode==="studio"||closed||unavailable||status==="sending"||status==="sent"||
-   (!!challengeSiteKey&&!challengeToken);
+ const fieldsDisabled=guest.mode==="studio"||closed||unavailable||status==="sending"||status==="sent";
+ const disabled=fieldsDisabled||!!challengeSiteKey&&!challengeToken;
+ const inputDisabled=heritage?fieldsDisabled:disabled;
  async function submit(e:FormEvent){
   e.preventDefault();if(disabled||busy.current)return;
   if(!name.trim()){setStatus("error");nameRef.current?.focus();return;}
@@ -49,18 +60,23 @@ function RsvpForm({block,nodeId,locale,guest,editorial}:{editorial:boolean;block
   }finally{busy.current=false;}
  }
  return <form className="v2-guest-form" noValidate onSubmit={submit}>
-  <label className="v2-guest-name">{!editorial&&w.name}<input aria-label={editorial?w.name:undefined} placeholder={editorial?w.name:undefined} ref={nameRef} autoComplete="name" disabled={disabled} value={name} maxLength={120} required aria-invalid={status==="error"&&!name.trim()} aria-describedby={id} onChange={e=>{setName(e.target.value);setStatus("idle");}}/></label>
+  <label className="v2-guest-name">{!editorial&&!heritage&&w.name}<input aria-label={editorial||heritage?w.name:undefined} placeholder={editorial||heritage?w.name:undefined} ref={nameRef} autoComplete="name" disabled={inputDisabled} value={name} maxLength={120} required aria-invalid={status==="error"&&!name.trim()} aria-describedby={id} onChange={e=>{setName(e.target.value);setStatus("idle");}}/></label>
+  {heritage&&status==="error"&&!name.trim()&&<p className="v2-heritage-error" role="alert">{heritageCopy.required}</p>}
   {editorial?<select ref={attendanceRef} aria-label={copy.attendance} required aria-invalid={status==="error"&&!attendance} value={attendance} disabled={disabled} onChange={e=>{const value=e.target.value;setAttendance(value==="yes"||value==="no"?value:"");setStatus("idle");}}>
    <option value="" disabled>{copy.attendance}</option><option value="yes">{w.yes}</option><option value="no">{w.no}</option>
-  </select>:<div className="v2-guest-options" role="group" aria-label={block.title[locale]}>{(["yes","no"] as const).map(v=><label key={v}><input type="radio" name={id} checked={attendance===v} disabled={disabled} onChange={()=>{setAttendance(v);setStatus("idle");}}/>{w[v]}</label>)}</div>}
-  {(editorial||attendance==="yes")&&<label>{!editorial&&w.guests}<select aria-label={editorial?w.guests:undefined} value={editorial&&attendance!=="yes"?0:Math.min(guests,block.maxGuests)} disabled={disabled||attendance==="no"} onChange={e=>setGuests(Number(e.target.value))}>{editorial&&<option value={0} disabled>{w.guests}</option>}{Array.from({length:block.maxGuests},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}</select></label>}
+  </select>:<div className="v2-guest-options" role="group" aria-label={heritage?heritageCopy.attendance:block.title[locale]}>{heritage&&<strong>{heritageCopy.attendance}</strong>}{(["yes","no"] as const).map(v=><label key={v}><input type="radio" name={id} checked={attendance===v} disabled={inputDisabled} onChange={()=>{setAttendance(v);setStatus("idle");}}/>{heritage?heritageCopy[v]:w[v]}</label>)}</div>}
+  {(editorial||attendance==="yes")&&<label>{!editorial&&w.guests}<select aria-label={editorial?w.guests:undefined} value={editorial&&attendance!=="yes"?0:Math.min(guests,block.maxGuests)} disabled={inputDisabled||attendance==="no"} onChange={e=>setGuests(Number(e.target.value))}>{editorial&&<option value={0} disabled>{w.guests}</option>}{Array.from({length:block.maxGuests},(_,i)=><option key={i+1} value={i+1}>{heritage?guestCount(i+1,locale):i+1}</option>)}</select>{heritage&&<ChevronDown size={18} className="v2-heritage-select-icon" aria-hidden="true"/>}</label>}
   <label className="v2-guest-honeypot" aria-hidden="true">Website<input ref={honeypot}
      name="website" tabIndex={-1} autoComplete="off"/></label>
   {challengeSiteKey&&<StudioTurnstile siteKey={challengeSiteKey} onToken={setChallengeToken}
     resetKey={challengeReset}/>}
-  <button type="submit" disabled={disabled}>{status==="sending"?w.sending:editorial?copy.submit:w.submit}</button>
-  <div id={id} className="v2-guest-status" role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?w.sent:status==="error"?w.error:guest.mode==="preview"&&!editorial?w.previewOnly:""}</div>
+  <button type="submit" disabled={disabled}>{status==="sending"?w.sending:heritage?heritageCopy.submit:editorial?copy.submit:w.submit}</button>
+  <div id={id} className="v2-guest-status" role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?w.sent:status==="error"&&(!heritage||name.trim())?w.error:guest.mode==="preview"&&!editorial&&!heritage?w.previewOnly:""}</div>
  </form>;
+}
+function guestCount(count:number,locale:ProjectDocumentV2["locale"]){
+ if(locale==="ky")return `${count} конок`;
+ return `${count} ${count===1?"гость":count<5?"гостя":"гостей"}`;
 }
 function MosaicGallery({node,document,guest,mediaUrls}:Props){
  const dialog=useRef<HTMLDialogElement>(null),touchStart=useRef<number|null>(null);
@@ -73,7 +89,7 @@ function MosaicGallery({node,document,guest,mediaUrls}:Props){
  function move(delta:number){if(assets.length)setIndex(i=>(i+delta+assets.length)%assets.length);}
  if(!active)return <p>{w.noPhotos}</p>;
  return <>
-   <div className="v2-editorial-mosaic" data-count={assets.length}>
+   <div className="v2-editorial-mosaic" data-layout={b.layout} data-count={assets.length}>
     {assets.map((asset,i)=><button type="button" key={asset.id} disabled={guest.mode==="studio"} aria-label={(ru?"Открыть фото ":"Сүрөттү ачуу ")+(i+1)}
       onClick={()=>{setIndex(i);dialog.current?.showModal();}}>
       {url(asset)?<Image unoptimized fill src={url(asset)!} alt={asset.name} sizes="(max-width: 600px) 50vw, 600px"/>:<span>{asset.name}</span>}
@@ -122,10 +138,38 @@ function Music({source,locale,guest,editorial}:{source:string;editorial:boolean;
 export function InvitationBlockView(props:Props){
  const {node,document,guest}=props,b=node.block,w=words[document.locale],a=node.appearance;
  const editorial=document.presentation==="editorial";
- const mapLabel=editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
- const style={fontFamily:editorial?"var(--font-ui), Arial, sans-serif":a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent} as CSSProperties;
- return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout==="mosaic"?" v2-guest-block-mosaic":"")} data-editorial-widget={editorial?b.kind:undefined} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
+ const heritage=document.presentation==="heritage";
+ const measureRef=useRef<HTMLDivElement>(null);
+ const {onMeasure}=props;
+ useLayoutEffect(()=>{
+  const content=measureRef.current?.querySelector<HTMLElement>("form, .v2-guest-schedule, .v2-heritage-location");
+  if(!heritage||!content||!onMeasure)return;
+  const report=()=>onMeasure(node.id,content.offsetHeight);
+  const observer=new ResizeObserver(report);
+  observer.observe(content);
+  report();
+  return ()=>observer.disconnect();
+ },[heritage,node.id,onMeasure]);
+ const mapLabel=heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
+ const style={fontFamily:editorial||heritage?"var(--font-ui), Arial, sans-serif":a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent} as CSSProperties;
+ return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout&&b.layout!=="carousel"?" v2-guest-block-mosaic":"")} ref={measureRef} data-heritage-widget={heritage?b.kind:undefined} data-editorial-widget={editorial?b.kind:undefined} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
  {b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
- {b.kind==="rsvp"?<Rsvp {...props}/>:b.kind==="countdown"?<Countdown target={countdownTarget(document,b)} locale={document.locale} editorial={editorial}/>:b.kind==="location"?(()=>{const address=locationAddress(document,b);return address.trim()?<>{editorial&&<MapPin size={11} aria-hidden="true"/>}<p>{address}</p>{guest.mode==="studio"?<span className="v2-guest-link">{mapLabel}</span>:<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{mapLabel}</a>}</>:<p>{w.noAddress}</p>;})():b.kind==="gallery"?(b.layout==="mosaic"?<MosaicGallery {...props}/>:<Gallery {...props}/>):b.kind==="music"?<Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source} locale={document.locale} guest={guest} editorial={editorial}/>:b.kind==="schedule"?<div className="v2-guest-schedule">{b.items.length?b.items.map((item,i)=><div key={i}><time>{item.time}</time><span>{item.label[document.locale]}</span></div>):<p>{w.noSchedule}</p>}</div>:null}
+ {b.kind==="rsvp"&&<Rsvp {...props}/>}
+ {b.kind==="countdown"&&<Countdown target={countdownTarget(document,b)} locale={document.locale} editorial={editorial} heritage={heritage}/>}
+ {b.kind==="location"&&(()=>{
+  const address=locationAddress(document,b);
+  if(!address.trim())return <p>{w.noAddress}</p>;
+  const location=<>
+   {(editorial||heritage)&&<MapPin size={heritage?32:11} aria-hidden="true"/>}
+   <p>{address}</p>
+   {guest.mode==="studio"
+    ?<span className="v2-guest-link">{mapLabel}</span>
+    :<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{mapLabel}</a>}
+  </>;
+  return heritage?<div className="v2-heritage-location">{location}</div>:location;
+ })()}
+ {b.kind==="gallery"&&(b.layout&&b.layout!=="carousel"?<MosaicGallery {...props}/>:<Gallery {...props}/>)}
+ {b.kind==="music"&&<Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source} locale={document.locale} guest={guest} editorial={editorial||heritage}/>}
+ {b.kind==="schedule"&&<div className="v2-guest-schedule">{b.items.length?b.items.map((item,i)=><div key={i}><time>{item.time}</time><span>{item.label[document.locale]}</span></div>):<p>{w.noSchedule}</p>}</div>}
  </div>;
 }

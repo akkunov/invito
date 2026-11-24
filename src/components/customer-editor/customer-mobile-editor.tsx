@@ -244,7 +244,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     const names:Record<string,{ru:string;ky:string}>={
       cover:{ru:"Обложка",ky:"Мукаба"},letter:{ru:"Приглашение",ky:"Чакыруу"},
       details:{ru:"Дата и место",ky:"Күнү жана жери"},program:{ru:"Программа",ky:"Программа"},
-      memories:{ru:"Галерея",ky:"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
+      memories:{ru:"Галерея",ky:"Галерея"},invitation:{ru:"Приглашение и программа",ky:"Чакыруу жана тойдун программасы"},
+      gallery:{ru:page.name,ky:document.presentation==="heritage"?"Галерея жана той өтүүчү жер":"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
     };
     return patch.sections?.names?.[page.id]??names[page.id]?.[locale]??(page.name.includes("/")?page.name.split("/").slice(1).join("/").trim():page.name);
   };

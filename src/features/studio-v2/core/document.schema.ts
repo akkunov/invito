@@ -112,6 +112,7 @@ export const mediaAssetRefSchema = z.strictObject({
   sizeBytes: z.number().int().min(0).max(50_000_000),
   storageKey: z.string().min(1).max(400).regex(/^(?:\/images\/[a-zA-Z0-9_./-]+|local:[a-zA-Z0-9_-]+|asset:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/).refine(key=>!key.includes(".."),"Unsafe asset path"),
   folder: z.string().max(80).optional(),
+  decorative: z.boolean().optional(),
   pixelWidth: z.number().int().min(1).max(4096).optional(),
   pixelHeight: z.number().int().min(1).max(4096).optional(),
 });
@@ -122,7 +123,7 @@ const variableSchema = z.strictObject({
 });
 export const projectDocumentSchema = z.strictObject({
   schemaVersion: z.literal(2),
-  presentation: z.literal("editorial").optional(),
+  presentation: z.enum(["editorial","heritage"]).optional(),
   id: idSchema,
   revision: z.number().int().min(0),
   locale: z.enum(["ru", "ky"]),
