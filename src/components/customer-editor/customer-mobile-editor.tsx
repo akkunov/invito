@@ -18,6 +18,7 @@ import {CustomerCloudControls} from "./customer-cloud-controls";
 import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
 import {UniversalMobileEditor} from "./universal-mobile-editor";
+import {UniversalSectionManager} from "./universal-section-manager";
 
 type Step="main"|"event"|"appearance"|"publish";
 const steps:readonly Step[]=["main","event","appearance","publish"];
@@ -244,14 +245,14 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
       details:{ru:"Дата и место",ky:"Күнү жана жери"},program:{ru:"Программа",ky:"Программа"},
       memories:{ru:"Галерея",ky:"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
     };
-    return names[page.id]?.[locale]??(page.name.includes("/")?page.name.split("/").slice(1).join("/").trim():page.name);
+    return patch.sections?.names?.[page.id]??names[page.id]?.[locale]??(page.name.includes("/")?page.name.split("/").slice(1).join("/").trim():page.name);
   };
   const sectionOrder=patch.sections?.order??source.pages.map(page=>page.id);
   const hiddenSections=patch.sections?.hidden??[];
   const canHide=(id:string)=>Boolean(contract.sectionEditing?.hideablePageIds.includes(id));
   const canMove=(id:string)=>Boolean(contract.sectionEditing?.reorderablePageIds.includes(id));
   const saveSections=(order:string[],hidden:string[])=>{
-    const candidate:PersonalizationPatch={...patch,sections:{order,hidden}};
+    const candidate:PersonalizationPatch={...patch,sections:{...patch.sections,order,hidden}};
     try{
       personalizeDocument(source,contract,candidate,assetsForPatch(candidate,customerAssets),true);
       const currentId=visiblePages[activePageIndex]?.id;
@@ -259,6 +260,12 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
       setActiveMobilePage(Math.max(0,visibleNext.indexOf(currentId??"")));
       commitPatch(candidate);setWarning("");
     }catch(error){setWarning(error instanceof Error?error.message:"Invalid sections");}
+  };
+  const renameSection=(id:string,name:string)=>{
+    if(!contract.sectionEditing?.renameablePageIds?.includes(id))return;
+    const candidate:PersonalizationPatch={...patch,sections:{order:[...sectionOrder],hidden:[...hiddenSections],names:{...patch.sections?.names,[id]:name}}};
+    try{personalizeDocument(source,contract,candidate,assetsForPatch(candidate,customerAssets),true);commitPatch(candidate);setWarning("");}
+    catch(error){setWarning(error instanceof Error?error.message:"Invalid section name");}
   };
   const toggleSection=(id:string)=>{
     if(!canHide(id))return;
@@ -505,43 +512,20 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           </button>
         </footer>
       </section>}
-    overlay={<>{mobileSectionsOpen&&<section className="ce-mobile-sections-screen" aria-label={t.mobileSectionsTitle}>
-      <header>
-        <button type="button" aria-label={t.back} onClick={()=>{setMobileSectionsOpen(false);mobileTriggerRef.current?.focus();}}><ArrowLeft size={21}/></button>
-        <h2>{t.mobileSectionsTitle}</h2>
-        <button type="button" className="ce-mobile-section-add" disabled={!hiddenSections.length} title={hiddenSections.length?t.sections:t.mobileLocked}
-          aria-label={locale==="ru"?"Показать скрытую секцию":"Жашырылган бөлүмдү көрсөтүү"}
-          onClick={()=>{const id=hiddenSections[0];if(id)toggleSection(id);}}><Plus size={20}/></button>
-      </header>
-      <div className="ce-mobile-sections-list">
-        {document.pages.map((page,index)=>{
-          const root=document.nodes[page.rootNodeId];
-          const firstImage=root?.type==="frame"?root.children.map(id=>document.nodes[id]).find(node=>node?.type==="image"):undefined;
-          const photo=firstImage?.type==="image"?document.assets[firstImage.assetId]:undefined;
-          const url=photo?.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+photo.storageKey:photo?mergedUrls[photo.storageKey]:undefined;
-          const hidden=root?.visible===false;
-          const canReorder=canMove(page.id);
-          const firstMovable=document.pages.findIndex(item=>canMove(item.id));
-          const lastMovable=document.pages.findLastIndex(item=>canMove(item.id));
-          return <div className={"ce-mobile-section-card"+(visiblePages[activePageIndex]?.id===page.id?" active":"")+(hidden?" is-hidden":"")} key={page.id}>
-            <button type="button" className="ce-mobile-section-select" onClick={()=>hidden&&canHide(page.id)?toggleSection(page.id):jumpPreview(page.id)}>
-              <span className="ce-mobile-section-thumbnail">{url?<img src={url} alt="" loading="lazy"/>:<Layers size={21}/>}</span>
-              <span className="ce-mobile-section-title"><small>{String(index+1).padStart(2,"0")}</small>{pageLabel(page.id)}</span>
-            </button>
-            <button type="button" className="ce-mobile-section-eye"
-              aria-label={(hidden?(locale==="ru"?"Показать":"Көрсөтүү"):canHide(page.id)?(locale==="ru"?"Скрыть":"Жашыруу"):t.mobileViewPage)+": "+pageLabel(page.id)}
-              aria-pressed={!hidden}
-              onClick={()=>canHide(page.id)?toggleSection(page.id):jumpPreview(page.id)}>
-              {hidden?<EyeOff size={20}/>:<Eye size={20}/>}
-            </button>
-            <div className="ce-mobile-section-reorder">
-              <button type="button" disabled={!canReorder||index<=firstMovable} onClick={()=>moveSection(page.id,-1)} aria-label={(locale==="ru"?"Выше":"Жогору")+": "+pageLabel(page.id)}><ArrowUp size={15}/></button>
-              <button type="button" disabled={!canReorder||index>=lastMovable} onClick={()=>moveSection(page.id,1)} aria-label={(locale==="ru"?"Ниже":"Төмөн")+": "+pageLabel(page.id)}><ArrowDown size={15}/></button>
-            </div>
-          </div>;
-        })}
-        <p className="ce-mobile-sections-help"><LockKeyhole size={16}/>{t.mobileSectionsHint}</p>
-      </div>
-    </section>}</>}
+    overlay={mobileSectionsOpen&&<UniversalSectionManager
+      locale={locale} activeId={visiblePages[activePageIndex]?.id}
+      sections={document.pages.map((page,index)=>{
+        const root=document.nodes[page.rootNodeId];
+        const image=root?.type==="frame"?root.children.map(id=>document.nodes[id]).find(node=>node?.type==="image"):undefined;
+        const asset=image?.type==="image"?document.assets[image.assetId]:undefined;
+        const thumbnail=asset?.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+asset.storageKey:asset?mergedUrls[asset.storageKey]:undefined;
+        return {id:page.id,name:pageLabel(page.id),thumbnail,visible:root?.visible!==false,canToggle:canHide(page.id),
+          canMoveUp:canMove(page.id)&&index>document.pages.findIndex(item=>canMove(item.id)),
+          canMoveDown:canMove(page.id)&&index<document.pages.findLastIndex(item=>canMove(item.id)),
+          canRename:Boolean(contract.sectionEditing?.renameablePageIds?.includes(page.id))};
+      })}
+      onClose={()=>{setMobileSectionsOpen(false);mobileTriggerRef.current?.focus();}}
+      onOpen={jumpPreview} onToggle={toggleSection} onMove={moveSection} onRename={renameSection}
+      onAdd={hiddenSections.length?()=>toggleSection(hiddenSections[0]):undefined}/>}
   />;
 }
