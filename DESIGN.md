@@ -129,3 +129,15 @@ restyle it with product UI CSS. The editor interface uses upright
 readable UI type. Preserve native field hit targets, visible focus,
 RU/KY labels and reduced-motion behavior. Desktop remains on its
 existing two-column layout until a separately approved iteration.
+
+
+## Universal mobile editor — reference-aligned chrome
+
+The canonical phone workspace is now `UniversalMobileEditor`, with
+`UniversalSectionManager` for section navigation/properties and
+`MobileTypographyControls` for approved text styling. Legacy and Studio v2
+document adapters use these shared components. The shared workspace
+styles and runtime tokens live in customer-mobile-editor.css:
+--ue-paper #faf8f6, --ue-line #e7e1dc, --ue-ink #171918,
+--ue-olive #526237, --ue-orange #ed713f. Keep desktop and admin unchanged.
+Use the invitation as real artwork, not a flattened reference image.
