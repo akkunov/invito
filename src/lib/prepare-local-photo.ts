@@ -1,16 +1,14 @@
 /** Downscale and strip metadata from a user image before local draft storage. */
 import type { Locale } from "@/i18n/locales";
+import {prepareCustomerPhoto} from "@/features/invitations/prepare-customer-photo";
 
 export async function prepareLocalPhoto(file: File, locale: Locale, maxSide = 1400, maxCharacters = 900_000): Promise<string> {
   const message = (ru: string, ky: string) => locale === "ru" ? ru : ky;
-  if (!(["image/jpeg", "image/png", "image/webp", "image/avif"] as string[]).includes(file.type)) {
-    throw new Error(message("Поддерживаются JPEG, PNG, WebP и AVIF.", "JPEG, PNG, WebP жана AVIF форматтары колдоого алынат."));
-  }
-  if (file.size > 10 * 1024 * 1024) {
-    throw new Error(message("Размер фотографии должен быть не больше 10 МБ.", "Сүрөттүн өлчөмү 10 МБдан ашпашы керек."));
-  }
+  let prepared:File;
+  try{prepared=await prepareCustomerPhoto(file,{minWidth:1,minHeight:1,maxEdge:maxSide});}
+  catch{throw Error(message("Не удалось прочитать фотографию. Выберите другой файл.","Сүрөт ачылган жок. Башка файлды тандаңыз."));}
 
-  const objectUrl = URL.createObjectURL(file);
+  const objectUrl = URL.createObjectURL(prepared);
   try {
     const photo = new Image();
     photo.src = objectUrl;
@@ -31,7 +29,7 @@ export async function prepareLocalPhoto(file: File, locale: Locale, maxSide = 14
       const result = canvas.toDataURL("image/jpeg", quality);
       if (result.length <= maxCharacters) return result;
     }
-    throw new Error(message("Слишком сложное изображение. Выберите фотографию меньшего разрешения.", "Сүрөт өтө чоң. Сапаты төмөнүрөөк сүрөт тандаңыз."));
+    throw new Error(message("Не удалось сжать фотографию для локального хранения.", "Сүрөттү жергиликтүү сактоо үчүн кысуу мүмкүн болгон жок."));
   } catch (error) {
     if (error instanceof Error) throw error;
     throw new Error(message("Не удалось обработать фотографию.", "Сүрөттү иштетүү мүмкүн болгон жок."));
