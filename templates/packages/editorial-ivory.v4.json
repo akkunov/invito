@@ -2858,6 +2858,14 @@
         "letter",
         "program",
         "memories"
+      ],
+      "renameablePageIds": [
+        "cover",
+        "letter",
+        "details",
+        "program",
+        "memories",
+        "rsvpPage"
       ]
     }
   }
