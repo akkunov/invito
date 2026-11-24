@@ -1,11 +1,7 @@
+@import "./eventiq-editorial-tokens.css";
+
 /* Gallery shell only. Invitation and editor art directions remain independent. */
 .invito-landing {
-  --ed-paper: #f2f3f5;
-  --ed-ink: #20242b;
-  --ed-muted: #606773;
-  --ed-line: #cdd1d9;
-  --ed-blue: #2549d9;
-  --ed-surface: #e2e7f0;
   --background: var(--ed-paper);
   --foreground: var(--ed-ink);
   --accent: var(--ed-blue);

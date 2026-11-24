@@ -381,7 +381,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     guest={{mode:"preview"}}/>;
 
   return <UniversalMobileEditor
-    locale={locale} backHref={`/${locale}/catalog/${slug}`}
+    locale={locale} backHref={`/${locale}/catalog/${slug}`} title={name}
     sheetOpen={mobileSheetOpen} activeTool={mobileSectionsOpen?"sections":mobileSheetOpen?mobileTool:"text"}
     pageIndex={activePageIndex} pageCount={visiblePages.length} pageName={pageLabel(visiblePages[activePageIndex]?.id??"")}
     onNavigate={delta=>{const page=visiblePages[activePageIndex+delta];if(page)jumpPreview(page.id);}}
@@ -408,7 +408,9 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           {source.pages.map((page,index)=><button key={page.id} type="button" aria-current={index===activeMobilePage?"page":undefined} onClick={()=>jumpPreview(page.id)}
             title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
         </nav></>}
-    settings={<section className="ce-controls" aria-label={t.title}>
+    settings={<section className="ce-controls" aria-label={t.title}
+      role={isMobileViewport&&mobileSheetOpen?"dialog":undefined}
+      aria-modal={isMobileViewport&&mobileSheetOpen?true:undefined} tabIndex={mobileSheetOpen?-1:undefined}>
         <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><span>{selectedFieldId?(selectedStyleField?t.toolText:t.mobileSelection):step==="publish"?t.mobileCheck:t[step]}</span><button type="button" aria-label={t.mobileClose} onClick={closeMobileSheet}><X size={20}/></button></div>
         <div className="ce-intro">
           <p className="ce-eyebrow">{t.template} / {name}</p>

@@ -78,7 +78,7 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
       onClose={close} onOpen={id=>navigate(id as BlockKind)} onToggle={id=>editor.toggleBlock(id as BlockKind)}
       onMove={(id,direction)=>editor.moveBlock(id as BlockKind,direction)} onRename={(id,value)=>editor.renameBlock(id as BlockKind,value)}
       onAdd={editor.document.blocks.some(block=>!block.enabled)?()=>{const block=editor.document.blocks.find(item=>!item.enabled);if(block)editor.toggleBlock(block.id);}:undefined}/>}
-    settings={panel&&panel!=="sections"&&<section className="ce-controls" aria-label={panelTitle}>
+    settings={panel&&panel!=="sections"&&<section className="ce-controls" role="dialog" aria-modal="true" aria-label={panelTitle} tabIndex={-1}>
       <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><strong>{panelTitle}</strong><button type="button" onClick={close} aria-label={ru?"Закрыть":"Жабуу"}><X size={20}/></button></div>
       <div className="ce-form lm3-sheet-body">{panel==="style"?<div className="lm3-style">
           <h3>{ru?"Цвет оформления":"Жасалган түс"}</h3>

@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import {ArrowLeft,ArrowRight,ChevronDown,Cloud,CloudOff,Image as ImageIcon,Layers,Music2,Palette,RotateCcw,RotateCw,Type} from "lucide-react";
-import type {MouseEventHandler,ReactNode,Ref} from "react";
+import {useEffect,useRef,type MouseEventHandler,type ReactNode,type Ref} from "react";
 import type {Locale} from "@/i18n/locales";
+import {publicFont} from "@/components/layout/public-font";
 import "./customer-mobile-editor.css";
 
 export type MobileEditorTool="text"|"photo"|"style"|"sections"|"music";
 export type MobileSaveState="saved"|"pending"|"error";
 type Props={
- locale:Locale;backHref:string;sheetOpen:boolean;activeTool:MobileEditorTool|null;
+ locale:Locale;backHref:string;title?:string;sheetOpen:boolean;activeTool:MobileEditorTool|null;
  pageIndex:number;pageCount:number;pageName:string;
  onNavigate:(delta:-1|1)=>void;onTool:(tool:MobileEditorTool,trigger:HTMLButtonElement)=>void;
  canUndo:boolean;canRedo:boolean;onUndo:()=>void;onRedo:()=>void;
@@ -29,12 +30,35 @@ const tools=[
 
 /** One customer-facing phone workspace. Document adapters own commands and permissions;
  * this component owns all mobile chrome, navigation and responsive layout. */
-export function UniversalMobileEditor(p:Props){
+export function UniversalMobileEditor({canvasRef,...p}:Props){
+ const {sheetOpen}=p;
  const ru=p.locale==="ru",t=(ruText:string,kyText:string)=>ru?ruText:kyText;
  const SaveIcon=p.saveState==="error"?CloudOff:Cloud;
- return <main className={["ce-shell","ue-mobile",p.className,p.sheetOpen?"ce-mobile-sheet-open":""].filter(Boolean).join(" ")} lang={p.locale}>
+ const shell=useRef<HTMLElement>(null);
+ useEffect(()=>{
+   if(!sheetOpen||!window.matchMedia("(max-width: 850px)").matches)return;
+   const panel=shell.current?.querySelector<HTMLElement>(".ce-controls");
+   if(!panel)return;
+   (panel.querySelector<HTMLElement>(".ce-mobile-sheet-handle button")??panel).focus();
+   function trapTab(event:KeyboardEvent){
+     if(event.key!=="Tab"||!panel)return;
+     const controls=Array.from(panel.querySelectorAll<HTMLElement>(
+       "button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary",
+     )).filter(element=>element.tabIndex>=0&&element.getClientRects().length>0&&!element.closest("[inert]"));
+     const first=controls[0],last=controls.at(-1);
+     if(!first||!last){event.preventDefault();return;}
+     if(!panel.contains(document.activeElement)||(event.shiftKey?document.activeElement===first:document.activeElement===last)){
+       event.preventDefault();
+       (event.shiftKey?last:first).focus();
+     }
+   }
+   window.addEventListener("keydown",trapTab);
+   return ()=>window.removeEventListener("keydown",trapTab);
+ },[sheetOpen]);
+ return <main ref={shell} className={["ce-shell","ue-mobile","eventiq-editorial-tokens",publicFont.variable,p.className,p.sheetOpen?"ce-mobile-sheet-open":""].filter(Boolean).join(" ")} lang={p.locale}>
    <header className="ce-mobile-topbar">
-     <Link className="ue-brand" href={p.backHref} aria-label={t("К шаблонам","Шаблондорго")}>Eventiq</Link>
+     <Link className="ue-brand" href={p.backHref} aria-label={t("К шаблонам","Шаблондорго")}><ArrowLeft size={20}/></Link>
+     <strong className="ue-editor-title" title={p.title}>{p.title??"Eventiq"}</strong>
      <div className="ce-mobile-top-actions">
        <button type="button" onClick={p.onUndo} disabled={!p.canUndo} aria-label={t("Отменить","Артка кайтаруу")}><RotateCcw size={19}/></button>
        <button type="button" onClick={p.onRedo} disabled={!p.canRedo} aria-label={t("Повторить","Кайталоо")}><RotateCw size={19}/></button>
@@ -48,7 +72,7 @@ export function UniversalMobileEditor(p:Props){
      {p.settings}
      <aside className={p.previewClassName??"ce-preview"} aria-label={t("Предпросмотр","Алдын ала көрүү")}>
        {p.desktopPreviewHeader}
-       <div className="ce-preview-screen" ref={p.canvasRef} onClickCapture={p.onCanvasClick}>{p.canvas}</div>
+       <div className="ce-preview-screen" ref={canvasRef} onClickCapture={p.onCanvasClick}>{p.canvas}</div>
        <nav className="ce-mobile-page-nav" aria-label={t("Страницы","Барактар")}>
          <button type="button" disabled={p.pageIndex<=0} onClick={()=>p.onNavigate(-1)} aria-label={t("Предыдущая секция","Мурунку бөлүм")}><ArrowLeft size={19}/></button>
          <button type="button" onClick={e=>p.onTool("sections",e.currentTarget)}><span>{p.pageCount?p.pageIndex+1:0} / {p.pageCount}</span><strong>{p.pageName}</strong><ChevronDown size={16}/></button>

@@ -131,7 +131,7 @@ RU/KY labels and reduced-motion behavior. Desktop remains on its
 existing two-column layout until a separately approved iteration.
 
 
-## Universal mobile editor — reference-aligned chrome
+## Universal mobile editor 3.0 — previous chrome
 
 The canonical phone workspace is now `UniversalMobileEditor`, with
 `UniversalSectionManager` for section navigation/properties and
@@ -141,6 +141,17 @@ styles and runtime tokens live in customer-mobile-editor.css:
 --ue-paper #faf8f6, --ue-line #e7e1dc, --ue-ink #171918,
 --ue-olive #526237, --ue-orange #ed713f. Keep desktop and admin unchanged.
 Use the invitation as real artwork, not a flattened reference image.
+
+## Eventiq 4.0 customer workspace
+
+The mobile editor and account share the landing palette defined in
+`src/app/eventiq-editorial-tokens.css` and use Inter Tight for controls.
+The mobile shell has a back action, a short title, undo/redo, save status,
+the primary publish action and a fixed five-tool dock. The selected tool
+and focus ring use cobalt. Show the actual invitation canvas as the main
+content. Mobile property dialogs bring focus to their close action,
+hold keyboard navigation while open and return focus on dismissal.
+Retain each template's own type, artwork and behavior inside the canvas.
 
 ### Kyrgyz Heritage invitation
 
