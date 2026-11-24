@@ -15,6 +15,7 @@ import {StudioV2ProjectRenderer} from "@/components/studio-v2/studio-v2-project-
 import {SimpleField} from "@/components/studio-v2/studio-v2-simple-fields";
 import type {Locale} from "@/i18n/locales";
 import {CustomerCloudControls} from "./customer-cloud-controls";
+import {galleryAfterUpload} from "@/features/invitations/photo-geometry";
 import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
 import {UniversalMobileEditor} from "./universal-mobile-editor";
@@ -474,19 +475,20 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                 setWarning("");setStatus(t.restore);
               }catch{setWarning(t.invalidDraft);}
             }}
-            onUploaded={(fieldId,asset,url)=>{
-              const nextAssets=[...customerAssets.filter(a=>a.id!==asset.id),asset];
+            onUploaded={(fieldId,results,uploadMode)=>{
+              const successful=results.filter((result):result is NonNullable<typeof result>=>result!==null);
+              if(!successful.length)return;
+              const nextAssets=[...customerAssets,...successful.map(result=>result.asset)];
               const field=contract.fields.find(f=>f.id===fieldId);
-              const current=field?readPersonalizedValue(document,field):undefined;
-              const nextValue=field?.kind==="gallery"?
-                {kind:"gallery" as const,assetIds:[...(current?.kind==="gallery"?current.assetIds:[]),asset.id]}:
-                {kind:"image" as const,assetId:asset.id};
+              if(!field||field.kind!=="image"&&field.kind!=="gallery")throw Error("INVALID_UPLOAD_TARGET");
+              const current=readPersonalizedValue(document,field);
+              const nextValue=field.kind==="gallery"?
+                {kind:"gallery" as const,assetIds:galleryAfterUpload(current?.kind==="gallery"?current.assetIds:[],results.map(result=>result?.asset.id??null),field.maxPhotos,uploadMode)}:
+                {kind:"image" as const,assetId:successful[0].asset.id};
               const nextPatch={...patch,values:{...patch.values,[fieldId]:nextValue}};
-              try{
-                personalizeDocument(source,contract,nextPatch,assetsForPatch(nextPatch,nextAssets),true);
-                setCustomerAssets(nextAssets);setCustomerUrls(v=>({...v,[asset.storageKey]:url}));
-                commitPatch(nextPatch);setWarning("");
-              }catch{setWarning(t.invalidDraft);}
+              personalizeDocument(source,contract,nextPatch,assetsForPatch(nextPatch,nextAssets),true);
+              setCustomerAssets(nextAssets);setCustomerUrls(v=>({...v,...Object.fromEntries(successful.map(result=>[result.asset.storageKey,result.url]))}));
+              commitPatch(nextPatch);setWarning("");
             }}
             />
           </div>
