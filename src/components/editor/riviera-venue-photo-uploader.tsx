@@ -31,7 +31,7 @@ export function RivieraVenuePhotoUploader({ locale, photo, onChange }: {
     {photo && <div className="riviera-venue-upload-preview" style={{backgroundImage:`url("${photo}")`}} role="img" aria-label={locale === "ru" ? "Выбранное фото ресторана" : "Тандалган ресторан сүрөтү"}/>}
     <label className="birthday-upload-button"><ImagePlus size={17}/>
       {processing ? (locale === "ru" ? "Обрабатываем…" : "Иштетилүүдө…") : (locale === "ru" ? "Загрузить / сменить ресторан" : "Ресторандын сүрөтүн өзгөртүү")}
-      <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={processing} onChange={upload} aria-label={locale === "ru" ? "Выбрать фото ресторана" : "Ресторандын сүрөтүн тандоо"}/>
+      <input type="file" accept="image/*,.heic,.heif" disabled={processing} onChange={upload} aria-label={locale === "ru" ? "Выбрать фото ресторана" : "Ресторандын сүрөтүн тандоо"}/>
     </label>
     {photo && <button type="button" className="birthday-remove-button" onClick={() => onChange(null)}><Trash2 size={15}/>{locale === "ru" ? "Вернуть исходную фотографию" : "Баштапкы сүрөткө кайтуу"}</button>}
     {error && <p className="birthday-upload-error" role="alert">{error}</p>}
