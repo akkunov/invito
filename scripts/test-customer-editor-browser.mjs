@@ -50,6 +50,12 @@ try{
 
   const textTool=tools.getByRole("button",{name:"Текст",exact:true});
   await textTool.click();
+  const dialog=mobile.getByRole("dialog",{name:"Текст",exact:true});
+  assert.equal(await dialog.getAttribute("aria-modal"),"true");
+  await mobile.keyboard.press("Shift+Tab");
+  assert.ok(await dialog.evaluate(el=>el.contains(document.activeElement)));
+  await mobile.keyboard.press("Tab");
+  assert.ok(await dialog.evaluate(el=>el.contains(document.activeElement)));
   const form=mobile.locator(".ce-controls .editor-inspector");
   assert.ok(await form.isVisible());
   const field=form.locator(".inspector-fields input").first();
