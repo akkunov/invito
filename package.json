@@ -47,7 +47,8 @@
     "test:backend-contract": "node --experimental-strip-types scripts/test-backend-contract.mjs",
     "test:studio-v2-remote-sync": "node --experimental-strip-types scripts/test-studio-v2-remote-sync.mjs",
     "test:studio-v2-cloud-media": "node --experimental-strip-types scripts/test-studio-v2-cloud-media.mjs",
-    "test:studio-v2-route-audit": "node scripts/audit-studio-routes.mjs"
+    "test:studio-v2-route-audit": "node scripts/audit-studio-routes.mjs",
+    "test:customer-photos": "node --experimental-strip-types --test scripts/test-customer-photo-upload.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
