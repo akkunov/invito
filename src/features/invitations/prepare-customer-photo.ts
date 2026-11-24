@@ -35,12 +35,12 @@ export async function prepareCustomerPhoto(file:File,bounds:PhotoBounds):Promise
  }
  const canvas=window.document.createElement("canvas");
  try{
-  const {width,height}=photoDimensions(decoded.width,decoded.height,bounds);
+  const {width,height,sourceX,sourceY,sourceWidth,sourceHeight}=photoDimensions(decoded.width,decoded.height,bounds);
   canvas.width=width;canvas.height=height;
   const ctx=canvas.getContext("2d");
   if(!ctx)throw Error("IMAGE_CANVAS_UNAVAILABLE");
   ctx.imageSmoothingQuality="high";
-  ctx.drawImage(decoded.image,0,0,width,height);
+  ctx.drawImage(decoded.image,sourceX,sourceY,sourceWidth,sourceHeight,0,0,width,height);
   let blob=await encode(canvas,"image/webp",.86);
   if(blob.type!=="image/webp"){
    // JPEG fallback for browsers without a WebP encoder.
