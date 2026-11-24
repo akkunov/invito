@@ -60,7 +60,8 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
  switch(f.kind){
   case "textStyle":{
    if(v.kind!=="textStyle")return reject("Неверный тип");
-   if(v.fontSize<f.minFontSize||v.fontSize>f.maxFontSize||!f.allowedFonts.includes(v.fontFamily)||!f.allowedWeights.includes(v.fontWeight)||!f.allowedColors.some(color=>color.toLowerCase()===v.color.toLowerCase())&&!(doc.nodes[f.nodeId]?.type==="text"&&doc.nodes[f.nodeId].runs[0]?.style.color.toLowerCase()===v.color.toLowerCase()))reject("Стиль текста не разрешён автором");
+   const original=doc.nodes[f.nodeId];
+   if(v.fontSize<f.minFontSize||v.fontSize>f.maxFontSize||!f.allowedFonts.includes(v.fontFamily)||!f.allowedWeights.includes(v.fontWeight)||!f.allowedColors.some(color=>color.toLowerCase()===v.color.toLowerCase())&&!(original?.type==="text"&&original.runs[0]?.style.color.toLowerCase()===v.color.toLowerCase()))reject("Стиль текста не разрешён автором");
    break;
   }
   case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
