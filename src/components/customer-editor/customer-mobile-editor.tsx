@@ -75,6 +75,14 @@ const initialPatch=(source:ProjectDocumentV2,contract:PersonalizationContract):P
   values:{},...(!contract.locales.includes(source.locale)?{locale:contract.locales[0]}:{})
 });
 const draftStorageKey=(id:string)=>"eventiq:customer-draft:v1:"+id;
+function assetsForPatch(patch:PersonalizationPatch,assets:readonly VerifiedCustomerAsset[]){
+  const ids=new Set<string>();
+  for(const value of Object.values(patch.values)){
+    if(value.kind==="image")ids.add(value.assetId);
+    else if(value.kind==="gallery")for(const id of value.assetIds)ids.add(id);
+  }
+  return assets.filter(asset=>ids.has(asset.id));
+}
 
 export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftId,source,contract,mediaUrls}:Props){
   const t=dictionary[locale];
@@ -118,7 +126,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         const storedAssets=window.localStorage.getItem(cacheKey+":assets");
         const parsedAssets=storedAssets?JSON.parse(storedAssets) as VerifiedCustomerAsset[]:[];
         if(!Array.isArray(parsedAssets))throw Error("INVALID_ASSET_CACHE");
-        personalizeDocument(source,contract,parsed,parsedAssets,true);
+        personalizeDocument(source,contract,parsed,assetsForPatch(parsed,parsedAssets),true);
         setCustomerAssets(parsedAssets);
         setPatch(parsed);
         setStatus(dictionary[locale].restore);
@@ -133,7 +141,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     try {
       if(Object.keys(patch.values).length || patch.locale || patch.sections){
         window.localStorage.setItem(cacheKey,JSON.stringify(patch));
-        window.localStorage.setItem(cacheKey+":assets",JSON.stringify(customerAssets));
+        window.localStorage.setItem(cacheKey+":assets",JSON.stringify(assetsForPatch(patch,customerAssets)));
       }else{
         window.localStorage.removeItem(cacheKey);
         window.localStorage.removeItem(cacheKey+":assets");
@@ -181,11 +189,12 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries)}));
       }catch{}
     };
+    void refresh();
     const timer=window.setInterval(()=>void refresh(),45_000);
     return()=>{active=false;window.clearInterval(timer);};
   },[customerAssets]);
 
-  const document=useMemo(()=>personalizeDocument(source,contract,patch,customerAssets,true),[source,contract,patch,customerAssets]);
+  const document=useMemo(()=>personalizeDocument(source,contract,patch,assetsForPatch(patch,customerAssets),true),[source,contract,patch,customerAssets]);
   const mergedUrls=useMemo(()=>({...templateUrls,...customerUrls}),[templateUrls,customerUrls]);
   const visiblePages=useMemo(()=>document.pages.filter(page=>document.nodes[page.rootNodeId]?.visible!==false),[document]);
   const activePageIndex=Math.min(activeMobilePage,Math.max(0,visiblePages.length-1));
@@ -244,7 +253,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const saveSections=(order:string[],hidden:string[])=>{
     const candidate:PersonalizationPatch={...patch,sections:{order,hidden}};
     try{
-      personalizeDocument(source,contract,candidate,customerAssets,true);
+      personalizeDocument(source,contract,candidate,assetsForPatch(candidate,customerAssets),true);
       const currentId=visiblePages[activePageIndex]?.id;
       const visibleNext=order.filter(id=>!hidden.includes(id));
       setActiveMobilePage(Math.max(0,visibleNext.indexOf(currentId??"")));
@@ -304,13 +313,13 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   };
   const update=(id:string,value:PersonalizedValue)=>{
     const candidate={...patch,values:{...patch.values,[id]:value}};
-    try{personalizeDocument(source,contract,candidate,customerAssets,true);commitPatch(candidate);setWarning("");setReview(false);}
+    try{personalizeDocument(source,contract,candidate,assetsForPatch(candidate,customerAssets),true);commitPatch(candidate);setWarning("");setReview(false);}
     catch(error){setWarning(error instanceof Error?error.message:"Invalid value");}
   };
   const changeLocale=(lang:"ru"|"ky")=>{
     try {
       const candidate={...patch,locale:lang};
-      personalizeDocument(source,contract,candidate,customerAssets,true);
+      personalizeDocument(source,contract,candidate,assetsForPatch(candidate,customerAssets),true);
       commitPatch(candidate);setWarning("");
     }catch(error){setWarning(error instanceof Error?error.message:"Invalid locale");}
   };
@@ -324,7 +333,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
       return;
     }
     setReview(true);
-    try{finalizePersonalization(source,contract,patch,customerAssets,true);setWarning("");}
+    try{finalizePersonalization(source,contract,patch,assetsForPatch(patch,customerAssets),true);setWarning("");}
     catch{setWarning(t.required);}
   };
   const selectedContentField=selectedNodeId?editableFieldForNode(document,contract.fields,selectedNodeId):undefined;
@@ -366,7 +375,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
       else openTool(tool,trigger);
     }}
     canUndo={past.length>0} canRedo={future.length>0} onUndo={undo} onRedo={redo}
-    saveState={hydrated?"saved":"pending"} saveLabel={hydrated?status||t.saveLocal:t.notSaved}
+    saveState={warning===t.storageError?"error":hydrated?"saved":"pending"} saveLabel={hydrated?status||t.saveLocal:t.notSaved}
     onPublish={trigger=>{mobileTriggerRef.current=trigger;setMobileSectionsOpen(false);openMobileStep("publish");}}
     canvas={preview} canvasRef={mobileCanvasRef} onCanvasClick={selectCanvasField}
     previewClassName={mode==="edit"?"ce-preview ce-mobile-hidden":"ce-preview"} onClose={closeMobileSheet}
@@ -451,7 +460,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
               <div className={review&&fieldError.has(field.id)?"ce-field-invalid":""} key={field.id}>
                 <SimpleField field={field} value={readPersonalizedValue(document,field)}
                   document={document} locale={locale} locales={contract.locales}
-                  urls={mergedUrls} onChange={value=>update(field.id,value)}/>
+                  urls={mergedUrls} musicLibrary={isMobileViewport} onChange={value=>update(field.id,value)}/>
               </div>):
               <p className="ce-empty">{isMobileViewport&&step==="appearance"&&mobileTool==="style"?t.mobileStyleHint+" "+t.mobileLocked:
                 isMobileViewport&&step==="appearance"&&mobileTool==="music"?t.mobileNoMusic:hasFields?t.noFields:t.unsupported}</p>}
@@ -477,7 +486,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                 {kind:"image" as const,assetId:asset.id};
               const nextPatch={...patch,values:{...patch.values,[fieldId]:nextValue}};
               try{
-                personalizeDocument(source,contract,nextPatch,nextAssets,true);
+                personalizeDocument(source,contract,nextPatch,assetsForPatch(nextPatch,nextAssets),true);
                 setCustomerAssets(nextAssets);setCustomerUrls(v=>({...v,[asset.storageKey]:url}));
                 commitPatch(nextPatch);setWarning("");
               }catch{setWarning(t.invalidDraft);}
