@@ -686,3 +686,15 @@
 .v2-editorial-lightbox-photo{position:relative;min-height:0;touch-action:pan-y}
 .v2-editorial-lightbox-photo img{object-fit:contain}
 .v2-editorial-lightbox button{min-width:44px;min-height:44px;background:transparent;color:#fff;border:1px solid #ffffff55;border-radius:4px;font-size:22px}
+
+
+/* Account templates are distinct from the browser-only template library. */
+.v2-cloud-template-library{display:grid;gap:12px;margin-bottom:18px;padding:16px;border:1px solid #454545;border-radius:10px}
+.v2-cloud-template-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.v2-cloud-template-heading h3{margin:0 0 6px;font-size:15px}
+.v2-cloud-template-heading .v2-inspector-button{width:auto;flex:none}
+.v2-cloud-template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px}
+.v2-cloud-template-item{display:grid;gap:6px;text-align:left;padding:13px;background:transparent;border:1px solid #555;border-radius:8px;color:inherit;cursor:pointer}
+.v2-cloud-template-item span{font-size:11px;opacity:.75;overflow-wrap:anywhere}
+.v2-cloud-template-item:hover:not(:disabled){border-color:#ff4a0a}
+.v2-cloud-template-item:disabled{opacity:.5;cursor:default}
