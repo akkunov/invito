@@ -91,6 +91,19 @@ export function createStudioRemoteClient(settings: RemoteSyncSettings) {
     return project;
   }
   return {
+    async listTemplates(page = 1) {
+      return send<{items: Array<{id:string;slug:string;name:string;status:string;latestVersion:number}>;nextPage:number|null}>(
+        "/workspaces/"+workspaceId+"/templates?page="+page+"&limit=24");
+    },
+    async getTemplateVersion(id:string,number:number) {
+      if(!Number.isSafeInteger(number)||number<1)throw new Error("INVALID_TEMPLATE_VERSION");
+      const path="/templates/"+encodeURIComponent(id);
+      const template=await send<{id:string;workspaceId:string;latestVersion:number}>(path);
+      if(template.id!==id||template.workspaceId!==workspaceId)throw new Error("REMOTE_WORKSPACE_MISMATCH");
+      const version=await send<{number:number;document:unknown}>(path+"/versions/"+number);
+      if(version.number!==number)throw new Error("INVALID_TEMPLATE_VERSION");
+      return {...version,document:parseProjectV2(version.document)};
+    },
     async listProjects(page = 1) {
       return send<{items: Array<{id: string; title: string; latestRevision: number}>; nextPage: number | null}>(
         "/workspaces/" + workspaceId + "/projects?page=" + page,
