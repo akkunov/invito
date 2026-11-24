@@ -9,6 +9,7 @@ import {getDictionary} from "@/i18n/dictionaries";
 import {InvitationCanvas} from "@/components/invitation/invitation-canvas";
 import {EditorInspector} from "@/components/editor/editor-inspector";
 import {UniversalMobileEditor} from "@/components/customer-editor/universal-mobile-editor";
+import {UniversalSectionManager} from "@/components/customer-editor/universal-section-manager";
 import {MusicLibraryPicker} from "@/components/customer-editor/music-library-picker";
 import "./legacy-mobile-workspace.css";
 
@@ -23,7 +24,7 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
   const trigger=useRef<HTMLButtonElement|null>(null);
   const blocks=editor.document.blocks.filter(block=>block.enabled);
   const current=Math.max(0,blocks.findIndex(block=>block.id===selected));
-  const name=(id:BlockKind)=>dict.editor.blocks[id];
+  const name=(id:BlockKind)=>editor.document.blocks.find(block=>block.id===id)?.navigationName??dict.editor.blocks[id];
   const navigate=(id:BlockKind)=>{
     onSelect(id);setPanel(null);
     window.requestAnimationFrame(()=>{
@@ -60,7 +61,7 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
   const isText=panel==="text",isPhoto=panel==="photo";
   return <UniversalMobileEditor
     locale={locale} backHref={`/${locale}/templates`}
-    className="ue-legacy" sheetOpen={panel!==null} activeTool={panel??"text"}
+    className="ue-legacy" sheetOpen={panel!==null&&panel!=="sections"} activeTool={panel??"text"}
     pageIndex={current} pageCount={blocks.length} pageName={name(blocks[current]?.id??"cover")}
     onNavigate={delta=>{const block=blocks[current+delta];if(block)navigate(block.id);}}
     onTool={open} onClose={close}
@@ -71,22 +72,15 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
     publishDisabledReason={ru?"Этот шаблон пока хранится только на устройстве. Для публикации выберите серверный шаблон.":"Бул шаблон азырынча түзмөктө гана сакталат."}
     canvas={<InvitationCanvas document={editor.document} musicSrc={editor.audioUrl} musicName={editor.audioName??undefined}/>}
     canvasRef={preview} onCanvasClick={selectByTap}
-    settings={panel&&<section className="ce-controls" aria-label={panelTitle}>
+    overlay={panel==="sections"&&<UniversalSectionManager locale={locale} activeId={selected}
+      sections={editor.document.blocks.map((block,index)=>({id:block.id,name:name(block.id),visible:block.enabled,
+        canToggle:block.enabled?blocks.length>1:true,canMoveUp:index>0,canMoveDown:index<editor.document.blocks.length-1,canRename:true}))}
+      onClose={close} onOpen={id=>navigate(id as BlockKind)} onToggle={id=>editor.toggleBlock(id as BlockKind)}
+      onMove={(id,direction)=>editor.moveBlock(id as BlockKind,direction)} onRename={(id,value)=>editor.renameBlock(id as BlockKind,value)}
+      onAdd={editor.document.blocks.some(block=>!block.enabled)?()=>{const block=editor.document.blocks.find(item=>!item.enabled);if(block)editor.toggleBlock(block.id);}:undefined}/>}
+    settings={panel&&panel!=="sections"&&<section className="ce-controls" aria-label={panelTitle}>
       <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><strong>{panelTitle}</strong><button type="button" onClick={close} aria-label={ru?"Закрыть":"Жабуу"}><X size={20}/></button></div>
-      <div className="ce-form lm3-sheet-body">{panel==="sections"?<div className="lm3-sections">
-          {editor.document.blocks.map((block,index)=><div className={"lm3-section-row"+(selected===block.id?" active":"")} key={block.id}>
-            <button type="button" className="lm3-section-select" onClick={()=>navigate(block.id)} aria-current={selected===block.id?"true":undefined}>
-              <span className="lm3-section-icon"><Layers3 size={18}/></span>
-              <span className="lm3-section-name"><small>{String(index+1).padStart(2,"0")}</small>{name(block.id)}</span>
-            </button>
-            <button type="button" className="lm3-section-icon-button" onClick={()=>editor.toggleBlock(block.id)} aria-label={(block.enabled?(ru?"Скрыть ":"Жашыруу "):(ru?"Показать ":"Көрсөтүү "))+name(block.id)} aria-pressed={block.enabled}>{block.enabled?<Eye size={19}/>:<EyeOff size={19}/>}</button>
-            <div className="lm3-reorder">
-              <button type="button" disabled={index===0} onClick={()=>editor.moveBlock(block.id,-1)} aria-label={(ru?"Выше: ":"Жогору: ")+name(block.id)}><ChevronUp size={16}/></button>
-              <button type="button" disabled={index===editor.document.blocks.length-1} onClick={()=>editor.moveBlock(block.id,1)} aria-label={(ru?"Ниже: ":"Төмөн: ")+name(block.id)}><ChevronDown size={16}/></button>
-            </div>
-          </div>)}
-          <p className="lm3-hint">{ru?"Порядок и видимость секций сохраняются в вашем черновике.":"Бөлүмдөрдүн ирети жана көрүнүшү черновикте сакталат."}</p>
-        </div>:panel==="style"?<div className="lm3-style">
+      <div className="ce-form lm3-sheet-body">{panel==="style"?<div className="lm3-style">
           <h3>{ru?"Цвет оформления":"Жасалган түс"}</h3>
           <div className="lm3-palette">{["#556A40","#B69A70","#D6A09B","#30302D","#FF4A0A"].map(color=>
             <button type="button" key={color} style={{backgroundColor:color}} aria-label={color} aria-pressed={editor.document.accent.toLowerCase()===color.toLowerCase()} onClick={()=>editor.updateAccent(color)}/>)}
