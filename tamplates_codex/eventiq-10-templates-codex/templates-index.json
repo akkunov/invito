@@ -1,0 +1,82 @@
+[
+  {
+    "slug": "vogue-wedding",
+    "name": "Vogue Wedding",
+    "spec": "design/Vogue-Wedding-Codex-Spec.md",
+    "reference": "design/references/vogue-wedding/full-reference.png",
+    "geometry": "design/references/vogue-wedding/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "italian-romance",
+    "name": "Italian Romance",
+    "spec": "design/Italian-Romance-Codex-Spec.md",
+    "reference": "design/references/italian-romance/full-reference.png",
+    "geometry": "design/references/italian-romance/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "love-story",
+    "name": "Love Story",
+    "spec": "design/Love-Story-Codex-Spec.md",
+    "reference": "design/references/love-story/full-reference.png",
+    "geometry": "design/references/love-story/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "cinema-wedding",
+    "name": "Cinema Wedding",
+    "spec": "design/Cinema-Wedding-Codex-Spec.md",
+    "reference": "design/references/cinema-wedding/full-reference.png",
+    "geometry": "design/references/cinema-wedding/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "secret-garden",
+    "name": "Secret Garden",
+    "spec": "design/Secret-Garden-Codex-Spec.md",
+    "reference": "design/references/secret-garden/full-reference.png",
+    "geometry": "design/references/secret-garden/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "boarding-pass",
+    "name": "Boarding Pass",
+    "spec": "design/Boarding-Pass-Codex-Spec.md",
+    "reference": "design/references/boarding-pass/full-reference.png",
+    "geometry": "design/references/boarding-pass/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "wedding-newspaper",
+    "name": "Wedding Newspaper",
+    "spec": "design/Wedding-Newspaper-Codex-Spec.md",
+    "reference": "design/references/wedding-newspaper/full-reference.png",
+    "geometry": "design/references/wedding-newspaper/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "digital-envelope",
+    "name": "Digital Envelope",
+    "spec": "design/Digital-Envelope-Codex-Spec.md",
+    "reference": "design/references/digital-envelope/full-reference.png",
+    "geometry": "design/references/digital-envelope/geometry.json",
+    "status": "selected-reference"
+  },
+  {
+    "slug": "art-gallery",
+    "name": "Art Gallery",
+    "spec": "design/Art-Gallery-Codex-Spec.md",
+    "reference": "design/references/art-gallery/full-reference.png",
+    "geometry": "design/references/art-gallery/geometry.json",
+    "status": "new-proposal"
+  },
+  {
+    "slug": "minimal-architecture",
+    "name": "Minimal Architecture",
+    "spec": "design/Minimal-Architecture-Codex-Spec.md",
+    "reference": "design/references/minimal-architecture/full-reference.png",
+    "geometry": "design/references/minimal-architecture/geometry.json",
+    "status": "new-proposal"
+  }
+]

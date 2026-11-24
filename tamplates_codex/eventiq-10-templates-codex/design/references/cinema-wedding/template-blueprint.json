@@ -1,0 +1,149 @@
+{
+  "status": "design-contract-only-not-importable",
+  "manifest": {
+    "slug": "cinema-wedding",
+    "name": "Cinema Wedding",
+    "category": "WEDDING",
+    "coverPageId": "cover"
+  },
+  "document": {
+    "schemaVersion": 2,
+    "locale": "ru",
+    "pages": [
+      {
+        "id": "cover",
+        "width": 430,
+        "height": 1741
+      },
+      {
+        "id": "story",
+        "width": 430,
+        "height": 1782
+      },
+      {
+        "id": "event",
+        "width": 430,
+        "height": 1770
+      },
+      {
+        "id": "rsvp",
+        "width": 430,
+        "height": 1782
+      }
+    ],
+    "variables": {
+      "ceremonyDate": {
+        "type": "date",
+        "value": "2027-05-29T17:00:00+06:00"
+      },
+      "coupleNames": {
+        "type": "text",
+        "value": {
+          "ru": "Алибек и Алина",
+          "ky": "Алибек жана Алина"
+        }
+      }
+    }
+  },
+  "personalization": {
+    "locales": [
+      "ru",
+      "ky"
+    ],
+    "fields": [
+      {
+        "id": "names",
+        "kind": "text",
+        "target": "coupleNames",
+        "section": "main"
+      },
+      {
+        "id": "invitation",
+        "kind": "text",
+        "target": "invitationText",
+        "section": "main"
+      },
+      {
+        "id": "date",
+        "kind": "date",
+        "target": "ceremonyDate",
+        "section": "date"
+      },
+      {
+        "id": "venueName",
+        "kind": "text",
+        "target": "venueName",
+        "section": "location"
+      },
+      {
+        "id": "address",
+        "kind": "text",
+        "target": "venueAddress",
+        "section": "location"
+      },
+      {
+        "id": "coverPhoto",
+        "kind": "image",
+        "target": "cover",
+        "section": "photos"
+      },
+      {
+        "id": "venuePhoto",
+        "kind": "image",
+        "target": "venuePhoto",
+        "section": "photos"
+      },
+      {
+        "id": "program",
+        "kind": "schedule",
+        "target": "program",
+        "section": "schedule"
+      },
+      {
+        "id": "response",
+        "kind": "rsvp",
+        "target": "rsvp",
+        "section": "rsvp"
+      },
+      {
+        "id": "musicTrack",
+        "kind": "music",
+        "target": "music",
+        "section": "music"
+      },
+      {
+        "id": "chapters",
+        "kind": "proposed-story",
+        "target": "story",
+        "section": "photos",
+        "maxItems": 6
+      },
+      {
+        "id": "trailer",
+        "kind": "proposed-video",
+        "target": "storyVideo",
+        "section": "photos",
+        "required": false
+      }
+    ]
+  },
+  "proposedSharedCapabilities": [
+    {
+      "name": "video",
+      "contract": "media asset: verified poster + optional video asset, controls, captions, fallback image; no autoplay audio"
+    },
+    {
+      "name": "story",
+      "contract": "1–6 episodes, filmstrip layout; date/title/description/photo via shared story widget"
+    },
+    {
+      "name": "calendar",
+      "contract": "existing calendar action / ICS"
+    },
+    {
+      "name": "rsvp",
+      "contract": "extended existing RSVP, cinematic appearance"
+    }
+  ],
+  "notes": "Resolve proposed types and target IDs against current Studio schema; use geometry for layout, not import. Keep existing schemas backward compatible."
+}

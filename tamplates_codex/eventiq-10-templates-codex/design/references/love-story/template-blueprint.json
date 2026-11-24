@@ -1,0 +1,340 @@
+{
+  "format": "eventiq-template-blueprint",
+  "version": 1,
+  "status": "design-contract-not-importable",
+  "targetPackage": "templates/packages/love-story.v1.json",
+  "manifest": {
+    "slug": "love-story",
+    "name": "Love Story",
+    "description": "Свадебное приглашение с фотографиями и хронологией пары. RU/KY.",
+    "category": "WEDDING",
+    "tags": [
+      "wedding",
+      "story",
+      "editorial",
+      "ru",
+      "ky"
+    ],
+    "coverPageId": "cover"
+  },
+  "documentPlan": {
+    "schemaVersion": 2,
+    "proposedPresentation": "loveStory",
+    "locale": "ru",
+    "pages": [
+      {
+        "id": "cover",
+        "rootNodeId": "coverRoot",
+        "placement": {
+          "x": 0,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1286,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1340,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "story",
+        "rootNodeId": "storyRoot",
+        "placement": {
+          "x": 420,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1286,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1340,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "details",
+        "rootNodeId": "detailsRoot",
+        "placement": {
+          "x": 840,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1286,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1340,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "rsvpPage",
+        "rootNodeId": "rsvpPageRoot",
+        "placement": {
+          "x": 1260,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1045,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1286,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1340,
+            "mode": "scale"
+          }
+        }
+      }
+    ],
+    "variables": {
+      "ceremonyDate": {
+        "type": "date",
+        "value": "2027-05-29T17:00:00+06:00"
+      },
+      "coupleNames": {
+        "type": "text",
+        "value": {
+          "ru": "АЛИБЕК\nИ АЛИНА",
+          "ky": "АЛИБЕК\nЖАНА АЛИНА"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "value": {
+          "ru": "VILLA TOSCANA",
+          "ky": "VILLA TOSCANA"
+        }
+      },
+      "venueAddress": {
+        "type": "text",
+        "value": {
+          "ru": "г. Бишкек, демонстрационный адрес",
+          "ky": "Бишкек ш., үлгү дарек"
+        }
+      }
+    },
+    "proposedWidgets": {
+      "storyTimeline": {
+        "kind": "story",
+        "layout": "filmstrip",
+        "title": {
+          "ru": "Наша история",
+          "ky": "Биздин тарыхыбыз"
+        },
+        "items": [
+          {
+            "id": "meeting",
+            "date": "2022-06-12",
+            "title": {
+              "ru": "Первая встреча",
+              "ky": "Алгачкы жолугушуу"
+            },
+            "description": {
+              "ru": "Мы познакомились совершенно случайно, но сразу поняли, что это особенная встреча.",
+              "ky": "Кокустан тааныштык, бирок бул өзгөчө жолугушуу экенин дароо сездик."
+            },
+            "assetId": "first-meeting"
+          },
+          {
+            "id": "trip",
+            "date": "2023-08-18",
+            "title": {
+              "ru": "Первое путешествие",
+              "ky": "Алгачкы саякат"
+            },
+            "description": {
+              "ru": "Наше первое совместное путешествие научило нас быть ещё ближе.",
+              "ky": "Алгачкы биргелешкен саякатыбыз бизди дагы жакындатты."
+            },
+            "assetId": "first-trip"
+          },
+          {
+            "id": "proposal",
+            "date": "2026-02-14",
+            "title": {
+              "ru": "Она сказала «да»",
+              "ky": "Ал «ооба» деди"
+            },
+            "description": {
+              "ru": "В этот день мы поняли — хотим провести вместе всю жизнь.",
+              "ky": "Ошол күнү өмүр бою бирге болууну каалаарыбызды түшүндүк."
+            },
+            "assetId": "proposal"
+          }
+        ]
+      },
+      "calendarAction": {
+        "kind": "calendarAction",
+        "targetKey": "ceremonyDate",
+        "durationMinutes": 300
+      },
+      "program": {
+        "kind": "schedule",
+        "items": [
+          {
+            "time": "16:00",
+            "label": {
+              "ru": "Сбор гостей\nПриветственные напитки",
+              "ky": "Конокторду тосуу\nСуусундуктар"
+            }
+          },
+          {
+            "time": "17:00",
+            "label": {
+              "ru": "Церемония\nТоржественная регистрация",
+              "ky": "Салтанат\nНикени каттоо"
+            }
+          },
+          {
+            "time": "18:30",
+            "label": {
+              "ru": "Банкет\nПраздничный ужин и тосты",
+              "ky": "Той\nМайрамдык кечки тамак"
+            }
+          },
+          {
+            "time": "22:00",
+            "label": {
+              "ru": "Вечерняя программа\nМузыка, танцы и сюрпризы",
+              "ky": "Кечки программа\nМузыка, бий жана сюрприздер"
+            }
+          }
+        ]
+      },
+      "rsvpWidget": {
+        "kind": "rsvp",
+        "deadline": null,
+        "maxGuests": 4,
+        "wishEnabled": true,
+        "guestCountControl": "stepper"
+      },
+      "musicPlayer": {
+        "kind": "music",
+        "source": "",
+        "layout": "compact"
+      }
+    }
+  },
+  "personalizationPlan": {
+    "version": 1,
+    "locales": [
+      "ru",
+      "ky"
+    ],
+    "fields": [
+      {
+        "id": "names",
+        "kind": "text",
+        "key": "coupleNames"
+      },
+      {
+        "id": "date",
+        "kind": "date",
+        "key": "ceremonyDate"
+      },
+      {
+        "id": "venueName",
+        "kind": "text",
+        "key": "venueName"
+      },
+      {
+        "id": "venueAddress",
+        "kind": "text",
+        "key": "venueAddress"
+      },
+      {
+        "id": "coverPhoto",
+        "kind": "image",
+        "nodeId": "coverPhoto"
+      },
+      {
+        "id": "story",
+        "kind": "story",
+        "nodeId": "storyTimeline",
+        "maxItems": 6
+      },
+      {
+        "id": "venuePhoto",
+        "kind": "image",
+        "nodeId": "venuePhoto"
+      },
+      {
+        "id": "closingPhoto",
+        "kind": "image",
+        "nodeId": "closingPhoto"
+      },
+      {
+        "id": "program",
+        "kind": "schedule",
+        "nodeId": "program",
+        "maxItems": 6
+      },
+      {
+        "id": "rsvp",
+        "kind": "rsvp",
+        "nodeId": "rsvpWidget",
+        "maxGuests": 6
+      },
+      {
+        "id": "music",
+        "kind": "music",
+        "nodeId": "musicPlayer",
+        "sources": []
+      }
+    ]
+  },
+  "assetPlan": {
+    "replaceable": [
+      "cover",
+      "first-meeting",
+      "first-trip",
+      "proposal",
+      "venue",
+      "closing"
+    ],
+    "locked": [
+      "landscape",
+      "paper",
+      "stamp",
+      "airmailBorder"
+    ],
+    "note": "Prototype crops are low resolution and may include reference edges; recreate clean assets for production."
+  }
+}

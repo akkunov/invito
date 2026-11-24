@@ -1,0 +1,408 @@
+{
+  "slug": "wedding-newspaper",
+  "reference": "full-reference.png",
+  "sourceType": "approved raster concept",
+  "coordinateSystem": "local CSS px at width 430; raster estimates, not Figma; preserve aspect ratio; live controls reflow",
+  "viewport": {
+    "width": 430,
+    "height": 932
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "width": 430,
+      "height": 1147,
+      "sourceCrop": [
+        2,
+        7,
+        380,
+        1015
+      ],
+      "elements": [
+        {
+          "id": "masthead",
+          "type": "text",
+          "x": 77,
+          "y": 21,
+          "width": 275,
+          "height": 63
+        },
+        {
+          "id": "edition",
+          "type": "text",
+          "x": 15,
+          "y": 114,
+          "width": 400,
+          "height": 30
+        },
+        {
+          "id": "names",
+          "type": "text",
+          "x": 37,
+          "y": 161,
+          "width": 357,
+          "height": 189
+        },
+        {
+          "id": "dateVenue",
+          "type": "text",
+          "x": 17,
+          "y": 373,
+          "width": 396,
+          "height": 39
+        },
+        {
+          "id": "coverPhoto",
+          "type": "image",
+          "x": 11,
+          "y": 427,
+          "width": 408,
+          "height": 510
+        },
+        {
+          "id": "headline",
+          "type": "text",
+          "x": 39,
+          "y": 895,
+          "width": 353,
+          "height": 99
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 82,
+          "y": 1002,
+          "width": 267,
+          "height": 69
+        },
+        {
+          "id": "next",
+          "type": "button",
+          "x": 194,
+          "y": 1084,
+          "width": 47,
+          "height": 53
+        }
+      ]
+    },
+    {
+      "id": "story",
+      "width": 430,
+      "height": 1147,
+      "sourceCrop": [
+        387,
+        7,
+        765,
+        1015
+      ],
+      "elements": [
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 39,
+          "y": 29,
+          "width": 353,
+          "height": 72
+        },
+        {
+          "id": "subtitle",
+          "type": "text",
+          "x": 77,
+          "y": 101,
+          "width": 275,
+          "height": 40
+        },
+        {
+          "id": "chapter1Photo",
+          "type": "image",
+          "x": 22,
+          "y": 170,
+          "width": 211,
+          "height": 218
+        },
+        {
+          "id": "chapter1Text",
+          "type": "text",
+          "x": 245,
+          "y": 166,
+          "width": 168,
+          "height": 216
+        },
+        {
+          "id": "chapter2Text",
+          "type": "text",
+          "x": 32,
+          "y": 407,
+          "width": 168,
+          "height": 206
+        },
+        {
+          "id": "chapter2Photo",
+          "type": "image",
+          "x": 215,
+          "y": 396,
+          "width": 194,
+          "height": 218
+        },
+        {
+          "id": "chapter3Photo",
+          "type": "image",
+          "x": 22,
+          "y": 619,
+          "width": 211,
+          "height": 235
+        },
+        {
+          "id": "chapter3Text",
+          "type": "text",
+          "x": 247,
+          "y": 637,
+          "width": 168,
+          "height": 218
+        },
+        {
+          "id": "quote",
+          "type": "text",
+          "x": 32,
+          "y": 883,
+          "width": 366,
+          "height": 109
+        },
+        {
+          "id": "landscape",
+          "type": "decoration",
+          "x": 0,
+          "y": 998,
+          "width": 430,
+          "height": 149
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "width": 430,
+      "height": 1153,
+      "sourceCrop": [
+        772,
+        7,
+        1148,
+        1015
+      ],
+      "elements": [
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 30,
+          "y": 31,
+          "width": 370,
+          "height": 67
+        },
+        {
+          "id": "subtitle",
+          "type": "text",
+          "x": 60,
+          "y": 95,
+          "width": 310,
+          "height": 37
+        },
+        {
+          "id": "program",
+          "type": "schedule",
+          "x": 34,
+          "y": 138,
+          "width": 370,
+          "height": 306
+        },
+        {
+          "id": "venueHeading",
+          "type": "text",
+          "x": 34,
+          "y": 484,
+          "width": 361,
+          "height": 44
+        },
+        {
+          "id": "venuePhoto",
+          "type": "image",
+          "x": 15,
+          "y": 542,
+          "width": 401,
+          "height": 219
+        },
+        {
+          "id": "venueCard",
+          "type": "location",
+          "x": 24,
+          "y": 767,
+          "width": 383,
+          "height": 69
+        },
+        {
+          "id": "calendar",
+          "type": "button",
+          "x": 34,
+          "y": 853,
+          "width": 361,
+          "height": 55
+        },
+        {
+          "id": "fact",
+          "type": "frame",
+          "x": 22,
+          "y": 945,
+          "width": 280,
+          "height": 179
+        },
+        {
+          "id": "camera",
+          "type": "decoration",
+          "x": 292,
+          "y": 945,
+          "width": 138,
+          "height": 208
+        }
+      ]
+    },
+    {
+      "id": "rsvp",
+      "width": 430,
+      "height": 1144,
+      "sourceCrop": [
+        1155,
+        7,
+        1534,
+        1015
+      ],
+      "elements": [
+        {
+          "id": "newspaperDecor",
+          "type": "decoration",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 257
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 30,
+          "y": 271,
+          "width": 370,
+          "height": 87
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 47,
+          "y": 366,
+          "width": 335,
+          "height": 55
+        },
+        {
+          "id": "nameLabel",
+          "type": "text",
+          "x": 32,
+          "y": 437,
+          "width": 366,
+          "height": 22
+        },
+        {
+          "id": "name",
+          "type": "input",
+          "x": 32,
+          "y": 463,
+          "width": 366,
+          "height": 48
+        },
+        {
+          "id": "attendanceLabel",
+          "type": "text",
+          "x": 32,
+          "y": 526,
+          "width": 366,
+          "height": 22
+        },
+        {
+          "id": "yes",
+          "type": "radio",
+          "x": 32,
+          "y": 553,
+          "width": 166,
+          "height": 40
+        },
+        {
+          "id": "no",
+          "type": "radio",
+          "x": 206,
+          "y": 553,
+          "width": 191,
+          "height": 40
+        },
+        {
+          "id": "guestsLabel",
+          "type": "text",
+          "x": 32,
+          "y": 612,
+          "width": 366,
+          "height": 22
+        },
+        {
+          "id": "stepper",
+          "type": "stepper",
+          "x": 32,
+          "y": 638,
+          "width": 366,
+          "height": 49
+        },
+        {
+          "id": "wishLabel",
+          "type": "text",
+          "x": 32,
+          "y": 709,
+          "width": 366,
+          "height": 22
+        },
+        {
+          "id": "wish",
+          "type": "textarea",
+          "x": 32,
+          "y": 734,
+          "width": 366,
+          "height": 95
+        },
+        {
+          "id": "counter",
+          "type": "text",
+          "x": 335,
+          "y": 837,
+          "width": 62,
+          "height": 18
+        },
+        {
+          "id": "submit",
+          "type": "button",
+          "x": 32,
+          "y": 869,
+          "width": 366,
+          "height": 55
+        },
+        {
+          "id": "music",
+          "type": "music",
+          "x": 32,
+          "y": 955,
+          "width": 366,
+          "height": 92
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "paper": "#F3E8DC",
+    "ink": "#161412",
+    "surface": "#F9F1E5",
+    "accent": "#941D24",
+    "border": "#8B7763",
+    "ivory": "#FFF8ED"
+  }
+}

@@ -1,0 +1,708 @@
+{
+  "templateSlug": "vogue-wedding",
+  "units": "CSS px",
+  "sourceSize": [
+    1536,
+    1024
+  ],
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "nominalHeight": 4192,
+  "note": "Target bounds manually measured from raster concept and normalized. Not Figma metadata. Nested form controls are flow targets, not independent Studio nodes. Photo crops are references, not production assets.",
+  "tokens": {
+    "paper": "#F5F3EF",
+    "ink": "#111111",
+    "black": "#111111",
+    "white": "#FAFAF8",
+    "red": "#C62420",
+    "border": "#D4D1CC",
+    "muted": "#BDBDBD",
+    "focus": "#E6534C",
+    "errorDark": "#FFAAA3",
+    "errorLight": "#A91D1A"
+  },
+  "artboards": [
+    {
+      "id": "cover",
+      "width": 390,
+      "height": 1048,
+      "background": "paper",
+      "sourceCrop": [
+        10,
+        14,
+        380,
+        1006
+      ],
+      "placement": {
+        "x": 0,
+        "y": 0
+      },
+      "elements": [
+        {
+          "id": "coverRule",
+          "kind": "rule",
+          "x": 39,
+          "y": 39,
+          "width": 40,
+          "height": 4,
+          "style": {
+            "fill": "red"
+          }
+        },
+        {
+          "id": "coverEyebrow",
+          "kind": "text",
+          "x": 39,
+          "y": 54,
+          "width": 269,
+          "height": 45,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 24,
+            "weight": 600,
+            "tracking": 6,
+            "align": "left"
+          }
+        },
+        {
+          "id": "coverNames",
+          "kind": "text",
+          "x": 28,
+          "y": 133,
+          "width": 340,
+          "height": 200,
+          "style": {
+            "font": "display",
+            "fontSize": 83,
+            "lineHeight": 101,
+            "weight": 400,
+            "tracking": -3.0,
+            "align": "left"
+          }
+        },
+        {
+          "id": "coverPhoto",
+          "kind": "image",
+          "x": 0,
+          "y": 336,
+          "width": 390,
+          "height": 712,
+          "style": {
+            "fit": "cover",
+            "focalX": 0.5,
+            "focalY": 0.42
+          }
+        },
+        {
+          "id": "coverDate",
+          "kind": "date",
+          "x": 45,
+          "y": 886,
+          "width": 300,
+          "height": 49,
+          "style": {
+            "font": "sans",
+            "fontSize": 29,
+            "lineHeight": 37,
+            "weight": 700,
+            "tracking": 5,
+            "align": "center",
+            "color": "red"
+          }
+        },
+        {
+          "id": "coverScroll",
+          "kind": "button",
+          "x": 170,
+          "y": 956,
+          "width": 56,
+          "height": 56,
+          "style": {
+            "radius": "50%",
+            "borderWidth": 1,
+            "iconSize": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "invitation",
+      "width": 390,
+      "height": 1048,
+      "background": "paper",
+      "sourceCrop": [
+        392,
+        14,
+        763,
+        1006
+      ],
+      "placement": {
+        "x": 420,
+        "y": 0
+      },
+      "elements": [
+        {
+          "id": "invitationText",
+          "kind": "text",
+          "x": 39,
+          "y": 78,
+          "width": 316,
+          "height": 103,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 26,
+            "weight": 500,
+            "tracking": 2.6,
+            "align": "center"
+          }
+        },
+        {
+          "id": "invitationRule",
+          "kind": "rule",
+          "x": 176,
+          "y": 208,
+          "width": 39,
+          "height": 4,
+          "style": {
+            "fill": "red"
+          }
+        },
+        {
+          "id": "countdownWidget",
+          "kind": "countdown",
+          "x": 19,
+          "y": 243,
+          "width": 353,
+          "height": 75,
+          "style": {
+            "numberFont": "display",
+            "numberSize": 49,
+            "numberLineHeight": 55,
+            "labelSize": 13,
+            "labelTracking": 2.5,
+            "dividerWidth": 1
+          }
+        },
+        {
+          "id": "sectionRule",
+          "kind": "rule",
+          "x": 29,
+          "y": 362,
+          "width": 337,
+          "height": 2,
+          "style": {}
+        },
+        {
+          "id": "programHeading",
+          "kind": "text",
+          "x": 25,
+          "y": 396,
+          "width": 344,
+          "height": 32,
+          "style": {
+            "font": "sans",
+            "fontSize": 23,
+            "lineHeight": 30,
+            "weight": 700,
+            "tracking": 4,
+            "align": "left"
+          }
+        },
+        {
+          "id": "scheduleWidget",
+          "kind": "schedule",
+          "x": 28,
+          "y": 450,
+          "width": 339,
+          "height": 350,
+          "style": {
+            "timeFont": "display",
+            "timeSize": 43,
+            "timeLineHeight": 49,
+            "titleSize": 18,
+            "titleWeight": 700,
+            "titleTracking": 1.2,
+            "descriptionSize": 16,
+            "descriptionLineHeight": 19,
+            "rowDividerWidth": 1,
+            "accentWidth": 2
+          }
+        },
+        {
+          "id": "mountainsFooter",
+          "kind": "decoration",
+          "x": 0,
+          "y": 867,
+          "width": 390,
+          "height": 181,
+          "style": {}
+        }
+      ]
+    },
+    {
+      "id": "gallery",
+      "width": 390,
+      "height": 1048,
+      "background": "paper",
+      "sourceCrop": [
+        775,
+        14,
+        1145,
+        1006
+      ],
+      "placement": {
+        "x": 840,
+        "y": 0
+      },
+      "elements": [
+        {
+          "id": "galleryHeading",
+          "kind": "text",
+          "x": 37,
+          "y": 39,
+          "width": 163,
+          "height": 28,
+          "style": {
+            "font": "sans",
+            "fontSize": 23,
+            "lineHeight": 29,
+            "weight": 700,
+            "tracking": 5,
+            "align": "left"
+          }
+        },
+        {
+          "id": "galleryRule",
+          "kind": "rule",
+          "x": 221,
+          "y": 50,
+          "width": 41,
+          "height": 3,
+          "style": {
+            "fill": "red"
+          }
+        },
+        {
+          "id": "galleryWidget",
+          "kind": "gallery",
+          "x": 12,
+          "y": 90,
+          "width": 365,
+          "height": 528,
+          "style": {
+            "layout": "stackedMosaic",
+            "gap": 7,
+            "radius": 0,
+            "maxPhotos": 4
+          }
+        },
+        {
+          "id": "galleryPhoto1",
+          "kind": "imageSlot",
+          "x": 12,
+          "y": 90,
+          "width": 365,
+          "height": 184,
+          "style": {},
+          "nestedIn": "galleryWidget"
+        },
+        {
+          "id": "galleryPhoto2",
+          "kind": "imageSlot",
+          "x": 12,
+          "y": 280,
+          "width": 180,
+          "height": 191,
+          "style": {},
+          "nestedIn": "galleryWidget"
+        },
+        {
+          "id": "galleryPhoto3",
+          "kind": "imageSlot",
+          "x": 200,
+          "y": 280,
+          "width": 177,
+          "height": 191,
+          "style": {},
+          "nestedIn": "galleryWidget"
+        },
+        {
+          "id": "galleryPhoto4",
+          "kind": "imageSlot",
+          "x": 12,
+          "y": 476,
+          "width": 365,
+          "height": 142,
+          "style": {},
+          "nestedIn": "galleryWidget"
+        },
+        {
+          "id": "venueRule",
+          "kind": "rule",
+          "x": 32,
+          "y": 640,
+          "width": 39,
+          "height": 3,
+          "style": {
+            "fill": "red"
+          }
+        },
+        {
+          "id": "venueHeading",
+          "kind": "text",
+          "x": 31,
+          "y": 658,
+          "width": 339,
+          "height": 28,
+          "style": {
+            "font": "sans",
+            "fontSize": 20,
+            "lineHeight": 26,
+            "weight": 700,
+            "tracking": 3.5,
+            "align": "left"
+          }
+        },
+        {
+          "id": "venuePhoto",
+          "kind": "image",
+          "x": 12,
+          "y": 699,
+          "width": 365,
+          "height": 162,
+          "style": {
+            "fit": "cover",
+            "radius": 0
+          }
+        },
+        {
+          "id": "venuePin",
+          "kind": "icon",
+          "x": 25,
+          "y": 880,
+          "width": 28,
+          "height": 32,
+          "style": {}
+        },
+        {
+          "id": "venueName",
+          "kind": "text",
+          "x": 67,
+          "y": 876,
+          "width": 304,
+          "height": 23,
+          "style": {
+            "font": "sans",
+            "fontSize": 18,
+            "lineHeight": 23,
+            "weight": 700,
+            "tracking": 0.3,
+            "align": "left"
+          }
+        },
+        {
+          "id": "venueAddress",
+          "kind": "text",
+          "x": 67,
+          "y": 902,
+          "width": 303,
+          "height": 22,
+          "style": {
+            "font": "sans",
+            "fontSize": 16,
+            "lineHeight": 22,
+            "weight": 400,
+            "align": "left"
+          }
+        },
+        {
+          "id": "mapButton",
+          "kind": "button",
+          "x": 20,
+          "y": 949,
+          "width": 351,
+          "height": 56,
+          "style": {
+            "radius": 10,
+            "borderWidth": 1,
+            "fontSize": 16,
+            "weight": 650,
+            "tracking": 2,
+            "paddingX": 16,
+            "iconSize": 24
+          }
+        }
+      ]
+    },
+    {
+      "id": "rsvpPage",
+      "width": 390,
+      "height": 1048,
+      "background": "black",
+      "sourceCrop": [
+        1158,
+        13,
+        1529,
+        1007
+      ],
+      "placement": {
+        "x": 1260,
+        "y": 0
+      },
+      "elements": [
+        {
+          "id": "rsvpRule",
+          "kind": "rule",
+          "x": 176,
+          "y": 47,
+          "width": 41,
+          "height": 5,
+          "style": {
+            "fill": "red"
+          }
+        },
+        {
+          "id": "rsvpHeading",
+          "kind": "text",
+          "x": 27,
+          "y": 78,
+          "width": 340,
+          "height": 102,
+          "style": {
+            "font": "display",
+            "fontSize": 44,
+            "lineHeight": 52,
+            "weight": 400,
+            "align": "center",
+            "color": "white"
+          }
+        },
+        {
+          "id": "rsvpIntro",
+          "kind": "text",
+          "x": 69,
+          "y": 211,
+          "width": 253,
+          "height": 95,
+          "style": {
+            "font": "sans",
+            "fontSize": 16,
+            "lineHeight": 24,
+            "weight": 500,
+            "tracking": 4,
+            "align": "center",
+            "color": "white"
+          }
+        },
+        {
+          "id": "rsvpWidget",
+          "kind": "rsvp",
+          "x": 27,
+          "y": 333,
+          "width": 342,
+          "height": 426,
+          "style": {}
+        },
+        {
+          "id": "nameLabel",
+          "kind": "label",
+          "x": 28,
+          "y": 337,
+          "width": 341,
+          "height": 20,
+          "style": {
+            "font": "sans",
+            "fontSize": 14,
+            "lineHeight": 20,
+            "weight": 600,
+            "tracking": 2,
+            "color": "white"
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "nameInput",
+          "kind": "input",
+          "x": 28,
+          "y": 363,
+          "width": 341,
+          "height": 49,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 23,
+            "weight": 400,
+            "radius": 9,
+            "borderWidth": 1,
+            "paddingX": 19,
+            "background": "transparent",
+            "color": "white",
+            "minHeight": 48
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "attendanceLabel",
+          "kind": "label",
+          "x": 28,
+          "y": 432,
+          "width": 341,
+          "height": 20,
+          "style": {
+            "font": "sans",
+            "fontSize": 14,
+            "lineHeight": 20,
+            "weight": 600,
+            "tracking": 2,
+            "color": "white"
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "attendanceYes",
+          "kind": "radio",
+          "x": 28,
+          "y": 462,
+          "width": 341,
+          "height": 48,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 23,
+            "weight": 400,
+            "radius": 9,
+            "borderWidth": 1,
+            "paddingX": 19,
+            "background": "transparent",
+            "color": "white",
+            "minHeight": 48,
+            "radioSize": 24,
+            "radioGap": 20
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "attendanceNo",
+          "kind": "radio",
+          "x": 28,
+          "y": 519,
+          "width": 341,
+          "height": 47,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 23,
+            "weight": 400,
+            "radius": 9,
+            "borderWidth": 1,
+            "paddingX": 19,
+            "background": "transparent",
+            "color": "white",
+            "minHeight": 48,
+            "radioSize": 24,
+            "radioGap": 20
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "guestsLabel",
+          "kind": "label",
+          "x": 28,
+          "y": 587,
+          "width": 341,
+          "height": 21,
+          "style": {
+            "font": "sans",
+            "fontSize": 14,
+            "lineHeight": 20,
+            "weight": 600,
+            "tracking": 2,
+            "color": "white"
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "guestSelect",
+          "kind": "select",
+          "x": 28,
+          "y": 616,
+          "width": 341,
+          "height": 48,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 23,
+            "weight": 400,
+            "radius": 9,
+            "borderWidth": 1,
+            "paddingX": 19,
+            "background": "transparent",
+            "color": "white",
+            "minHeight": 48
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "submitButton",
+          "kind": "button",
+          "x": 27,
+          "y": 696,
+          "width": 342,
+          "height": 63,
+          "style": {
+            "radius": 10,
+            "fontSize": 20,
+            "weight": 700,
+            "tracking": 1.4,
+            "paddingX": 16,
+            "background": "white",
+            "color": "ink"
+          },
+          "nestedIn": "rsvpWidget"
+        },
+        {
+          "id": "thanksRule",
+          "kind": "rule",
+          "x": 176,
+          "y": 799,
+          "width": 41,
+          "height": 3,
+          "style": {
+            "fill": "red"
+          }
+        },
+        {
+          "id": "thanksText",
+          "kind": "text",
+          "x": 65,
+          "y": 829,
+          "width": 266,
+          "height": 50,
+          "style": {
+            "font": "sans",
+            "fontSize": 17,
+            "lineHeight": 25,
+            "weight": 500,
+            "tracking": 4,
+            "align": "center",
+            "color": "white"
+          }
+        },
+        {
+          "id": "mountainsFooterDark",
+          "kind": "decoration",
+          "x": 0,
+          "y": 912,
+          "width": 390,
+          "height": 136,
+          "style": {}
+        }
+      ]
+    }
+  ]
+}

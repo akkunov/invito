@@ -1,0 +1,548 @@
+{
+  "source": {
+    "width": 1536,
+    "height": 1024,
+    "note": "Target measurements from raster, not Figma source. Interactive targets corrected to minimum 44 CSS px."
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "tokens": {
+    "paper": "#F6F0E7",
+    "sky": "#B8CAD4",
+    "ink": "#302824",
+    "wine": "#791F35",
+    "line": "#A99B8D",
+    "white": "#FFF9F1",
+    "muted": "#6E625A"
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "width": 390,
+      "height": 1045,
+      "nodes": [
+        {
+          "id": "coverSky",
+          "type": "background",
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 468
+        },
+        {
+          "id": "eyebrow",
+          "type": "text",
+          "x": 36,
+          "y": 43,
+          "width": 208,
+          "height": 36
+        },
+        {
+          "id": "eyebrowRule",
+          "type": "decoration",
+          "x": 37,
+          "y": 102,
+          "width": 46,
+          "height": 3
+        },
+        {
+          "id": "names",
+          "type": "text",
+          "x": 34,
+          "y": 144,
+          "width": 335,
+          "height": 171
+        },
+        {
+          "id": "date",
+          "type": "text",
+          "x": 40,
+          "y": 348,
+          "width": 302,
+          "height": 33
+        },
+        {
+          "id": "coverPhoto",
+          "type": "image",
+          "x": 0,
+          "y": 394,
+          "width": 390,
+          "height": 650
+        },
+        {
+          "id": "storyLink",
+          "type": "button",
+          "x": 107,
+          "y": 928,
+          "width": 216,
+          "height": 85,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "scrollIcon",
+          "type": "button",
+          "x": 184,
+          "y": 963,
+          "width": 46,
+          "height": 46,
+          "minTouchHeight": 44
+        }
+      ]
+    },
+    {
+      "id": "story",
+      "width": 390,
+      "height": 1045,
+      "nodes": [
+        {
+          "id": "storyRule",
+          "type": "decoration",
+          "x": 44,
+          "y": 50,
+          "width": 45,
+          "height": 3
+        },
+        {
+          "id": "storyTitle",
+          "type": "text",
+          "x": 43,
+          "y": 75,
+          "width": 295,
+          "height": 69
+        },
+        {
+          "id": "storySubtitle",
+          "type": "text",
+          "x": 45,
+          "y": 162,
+          "width": 295,
+          "height": 36
+        },
+        {
+          "id": "storyTimeline",
+          "type": "widget",
+          "x": 24,
+          "y": 219,
+          "width": 358,
+          "height": 691
+        },
+        {
+          "id": "storyLine",
+          "type": "decoration",
+          "x": 30,
+          "y": 272,
+          "width": 2,
+          "height": 602
+        },
+        {
+          "id": "meetingDate",
+          "type": "text",
+          "x": 54,
+          "y": 263,
+          "width": 128,
+          "height": 28
+        },
+        {
+          "id": "meetingTitle",
+          "type": "text",
+          "x": 55,
+          "y": 300,
+          "width": 130,
+          "height": 38
+        },
+        {
+          "id": "meetingText",
+          "type": "text",
+          "x": 55,
+          "y": 352,
+          "width": 130,
+          "height": 78
+        },
+        {
+          "id": "meetingPhoto",
+          "type": "image",
+          "x": 195,
+          "y": 224,
+          "width": 188,
+          "height": 227
+        },
+        {
+          "id": "tripDate",
+          "type": "text",
+          "x": 54,
+          "y": 498,
+          "width": 132,
+          "height": 28
+        },
+        {
+          "id": "tripTitle",
+          "type": "text",
+          "x": 56,
+          "y": 531,
+          "width": 132,
+          "height": 45
+        },
+        {
+          "id": "tripText",
+          "type": "text",
+          "x": 56,
+          "y": 583,
+          "width": 128,
+          "height": 76
+        },
+        {
+          "id": "tripPhoto",
+          "type": "image",
+          "x": 193,
+          "y": 472,
+          "width": 191,
+          "height": 223
+        },
+        {
+          "id": "proposalDate",
+          "type": "text",
+          "x": 55,
+          "y": 725,
+          "width": 129,
+          "height": 28
+        },
+        {
+          "id": "proposalTitle",
+          "type": "text",
+          "x": 56,
+          "y": 760,
+          "width": 129,
+          "height": 44
+        },
+        {
+          "id": "proposalText",
+          "type": "text",
+          "x": 56,
+          "y": 813,
+          "width": 129,
+          "height": 63
+        },
+        {
+          "id": "proposalPhoto",
+          "type": "image",
+          "x": 201,
+          "y": 711,
+          "width": 182,
+          "height": 198
+        },
+        {
+          "id": "landscapeFooter",
+          "type": "decoration",
+          "x": 0,
+          "y": 917,
+          "width": 390,
+          "height": 124
+        }
+      ]
+    },
+    {
+      "id": "details",
+      "width": 390,
+      "height": 1045,
+      "nodes": [
+        {
+          "id": "ticket",
+          "type": "layout",
+          "x": 22,
+          "y": 37,
+          "width": 350,
+          "height": 315
+        },
+        {
+          "id": "ticketEyebrow",
+          "type": "text",
+          "x": 67,
+          "y": 70,
+          "width": 264,
+          "height": 40
+        },
+        {
+          "id": "ticketDate",
+          "type": "text",
+          "x": 66,
+          "y": 129,
+          "width": 283,
+          "height": 52
+        },
+        {
+          "id": "ticketDay",
+          "type": "text",
+          "x": 71,
+          "y": 207,
+          "width": 110,
+          "height": 26
+        },
+        {
+          "id": "ticketTime",
+          "type": "text",
+          "x": 210,
+          "y": 197,
+          "width": 108,
+          "height": 33
+        },
+        {
+          "id": "calendarAction",
+          "type": "button",
+          "x": 141,
+          "y": 262,
+          "width": 210,
+          "height": 46,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "dayHeading",
+          "type": "text",
+          "x": 97,
+          "y": 394,
+          "width": 209,
+          "height": 33
+        },
+        {
+          "id": "program",
+          "type": "widget",
+          "x": 26,
+          "y": 441,
+          "width": 338,
+          "height": 189
+        },
+        {
+          "id": "event1",
+          "type": "layout",
+          "x": 37,
+          "y": 446,
+          "width": 317,
+          "height": 43
+        },
+        {
+          "id": "event2",
+          "type": "layout",
+          "x": 37,
+          "y": 494,
+          "width": 317,
+          "height": 43
+        },
+        {
+          "id": "event3",
+          "type": "layout",
+          "x": 37,
+          "y": 542,
+          "width": 317,
+          "height": 43
+        },
+        {
+          "id": "event4",
+          "type": "layout",
+          "x": 37,
+          "y": 590,
+          "width": 317,
+          "height": 43
+        },
+        {
+          "id": "venuePhoto",
+          "type": "image",
+          "x": 10,
+          "y": 652,
+          "width": 368,
+          "height": 188
+        },
+        {
+          "id": "venueName",
+          "type": "text",
+          "x": 71,
+          "y": 853,
+          "width": 289,
+          "height": 30
+        },
+        {
+          "id": "venueAddress",
+          "type": "text",
+          "x": 71,
+          "y": 882,
+          "width": 289,
+          "height": 24
+        },
+        {
+          "id": "mapAction",
+          "type": "button",
+          "x": 27,
+          "y": 921,
+          "width": 336,
+          "height": 54,
+          "minTouchHeight": 44
+        }
+      ]
+    },
+    {
+      "id": "rsvpPage",
+      "width": 390,
+      "height": 1045,
+      "nodes": [
+        {
+          "id": "airmailBorder",
+          "type": "decoration",
+          "x": 1,
+          "y": 0,
+          "width": 389,
+          "height": 47
+        },
+        {
+          "id": "stamp",
+          "type": "decoration",
+          "x": 275,
+          "y": 38,
+          "width": 94,
+          "height": 92
+        },
+        {
+          "id": "rsvpHeading",
+          "type": "text",
+          "x": 43,
+          "y": 72,
+          "width": 229,
+          "height": 58
+        },
+        {
+          "id": "rsvpIntro",
+          "type": "text",
+          "x": 44,
+          "y": 156,
+          "width": 312,
+          "height": 40
+        },
+        {
+          "id": "rsvpWidget",
+          "type": "widget",
+          "x": 32,
+          "y": 216,
+          "width": 336,
+          "height": 400
+        },
+        {
+          "id": "nameLabel",
+          "type": "text",
+          "x": 39,
+          "y": 216,
+          "width": 209,
+          "height": 16
+        },
+        {
+          "id": "nameInput",
+          "type": "input",
+          "x": 37,
+          "y": 236,
+          "width": 328,
+          "height": 43,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "attendanceLabel",
+          "type": "text",
+          "x": 39,
+          "y": 299,
+          "width": 328,
+          "height": 18
+        },
+        {
+          "id": "attendanceYes",
+          "type": "radio",
+          "x": 38,
+          "y": 322,
+          "width": 143,
+          "height": 42,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "attendanceNo",
+          "type": "radio",
+          "x": 191,
+          "y": 322,
+          "width": 174,
+          "height": 42,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "guestLabel",
+          "type": "text",
+          "x": 38,
+          "y": 395,
+          "width": 174,
+          "height": 16
+        },
+        {
+          "id": "guestStepper",
+          "type": "control",
+          "x": 225,
+          "y": 382,
+          "width": 140,
+          "height": 42,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "wishLabel",
+          "type": "text",
+          "x": 38,
+          "y": 438,
+          "width": 282,
+          "height": 16
+        },
+        {
+          "id": "wishInput",
+          "type": "textarea",
+          "x": 37,
+          "y": 457,
+          "width": 328,
+          "height": 81
+        },
+        {
+          "id": "wishCounter",
+          "type": "text",
+          "x": 315,
+          "y": 544,
+          "width": 49,
+          "height": 16
+        },
+        {
+          "id": "submit",
+          "type": "button",
+          "x": 35,
+          "y": 568,
+          "width": 332,
+          "height": 48,
+          "minTouchHeight": 44
+        },
+        {
+          "id": "music",
+          "type": "widget",
+          "x": 35,
+          "y": 644,
+          "width": 332,
+          "height": 75
+        },
+        {
+          "id": "closingPhoto",
+          "type": "image",
+          "x": 15,
+          "y": 733,
+          "width": 370,
+          "height": 250
+        },
+        {
+          "id": "footerPaper",
+          "type": "decoration",
+          "x": 0,
+          "y": 954,
+          "width": 390,
+          "height": 91
+        }
+      ]
+    }
+  ]
+}

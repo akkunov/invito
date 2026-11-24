@@ -1,0 +1,142 @@
+{
+  "status": "design-contract-only-not-importable",
+  "manifest": {
+    "slug": "secret-garden",
+    "name": "Secret Garden",
+    "category": "WEDDING",
+    "coverPageId": "cover"
+  },
+  "document": {
+    "schemaVersion": 2,
+    "locale": "ru",
+    "pages": [
+      {
+        "id": "cover",
+        "width": 430,
+        "height": 1114
+      },
+      {
+        "id": "story",
+        "width": 430,
+        "height": 1230
+      },
+      {
+        "id": "event",
+        "width": 430,
+        "height": 1100
+      },
+      {
+        "id": "rsvp",
+        "width": 430,
+        "height": 1143
+      }
+    ],
+    "variables": {
+      "ceremonyDate": {
+        "type": "date",
+        "value": "2027-05-29T17:00:00+06:00"
+      },
+      "coupleNames": {
+        "type": "text",
+        "value": {
+          "ru": "Алибек и Алина",
+          "ky": "Алибек жана Алина"
+        }
+      }
+    }
+  },
+  "personalization": {
+    "locales": [
+      "ru",
+      "ky"
+    ],
+    "fields": [
+      {
+        "id": "names",
+        "kind": "text",
+        "target": "coupleNames",
+        "section": "main"
+      },
+      {
+        "id": "invitation",
+        "kind": "text",
+        "target": "invitationText",
+        "section": "main"
+      },
+      {
+        "id": "date",
+        "kind": "date",
+        "target": "ceremonyDate",
+        "section": "date"
+      },
+      {
+        "id": "venueName",
+        "kind": "text",
+        "target": "venueName",
+        "section": "location"
+      },
+      {
+        "id": "address",
+        "kind": "text",
+        "target": "venueAddress",
+        "section": "location"
+      },
+      {
+        "id": "coverPhoto",
+        "kind": "image",
+        "target": "cover",
+        "section": "photos"
+      },
+      {
+        "id": "venuePhoto",
+        "kind": "image",
+        "target": "venuePhoto",
+        "section": "photos"
+      },
+      {
+        "id": "program",
+        "kind": "schedule",
+        "target": "program",
+        "section": "schedule"
+      },
+      {
+        "id": "response",
+        "kind": "rsvp",
+        "target": "rsvp",
+        "section": "rsvp"
+      },
+      {
+        "id": "musicTrack",
+        "kind": "music",
+        "target": "music",
+        "section": "music"
+      },
+      {
+        "id": "chapters",
+        "kind": "proposed-story",
+        "target": "story",
+        "section": "photos",
+        "maxItems": 6
+      }
+    ]
+  },
+  "proposedSharedCapabilities": [
+    {
+      "name": "reveal",
+      "contract": "optional gate opening, two SVG/image layers, pointer and keyboard trigger, skip/reduced motion; once per visit"
+    },
+    {
+      "name": "story",
+      "contract": "botanical/arched layout variant, 1–6 chapters"
+    },
+    {
+      "name": "calendar",
+      "contract": "existing date-driven month view"
+    },
+    {
+      "name": "schedule",
+      "contract": "compact 2×2 at narrow widths, four columns only if readable"
+    }
+  ],
+  "notes": "Resolve proposed types and target IDs against current Studio schema; use geometry for layout, not import. Keep existing schemas backward compatible."
+}

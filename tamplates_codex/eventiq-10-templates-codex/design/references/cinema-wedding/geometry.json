@@ -1,0 +1,464 @@
+{
+  "slug": "cinema-wedding",
+  "reference": "full-reference.png",
+  "sourceType": "approved raster concept",
+  "coordinateSystem": "local CSS px at width 430; raster estimates, not Figma; preserve aspect ratio; live controls reflow",
+  "viewport": {
+    "width": 430,
+    "height": 932
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "width": 430,
+      "height": 1741,
+      "sourceCrop": [
+        7,
+        8,
+        313,
+        1247
+      ],
+      "elements": [
+        {
+          "id": "header",
+          "type": "text",
+          "x": 30,
+          "y": 44,
+          "width": 370,
+          "height": 87
+        },
+        {
+          "id": "heroPoster",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 888
+        },
+        {
+          "id": "trailerPlay",
+          "type": "button",
+          "x": 160,
+          "y": 557,
+          "width": 110,
+          "height": 113
+        },
+        {
+          "id": "trailerLabel",
+          "type": "text",
+          "x": 60,
+          "y": 740,
+          "width": 310,
+          "height": 78
+        },
+        {
+          "id": "eyebrow",
+          "type": "text",
+          "x": 47,
+          "y": 844,
+          "width": 335,
+          "height": 78
+        },
+        {
+          "id": "names",
+          "type": "text",
+          "x": 43,
+          "y": 975,
+          "width": 344,
+          "height": 235
+        },
+        {
+          "id": "date",
+          "type": "text",
+          "x": 47,
+          "y": 1236,
+          "width": 335,
+          "height": 56
+        },
+        {
+          "id": "venue",
+          "type": "text",
+          "x": 52,
+          "y": 1288,
+          "width": 327,
+          "height": 45
+        },
+        {
+          "id": "landscape",
+          "type": "decoration",
+          "x": 0,
+          "y": 1323,
+          "width": 430,
+          "height": 418
+        },
+        {
+          "id": "next",
+          "type": "button",
+          "x": 163,
+          "y": 1602,
+          "width": 103,
+          "height": 96
+        }
+      ]
+    },
+    {
+      "id": "story",
+      "width": 430,
+      "height": 1782,
+      "sourceCrop": [
+        322,
+        8,
+        621,
+        1247
+      ],
+      "elements": [
+        {
+          "id": "filmTrim",
+          "type": "decoration",
+          "x": 0,
+          "y": 0,
+          "width": 138,
+          "height": 160
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 52,
+          "y": 107,
+          "width": 327,
+          "height": 160
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 47,
+          "y": 258,
+          "width": 335,
+          "height": 98
+        },
+        {
+          "id": "storyVideo",
+          "type": "video",
+          "x": 24,
+          "y": 374,
+          "width": 383,
+          "height": 303
+        },
+        {
+          "id": "episode1",
+          "type": "image",
+          "x": 22,
+          "y": 722,
+          "width": 185,
+          "height": 241
+        },
+        {
+          "id": "episode1Copy",
+          "type": "text",
+          "x": 219,
+          "y": 748,
+          "width": 189,
+          "height": 214
+        },
+        {
+          "id": "episode2",
+          "type": "image",
+          "x": 22,
+          "y": 980,
+          "width": 185,
+          "height": 241
+        },
+        {
+          "id": "episode2Copy",
+          "type": "text",
+          "x": 219,
+          "y": 1007,
+          "width": 189,
+          "height": 214
+        },
+        {
+          "id": "episode3",
+          "type": "image",
+          "x": 22,
+          "y": 1247,
+          "width": 185,
+          "height": 241
+        },
+        {
+          "id": "episode3Copy",
+          "type": "text",
+          "x": 219,
+          "y": 1274,
+          "width": 189,
+          "height": 205
+        },
+        {
+          "id": "reel",
+          "type": "decoration",
+          "x": 0,
+          "y": 1515,
+          "width": 430,
+          "height": 267
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "width": 430,
+      "height": 1770,
+      "sourceCrop": [
+        629,
+        8,
+        930,
+        1247
+      ],
+      "elements": [
+        {
+          "id": "venueHero",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 336
+        },
+        {
+          "id": "dateHeading",
+          "type": "text",
+          "x": 43,
+          "y": 327,
+          "width": 344,
+          "height": 53
+        },
+        {
+          "id": "date",
+          "type": "text",
+          "x": 47,
+          "y": 381,
+          "width": 335,
+          "height": 71
+        },
+        {
+          "id": "calendar",
+          "type": "button",
+          "x": 30,
+          "y": 474,
+          "width": 370,
+          "height": 58
+        },
+        {
+          "id": "divider",
+          "type": "decoration",
+          "x": 129,
+          "y": 558,
+          "width": 172,
+          "height": 5
+        },
+        {
+          "id": "programHeading",
+          "type": "text",
+          "x": 43,
+          "y": 588,
+          "width": 344,
+          "height": 57
+        },
+        {
+          "id": "program",
+          "type": "schedule",
+          "x": 24,
+          "y": 664,
+          "width": 383,
+          "height": 381
+        },
+        {
+          "id": "venueHeading",
+          "type": "text",
+          "x": 26,
+          "y": 1115,
+          "width": 378,
+          "height": 53
+        },
+        {
+          "id": "venuePhoto",
+          "type": "image",
+          "x": 17,
+          "y": 1177,
+          "width": 396,
+          "height": 257
+        },
+        {
+          "id": "venueText",
+          "type": "text",
+          "x": 41,
+          "y": 1451,
+          "width": 366,
+          "height": 74
+        },
+        {
+          "id": "map",
+          "type": "button",
+          "x": 22,
+          "y": 1531,
+          "width": 387,
+          "height": 58
+        },
+        {
+          "id": "foliage",
+          "type": "decoration",
+          "x": 206,
+          "y": 1628,
+          "width": 224,
+          "height": 142
+        }
+      ]
+    },
+    {
+      "id": "rsvp",
+      "width": 430,
+      "height": 1782,
+      "sourceCrop": [
+        939,
+        8,
+        1238,
+        1247
+      ],
+      "elements": [
+        {
+          "id": "clapper",
+          "type": "decoration",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 339
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 30,
+          "y": 347,
+          "width": 370,
+          "height": 107
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 37,
+          "y": 463,
+          "width": 357,
+          "height": 71
+        },
+        {
+          "id": "nameLabel",
+          "type": "text",
+          "x": 28,
+          "y": 536,
+          "width": 374,
+          "height": 32
+        },
+        {
+          "id": "name",
+          "type": "input",
+          "x": 28,
+          "y": 570,
+          "width": 374,
+          "height": 61
+        },
+        {
+          "id": "attendanceLabel",
+          "type": "text",
+          "x": 28,
+          "y": 650,
+          "width": 374,
+          "height": 32
+        },
+        {
+          "id": "yes",
+          "type": "radio",
+          "x": 28,
+          "y": 684,
+          "width": 374,
+          "height": 55
+        },
+        {
+          "id": "no",
+          "type": "radio",
+          "x": 28,
+          "y": 748,
+          "width": 374,
+          "height": 55
+        },
+        {
+          "id": "guestsLabel",
+          "type": "text",
+          "x": 28,
+          "y": 823,
+          "width": 374,
+          "height": 32
+        },
+        {
+          "id": "stepper",
+          "type": "stepper",
+          "x": 28,
+          "y": 857,
+          "width": 374,
+          "height": 59
+        },
+        {
+          "id": "wishLabel",
+          "type": "text",
+          "x": 28,
+          "y": 939,
+          "width": 374,
+          "height": 32
+        },
+        {
+          "id": "wish",
+          "type": "textarea",
+          "x": 28,
+          "y": 980,
+          "width": 374,
+          "height": 110
+        },
+        {
+          "id": "counter",
+          "type": "text",
+          "x": 327,
+          "y": 1101,
+          "width": 75,
+          "height": 27
+        },
+        {
+          "id": "submit",
+          "type": "button",
+          "x": 26,
+          "y": 1140,
+          "width": 378,
+          "height": 75
+        },
+        {
+          "id": "music",
+          "type": "music",
+          "x": 26,
+          "y": 1256,
+          "width": 378,
+          "height": 121
+        },
+        {
+          "id": "closing",
+          "type": "decoration",
+          "x": 0,
+          "y": 1417,
+          "width": 430,
+          "height": 365
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "paper": "#201914",
+    "ink": "#F3E7D7",
+    "surface": "#F9EFE4",
+    "accent": "#A52825",
+    "border": "#90745A",
+    "ivory": "#F8F1E7"
+  }
+}

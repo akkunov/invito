@@ -1,0 +1,530 @@
+{
+  "format": "eventiq-template-blueprint",
+  "version": 1,
+  "status": "design-contract-not-importable",
+  "targetPackage": "templates/packages/italian-romance.v1.json",
+  "manifest": {
+    "slug": "italian-romance",
+    "name": "Italian Romance",
+    "description": "Свадебная открытка с календарём и фотоальбомом. RU/KY.",
+    "category": "WEDDING",
+    "tags": [
+      "wedding",
+      "italian",
+      "romance",
+      "ru",
+      "ky"
+    ],
+    "coverPageId": "cover"
+  },
+  "documentPlan": {
+    "schemaVersion": 2,
+    "proposedPresentation": "italian",
+    "locale": "ru",
+    "pages": [
+      {
+        "id": "cover",
+        "rootNodeId": "coverRoot",
+        "placement": {
+          "x": 0,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1058,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1302,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1356,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "invitation",
+        "rootNodeId": "invitationRoot",
+        "placement": {
+          "x": 420,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1058,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1302,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1356,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "gallery",
+        "rootNodeId": "galleryRoot",
+        "placement": {
+          "x": 840,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1058,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1302,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1356,
+            "mode": "scale"
+          }
+        }
+      },
+      {
+        "id": "rsvpPage",
+        "rootNodeId": "rsvpPageRoot",
+        "placement": {
+          "x": 1260,
+          "y": 0
+        },
+        "responsive": {
+          "mobile": {
+            "width": 390,
+            "height": 1058,
+            "mode": "scale"
+          },
+          "tablet": {
+            "width": 480,
+            "height": 1302,
+            "mode": "scale"
+          },
+          "desktop": {
+            "width": 500,
+            "height": 1356,
+            "mode": "scale"
+          }
+        }
+      }
+    ],
+    "values": {
+      "coupleNames": {
+        "type": "text",
+        "value": {
+          "ru": "Алибек\nи Алина",
+          "ky": "Алибек\nжана Алина"
+        }
+      },
+      "invitationText": {
+        "type": "text",
+        "value": {
+          "ru": "С радостью приглашаем вас разделить с нами особенный день — нашу свадьбу",
+          "ky": "Сиздерди биз үчүн өзгөчө күнгө — үйлөнүү тоюбузга — чакырабыз"
+        }
+      },
+      "quoteText": {
+        "type": "text",
+        "value": {
+          "ru": "Наша история — это путешествие, которое привело нас к этому дню",
+          "ky": "Биздин тарыхыбыз — ушул күнгө алып келген саякат"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "value": {
+          "ru": "Villa Toscana",
+          "ky": "Villa Toscana"
+        }
+      },
+      "venueAddress": {
+        "type": "text",
+        "value": {
+          "ru": "г. Бишкек, адрес уточняется",
+          "ky": "Бишкек ш., дарек такталат"
+        }
+      },
+      "ceremonyDate": {
+        "type": "date",
+        "value": "2027-05-29T17:00:00+06:00"
+      }
+    },
+    "variables": {
+      "coupleNames": {
+        "type": "text",
+        "label": {
+          "ru": "Имена пары",
+          "ky": "Жаштардын ысымдары"
+        }
+      },
+      "invitationText": {
+        "type": "text",
+        "label": {
+          "ru": "Текст приглашения",
+          "ky": "Чакыруу тексти"
+        }
+      },
+      "quoteText": {
+        "type": "text",
+        "label": {
+          "ru": "История пары",
+          "ky": "Жаштардын тарыхы"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "label": {
+          "ru": "Место проведения",
+          "ky": "Той өтүүчү жер"
+        }
+      },
+      "venueAddress": {
+        "type": "text",
+        "label": {
+          "ru": "Адрес",
+          "ky": "Дарек"
+        }
+      },
+      "ceremonyDate": {
+        "type": "date",
+        "label": {
+          "ru": "Дата и время",
+          "ky": "Күнү жана убактысы"
+        }
+      }
+    },
+    "widgetContracts": {
+      "calendar": {
+        "kind": "calendar",
+        "title": {
+          "ru": "",
+          "ky": ""
+        },
+        "targetKey": "ceremonyDate",
+        "target": "2027-05-29T17:00:00+06:00"
+      },
+      "program": {
+        "kind": "schedule",
+        "title": {
+          "ru": "",
+          "ky": ""
+        },
+        "items": [
+          {
+            "time": "16:00",
+            "label": {
+              "ru": "Сбор гостей\nПриветственные напитки и лёгкие закуски",
+              "ky": "Конокторду тосуу\nСуусундуктар жана жеңил тамактар"
+            }
+          },
+          {
+            "time": "17:00",
+            "label": {
+              "ru": "Церемония\nТоржественная регистрация брака",
+              "ky": "Салтанат\nНикени каттоо"
+            }
+          },
+          {
+            "time": "18:30",
+            "label": {
+              "ru": "Банкет\nПраздничный ужин и программа",
+              "ky": "Той\nМайрамдык кечки тамак жана программа"
+            }
+          },
+          {
+            "time": "22:00",
+            "label": {
+              "ru": "Завершение\nОкончание вечера",
+              "ky": "Жыйынтык\nКеченин аягы"
+            }
+          }
+        ]
+      },
+      "polaroidGallery": {
+        "kind": "gallery",
+        "title": {
+          "ru": "",
+          "ky": ""
+        },
+        "layout": "polaroid",
+        "assetIds": [
+          "story-left",
+          "story-center",
+          "story-right"
+        ]
+      },
+      "venueCard": {
+        "kind": "location",
+        "title": {
+          "ru": "",
+          "ky": ""
+        },
+        "address": {
+          "ru": "г. Бишкек, адрес уточняется",
+          "ky": "Бишкек ш., дарек такталат"
+        },
+        "addressKey": "venueAddress",
+        "nameKey": "venueName"
+      },
+      "rsvpWidget": {
+        "kind": "rsvp",
+        "title": {
+          "ru": "",
+          "ky": ""
+        },
+        "deadline": null,
+        "maxGuests": 4,
+        "wishEnabled": true,
+        "guestCountControl": "stepper"
+      },
+      "musicCard": {
+        "kind": "music",
+        "title": {
+          "ru": "",
+          "ky": ""
+        },
+        "source": "",
+        "layout": "compact"
+      }
+    },
+    "photoAssets": [
+      {
+        "id": "cover",
+        "storageKey": "/images/italian-romance/cover.webp",
+        "metadata": "measure from final independently reconstructed image"
+      },
+      {
+        "id": "story-left",
+        "storageKey": "/images/italian-romance/story-left.webp",
+        "metadata": "measure from final independently reconstructed image"
+      },
+      {
+        "id": "story-center",
+        "storageKey": "/images/italian-romance/story-center.webp",
+        "metadata": "measure from final independently reconstructed image"
+      },
+      {
+        "id": "story-right",
+        "storageKey": "/images/italian-romance/story-right.webp",
+        "metadata": "measure from final independently reconstructed image"
+      },
+      {
+        "id": "venue-story",
+        "storageKey": "/images/italian-romance/venue-story.webp",
+        "metadata": "measure from final independently reconstructed image"
+      },
+      {
+        "id": "venue",
+        "storageKey": "/images/italian-romance/venue.webp",
+        "metadata": "measure from final independently reconstructed image"
+      }
+    ],
+    "geometry": "geometry.json"
+  },
+  "personalization": {
+    "version": 1,
+    "locales": [
+      "ru",
+      "ky"
+    ],
+    "fields": [
+      {
+        "id": "names",
+        "kind": "text",
+        "label": {
+          "ru": "Имена пары",
+          "ky": "Жаштардын ысымдары"
+        },
+        "section": "main",
+        "required": true,
+        "key": "coupleNames",
+        "maxLength": 70,
+        "multiline": true
+      },
+      {
+        "id": "invitation",
+        "kind": "text",
+        "label": {
+          "ru": "Текст приглашения",
+          "ky": "Чакыруу тексти"
+        },
+        "section": "main",
+        "required": true,
+        "key": "invitationText",
+        "maxLength": 240,
+        "multiline": true
+      },
+      {
+        "id": "quote",
+        "kind": "text",
+        "label": {
+          "ru": "История пары",
+          "ky": "Жаштардын тарыхы"
+        },
+        "section": "main",
+        "required": true,
+        "key": "quoteText",
+        "maxLength": 240,
+        "multiline": true
+      },
+      {
+        "id": "date",
+        "kind": "date",
+        "label": {
+          "ru": "Дата и время",
+          "ky": "Күнү жана убактысы"
+        },
+        "section": "date",
+        "required": true,
+        "key": "ceremonyDate"
+      },
+      {
+        "id": "venueName",
+        "kind": "text",
+        "label": {
+          "ru": "Место проведения",
+          "ky": "Той өтүүчү жер"
+        },
+        "section": "location",
+        "required": true,
+        "key": "venueName",
+        "maxLength": 80,
+        "multiline": true
+      },
+      {
+        "id": "address",
+        "kind": "text",
+        "label": {
+          "ru": "Адрес",
+          "ky": "Дарек"
+        },
+        "section": "location",
+        "required": true,
+        "key": "venueAddress",
+        "maxLength": 140,
+        "multiline": false
+      },
+      {
+        "id": "coverPhoto",
+        "kind": "image",
+        "label": {
+          "ru": "Фото обложки",
+          "ky": "Мукаба сүрөтү"
+        },
+        "section": "photos",
+        "required": false,
+        "nodeId": "coverScene",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "venueStoryPhoto",
+        "kind": "image",
+        "label": {
+          "ru": "Фото истории",
+          "ky": "Тарых сүрөтү"
+        },
+        "section": "photos",
+        "required": false,
+        "nodeId": "venueStoryPreview",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "venuePhotoField",
+        "kind": "image",
+        "label": {
+          "ru": "Фото ресторана",
+          "ky": "Тойкананын сүрөтү"
+        },
+        "section": "photos",
+        "required": false,
+        "nodeId": "venuePhoto",
+        "minWidth": 1,
+        "minHeight": 1
+      },
+      {
+        "id": "galleryPhotos",
+        "kind": "gallery",
+        "label": {
+          "ru": "Фотоальбом — до 4 фото",
+          "ky": "Фотоальбом — 4 сүрөткө чейин"
+        },
+        "section": "photos",
+        "required": false,
+        "nodeId": "polaroidGallery",
+        "maxPhotos": 4
+      },
+      {
+        "id": "programField",
+        "kind": "schedule",
+        "label": {
+          "ru": "Программа дня",
+          "ky": "Тойдун программасы"
+        },
+        "section": "schedule",
+        "required": true,
+        "nodeId": "program",
+        "maxItems": 6
+      },
+      {
+        "id": "response",
+        "kind": "rsvp",
+        "label": {
+          "ru": "Подтверждение участия",
+          "ky": "Катышууну ырастоо"
+        },
+        "section": "rsvp",
+        "required": true,
+        "nodeId": "rsvpWidget",
+        "maxGuests": 6
+      },
+      {
+        "id": "musicTrack",
+        "kind": "music",
+        "label": {
+          "ru": "Музыка",
+          "ky": "Музыка"
+        },
+        "section": "music",
+        "required": false,
+        "nodeId": "musicCard",
+        "sources": []
+      }
+    ],
+    "sectionEditing": {
+      "hideablePageIds": [
+        "gallery"
+      ],
+      "reorderablePageIds": [],
+      "renameablePageIds": [
+        "cover",
+        "invitation",
+        "gallery",
+        "rsvpPage"
+      ]
+    }
+  },
+  "notes": [
+    "Proposed calendar, polaroid layout, location nameKey, RSVP wishEnabled/guestCountControl and compact music layout require shared schema and runtime implementation before importing.",
+    "No calendarMonth/Year/Day fields: derive all from ceremonyDate in Asia/Bishkek.",
+    "No fixed song or invented venue address; defaults illustrative.",
+    "Optional video excluded from base contract until real supported media exists.",
+    "Additional static localized text bindings and all real asset metadata must be generated from geometry and final assets."
+  ]
+}

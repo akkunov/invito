@@ -1,0 +1,408 @@
+{
+  "slug": "secret-garden",
+  "reference": "full-reference.png",
+  "sourceType": "approved raster concept",
+  "coordinateSystem": "local CSS px at width 430; raster estimates, not Figma; preserve aspect ratio; live controls reflow",
+  "viewport": {
+    "width": 430,
+    "height": 932
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "width": 430,
+      "height": 1114,
+      "sourceCrop": [
+        1,
+        5,
+        392,
+        1018
+      ],
+      "elements": [
+        {
+          "id": "gatePoster",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 1114
+        },
+        {
+          "id": "header",
+          "type": "text",
+          "x": 43,
+          "y": 22,
+          "width": 344,
+          "height": 84
+        },
+        {
+          "id": "eyebrow",
+          "type": "text",
+          "x": 77,
+          "y": 568,
+          "width": 275,
+          "height": 56
+        },
+        {
+          "id": "names",
+          "type": "text",
+          "x": 54,
+          "y": 635,
+          "width": 322,
+          "height": 150
+        },
+        {
+          "id": "date",
+          "type": "text",
+          "x": 43,
+          "y": 854,
+          "width": 344,
+          "height": 39
+        },
+        {
+          "id": "venue",
+          "type": "text",
+          "x": 64,
+          "y": 903,
+          "width": 301,
+          "height": 29
+        },
+        {
+          "id": "openGate",
+          "type": "button",
+          "x": 185,
+          "y": 969,
+          "width": 60,
+          "height": 60
+        }
+      ]
+    },
+    {
+      "id": "story",
+      "width": 430,
+      "height": 1230,
+      "sourceCrop": [
+        395,
+        5,
+        749,
+        1018
+      ],
+      "elements": [
+        {
+          "id": "flowers",
+          "type": "decoration",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 209
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 60,
+          "y": 123,
+          "width": 310,
+          "height": 86
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 64,
+          "y": 234,
+          "width": 301,
+          "height": 55
+        },
+        {
+          "id": "storyLine",
+          "type": "decoration",
+          "x": 28,
+          "y": 381,
+          "width": 3,
+          "height": 443
+        },
+        {
+          "id": "chapter1Photo",
+          "type": "image",
+          "x": 54,
+          "y": 314,
+          "width": 144,
+          "height": 191
+        },
+        {
+          "id": "chapter1Text",
+          "type": "text",
+          "x": 224,
+          "y": 330,
+          "width": 189,
+          "height": 160
+        },
+        {
+          "id": "chapter2Photo",
+          "type": "image",
+          "x": 54,
+          "y": 509,
+          "width": 144,
+          "height": 191
+        },
+        {
+          "id": "chapter2Text",
+          "type": "text",
+          "x": 224,
+          "y": 517,
+          "width": 189,
+          "height": 166
+        },
+        {
+          "id": "chapter3Photo",
+          "type": "image",
+          "x": 54,
+          "y": 707,
+          "width": 144,
+          "height": 203
+        },
+        {
+          "id": "chapter3Text",
+          "type": "text",
+          "x": 224,
+          "y": 713,
+          "width": 189,
+          "height": 184
+        },
+        {
+          "id": "letter",
+          "type": "decoration",
+          "x": 17,
+          "y": 922,
+          "width": 396,
+          "height": 271
+        },
+        {
+          "id": "letterCopy",
+          "type": "text",
+          "x": 86,
+          "y": 996,
+          "width": 284,
+          "height": 111
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "width": 430,
+      "height": 1100,
+      "sourceCrop": [
+        753,
+        5,
+        1149,
+        1018
+      ],
+      "elements": [
+        {
+          "id": "heroPhoto",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 220
+        },
+        {
+          "id": "calendar",
+          "type": "calendar",
+          "x": 10,
+          "y": 220,
+          "width": 409,
+          "height": 280
+        },
+        {
+          "id": "programHeading",
+          "type": "text",
+          "x": 22,
+          "y": 534,
+          "width": 387,
+          "height": 55
+        },
+        {
+          "id": "program",
+          "type": "schedule",
+          "x": 13,
+          "y": 585,
+          "width": 404,
+          "height": 178
+        },
+        {
+          "id": "venuePhoto",
+          "type": "image",
+          "x": 11,
+          "y": 781,
+          "width": 408,
+          "height": 192
+        },
+        {
+          "id": "venueCard",
+          "type": "location",
+          "x": 11,
+          "y": 952,
+          "width": 408,
+          "height": 77
+        }
+      ]
+    },
+    {
+      "id": "rsvp",
+      "width": 430,
+      "height": 1143,
+      "sourceCrop": [
+        1153,
+        5,
+        1534,
+        1018
+      ],
+      "elements": [
+        {
+          "id": "heroDecor",
+          "type": "decoration",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 200
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 32,
+          "y": 206,
+          "width": 366,
+          "height": 82
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 34,
+          "y": 309,
+          "width": 361,
+          "height": 51
+        },
+        {
+          "id": "nameLabel",
+          "type": "text",
+          "x": 34,
+          "y": 377,
+          "width": 361,
+          "height": 21
+        },
+        {
+          "id": "name",
+          "type": "input",
+          "x": 34,
+          "y": 401,
+          "width": 361,
+          "height": 43
+        },
+        {
+          "id": "attendanceLabel",
+          "type": "text",
+          "x": 34,
+          "y": 459,
+          "width": 361,
+          "height": 21
+        },
+        {
+          "id": "yes",
+          "type": "radio",
+          "x": 34,
+          "y": 486,
+          "width": 163,
+          "height": 42
+        },
+        {
+          "id": "no",
+          "type": "radio",
+          "x": 204,
+          "y": 486,
+          "width": 191,
+          "height": 42
+        },
+        {
+          "id": "guestsLabel",
+          "type": "text",
+          "x": 34,
+          "y": 542,
+          "width": 361,
+          "height": 23
+        },
+        {
+          "id": "stepper",
+          "type": "stepper",
+          "x": 34,
+          "y": 567,
+          "width": 361,
+          "height": 42
+        },
+        {
+          "id": "wishLabel",
+          "type": "text",
+          "x": 34,
+          "y": 624,
+          "width": 361,
+          "height": 23
+        },
+        {
+          "id": "wish",
+          "type": "textarea",
+          "x": 34,
+          "y": 652,
+          "width": 361,
+          "height": 81
+        },
+        {
+          "id": "counter",
+          "type": "text",
+          "x": 331,
+          "y": 741,
+          "width": 64,
+          "height": 17
+        },
+        {
+          "id": "submit",
+          "type": "button",
+          "x": 34,
+          "y": 762,
+          "width": 361,
+          "height": 55
+        },
+        {
+          "id": "music",
+          "type": "music",
+          "x": 24,
+          "y": 840,
+          "width": 383,
+          "height": 89
+        },
+        {
+          "id": "thanks",
+          "type": "text",
+          "x": 69,
+          "y": 966,
+          "width": 292,
+          "height": 57
+        },
+        {
+          "id": "flowers",
+          "type": "decoration",
+          "x": 258,
+          "y": 949,
+          "width": 172,
+          "height": 194
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "paper": "#F7EBDD",
+    "ink": "#28331C",
+    "surface": "#E8DCC8",
+    "accent": "#9D302A",
+    "border": "#817444",
+    "ivory": "#FFFAF0"
+  }
+}

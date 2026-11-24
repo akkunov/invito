@@ -1,0 +1,142 @@
+{
+  "status": "design-contract-only-not-importable",
+  "manifest": {
+    "slug": "art-gallery",
+    "name": "Art Gallery",
+    "category": "WEDDING",
+    "coverPageId": "cover"
+  },
+  "document": {
+    "schemaVersion": 2,
+    "locale": "ru",
+    "pages": [
+      {
+        "id": "cover",
+        "width": 430,
+        "height": 1050
+      },
+      {
+        "id": "exhibition",
+        "width": 430,
+        "height": 1050
+      },
+      {
+        "id": "event",
+        "width": 430,
+        "height": 1050
+      },
+      {
+        "id": "rsvp",
+        "width": 430,
+        "height": 1050
+      }
+    ],
+    "variables": {
+      "ceremonyDate": {
+        "type": "date",
+        "value": "2027-05-29T17:00:00+06:00"
+      },
+      "coupleNames": {
+        "type": "text",
+        "value": {
+          "ru": "Алибек и Алина",
+          "ky": "Алибек жана Алина"
+        }
+      }
+    }
+  },
+  "personalization": {
+    "locales": [
+      "ru",
+      "ky"
+    ],
+    "fields": [
+      {
+        "id": "names",
+        "kind": "text",
+        "target": "coupleNames",
+        "section": "main"
+      },
+      {
+        "id": "invitation",
+        "kind": "text",
+        "target": "invitationText",
+        "section": "main"
+      },
+      {
+        "id": "date",
+        "kind": "date",
+        "target": "ceremonyDate",
+        "section": "date"
+      },
+      {
+        "id": "venueName",
+        "kind": "text",
+        "target": "venueName",
+        "section": "location"
+      },
+      {
+        "id": "address",
+        "kind": "text",
+        "target": "venueAddress",
+        "section": "location"
+      },
+      {
+        "id": "coverPhoto",
+        "kind": "image",
+        "target": "cover",
+        "section": "photos"
+      },
+      {
+        "id": "venuePhoto",
+        "kind": "image",
+        "target": "venuePhoto",
+        "section": "photos"
+      },
+      {
+        "id": "program",
+        "kind": "schedule",
+        "target": "program",
+        "section": "schedule"
+      },
+      {
+        "id": "response",
+        "kind": "rsvp",
+        "target": "rsvp",
+        "section": "rsvp"
+      },
+      {
+        "id": "musicTrack",
+        "kind": "music",
+        "target": "music",
+        "section": "music"
+      },
+      {
+        "id": "galleryPhotos",
+        "kind": "gallery",
+        "target": "gallery",
+        "section": "photos",
+        "maxPhotos": 4
+      }
+    ]
+  },
+  "proposedSharedCapabilities": [
+    {
+      "name": "gallery",
+      "contract": "exhibition layout: active photo, caption, ordinal, thumbnails, next/previous, full screen; 1–4 photos with optional RU/KY caption per asset"
+    },
+    {
+      "name": "schedule",
+      "contract": "minimal time/title rows"
+    },
+    {
+      "name": "calendar",
+      "contract": "existing ICS action"
+    },
+    {
+      "name": "rsvp",
+      "contract": "opening registration appearance, shared backend"
+    }
+  ],
+  "notes": "Resolve proposed types and target IDs against current Studio schema; use geometry for layout, not import. Keep existing schemas backward compatible."
+}

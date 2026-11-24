@@ -1,0 +1,464 @@
+{
+  "slug": "boarding-pass",
+  "reference": "full-reference.png",
+  "sourceType": "approved raster concept",
+  "coordinateSystem": "local CSS px at width 430; raster estimates, not Figma; preserve aspect ratio; live controls reflow",
+  "viewport": {
+    "width": 430,
+    "height": 932
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "width": 430,
+      "height": 1144,
+      "sourceCrop": [
+        5,
+        7,
+        383,
+        1013
+      ],
+      "elements": [
+        {
+          "id": "windowHero",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 1144
+        },
+        {
+          "id": "header",
+          "type": "text",
+          "x": 43,
+          "y": 34,
+          "width": 344,
+          "height": 69
+        },
+        {
+          "id": "eyebrow",
+          "type": "text",
+          "x": 77,
+          "y": 249,
+          "width": 275,
+          "height": 46
+        },
+        {
+          "id": "names",
+          "type": "text",
+          "x": 60,
+          "y": 510,
+          "width": 310,
+          "height": 183
+        },
+        {
+          "id": "date",
+          "type": "badge",
+          "x": 90,
+          "y": 716,
+          "width": 254,
+          "height": 43
+        },
+        {
+          "id": "venue",
+          "type": "text",
+          "x": 77,
+          "y": 774,
+          "width": 275,
+          "height": 27
+        },
+        {
+          "id": "luggage",
+          "type": "decoration",
+          "x": 0,
+          "y": 852,
+          "width": 430,
+          "height": 292
+        },
+        {
+          "id": "next",
+          "type": "button",
+          "x": 194,
+          "y": 1056,
+          "width": 52,
+          "height": 57
+        }
+      ]
+    },
+    {
+      "id": "ticket",
+      "width": 430,
+      "height": 1147,
+      "sourceCrop": [
+        388,
+        7,
+        765,
+        1013
+      ],
+      "elements": [
+        {
+          "id": "boardingTicket",
+          "type": "frame",
+          "x": 13,
+          "y": 21,
+          "width": 404,
+          "height": 390
+        },
+        {
+          "id": "title",
+          "type": "text",
+          "x": 90,
+          "y": 69,
+          "width": 280,
+          "height": 52
+        },
+        {
+          "id": "barcode",
+          "type": "decoration",
+          "x": 301,
+          "y": 69,
+          "width": 103,
+          "height": 46
+        },
+        {
+          "id": "flight",
+          "type": "text",
+          "x": 43,
+          "y": 154,
+          "width": 181,
+          "height": 52
+        },
+        {
+          "id": "date",
+          "type": "text",
+          "x": 215,
+          "y": 154,
+          "width": 194,
+          "height": 52
+        },
+        {
+          "id": "route",
+          "type": "text",
+          "x": 43,
+          "y": 229,
+          "width": 361,
+          "height": 57
+        },
+        {
+          "id": "departureArrival",
+          "type": "text",
+          "x": 26,
+          "y": 303,
+          "width": 378,
+          "height": 92
+        },
+        {
+          "id": "perforation",
+          "type": "decoration",
+          "x": 13,
+          "y": 411,
+          "width": 404,
+          "height": 5
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 77,
+          "y": 436,
+          "width": 275,
+          "height": 40
+        },
+        {
+          "id": "chapter1Photo",
+          "type": "image",
+          "x": 64,
+          "y": 491,
+          "width": 181,
+          "height": 126
+        },
+        {
+          "id": "chapter1Text",
+          "type": "text",
+          "x": 258,
+          "y": 493,
+          "width": 150,
+          "height": 132
+        },
+        {
+          "id": "chapter2Photo",
+          "type": "image",
+          "x": 64,
+          "y": 631,
+          "width": 181,
+          "height": 143
+        },
+        {
+          "id": "chapter2Text",
+          "type": "text",
+          "x": 258,
+          "y": 631,
+          "width": 150,
+          "height": 143
+        },
+        {
+          "id": "chapter3Photo",
+          "type": "image",
+          "x": 64,
+          "y": 786,
+          "width": 181,
+          "height": 138
+        },
+        {
+          "id": "chapter3Text",
+          "type": "text",
+          "x": 258,
+          "y": 786,
+          "width": 150,
+          "height": 143
+        },
+        {
+          "id": "stamp",
+          "type": "decoration",
+          "x": 11,
+          "y": 946,
+          "width": 408,
+          "height": 184
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "width": 430,
+      "height": 1144,
+      "sourceCrop": [
+        771,
+        7,
+        1149,
+        1013
+      ],
+      "elements": [
+        {
+          "id": "venuePhoto",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 263
+        },
+        {
+          "id": "destination",
+          "type": "text",
+          "x": 34,
+          "y": 269,
+          "width": 361,
+          "height": 32
+        },
+        {
+          "id": "venueTitle",
+          "type": "text",
+          "x": 26,
+          "y": 301,
+          "width": 378,
+          "height": 46
+        },
+        {
+          "id": "venueAddress",
+          "type": "text",
+          "x": 39,
+          "y": 355,
+          "width": 353,
+          "height": 29
+        },
+        {
+          "id": "map",
+          "type": "button",
+          "x": 47,
+          "y": 384,
+          "width": 335,
+          "height": 51
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 39,
+          "y": 478,
+          "width": 353,
+          "height": 41
+        },
+        {
+          "id": "program",
+          "type": "schedule",
+          "x": 32,
+          "y": 526,
+          "width": 374,
+          "height": 332
+        },
+        {
+          "id": "calendar",
+          "type": "button",
+          "x": 22,
+          "y": 877,
+          "width": 387,
+          "height": 76
+        },
+        {
+          "id": "passport",
+          "type": "decoration",
+          "x": 0,
+          "y": 972,
+          "width": 430,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "id": "rsvp",
+      "width": 430,
+      "height": 1147,
+      "sourceCrop": [
+        1154,
+        7,
+        1531,
+        1013
+      ],
+      "elements": [
+        {
+          "id": "mapDecor",
+          "type": "decoration",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 161
+        },
+        {
+          "id": "heading",
+          "type": "text",
+          "x": 43,
+          "y": 173,
+          "width": 344,
+          "height": 77
+        },
+        {
+          "id": "intro",
+          "type": "text",
+          "x": 56,
+          "y": 257,
+          "width": 318,
+          "height": 48
+        },
+        {
+          "id": "nameLabel",
+          "type": "text",
+          "x": 32,
+          "y": 319,
+          "width": 366,
+          "height": 23
+        },
+        {
+          "id": "name",
+          "type": "input",
+          "x": 32,
+          "y": 348,
+          "width": 366,
+          "height": 46
+        },
+        {
+          "id": "attendanceLabel",
+          "type": "text",
+          "x": 32,
+          "y": 407,
+          "width": 366,
+          "height": 23
+        },
+        {
+          "id": "yes",
+          "type": "radio",
+          "x": 32,
+          "y": 434,
+          "width": 172,
+          "height": 48
+        },
+        {
+          "id": "no",
+          "type": "radio",
+          "x": 215,
+          "y": 434,
+          "width": 183,
+          "height": 48
+        },
+        {
+          "id": "guestsLabel",
+          "type": "text",
+          "x": 32,
+          "y": 502,
+          "width": 366,
+          "height": 26
+        },
+        {
+          "id": "stepper",
+          "type": "stepper",
+          "x": 236,
+          "y": 516,
+          "width": 161,
+          "height": 46
+        },
+        {
+          "id": "wishLabel",
+          "type": "text",
+          "x": 32,
+          "y": 585,
+          "width": 366,
+          "height": 23
+        },
+        {
+          "id": "wish",
+          "type": "textarea",
+          "x": 32,
+          "y": 608,
+          "width": 366,
+          "height": 76
+        },
+        {
+          "id": "counter",
+          "type": "text",
+          "x": 331,
+          "y": 694,
+          "width": 67,
+          "height": 18
+        },
+        {
+          "id": "submit",
+          "type": "button",
+          "x": 30,
+          "y": 719,
+          "width": 370,
+          "height": 60
+        },
+        {
+          "id": "music",
+          "type": "music",
+          "x": 22,
+          "y": 809,
+          "width": 387,
+          "height": 86
+        },
+        {
+          "id": "closing",
+          "type": "decoration",
+          "x": 0,
+          "y": 941,
+          "width": 430,
+          "height": 206
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "paper": "#F5E9D8",
+    "ink": "#241A17",
+    "surface": "#F8F1E6",
+    "accent": "#722721",
+    "border": "#C58C56",
+    "ivory": "#FFF4DF"
+  }
+}
