@@ -1,14 +1,14 @@
 "use client";
 
 import {useEffect,useRef,useState,type MouseEvent} from "react";
-import Link from "next/link";
-import {ArrowLeft,ArrowRight,Check,Cloud,Eye,EyeOff,Image as ImageIcon,Layers3,Music2,Palette,RotateCcw,RotateCw,Type,X,ChevronUp,ChevronDown} from "lucide-react";
+import {Eye,EyeOff,Layers3,X,ChevronUp,ChevronDown} from "lucide-react";
 import type {BlockKind} from "@/features/invitations/invitation.schema";
 import type {InvitationEditorController} from "@/features/invitations/use-invitation-editor";
 import type {Locale} from "@/i18n/locales";
 import {getDictionary} from "@/i18n/dictionaries";
 import {InvitationCanvas} from "@/components/invitation/invitation-canvas";
 import {EditorInspector} from "@/components/editor/editor-inspector";
+import {UniversalMobileEditor} from "@/components/customer-editor/universal-mobile-editor";
 import "./legacy-mobile-workspace.css";
 
 type Panel="text"|"photo"|"style"|"sections"|"music"|null;
@@ -57,39 +57,22 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
   const iconLabel=ru?{text:"Текст",photo:"Фото",style:"Стиль",sections:"Секции",music:"Музыка"}:{text:"Текст",photo:"Сүрөт",style:"Стиль",sections:"Бөлүмдөр",music:"Музыка"};
   const panelTitle=panel?iconLabel[panel]:"";
   const isText=panel==="text",isPhoto=panel==="photo";
-  return <div className="lm3" lang={editor.document.locale}>
-    <header className="lm3-header">
-      <Link href={`/${locale}/templates`} aria-label={ru?"Назад к шаблонам":"Шаблондорго кайтуу"}><ArrowLeft size={19}/></Link>
-      <strong className="lm3-brand">Eventiq<span>.</span></strong>
-      <div className="lm3-header-actions">
-        <button type="button" disabled={!editor.canUndo} onClick={editor.undo} aria-label={ru?"Отменить":"Артка кайтаруу"}><RotateCcw size={19}/></button>
-        <button type="button" disabled={!editor.canRedo} onClick={editor.redo} aria-label={ru?"Повторить":"Кайталоо"}><RotateCw size={19}/></button>
-        <button type="button" onClick={editor.saveNow} aria-label={ru?"Сохранить на устройстве":"Түзмөктө сактоо"} title={editor.isSaved?"Сохранено":"Сохранить"}><Cloud size={19}/></button>
-        <button type="button" className="lm3-publish" disabled title={ru?"Для этого старого шаблона пока доступно только локальное сохранение. Выберите серверный шаблон для публикации.":"Бул шаблонго азырынча жергиликтүү сактоо гана жеткиликтүү."}>{ru?"Опубликовать":"Жарыялоо"}</button>
-      </div>
-    </header>
-    <div className="lm3-save" role="status"><Check size={13}/>{editor.saveError?(ru?"Не удалось сохранить — освободите память":"Сактоо мүмкүн болгон жок"):editor.isSaved?(ru?"Сохранено на телефоне":"Телефондо сакталды"):(ru?"Сохраняем локально…":"Түзмөккө сакталууда…")}</div>
-    <main className="lm3-main">
-      <div className="lm3-stage" ref={preview} onClickCapture={selectByTap} aria-label={ru?"Приглашение":"Чакыруу"}>
-        <InvitationCanvas document={editor.document} musicSrc={editor.audioUrl} musicName={editor.audioName??undefined}/>
-      </div>
-      <nav className="lm3-pager" aria-label={ru?"Навигация по приглашению":"Чакыруу боюнча багыттоо"}>
-        <button type="button" disabled={current===0} onClick={()=>navigate(blocks[current-1].id)} aria-label={ru?"Предыдущая секция":"Мурунку бөлүм"}><ArrowLeft size={19}/></button>
-        <button type="button" onClick={e=>open("sections",e.currentTarget)}>{current+1} / {blocks.length} <strong>{name(blocks[current]?.id??"cover")}</strong><ChevronDown size={16}/></button>
-        <button type="button" disabled={!blocks.length||current>=blocks.length-1} onClick={()=>{if(blocks[current+1])navigate(blocks[current+1].id);}} aria-label={ru?"Следующая секция":"Кийинки бөлүм"}><ArrowRight size={19}/></button>
-      </nav>
-    </main>
-    <nav className="lm3-dock" aria-label={ru?"Инструменты":"Куралдар"}>
-      {([{id:"text",icon:Type},{id:"photo",icon:ImageIcon},{id:"style",icon:Palette},{id:"sections",icon:Layers3},{id:"music",icon:Music2}] as const).map(item=>
-        <button type="button" key={item.id} aria-pressed={panel===item.id} onClick={e=>open(item.id,e.currentTarget)}>
-          <item.icon size={22}/><span>{iconLabel[item.id]}</span>
-        </button>)}
-    </nav>
-    {panel&&<div className="lm3-scrim" onClick={close} aria-hidden="true"/>}
-    {panel&&<section className="lm3-sheet" aria-label={panelTitle}>
-      <div className="lm3-sheet-heading"><span className="lm3-handle" aria-hidden="true"/><h2>{panelTitle}</h2><button type="button" onClick={close} aria-label={ru?"Закрыть":"Жабуу"}><X size={20}/></button></div>
-      <div className="lm3-sheet-scroll">
-        {panel==="sections"?<div className="lm3-sections">
+  return <UniversalMobileEditor
+    locale={locale} backHref={`/${locale}/templates`}
+    className="ue-legacy" sheetOpen={panel!==null} activeTool={panel??"text"}
+    pageIndex={current} pageCount={blocks.length} pageName={name(blocks[current]?.id??"cover")}
+    onNavigate={delta=>{const block=blocks[current+delta];if(block)navigate(block.id);}}
+    onTool={open} onClose={close}
+    canUndo={editor.canUndo} canRedo={editor.canRedo} onUndo={editor.undo} onRedo={editor.redo}
+    saveState={editor.saveError?"error":editor.isSaved?"saved":"pending"}
+    saveLabel={editor.saveError?(ru?"Не удалось сохранить":"Сактоо мүмкүн болгон жок"):editor.isSaved?(ru?"Сохранено на устройстве":"Түзмөктө сакталды"):(ru?"Сохранение…":"Сакталууда…")}
+    onSave={editor.saveNow}
+    publishDisabledReason={ru?"Этот шаблон пока хранится только на устройстве. Для публикации выберите серверный шаблон.":"Бул шаблон азырынча түзмөктө гана сакталат."}
+    canvas={<InvitationCanvas document={editor.document} musicSrc={editor.audioUrl} musicName={editor.audioName??undefined}/>}
+    canvasRef={preview} onCanvasClick={selectByTap}
+    settings={panel&&<section className="ce-controls" aria-label={panelTitle}>
+      <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><strong>{panelTitle}</strong><button type="button" onClick={close} aria-label={ru?"Закрыть":"Жабуу"}><X size={20}/></button></div>
+      <div className="ce-form lm3-sheet-body">{panel==="sections"?<div className="lm3-sections">
           {editor.document.blocks.map((block,index)=><div className={"lm3-section-row"+(selected===block.id?" active":"")} key={block.id}>
             <button type="button" className="lm3-section-select" onClick={()=>navigate(block.id)} aria-current={selected===block.id?"true":undefined}>
               <span className="lm3-section-icon"><Layers3 size={18}/></span>
@@ -115,8 +98,7 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
               <button type="button" className={selected===kind?"selected":""} key={kind} onClick={()=>onSelect(kind)}>{name(kind)}</button>)}
           </div>}
           <EditorInspector locale={locale} editor={editor} selected={panel==="music"?"music":selected}/>
-        </>}
-      </div>
+        </>}</div>
     </section>}
-  </div>;
+  />;
 }
