@@ -12,6 +12,7 @@ export const blockKindSchema = z.enum([
 export const invitationBlockSchema = z.object({
   id: blockKindSchema,
   enabled: z.boolean(),
+  navigationName: z.string().trim().min(1).max(80).optional(),
 });
 
 export const invitationDocumentSchema = z.object({
