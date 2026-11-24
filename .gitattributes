@@ -1,0 +1,2 @@
+# Template packages record canonical SVG byte lengths.
+public/images/**/*.svg text eol=lf
