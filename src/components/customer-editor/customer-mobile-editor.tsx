@@ -180,7 +180,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     let active=true;
     const refresh=async()=>{
       try{
-        const entries=await Promise.all(customerAssets.map(async asset=>{
+        const entries=await Promise.allSettled(customerAssets.map(async asset=>{
           const id=asset.storageKey.slice("asset:".length);
           const data=await customerApi<{url:string;expiresInSeconds:number}>(
             "/customer/media/"+encodeURIComponent(id)+"/read-url");
@@ -188,7 +188,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
           if(url.protocol!=="https:"||!url.hostname.endsWith(".r2.cloudflarestorage.com"))throw Error("INVALID_URL");
           return [asset.storageKey,data.url] as const;
         }));
-        if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries)}));
+        if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries.flatMap(entry=>entry.status==="fulfilled"?[entry.value]:[]))}));
       }catch{}
     };
     void refresh();
