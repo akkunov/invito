@@ -13,7 +13,7 @@ async function open(locale,viewport){
  const page=await context.newPage();
  page.on("pageerror",e=>errors.push(e.message));
  await page.goto(base+"/"+locale+"/editor?template=editorial-riviera-wedding",{waitUntil:"networkidle"});
- await page.locator(".editor-app-modern").waitFor({state:"visible"});
+ await page.locator(viewport.width <= 850 ? ".ue-mobile" : ".editor-app-modern").waitFor({state:"visible"});
  return {context,page};
 }
 try{
@@ -41,22 +41,31 @@ try{
  }finally{await context.close();}
  const {context:mobileContext,page:mobile}=await open("ky",{width:390,height:844});
  try{
-  assert.ok(await mobile.locator(".editor-control-pane").isVisible());
-  assert.equal(await mobile.locator(".editor-stage").isVisible(),false);
-  await mobile.locator(".editor-block-list li").nth(1).locator(".editor-block-select").click();
-  assert.equal(await mobile.locator(".editor-inspector").isVisible(),true);
-  await mobile.locator(".editor-view-switch button").nth(1).click();
-  assert.ok(await mobile.locator(".editor-stage").isVisible());
-  assert.equal(await mobile.locator(".editor-control-pane").isVisible(),false);
-  const phone=await mobile.locator(".editor-phone").boundingBox();
+  const canvas=mobile.getByRole("complementary",{name:"Алдын ала көрүү"});
+  const tools=mobile.getByRole("navigation",{name:"Куралдар"});
+  assert.ok(await canvas.isVisible());
+  await mobile.getByRole("button",{name:"Кийинки бөлүм"}).click();
+  assert.match(await mobile.locator(".ce-mobile-page-nav span").innerText(),/^2 \/ /);
+  await mobile.getByRole("button",{name:"Мурунку бөлүм"}).click();
+
+  const textTool=tools.getByRole("button",{name:"Текст",exact:true});
+  await textTool.click();
+  const form=mobile.locator(".ce-controls .editor-inspector");
+  assert.ok(await form.isVisible());
+  const field=form.locator(".inspector-fields input").first();
+  await field.fill("Айгүл Тест");
+  await mobile.waitForFunction(()=>document.querySelector(".ce-preview-screen")?.textContent?.includes("Айгүл Тест"));
+  await mobile.keyboard.press("Escape");
+  await form.waitFor({state:"hidden"});
+  assert.ok(await canvas.isVisible());
+  assert.ok(await textTool.evaluate(button=>button===document.activeElement));
+
+  const phone=await mobile.locator(".ce-preview-screen").boundingBox();
   assert.ok(phone&&phone.width<=390&&phone.height>200,"Preview must fit a narrow screen");
   const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
   assert.ok(overflow<=3,"No horizontal browser-page scrolling");
   await mobile.screenshot({path:join(artifacts,"public-customer-editor-mobile.png")});
-  await mobile.locator(".editor-view-switch button").first().click();
-  assert.equal(await mobile.locator(".editor-stage").isVisible(),false);
-  assert.ok(await mobile.locator(".editor-inspector").isVisible());
  }finally{await mobileContext.close();}
  assert.deepEqual(errors,[],"No uncaught editor errors");
- console.log("PASS: public INVITO customer editor, responsive edit/preview switch, section navigation and live content");
+ console.log("PASS: public INVITO customer editor, responsive workspace, section navigation, dismissing settings and live content");
 }finally{await browser.close();}

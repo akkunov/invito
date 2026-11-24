@@ -201,7 +201,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const mergedUrls=useMemo(()=>({...templateUrls,...customerUrls}),[templateUrls,customerUrls]);
   const visiblePages=useMemo(()=>document.pages.filter(page=>document.nodes[page.rootNodeId]?.visible!==false),[document]);
   const activePageIndex=Math.min(activeMobilePage,Math.max(0,visiblePages.length-1));
-  const issues=useMemo(()=>personalizationIssues(document,contract),[document,contract]);
+  const issues=useMemo(()=>personalizationIssues(document,contract,source),[document,contract,source]);
   const grouped=useMemo(()=>contract.fields.reduce<Record<Step,EditableField[]>>((acc,field)=>{
     acc[sectionToStep[field.section]].push(field);
     return acc;

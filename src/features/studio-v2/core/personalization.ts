@@ -47,7 +47,7 @@ export function readPersonalizedValue(doc:ProjectDocumentV2,f:EditableField):Per
  }
 }
 function invalid(message:string):never{throw Error(message);}
-function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,locales:readonly ("ru"|"ky")[],complete:boolean){
+function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,locales:readonly ("ru"|"ky")[],complete:boolean,source:ProjectDocumentV2){
  const reject=(msg:string)=>invalid(f.id+": "+msg);
  const asset=(id:string)=>{const a=own(doc.assets,id)?doc.assets[id]:undefined;if(!a)return reject("Ресурс не разрешён или не найден");return a;};
  const requiredText=(value:{ru:string;ky:string})=>{if(complete&&f.required&&locales.some(l=>!value[l].trim()))reject("Заполните обязательные языки");};
@@ -67,7 +67,16 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
    if(v.letterSpacing!==undefined&&(!f.letterSpacingRange||v.letterSpacing<f.letterSpacingRange.min||v.letterSpacing>f.letterSpacingRange.max))reject("Межбуквенный интервал вне диапазона");
    break;
   }
-  case "image":{if(v.kind!=="image")return reject("Неверный тип");const a=asset(v.assetId);if(a.decorative)reject("Выберите фотографию");if((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight)reject("Недостаточное разрешение фото");break;}
+  case "image":{
+   if(v.kind!=="image")return reject("Неверный тип");
+   const a=asset(v.assetId);
+   if(a.decorative)reject("Выберите фотографию");
+   const original=source.nodes[f.nodeId];
+   const authoredSample=f.allowOriginalResolution&&original?.type==="image"&&
+     original.assetId===v.assetId&&a.storageKey.startsWith("/images/");
+   if(!authoredSample&&((a.pixelWidth??1)<f.minWidth||(a.pixelHeight??1)<f.minHeight))reject("Недостаточное разрешение фото");
+   break;
+  }
   case "gallery":if(v.kind!=="gallery")return reject("Неверный тип");if(v.assetIds.length>f.maxPhotos||complete&&f.required&&!v.assetIds.length)reject("Недопустимое количество фото");v.assetIds.forEach(id=>{if(asset(id).decorative)reject("Выберите фотографию");});break;
   case "schedule":if(v.kind!=="schedule")return reject("Неверный тип");if(v.items.length>f.maxItems||complete&&f.required&&!v.items.length)reject("Недопустимое количество событий");for(const item of v.items)requiredText(item.label);break;
   case "music":if(v.kind!=="music")return reject("Неверный тип");if(v.source&&!f.sources.includes(v.source)||complete&&f.required&&!v.source)reject("Музыка не входит в разрешённый список");break;
@@ -75,11 +84,11 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
   case "theme":if(v.kind!=="theme")return reject("Неверный тип");if(v.themeId===null?!f.allowBase:!f.themeIds.includes(v.themeId))reject("Тема не разрешена");break;
  }
 }
-export function personalizationIssues(doc:ProjectDocumentV2,contract:PersonalizationContract):Issue[]{
+export function personalizationIssues(doc:ProjectDocumentV2,contract:PersonalizationContract,source:ProjectDocumentV2=doc):Issue[]{
  const issues=contractIssues(doc,contract);
  if(!contract.locales.includes(doc.locale))issues.push({fieldId:"locale",message:"Язык не разрешён"});
  for(const f of contract.fields){
-  try{const value=readPersonalizedValue(doc,f);if(value)checkValue(f,value,doc,contract.locales,true);else if(f.required)invalid("Обязательное значение отсутствует");}catch(e){issues.push({fieldId:f.id,message:e instanceof Error?e.message:"Неверное значение"});}
+  try{const value=readPersonalizedValue(doc,f);if(value)checkValue(f,value,doc,contract.locales,true,source);else if(f.required)invalid("Обязательное значение отсутствует");}catch(e){issues.push({fieldId:f.id,message:e instanceof Error?e.message:"Неверное значение"});}
  }
  return issues;
 }
@@ -98,7 +107,7 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
  for(const raw of uploadedAssets){const a=mediaAssetRefSchema.parse(raw);if(!used.has(a.id)||own(doc.assets,a.id))invalid("Unexpected or colliding uploaded asset");if(a.mimeType==="image/svg+xml"||!a.pixelWidth||!a.pixelHeight||!a.sizeBytes||!(a.storageKey.startsWith("local:")||trustedCloudAssets&&/^asset:[0-9a-f-]{36}$/i.test(a.storageKey)))invalid("Unverified uploaded image");doc.assets[a.id]=a;}
  for(const [id,v] of Object.entries(patch.values)){
   const f=fields.get(id);if(!f)invalid("Field not allowed: "+id);
-  checkValue(f,v,doc,contract.locales,false);
+  checkValue(f,v,doc,contract.locales,false,base);
   if("key" in f&&v.kind==="binding"){doc.values??={};doc.values[f.key]=structuredClone(v.value);continue;}
   if(f.kind==="theme"&&v.kind==="theme"){doc.activeThemeId=v.themeId;continue;}
   if(f.kind==="textStyle"&&v.kind==="textStyle"){
@@ -183,4 +192,4 @@ export function editableCandidates(doc:ProjectDocumentV2):EditableField[]{
 export function fieldTarget(f:EditableField){return "key" in f?"binding:"+f.key:"nodeId" in f?"node:"+f.nodeId:"theme";}
 
 /** Revalidate the derived snapshot before publish; draft editing permits incomplete required fields. */
-export function finalizePersonalization(source:ProjectDocumentV2,contract:PersonalizationContract,patch:unknown,assets:readonly Asset[]=[],trustedCloudAssets=false){const doc=personalizeDocument(source,contract,patch,assets,trustedCloudAssets);const issues=personalizationIssues(doc,contract);if(issues.length)throw Error(issues.map(i=>i.message).join("; "));return doc;}
+export function finalizePersonalization(source:ProjectDocumentV2,contract:PersonalizationContract,patch:unknown,assets:readonly Asset[]=[],trustedCloudAssets=false){const doc=personalizeDocument(source,contract,patch,assets,trustedCloudAssets);const issues=personalizationIssues(doc,contract,source);if(issues.length)throw Error(issues.map(i=>i.message).join("; "));return doc;}

@@ -28,7 +28,7 @@ export function SimpleEditor({source,contract,name,version,onClose}:Props){
  const [previewRun,setPreviewRun]=useState(0),[review,setReview]=useState(false);
  const editorRef=useRef<HTMLDivElement>(null),closeRef=useRef<HTMLButtonElement>(null),previewRef=useRef<HTMLDivElement>(null);
  const draft=useMemo(()=>personalizeDocument(source,contract,patch),[source,contract,patch]);
- const urls=useMediaUrls(draft.assets),issues=useMemo(()=>personalizationIssues(draft,contract),[draft,contract]);
+ const urls=useMediaUrls(draft.assets),issues=useMemo(()=>personalizationIssues(draft,contract,source),[draft,contract,source]);
  const t=(ru:string,ky:string)=>uiLocale==="ky"?ky:ru;
  const current=available.find(s=>s.id===section)??available[0],index=available.findIndex(s=>s.id===current?.id),fields=contract.fields.filter(f=>f.section===current?.id);
  const dirty=Object.keys(patch.values).length>0||patch.locale!==undefined&&patch.locale!==source.locale;

@@ -16,6 +16,8 @@ assert.equal(bindDocument(doc).nodes.title.runs[0].text,"Алина жана Т�
 assert.equal(bindDocument({...doc,locale:"ru"}).nodes.title.runs[0].text,"Алина и Тимур");
 assert.equal(doc.nodes.title.runs[0].text,"fallback");
 assert.equal(bindingText(doc.values["event.open"],"ky"),"Ооба");
+assert.equal(bindingText(doc.values["event.date"],"ky"),"2027-ж., 14-июнь");
+assert.equal(bindingText({type:"date",value:"2027-05-23T20:00:00Z"},"ky"),"2027-ж., 24-май");
 assert.throws(()=>applyStudioCommand(doc,{kind:"setVariableValue",key:"event.date",value:{type:"text",value:{ru:"a",ky:"b"}}}));
 assert.equal(instantSchema.safeParse("2027-06-14T16:00:00").success,false);
 for(const kind of ["rsvp","countdown","location","gallery","music","schedule"]){

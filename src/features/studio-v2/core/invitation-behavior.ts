@@ -8,7 +8,12 @@ export const BLOCK_NAMES:Record<BlockKind,{ru:string;ky:string}>={sectionLink:{r
 export function bindingText(value:BindingValue,locale:Locale):string{
  switch(value.type){
   case "text":return value.value[locale];
-  case "date":return new Intl.DateTimeFormat(locale==="ky"?"ky-KG":"ru-RU",{dateStyle:"long",timeZone:"Asia/Bishkek"}).format(new Date(value.value));
+  case "date":{
+   if(locale==="ru")return new Intl.DateTimeFormat("ru-RU",{dateStyle:"long",timeZone:"Asia/Bishkek"}).format(new Date(value.value));
+   // Keep the same Kyrgyz date in browsers whose ICU data omits ky-KG.
+   const {day,month,year}=eventDateParts(value.value);
+   return `${year}-ж., ${day}-${editorialMonths.ky[month-1]}`;
+  }
   case "number":return new Intl.NumberFormat(locale==="ky"?"ky-KG":"ru-RU").format(value.value);
   case "boolean":return value.value?(locale==="ky"?"Ооба":"Да"):(locale==="ky"?"Жок":"Нет");
  }
@@ -21,11 +26,13 @@ const editorialDateParts=new Intl.DateTimeFormat("en-US",{
  day:"numeric",month:"numeric",year:"numeric",timeZone:"Asia/Bishkek",
 });
 const kyrgyzDateMonths=["январы","февралы","марты","апрели","майы","июну","июлу","августу","сентябры","октябры","ноябры","декабры"];
-function editorialDate(value:string,locale:Locale,longKyrgyz:boolean):string{
+function eventDateParts(value:string){
  const parts=editorialDateParts.formatToParts(new Date(value));
- const day=parts.find(part=>part.type==="day")?.value;
- const month=Number(parts.find(part=>part.type==="month")?.value);
- const year=parts.find(part=>part.type==="year")?.value;
+ return {day:parts.find(part=>part.type==="day")?.value,
+   month:Number(parts.find(part=>part.type==="month")?.value),year:parts.find(part=>part.type==="year")?.value};
+}
+function editorialDate(value:string,locale:Locale,longKyrgyz:boolean):string{
+ const {day,month,year}=eventDateParts(value);
  if(longKyrgyz)return `${year}-жылдын ${day}-${kyrgyzDateMonths[month-1]}`.toLocaleUpperCase(locale);
  return `${day}${locale==="ky"?"-":" "}${editorialMonths[locale][month-1]} ${year}`.toLocaleUpperCase(locale);
 }

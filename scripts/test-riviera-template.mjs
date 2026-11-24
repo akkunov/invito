@@ -14,7 +14,7 @@ const invitation = read("src/components/invitation/riviera-invitation.tsx");
 assert.match(invitation, /media\?\.venuePhotoDataUrl \?\? IMAGES\.villa/);
 assert.match(invitation, /GalleryBlock/);
 const uploader = read("src/components/editor/birthday-gallery-uploader.tsx");
-assert.match(uploader, /4 - photos\.length/);
+assert.match(uploader, /4\s*-\s*photos\.length/);
 assert.match(uploader, /photos\.length < 4/);
 assert.ok(existsSync("src/components/editor/riviera-venue-photo-uploader.tsx"));
 const layout = read("src/app/[locale]/layout.tsx");

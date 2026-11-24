@@ -53,6 +53,18 @@ test(`Editorial Ivory ${version} — publishing validates initial personalizatio
   assert.equal(bound.nodes.rsvpHeading.runs[0].text,"Биз менен болосузбу?");
 });
 
+test(`Editorial Ivory ${version} — native sample resolutions leave replacement limits intact`,()=>{
+  const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
+  assert.equal(snapshot.assets.couple.pixelWidth,526);
+  const upload={...snapshot.assets.couple,id:"uploaded",storageKey:"local:uploaded"};
+  assert.throws(()=>finalizePersonalization(snapshot,contract,{
+    values:{coverPhoto:{kind:"image",assetId:upload.id}},
+  },[upload]),/Недостаточное разрешение фото/);
+  assert.throws(()=>finalizePersonalization(snapshot,contract,{
+    values:{coverPhoto:{kind:"image",assetId:"blooms"}},
+  }),/Недостаточное разрешение фото/);
+});
+
 test(`Editorial Ivory ${version} — only approved guest fields can change`,()=>{
   const {snapshot,contract}=validatedTemplateVersion(packageData.document,packageData.personalization);
   assert.ok(contract);

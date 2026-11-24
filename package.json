@@ -54,7 +54,8 @@
     "test:studio-v2-route-audit": "node scripts/audit-studio-routes.mjs",
     "test:customer-photos": "node --experimental-strip-types --test scripts/test-customer-photo-upload.mjs",
     "templates:compile": "node --experimental-strip-types scripts/compile-template-collection.mjs",
-    "test:template-collection": "node --experimental-strip-types --test scripts/test-template-collection.mjs"
+    "test:template-collection": "node --experimental-strip-types --test scripts/test-template-collection.mjs",
+    "test:template-assets": "node --experimental-strip-types --test scripts/test-template-assets.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

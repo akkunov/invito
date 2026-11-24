@@ -2219,28 +2219,28 @@
         "id": "couple",
         "mimeType": "image/webp",
         "name": "Editorial couple",
-        "sizeBytes": 1,
+        "sizeBytes": 34890,
         "storageKey": "/images/riviera/couple.webp",
-        "pixelWidth": 1280,
-        "pixelHeight": 1600
+        "pixelWidth": 526,
+        "pixelHeight": 675
       },
       "villa": {
         "id": "villa",
         "mimeType": "image/webp",
         "name": "Venue",
-        "sizeBytes": 1,
+        "sizeBytes": 30638,
         "storageKey": "/images/riviera/villa.webp",
-        "pixelWidth": 1280,
-        "pixelHeight": 1600
+        "pixelWidth": 366,
+        "pixelHeight": 300
       },
       "blooms": {
         "id": "blooms",
         "mimeType": "image/webp",
         "name": "Floral detail",
-        "sizeBytes": 1,
+        "sizeBytes": 12420,
         "storageKey": "/images/riviera/flowers.webp",
-        "pixelWidth": 1280,
-        "pixelHeight": 1600
+        "pixelWidth": 210,
+        "pixelHeight": 504
       }
     },
     "variables": {
@@ -2695,7 +2695,8 @@
         "section": "photos",
         "required": false,
         "minWidth": 600,
-        "minHeight": 800
+        "minHeight": 800,
+        "allowOriginalResolution": true
       },
       {
         "id": "heroPhoto",
@@ -2708,7 +2709,8 @@
         "section": "photos",
         "required": false,
         "minWidth": 600,
-        "minHeight": 600
+        "minHeight": 600,
+        "allowOriginalResolution": true
       },
       {
         "id": "galleryPhotos",

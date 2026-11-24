@@ -1031,7 +1031,7 @@
         "id": "cover",
         "name": "Портрет пары",
         "mimeType": "image/webp",
-        "sizeBytes": 25100,
+        "sizeBytes": 17868,
         "pixelWidth": 472,
         "pixelHeight": 586,
         "storageKey": "/images/monochrome-editorial/cover.webp"
@@ -1040,7 +1040,7 @@
         "id": "landscape",
         "name": "Свадебная прогулка",
         "mimeType": "image/webp",
-        "sizeBytes": 17180,
+        "sizeBytes": 23520,
         "pixelWidth": 314,
         "pixelHeight": 284,
         "storageKey": "/images/monochrome-editorial/landscape.webp"
@@ -1049,7 +1049,7 @@
         "id": "bouquet",
         "name": "Букет",
         "mimeType": "image/webp",
-        "sizeBytes": 6316,
+        "sizeBytes": 5800,
         "pixelWidth": 304,
         "pixelHeight": 139,
         "storageKey": "/images/monochrome-editorial/bouquet.webp"
@@ -1058,7 +1058,7 @@
         "id": "rings",
         "name": "Кольца",
         "mimeType": "image/webp",
-        "sizeBytes": 4116,
+        "sizeBytes": 2292,
         "pixelWidth": 149,
         "pixelHeight": 138,
         "storageKey": "/images/monochrome-editorial/rings.webp"
@@ -1067,7 +1067,7 @@
         "id": "shadows",
         "name": "Свет и тени",
         "mimeType": "image/webp",
-        "sizeBytes": 3106,
+        "sizeBytes": 2810,
         "pixelWidth": 148,
         "pixelHeight": 138,
         "storageKey": "/images/monochrome-editorial/shadows.webp"
@@ -1076,7 +1076,7 @@
         "id": "venue",
         "name": "Интерьер ресторана",
         "mimeType": "image/webp",
-        "sizeBytes": 23514,
+        "sizeBytes": 14518,
         "pixelWidth": 376,
         "pixelHeight": 161,
         "storageKey": "/images/monochrome-editorial/venue.webp"

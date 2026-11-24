@@ -10,7 +10,7 @@ export const editableFieldSchema=z.discriminatedUnion("kind",[
  common.extend({kind:z.literal("number"),key:bindingKeySchema,min:z.number().finite(),max:z.number().finite()}),
  common.extend({kind:z.literal("boolean"),key:bindingKeySchema}),
  common.extend({kind:z.literal("textStyle"),nodeId:id,minFontSize:z.number().int().min(6).max(400),maxFontSize:z.number().int().min(6).max(400),allowedColors:z.array(z.string().regex(/^#[0-9a-fA-F]{6}$/)).min(1).max(12),allowedFonts:z.array(z.enum(["serif","sans"])).min(1).max(2),allowedWeights:z.array(z.number().int().min(100).max(900)).min(1).max(9),allowItalic:z.boolean().optional(),allowUnderline:z.boolean().optional(),lineHeightRange:z.strictObject({min:z.number().min(.8).max(4),max:z.number().min(.8).max(4)}).optional(),letterSpacingRange:z.strictObject({min:z.number().min(-10).max(60),max:z.number().min(-10).max(60)}).optional()}),
- common.extend({kind:z.literal("image"),nodeId:id,minWidth:z.number().int().min(1).max(4096),minHeight:z.number().int().min(1).max(4096)}),
+ common.extend({kind:z.literal("image"),nodeId:id,minWidth:z.number().int().min(1).max(4096),minHeight:z.number().int().min(1).max(4096),allowOriginalResolution:z.literal(true).optional()}),
  common.extend({kind:z.literal("gallery"),nodeId:id,maxPhotos:z.number().int().min(1).max(4)}),
  common.extend({kind:z.literal("schedule"),nodeId:id,maxItems:z.number().int().min(1).max(20)}),
  common.extend({kind:z.literal("music"),nodeId:id,sources:z.array(musicSourceSchema).max(50).refine(v=>v.every(Boolean)&&new Set(v).size===v.length,"Invalid music choices")}),
