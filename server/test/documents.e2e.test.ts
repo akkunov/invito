@@ -2,6 +2,7 @@ import "reflect-metadata";
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {createServer} from "node:http";
+import {readFileSync} from "node:fs";
 import type {AddressInfo} from "node:net";
 import {randomUUID} from "node:crypto";
 import {NestFactory} from "@nestjs/core";
@@ -39,6 +40,9 @@ test("Studio templates and projects: tenant boundaries, immutable snapshots and 
         await db.auditEvent.deleteMany({where: {workspaceId}});
         await db.projectRevision.deleteMany({where: {project: {workspaceId}}});
         await db.studioProject.deleteMany({where: {workspaceId}});
+        await db.invitationDraft.deleteMany({where: {ownerId: {in: users}}});
+        await db.workspace.deleteMany({where: {slug: {in: users.map(id => "customer-" + id)}}});
+        await db.template.updateMany({where: {workspaceId}, data: {publishedVersionId: null}});
         await db.templateVersion.deleteMany({where: {template: {workspaceId}}});
         await db.template.deleteMany({where: {workspaceId}});
         await db.workspace.delete({where: {id: workspaceId}});
@@ -115,6 +119,48 @@ test("Studio templates and projects: tenant boundaries, immutable snapshots and 
   assert.equal(staleVersion.status, 409);
   const firstAgain = await request(`/templates/${templateId}/versions/1`, ownerToken);
   assert.equal((firstAgain.json as {document: {locale: string}}).document.locale, "ru");
+
+  const pack = JSON.parse(readFileSync(new URL("../../templates/packages/monochrome-editorial.v1.json", import.meta.url), "utf8"));
+  const imported = await request(`/workspaces/${workspaceId}/template-packages/import`, ownerToken, "POST", pack);
+  assert.equal(imported.status, 201, JSON.stringify(imported.json));
+  const catalogId = (imported.json as {id: string}).id;
+  const publicSlug = "catalog-pin-" + randomUUID().slice(0, 12);
+  const publicPath = `/catalog/templates/${publicSlug}`;
+  const publishPath = `/workspaces/${workspaceId}/templates/${catalogId}/publish`;
+  assert.equal((await request(publicPath, "")).status, 404);
+  assert.equal((await request(publishPath, ownerToken, "POST", {publicSlug})).status, 201);
+  const readCatalog = async () => {
+    const response = await request(publicPath, "");
+    assert.equal(response.status, 200, JSON.stringify(response.json));
+    return response.json as {version: number; templateVersionId: string; document: {locale: string}};
+  };
+  const publishedV1 = await readCatalog();
+  assert.equal(publishedV1.version, 1);
+  const draft = await request("/customer/invitations", ownerToken, "POST", {templateVersionId: publishedV1.templateVersionId});
+  assert.equal(draft.status, 201);
+  const draftId = (draft.json as {id: string}).id;
+  const pending = await request(`/templates/${catalogId}/versions`, ownerToken, "POST", {
+    expectedVersion: 1, note: "Unpublished locale update",
+    document: {...pack.document, locale: "ky"}, personalization: pack.personalization,
+  });
+  assert.equal(pending.status, 201, JSON.stringify(pending.json));
+  const candidateId = (pending.json as {id: string}).id;
+  assert.deepEqual(await readCatalog(), publishedV1);
+  const catalog = await request(`/catalog/templates?search=${encodeURIComponent(pack.manifest.name)}`, "");
+  const catalogItem = (catalog.json as {items: {slug: string; version: number}[]}).items.find(item => item.slug === publicSlug);
+  assert.equal(catalogItem?.version, 1);
+  assert.equal((await request("/customer/invitations", ownerToken, "POST", {templateVersionId: candidateId})).status, 404);
+  await assert.rejects(db.template.update({where: {id: templateId}, data: {publishedVersionId: candidateId}}), {code: "P2003"});
+  assert.equal((await request(publishPath, ownerToken, "POST", {publicSlug, expectedVersion: 1})).status, 409);
+  assert.equal((await request(publishPath, ownerToken, "POST", {publicSlug, expectedVersion: 2})).status, 201);
+  const publishedV2 = await readCatalog();
+  assert.equal(publishedV2.templateVersionId, candidateId);
+  assert.equal(publishedV2.document.locale, "ky");
+  assert.equal((await request("/customer/invitations", ownerToken, "POST", {templateVersionId: publishedV1.templateVersionId})).status, 404);
+  const oldDraftPath = "/customer/invitations/" + draftId;
+  const oldDraft = await request(oldDraftPath, ownerToken);
+  assert.equal((oldDraft.json as {templateVersionId: string}).templateVersionId, publishedV1.templateVersionId);
+  assert.equal((await request(oldDraftPath, ownerToken, "PATCH", {expectedRevision: 1, patch: {values: {}}})).status, 200);
 
   const projectInput = {title: "Project", document: doc};
   const projectCreate = await request(`/workspaces/${workspaceId}/projects`, ownerToken, "POST", projectInput);

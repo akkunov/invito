@@ -70,8 +70,10 @@ jobs:
         run: npm run build
       - name: Apply migrations to disposable PostgreSQL
         run: npm run db:migrate:deploy
-      - name: E2E integration tests (real PostgreSQL)
+      - name: API unit tests
         run: npm test
+      - name: E2E integration tests (real PostgreSQL)
+        run: npm run test:e2e
       - name: Smoke test compiled Node runtime
         run: |
           npm start >/tmp/invito-api.log 2>&1 &

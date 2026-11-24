@@ -62,9 +62,9 @@ export class CustomerInvitationsService {
     const version=await this.db.templateVersion.findUnique({
       where:{id:versionId},
       select:{id:true,number:true,document:true,personalization:true,
-        template:{select:{id:true,status:true,publicSlug:true,workspaceId:true}}},
+        template:{select:{id:true,status:true,publicSlug:true,workspaceId:true,publishedVersionId:true}}},
     });
-    if(!version||(mustBePublished&&(version.template.status!=="PUBLISHED"||!version.template.publicSlug)))
+    if(!version||(mustBePublished&&(version.template.status!=="PUBLISHED"||!version.template.publicSlug||version.template.publishedVersionId!==version.id)))
       throw new NotFoundException("TEMPLATE_NOT_PUBLISHED");
     const {snapshot,contract}=validatedTemplate(version.document,version.personalization);
     if(!contract||!contract.fields.length)throw new UnprocessableEntityException("TEMPLATE_NOT_PERSONALIZABLE");
@@ -182,7 +182,7 @@ export class CustomerInvitationsService {
     const draft=await this.db.invitationDraft.findFirst({where:{id,ownerId:userId},
       select:{id:true,revision:true,workspaceId:true,templateVersionId:true}});
     if(!draft)throw new NotFoundException("INVITATION_NOT_FOUND");
-    const template=await this.template(draft.templateVersionId);
+    const template=await this.template(draft.templateVersionId,false);
     const {patch}=await this.checkPatch(userId,draft.workspaceId,template,raw);
     const changed=await this.db.invitationDraft.updateMany({
       where:{id,ownerId:userId,revision:expectedRevision},

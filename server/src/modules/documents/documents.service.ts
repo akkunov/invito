@@ -48,7 +48,7 @@ export class StudioDocumentsService {
     const items = await this.db.template.findMany({
       where: {workspaceId},
       select: {id: true, slug: true, publicSlug: true, name: true, description: true, category: true,
-        tags: true, status: true, coverPageId: true, latestVersion: true, createdAt: true, updatedAt: true},
+        tags: true, status: true, coverPageId: true, latestVersion: true, publishedVersionId: true, createdAt: true, updatedAt: true},
       orderBy: [{updatedAt: "desc"}, {id: "asc"}],
       skip: (page - 1) * limit, take: limit + 1,
     });
@@ -91,7 +91,7 @@ export class StudioDocumentsService {
     const template = await this.db.template.findFirst({
       where: {id, workspaceId: scope.workspaceId},
       select: {id: true, workspaceId: true, slug: true, name: true, description: true,
-        category: true, tags: true, coverPageId: true, status: true, latestVersion: true,
+        category: true, tags: true, coverPageId: true, status: true, latestVersion: true, publishedVersionId: true,
         createdAt: true, updatedAt: true},
     });
     if (!template) throw new NotFoundException();
@@ -118,13 +118,16 @@ export class StudioDocumentsService {
       return await this.db.$transaction(async tx => {
         const current = await tx.template.findFirst({
           where: {id, workspaceId: scope.workspaceId},
-          select: {coverPageId: true},
+          select: {coverPageId: true, status: true, publishedVersionId: true},
         });
         if (!current) throw new NotFoundException();
         verifyCoverPage(validated.snapshot, current.coverPageId);
         const updated = await tx.template.updateMany({
           where: {id, workspaceId: scope.workspaceId, latestVersion: input.expectedVersion},
-          data: {latestVersion: {increment: 1}, status: "DRAFT"},
+          data: {
+            latestVersion: {increment: 1},
+            status: current.status === "PUBLISHED" && current.publishedVersionId ? "PUBLISHED" : "DRAFT",
+          },
         });
         if (updated.count !== 1) throw new ConflictException("VERSION_CONFLICT");
         const version = await tx.templateVersion.create({
