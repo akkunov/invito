@@ -914,7 +914,7 @@ export function StudioV2Workspace({locale,remoteSettings}:{locale:Locale;remoteS
         </section></InspectorPanel>
       </aside>
     </div>
-    {templateManagerOpen&&<TemplateManager document={sourceDocument} onOpen={openTemplateProject} onClose={()=>setTemplateManagerOpen(false)}/>}
+    {templateManagerOpen&&<TemplateManager document={sourceDocument} remoteSettings={remoteSettings} onOpen={openTemplateProject} onClose={()=>setTemplateManagerOpen(false)}/>}
     {printOpen&&<StudioV2PrintDialog document={sourceDocument} selectedPageId={selectedPage??sourceDocument.pages[0]?.id??""} onDownloadJson={()=>downloadDocument(sourceDocument)} onClose={()=>setPrintOpen(false)}/>}
     {publishPanelOpen&&(remoteSettings?<StudioPublishPanel document={sourceDocument} settings={remoteSettings} locale={locale} onClose={()=>setPublishPanelOpen(false)}/>:<StudioPublishUnavailable onClose={()=>setPublishPanelOpen(false)}/>)}
     {cloudPanelOpen&&(remoteSettings?<StudioCloudPanel document={sourceDocument} settings={remoteSettings} onOpenLocalCopy={openTemplateProject} onClose={()=>setCloudPanelOpen(false)}/>:<StudioCloudUnavailable onClose={()=>setCloudPanelOpen(false)}/>)}
