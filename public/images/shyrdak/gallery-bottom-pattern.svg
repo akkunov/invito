@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 86">
+  <defs>
+    <filter id="felt" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".57 .74" numOctaves="3" seed="14" result="grain"/>
+      <feColorMatrix in="grain" type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="3.1" intercept="-1.05"/>
+        <feFuncG type="linear" slope="3.1" intercept="-1.05"/>
+        <feFuncB type="linear" slope="3.1" intercept="-1.05"/>
+        <feFuncA type="linear" slope="1.25"/>
+      </feComponentTransfer>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feBlend in2="SourceGraphic" mode="soft-light"/>
+    </filter>
+  </defs>
+  <g filter="url(#felt)">
+    <path fill="#922832" d="M0 16C24 13 54 31 77 51C87 24 111 3 142 2C174 -2 199 19 208 41C217 14 237 0 261 2C285 3 304 22 318 47C342 18 370 11 390 23V86H0Z"/>
+    <path fill="#C05B34" d="M0 48C29 35 49 56 76 86H0Z M390 44C365 34 341 63 323 86H390Z"/>
+    <path fill="#F4E3CA" d="M116 86C98 63 125 30 151 27C176 25 185 50 173 61C167 67 156 67 153 60C149 51 160 47 164 48C149 40 133 54 134 68C135 78 143 83 150 86Z M250 86C238 77 237 62 246 54C258 44 270 50 270 58C270 64 264 68 255 67C262 74 272 73 278 67C290 51 274 28 253 27C229 26 212 49 210 72C194 46 176 80 160 86Z"/>
+  </g>
+</svg>

@@ -15,6 +15,7 @@ import {StudioV2ProjectRenderer} from "@/components/studio-v2/studio-v2-project-
 import {SimpleField} from "@/components/studio-v2/studio-v2-simple-fields";
 import type {Locale} from "@/i18n/locales";
 import {CustomerCloudControls} from "./customer-cloud-controls";
+import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {galleryAfterUpload} from "@/features/invitations/photo-geometry";
 import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
@@ -245,7 +246,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
       cover:{ru:"Обложка",ky:"Мукаба"},letter:{ru:"Приглашение",ky:"Чакыруу"},
       details:{ru:"Дата и место",ky:"Күнү жана жери"},program:{ru:"Программа",ky:"Программа"},
       memories:{ru:"Галерея",ky:"Галерея"},invitation:{ru:"Приглашение и программа",ky:"Чакыруу жана тойдун программасы"},
-      gallery:{ru:page.name,ky:(document.presentation==="heritage"||document.presentation==="gilded"||document.presentation==="alpine")?"Галерея жана той өтүүчү жер":"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
+      gallery:{ru:page.name,ky:isHeritagePresentation(document.presentation)?"Галерея жана той өтүүчү жер":"Галерея"},rsvpPage:{ru:"RSVP",ky:"RSVP"},
     };
     return patch.sections?.names?.[page.id]??names[page.id]?.[locale]??(page.name.includes("/")?page.name.split("/").slice(1).join("/").trim():page.name);
   };

@@ -34,7 +34,7 @@ export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
  for(const [id,n] of Object.entries(nodes)){
   if(n.type==="text"&&n.bindingKey&&doc.values?.[n.bindingKey]){
    const binding=doc.values[n.bindingKey];
-   const longKyrgyzDate=doc.presentation==="alpine"&&doc.locale==="ky"&&binding.type==="date";
+   const longKyrgyzDate=(doc.presentation==="alpine"||doc.presentation==="felt")&&doc.locale==="ky"&&binding.type==="date";
    const value=doc.presentation&&binding.type==="date"
      ?editorialDate(binding.value,doc.locale,longKyrgyzDate)
      :bindingText(binding,doc.locale);

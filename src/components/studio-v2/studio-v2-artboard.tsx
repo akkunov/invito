@@ -3,6 +3,7 @@ import Image from "next/image";
 import {motionTracks} from "@/features/studio-v2/core/motion-engine.ts";
 import {useStudioMotion,type MotionPlayback} from "./use-studio-motion";
 import {appearanceCss,maskCss,contentTransform} from "@/features/studio-v2/core/appearance.ts";
+import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {InvitationBlockView} from "./studio-v2-invitation-block";
 import type {GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
 import { memo, useMemo, useLayoutEffect, useRef, type CSSProperties } from "react";
@@ -47,7 +48,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
   const node = document.nodes[id];
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
-  const fluidWidget=document.presentation==="alpine"&&options.guest?.mode!=="studio"&&node.type==="widget"
+  const fluidWidget=(document.presentation==="alpine"||document.presentation==="felt")&&options.guest?.mode!=="studio"&&node.type==="widget"
     &&["rsvp","location","schedule"].includes(node.block.kind);
   switch (node.type) {
     case "frame":
@@ -61,7 +62,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
         justifyContent:node.textAlign==="left"?"flex-start":node.textAlign==="right"?"flex-end":"center",
         whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0,
       }}>
-        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={document.presentation==="heritage"||document.presentation==="gilded"||document.presentation==="alpine"} onMeasure={options.onMeasure}/></div>
+        <div style={{width:"100%",visibility:options.editingId===id?"hidden":"visible"}}><TextContent node={node} editorial={!!document.presentation} heritage={isHeritagePresentation(document.presentation)} onMeasure={options.onMeasure}/></div>
         {options.editingId===id&&options.renderEditor?.(node)}
       </div>;
     case "image": {
@@ -70,7 +71,8 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
       const path = asset.storageKey.startsWith("/images/") ? `${process.env.NEXT_PUBLIC_PAGES_BASE_PATH ?? ""}${asset.storageKey}` : options.mediaUrls?.[asset.storageKey];
       return <div key={id} data-studio-node={id} style={{ ...style, overflow: "hidden",clipPath:maskCss(node) }}>
         {path?<Image unoptimized draggable={false} src={path} alt={asset.decorative?"":asset.name} aria-hidden={asset.decorative||undefined}
-          fill loading={!!document.presentation&&!asset.decorative&&node.parentId===document.pages[0].rootNodeId?"eager":undefined}
+          fill loading={!!document.presentation&&(!asset.decorative||document.presentation==="felt")&&node.parentId===document.pages[0].rootNodeId?"eager":undefined}
+          fetchPriority={document.presentation==="felt"&&!asset.decorative&&node.parentId===document.pages[0].rootNodeId?"high":undefined}
           sizes={document.presentation?"(max-width: 600px) 100vw, 590px":"(max-width: 900px) 300px, 500px"}
           style={{ objectFit: asset.decorative?"fill":node.fit, objectPosition: `${(node.visual?.imageCrop?.x??node.focalX) * 100}% ${(node.visual?.imageCrop?.y??node.focalY) * 100}%`,transform:contentTransform(node),transformOrigin:`${(node.visual?.imageCrop?.x??node.focalX)*100}% ${(node.visual?.imageCrop?.y??node.focalY)*100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
       </div>;

@@ -1,5 +1,9 @@
 import type {ProjectDocumentV2,ProjectNodeV2} from "./document.schema.ts";
 
+export function isHeritagePresentation(presentation: ProjectDocumentV2["presentation"]): boolean {
+ return presentation==="heritage"||presentation==="gilded"||presentation==="alpine"||presentation==="felt";
+}
+
 function canGrow(node:ProjectNodeV2):boolean {
  if(node.type==="text")return node.autoHeight===true;
  return node.type==="widget"&&["rsvp","schedule","location"].includes(node.block.kind);
@@ -17,6 +21,7 @@ function lineAdvance(text:string):number {
 export function layoutHeritagePresentation(document:ProjectDocumentV2,width:number,measurements:Record<string,number>):ProjectDocumentV2 {
  const nodes={...document.nodes};
  const ratio=Math.min(1,width/390);
+ const felt=document.presentation==="felt";
  for(const page of document.pages){
   const root=document.nodes[page.rootNodeId];
   if(root.type!=="frame")continue;
@@ -41,14 +46,14 @@ export function layoutHeritagePresentation(document:ProjectDocumentV2,width:numb
     next.runs=next.runs.map(run=>{
      const size=run.style.fontSize;
      const fontSize=names
-      ?Math.max(44,Math.min(size*ratio,Math.floor(next.width/advance)))
+      ?Math.max(felt?40:44,Math.min(size*ratio,Math.floor(next.width/advance)))
       :size*Math.max(.88,ratio);
      return {...run,style:{...run.style,fontSize}};
     });
    }
    nodes[node.id]=next;
   }
-  if(document.presentation==="alpine"&&growth>0){
+  if((document.presentation==="alpine"||felt)&&growth>0){
    for(const node of children){
     if(node.type==="image"&&node.x===0&&node.y===0&&node.width===root.width&&node.height===root.height){
      nodes[node.id]={...nodes[node.id],height:node.height+growth};

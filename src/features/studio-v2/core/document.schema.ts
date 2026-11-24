@@ -123,7 +123,7 @@ const variableSchema = z.strictObject({
 });
 export const projectDocumentSchema = z.strictObject({
   schemaVersion: z.literal(2),
-  presentation: z.enum(["editorial","heritage","gilded","alpine"]).optional(),
+  presentation: z.enum(["editorial","heritage","gilded","alpine","felt"]).optional(),
   id: idSchema,
   revision: z.number().int().min(0),
   locale: z.enum(["ru", "ky"]),

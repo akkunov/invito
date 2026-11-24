@@ -7,6 +7,7 @@ export function fillCss(fill:VisualProperties["fill"],fallback="transparent"){
  return `linear-gradient(${fill.angle}deg, ${fill.stops.map(s=>s.color+" "+s.position+"%").join(", ")})`;
 }
 export function radiusCss(node:ProjectNodeV2){
+ if(node.visual?.clipPolygon)return undefined;
  if(node.visual?.mask==="arch")return "50% 50% 0 0 / 37% 37% 0 0";
  const c=node.visual?.corners;
  if(node.type==="shape"&&(node.shape==="circle"||node.shape==="ellipse"))return "50%";
@@ -20,6 +21,8 @@ export function appearanceCss(node:ProjectNodeV2){
  return {background:fillCss(v?.fill,fallback),borderRadius:radiusCss(node),boxShadow:shadow?`${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${shadow.color}${Math.round(shadow.opacity*255).toString(16).padStart(2,"0")}`:undefined,filter:v?.blur?`blur(${v.blur}px)`:undefined,outline:stroke&&stroke.width?`${stroke.width}px ${stroke.style} ${stroke.color}`:undefined,outlineOffset:stroke&&stroke.width?-stroke.width:undefined};
 }
 export function maskCss(node:ProjectNodeV2){
+ const polygon=node.visual?.clipPolygon;
+ if(polygon)return `polygon(${polygon.map(([x,y])=>`${x}% ${y}%`).join(", ")})`;
  return node.visual?.mask==="ellipse"?"ellipse(50% 50% at 50% 50%)":node.visual?.mask==="diamond"?"polygon(50% 0, 100% 50%, 50% 100%, 0 50%)":undefined;
 }
 export function contentTransform(node:ProjectNodeV2){

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 161 96">
+  <defs>
+    <filter id="felt" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".57 .74" numOctaves="3" seed="14" result="grain"/>
+      <feColorMatrix in="grain" type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="3.1" intercept="-1.05"/>
+        <feFuncG type="linear" slope="3.1" intercept="-1.05"/>
+        <feFuncB type="linear" slope="3.1" intercept="-1.05"/>
+        <feFuncA type="linear" slope="1.25"/>
+      </feComponentTransfer>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feBlend in2="SourceGraphic" mode="soft-light"/>
+    </filter>
+  </defs>
+  <g filter="url(#felt)">
+    <g transform="scale(0.99383 0.97959)"><path fill="#922B34" d="M80 47C66 33 54 27 43 30C32 33 28 40 21 48C15 54 9 53 1 53C8 65 18 69 26 63C36 77 55 79 61 67C68 56 58 48 51 52C45 54 46 59 48 62C36 64 33 57 36 50C43 36 63 43 70 55C77 67 73 76 63 82C71 86 77 91 81 97L87 77L86 54Z"/><g transform="translate(162 0) scale(-1 1)"><path fill="#922B34" d="M80 47C66 33 54 27 43 30C32 33 28 40 21 48C15 54 9 53 1 53C8 65 18 69 26 63C36 77 55 79 61 67C68 56 58 48 51 52C45 54 46 59 48 62C36 64 33 57 36 50C43 36 63 43 70 55C77 67 73 76 63 82C71 86 77 91 81 97L87 77L86 54Z"/></g><path fill="#922B34" fill-rule="evenodd" d="M81 1C75 12 58 12 58 31C58 43 72 49 81 63C90 49 104 43 104 31C104 12 87 12 81 1ZM81 19C83 24 90 25 90 32C90 39 85 43 81 49C77 43 72 39 72 32C72 25 79 24 81 19Z"/></g>
+  </g>
+</svg>
