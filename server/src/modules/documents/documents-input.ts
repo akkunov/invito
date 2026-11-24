@@ -49,7 +49,13 @@ export function validatedTemplate(input: unknown, personalization: unknown) {
   try { return validatedTemplateVersion(input, personalization); }
   catch { throw new UnprocessableEntityException("INVALID_TEMPLATE_DOCUMENT_OR_CONTRACT"); }
 }
-const staticAssets = new Set([
+export const staticAssets = new Set([
+  "/images/monochrome-editorial/cover.webp",
+  "/images/monochrome-editorial/landscape.webp",
+  "/images/monochrome-editorial/bouquet.webp",
+  "/images/monochrome-editorial/rings.webp",
+  "/images/monochrome-editorial/shadows.webp",
+  "/images/monochrome-editorial/venue.webp",
   "/images/riviera/couple.webp", "/images/riviera/fabric-left.webp",
   "/images/riviera/fabric-right.webp", "/images/riviera/flowers.webp",
   "/images/riviera/villa.webp",
