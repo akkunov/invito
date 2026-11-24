@@ -2218,7 +2218,6 @@
         "id": "musicPlayer",
         "parentId": "rsvpPageRoot",
         "type": "widget",
-        "name": "Музыка / Музыка",
         "x": 42,
         "y": 840,
         "width": 306,
@@ -2241,7 +2240,8 @@
           "color": "#262720",
           "background": "transparent",
           "accent": "#606B52"
-        }
+        },
+        "layerName": "Музыка / Музыка"
       }
     },
     "assets": {
