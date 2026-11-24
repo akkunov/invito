@@ -18,7 +18,7 @@ export const editableFieldSchema=z.discriminatedUnion("kind",[
  common.extend({kind:z.literal("theme"),themeIds:uniqueIds,allowBase:z.boolean()}),
 ]);
 const distinctPageIds=z.array(id).max(30).refine(v=>new Set(v).size===v.length,"Duplicate page IDs");
-export const sectionEditingSchema=z.strictObject({hideablePageIds:distinctPageIds,reorderablePageIds:distinctPageIds});
+export const sectionEditingSchema=z.strictObject({hideablePageIds:distinctPageIds,reorderablePageIds:distinctPageIds,renameablePageIds:distinctPageIds.optional()});
 export const personalizationSchema=z.strictObject({version:z.literal(1),locales:z.array(z.enum(["ru","ky"])).min(1).max(2).refine(v=>new Set(v).size===v.length,"Duplicate locale"),fields:z.array(editableFieldSchema).max(100),sectionEditing:sectionEditingSchema.optional()}).superRefine((p,ctx)=>{
  const ids=new Set<string>(),targets=new Set<string>();
  for(const [i,f] of p.fields.entries()){
@@ -45,6 +45,6 @@ export const personalizedValueSchema=z.discriminatedUnion("kind",[
  z.strictObject({kind:z.literal("rsvp"),deadline:instantSchema.nullable(),maxGuests:z.number().int().min(1).max(10)}),
  z.strictObject({kind:z.literal("theme"),themeId:id.nullable()}),
 ]);
-export const personalizationPatchSchema=z.strictObject({locale:z.enum(["ru","ky"]).optional(),values:z.record(id,personalizedValueSchema).refine(v=>Object.keys(v).length<=100,"Too many values"),sections:z.strictObject({order:distinctPageIds.refine(ids=>ids.length>=1,"Section order required"),hidden:distinctPageIds}).optional()});
+export const personalizationPatchSchema=z.strictObject({locale:z.enum(["ru","ky"]).optional(),values:z.record(id,personalizedValueSchema).refine(v=>Object.keys(v).length<=100,"Too many values"),sections:z.strictObject({order:distinctPageIds.refine(ids=>ids.length>=1,"Section order required"),hidden:distinctPageIds,names:z.record(id,z.string().trim().min(1).max(80)).refine(v=>Object.keys(v).length<=30,"Too many names").optional()}).optional()});
 export type PersonalizedValue=z.infer<typeof personalizedValueSchema>;
 export type PersonalizationPatch=z.infer<typeof personalizationPatchSchema>;
