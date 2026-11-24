@@ -9,6 +9,7 @@ import {getDictionary} from "@/i18n/dictionaries";
 import {InvitationCanvas} from "@/components/invitation/invitation-canvas";
 import {EditorInspector} from "@/components/editor/editor-inspector";
 import {UniversalMobileEditor} from "@/components/customer-editor/universal-mobile-editor";
+import {MusicLibraryPicker} from "@/components/customer-editor/music-library-picker";
 import "./legacy-mobile-workspace.css";
 
 type Panel="text"|"photo"|"style"|"sections"|"music"|null;
@@ -97,6 +98,7 @@ export function LegacyMobileWorkspace({locale,editor,selected,onSelect}:Props){
             {(isPhoto?["cover","location","gallery"] as BlockKind[]:["cover","message","details","location","program"] as BlockKind[]).map(kind=>
               <button type="button" className={selected===kind?"selected":""} key={kind} onClick={()=>onSelect(kind)}>{name(kind)}</button>)}
           </div>}
+          {panel==="music"&&<MusicLibraryPicker locale={locale} value={editor.catalogTrack?.source??(editor.audioUrl?"local":"")} onChoose={(source,track)=>{if(!source)void editor.removeAudio();else if(track)editor.chooseCatalogTrack(track);}}/>}
           <EditorInspector locale={locale} editor={editor} selected={panel==="music"?"music":selected}/>
         </>}</div>
     </section>}
