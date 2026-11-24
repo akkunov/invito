@@ -17,7 +17,7 @@ import type {Locale} from "@/i18n/locales";
 import {CustomerCloudControls} from "./customer-cloud-controls";
 import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
-import "./customer-mobile-editor.css";
+import {UniversalMobileEditor} from "./universal-mobile-editor";
 
 type Step="main"|"event"|"appearance"|"publish";
 const steps:readonly Step[]=["main","event","appearance","publish"];
@@ -131,7 +131,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   useEffect(()=>{
     if(!hydrated)return;
     try {
-      if(Object.keys(patch.values).length || patch.locale){
+      if(Object.keys(patch.values).length || patch.locale || patch.sections){
         window.localStorage.setItem(cacheKey,JSON.stringify(patch));
         window.localStorage.setItem(cacheKey+":assets",JSON.stringify(customerAssets));
       }else{
@@ -356,25 +356,35 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     device="mobile" pageFilter={isMobileViewport?visiblePages[activePageIndex]?.id:undefined}
     guest={{mode:"preview"}}/>;
 
-  return <main className={"ce-shell"+(mobileSheetOpen?" ce-mobile-sheet-open":"")}>
-    <div className="ce-mobile-topbar">
-      <Link href={`/${locale}/catalog/${slug}`} aria-label={t.back}><ArrowLeft size={19}/></Link>
-      <strong>Eventiq<span>.</span></strong>
-      <div className="ce-mobile-top-actions">
-        <button type="button" aria-label={t.mobileUndo} disabled={!past.length} onClick={undo}><RotateCcw size={19}/></button>
-        <button type="button" aria-label={t.mobileRedo} disabled={!future.length} onClick={redo}><RotateCw size={19}/></button>
-        <span className="ce-mobile-cloud-status" role="status" aria-label={hydrated?status||t.mobileSaved:t.mobileSaving} title={hydrated?status||t.mobileSaved:t.mobileSaving}><Cloud size={19}/></span>
-        <button className="ce-mobile-publish-top" type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(false);openMobileStep("publish");}}>{t.publishAction}</button>
-      </div>
-    </div>
-    <header className="ce-header">
+  return <UniversalMobileEditor
+    locale={locale} backHref={`/${locale}/catalog/${slug}`}
+    sheetOpen={mobileSheetOpen} activeTool={mobileSectionsOpen?"sections":mobileSheetOpen?mobileTool:"text"}
+    pageIndex={activePageIndex} pageCount={visiblePages.length} pageName={pageLabel(visiblePages[activePageIndex]?.id??"")}
+    onNavigate={delta=>{const page=visiblePages[activePageIndex+delta];if(page)jumpPreview(page.id);}}
+    onTool={(tool,trigger)=>{
+      if(tool==="sections"){mobileTriggerRef.current=trigger;setMobileSheetOpen(false);setMobileSectionsOpen(true);}
+      else openTool(tool,trigger);
+    }}
+    canUndo={past.length>0} canRedo={future.length>0} onUndo={undo} onRedo={redo}
+    saveState={hydrated?"saved":"pending"} saveLabel={hydrated?status||t.saveLocal:t.notSaved}
+    onPublish={trigger=>{mobileTriggerRef.current=trigger;setMobileSectionsOpen(false);openMobileStep("publish");}}
+    canvas={preview} canvasRef={mobileCanvasRef} onCanvasClick={selectCanvasField}
+    previewClassName={mode==="edit"?"ce-preview ce-mobile-hidden":"ce-preview"} onClose={closeMobileSheet}
+    desktopHeader={<header className="ce-header">
       <Link aria-label={t.back} href={`/${locale}/catalog/${slug}`} className="ce-icon"><ArrowLeft size={20}/></Link>
       <Link href={`/${locale}`} className="ce-logo">eventiq<span>.</span></Link>
       <Link className="ce-account-link" href={`/${locale}/invitations`}>{locale==="ru"?"Мои приглашения":"Менин чакырууларым"}</Link>
       <div className="ce-save-state" role="status"><Save size={14}/><span>{hydrated?status||t.saveLocal:t.notSaved}</span></div>
-    </header>
-    <div className="ce-layout">
-      <section className="ce-controls" aria-label={t.title}>
+    </header>}
+    desktopPreviewHeader={<><div className="ce-preview-head">
+          <div><strong>{t.preview}</strong><small>{name}</small></div>
+          <button className="ce-secondary" aria-label={locale==="ru"?"Перезапустить анимации":"Анимацияны кайра баштоо"} type="button" onClick={()=>setPreviewRun(n=>n+1)}><RotateCcw size={15}/></button>
+        </div>
+        <nav className="ce-preview-sections" aria-label={t.sections}>
+          {source.pages.map((page,index)=><button key={page.id} type="button" aria-current={index===activeMobilePage?"page":undefined} onClick={()=>jumpPreview(page.id)}
+            title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
+        </nav></>}
+    settings={<section className="ce-controls" aria-label={t.title}>
         <div className="ce-mobile-sheet-handle"><span className="ce-mobile-grabber" aria-hidden="true"/><span>{selectedFieldId?t.mobileSelection:step==="publish"?t.mobileCheck:t[step]}</span><button type="button" aria-label={t.mobileClose} onClick={closeMobileSheet}><X size={20}/></button></div>
         <div className="ce-intro">
           <p className="ce-eyebrow">{t.template} / {name}</p>
@@ -485,34 +495,8 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
             {isMobileViewport&&selectedFieldId?t.mobileDone:step==="publish"?t.review:t.next}<ArrowRight size={17}/>
           </button>
         </footer>
-      </section>
-      <aside className={mode==="edit"?"ce-preview ce-mobile-hidden":"ce-preview"} aria-label={t.preview}>
-        <div className="ce-preview-head">
-          <div><strong>{t.preview}</strong><small>{name}</small></div>
-          <button className="ce-secondary" aria-label={locale==="ru"?"Перезапустить анимации":"Анимацияны кайра баштоо"} type="button" onClick={()=>setPreviewRun(n=>n+1)}><RotateCcw size={15}/></button>
-        </div>
-        <nav className="ce-preview-sections" aria-label={t.sections}>
-          {source.pages.map((page,index)=><button key={page.id} type="button" aria-current={index===activeMobilePage?"page":undefined} onClick={()=>jumpPreview(page.id)}
-            title={page.name}>{String(index+1).padStart(2,"0")} <span>{page.name.includes("/") ? page.name.split("/").slice(1).join("/").trim() : page.name}</span></button>)}
-        </nav>
-        <div ref={mobileCanvasRef} className="ce-preview-screen" onClickCapture={selectCanvasField}>{preview}</div>
-        <div className="ce-mobile-canvas-caption"><span>{t.mobileHint}</span></div>
-        <nav className="ce-mobile-page-nav" aria-label={t.mobilePage}>
-          <button type="button" disabled={activePageIndex===0} onClick={()=>jumpPreview(visiblePages[activePageIndex-1].id)} aria-label={t.back}><ArrowLeft size={18}/></button>
-          <button type="button" onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSectionsOpen(true);setMobileSheetOpen(false);}}>{activePageIndex+1} / {visiblePages.length} <strong>{pageLabel(visiblePages[activePageIndex]?.id??"")}</strong><ChevronDown size={16}/></button>
-          <button type="button" disabled={activePageIndex>=visiblePages.length-1} onClick={()=>jumpPreview(visiblePages[activePageIndex+1].id)} aria-label={t.next}><ArrowRight size={18}/></button>
-        </nav>
-        <nav className="ce-mobile-dock" aria-label={t.mobileEdit}>
-          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="text"} onClick={e=>openTool("text",e.currentTarget)}><Type size={22}/><span>{t.toolText}</span></button>
-          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="photo"} onClick={e=>openTool("photo",e.currentTarget)}><ImageIcon size={22}/><span>{t.toolPhotos}</span></button>
-          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="style"} onClick={e=>openTool("style",e.currentTarget)}><Palette size={22}/><span>{t.toolStyle}</span></button>
-          <button type="button" aria-pressed={mobileSectionsOpen} onClick={e=>{mobileTriggerRef.current=e.currentTarget;setMobileSheetOpen(false);setMobileSectionsOpen(true);}}><Layers size={22}/><span>{t.sections}</span></button>
-          <button type="button" aria-pressed={mobileSheetOpen&&mobileTool==="music"} onClick={e=>openTool("music",e.currentTarget)}><Music2 size={22}/><span>{t.toolMusic}</span></button>
-        </nav>
-      </aside>
-    </div>
-    {mobileSheetOpen&&<button type="button" className="ce-mobile-backdrop" onClick={closeMobileSheet} aria-label={t.mobileClose}/>}
-    {mobileSectionsOpen&&<section className="ce-mobile-sections-screen" aria-label={t.mobileSectionsTitle}>
+      </section>}
+    overlay={<>{mobileSectionsOpen&&<section className="ce-mobile-sections-screen" aria-label={t.mobileSectionsTitle}>
       <header>
         <button type="button" aria-label={t.back} onClick={()=>{setMobileSectionsOpen(false);mobileTriggerRef.current?.focus();}}><ArrowLeft size={21}/></button>
         <h2>{t.mobileSectionsTitle}</h2>
@@ -549,6 +533,6 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
         })}
         <p className="ce-mobile-sections-help"><LockKeyhole size={16}/>{t.mobileSectionsHint}</p>
       </div>
-    </section>}
-  </main>;
+    </section>}</>}
+  />;
 }
