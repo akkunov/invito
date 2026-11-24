@@ -2,7 +2,7 @@ import {ConflictException, Inject, Injectable, NotFoundException, UnprocessableE
 import {PrismaService} from "../../database/prisma.service.js";
 import {MediaObjectStore} from "../media/media-object-store.js";
 import {DocumentsAccessService, validUuid} from "../documents/documents-access.service.js";
-import {validatedTemplate, verifyAssets} from "../documents/documents-input.js";
+import {validatedTemplate, verifyAssets, staticAssets} from "../documents/documents-input.js";
 import type {ProjectDocumentV2} from "../../../../src/features/studio-v2/core/document.schema.js";
 
 const CATEGORIES = ["WEDDING","KYZ_UZATUU","BIRTHDAY","ANNIVERSARY","CORPORATE","OTHER"] as const;
@@ -39,13 +39,7 @@ export class CatalogService {
     ]);
     const items=await Promise.all(rows.map(async row=>{
       const document=row.versions[0]?.document as ProjectDocumentV2|undefined;
-      const trustedStaticCovers=new Set([
-        "/images/riviera/couple.webp",
-        "/images/riviera/fabric-left.webp",
-        "/images/riviera/fabric-right.webp",
-        "/images/riviera/flowers.webp",
-        "/images/riviera/villa.webp",
-      ]);
+      const trustedStaticCovers=staticAssets;
       const image=document&&Object.values(document.assets).find(asset=>asset.mimeType.startsWith("image/")&&
         (asset.storageKey.startsWith("asset:")||trustedStaticCovers.has(asset.storageKey)));
       let coverUrl:string|null=null;
