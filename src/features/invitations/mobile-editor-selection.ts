@@ -17,7 +17,7 @@ export function editableFieldForNode(
     if(field)return field;
   }
   const key=node.type==="text"?node.bindingKey:
-    node.type==="widget"&&node.block.kind==="countdown"?node.block.targetKey:
+    node.type==="widget"&&(node.block.kind==="countdown"||node.block.kind==="calendar")?node.block.targetKey:
     node.type==="widget"&&node.block.kind==="location"?node.block.addressKey:null;
   const binding=key?fields.find(item=>"key" in item&&item.key===key):undefined;
   if(binding)return binding;

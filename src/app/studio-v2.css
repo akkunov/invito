@@ -2094,3 +2094,272 @@
  [data-artboard-presentation="collection"] [data-widget-preset="contact-sheet"] .v2-guest-schedule[data-layout="rows"] time { font-size: 36px; }
  [data-artboard-presentation="collection"] [data-widget-preset="contact-sheet"] .v2-guest-form button[type="submit"] { font-size: 17px; }
 }
+
+/* Postcard controls share the collection layout and guest behaviour. */
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-link[data-style="arrow"] {
+ width: 100%;
+ min-width: 44px;
+ min-height: 44px;
+ aspect-ratio: 1;
+}
+[data-widget-preset="postcard"] .v2-collection-month {
+ border: 0;
+ padding: 0;
+}
+[data-widget-preset="postcard"] .v2-month-header {
+ min-height: 44px;
+ grid-template-columns: 44px minmax(0, 1fr) 44px;
+ font: 540 20px/1.1 var(--font-display), Georgia, serif;
+ letter-spacing: .2em;
+ text-transform: uppercase;
+}
+[data-widget-preset="postcard"] .v2-month-header strong { font-weight: inherit; }
+[data-widget-preset="postcard"] .v2-month-header .v2-month-return {
+ padding: 1px 2px;
+ font: inherit;
+ letter-spacing: inherit;
+ text-transform: inherit;
+ text-decoration: underline;
+ text-underline-offset: .18em;
+}
+[data-widget-preset="postcard"] .v2-month-days {
+ gap: 0;
+ font: 520 17px/1 var(--font-display), Georgia, serif;
+}
+[data-widget-preset="postcard"] .v2-month-days > span { min-height: 34px; }
+[data-widget-preset="postcard"] .v2-month-days .v2-month-weekday {
+ min-height: 33px;
+ font: 600 14px/1 var(--font-ui), Arial, sans-serif;
+ text-transform: uppercase;
+}
+[data-widget-preset="postcard"] .v2-month-days [data-event-day] {
+ justify-self: center;
+ width: 36px;
+ font-weight: 560;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] > div {
+ grid-template-columns: 79px minmax(0, 1fr) 35px;
+ gap: 5px;
+ align-items: start;
+ min-height: 69px;
+ padding: 5px 0 6px 23px;
+ border: 0;
+}
+[data-widget-preset="postcard"][data-heritage-widget="schedule"] .v2-guest-schedule > div::before {
+ display: block;
+ width: 8px;
+ height: 8px;
+ left: -4px;
+ top: 16px;
+ background: #9a652c;
+}
+[data-widget-preset="postcard"][data-heritage-widget="schedule"] .v2-guest-schedule > div:not(:last-child)::after {
+ display: block;
+ top: 20px;
+ bottom: -20px;
+ border-color: #9f8357;
+}
+[data-widget-preset="postcard"] .v2-guest-schedule .v2-stationery-event-mark {
+ grid-column: 3;
+ grid-row: 1;
+ align-self: center;
+ justify-self: center;
+ color: #846022;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] time {
+ grid-column: 1;
+ grid-row: 1;
+ font: 670 23px/1.18 var(--font-display), Georgia, serif;
+}
+[data-widget-preset="postcard"] .v2-guest-schedule > div > span:not(.v2-stationery-event-mark) {
+ grid-column: 2;
+ grid-row: 1;
+ align-self: stretch;
+ padding-bottom: 6px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] > div:last-child {
+ min-height: 58px;
+ padding-bottom: 0;
+}
+[data-widget-preset="postcard"] .v2-guest-schedule > div:last-child > span:not(.v2-stationery-event-mark) { padding-bottom: 0; }
+[data-widget-preset="postcard"] .v2-guest-schedule > div:not(:last-child) > span:not(.v2-stationery-event-mark) {
+ border-bottom: 1px solid #cbbb9e;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule strong {
+ font: 700 19px/1.1 var(--font-display), Georgia, serif;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule span {
+ font-size: 13px;
+ line-height: 15px;
+ white-space: pre-line;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"] {
+ position: relative;
+ gap: 10px;
+ justify-content: center;
+ padding-inline: 12px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"] > button {
+ min-width: 0;
+ border: 8px solid #fff9ec;
+ border-bottom-width: 26px;
+ background: #fff9ec;
+ border-radius: 0;
+ transform: none;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="1"] > button {
+ flex: 0 1 56%;
+ height: 94%;
+ transform: rotate(2deg);
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="3"] > button {
+ position: absolute;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="3"] > button:nth-child(1) {
+ left: 2%;
+ top: 17%;
+ width: 37%;
+ height: 76%;
+ transform: rotate(-11deg);
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="3"] > button:nth-child(2) {
+ left: 29.5%;
+ top: 1%;
+ width: 46.5%;
+ height: 96%;
+ transform: rotate(2deg);
+ z-index: 2;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="3"] > button:nth-child(3) {
+ left: 68%;
+ top: 25%;
+ width: 29%;
+ height: 71%;
+ transform: rotate(12deg);
+}
+[data-widget-preset="postcard"] [data-layout="polaroids"][data-count="3"]::after {
+ content: "";
+ position: absolute;
+ pointer-events: none;
+ top: 10%;
+ left: 7%;
+ width: 20%;
+ height: 10%;
+ background: #dbbd91d1;
+ transform: rotate(-25deg);
+ z-index: 1;
+ clip-path: polygon(0 0, 100% 6%, 93% 100%, 0 96%, 4% 70%, 1% 49%, 5% 24%);
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="4"] {
+ display: grid;
+ grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] [data-layout="polaroids"][data-count="4"] > button {
+ width: 100%;
+ height: 100%;
+ border-bottom-width: 15px;
+}
+[data-widget-preset="postcard"] .v2-editorial-mosaic > button:focus-visible { outline-offset: -3px; }
+[data-widget-preset="postcard"] .v2-heritage-location { padding-top: 0; }
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-heritage-location .v2-guest-link {
+ min-height: 88px;
+ display: grid;
+ grid-template-columns: 26px minmax(0, 1fr) 24px;
+ gap: 15px;
+ align-items: center;
+ padding: 12px 17px;
+ border: 1px solid #a99374;
+ border-radius: 15px;
+}
+[data-widget-preset="postcard"] .v2-location-card-copy {
+ display: grid;
+ gap: 2px;
+ min-width: 0;
+ text-align: start;
+ overflow-wrap: anywhere;
+ white-space: pre-line;
+ font: 500 15px/1.18 var(--font-ui), Arial, sans-serif;
+}
+[data-widget-preset="postcard"] .v2-location-card-copy strong {
+ font: 640 21px/1.05 var(--font-display), Georgia, serif;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-heritage-location svg { color: #846022; }
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-heritage-location .v2-postcard-pin { color: #A43E23; }
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-form :is(.v2-guest-name, .v2-guest-options, .v2-guest-stepper, .v2-guest-wish) {
+ margin-inline: 10px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-form
+:is(input[autocomplete="name"], .v2-guest-options label, textarea, .v2-guest-stepper > div) {
+ min-height: 44px;
+ border-color: #e3d5ae;
+ border-radius: 12px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-form input[aria-invalid="true"] { border-color: #ffe0cd; }
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-options {
+ column-gap: 13px;
+ row-gap: 6px;
+ margin-block: 16px 18px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-options label {
+ gap: 8px;
+ min-width: 0;
+ padding-inline: 11px;
+ font-size: 14px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-options label:has(input:checked) {
+ background: var(--v2-guest-accent);
+ color: #30351d;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-options input:checked {
+ box-shadow: inset 0 0 0 4px var(--v2-guest-accent);
+}
+[data-widget-preset="postcard"] .v2-guest-stepper > div {
+ grid-template-columns: 44px minmax(43px, auto) 44px;
+}
+[data-widget-preset="postcard"] .v2-guest-stepper output {
+ font-family: var(--font-display), Georgia, serif;
+}
+[data-widget-preset="postcard"] .v2-guest-wish {
+ margin-block: 8px 0;
+ gap: 6px;
+ position: relative;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-form .v2-guest-wish textarea {
+ min-height: 68px;
+ padding: 10px 16px 20px;
+ resize: none;
+}
+[data-widget-preset="postcard"] .v2-guest-wish > span { position: absolute; inset: auto 12px 5px auto; font-size: 11px; }
+[data-widget-preset="postcard"] .v2-guest-wish:has(textarea:placeholder-shown):not(:focus-within) > span { visibility: hidden; }
+[data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-form button[type="submit"] {
+ position: relative;
+ min-height: 52px;
+ margin-top: 25px;
+ padding: 8px 42px;
+ border-radius: 999px;
+ font: 680 17px/1.25 var(--font-display), Georgia, serif;
+ text-transform: uppercase;
+}
+[data-widget-preset="postcard"] .v2-guest-form button[type="submit"] .lucide-arrow-right {
+ position: absolute;
+ inset-inline-end: 20px;
+ color: #a43e23;
+}
+[data-widget-preset="postcard"] :is(.v2-heritage-error, .v2-guest-status[data-error]) { color: #ffe0cd; }
+[data-widget-preset="postcard"] .v2-stationery-music {
+ grid-template-columns: 54px minmax(0,1fr) 44px minmax(27px,65px);
+ min-height: 81px;
+ padding: 9px 13px;
+ border-color: #d7c9a3;
+}
+[data-widget-preset="postcard"] .v2-stationery-music-cover { height: 52px; border-radius: 7px; }
+[data-widget-preset="postcard"] .v2-stationery-music-wave { color: #e2d5b7; }
+@media (max-width: 370px) {
+ [data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] > div {
+  grid-template-columns: 62px minmax(0, 1fr) 29px;
+  padding-inline-start: 16px;
+  gap: 7px;
+ }
+ [data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] time { font-size: 20px; }
+ [data-widget-preset="postcard"] .v2-month-header { font-size: 18px; letter-spacing: .14em; }
+}

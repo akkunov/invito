@@ -120,7 +120,6 @@ const loveStory = {
  },
 };
 
-const decoration = (file) => ({source:"decoration-crops/"+file,decorative:true});
 const centered = {align:"center"};
 const label = (at,ru,ky,options={}) => text(at,[ru,ky],13,{weight:650,spacing:2,...options});
 const sectionTitle = (at,ru,ky,size,options={}) => title(at,[ru,ky],size,{...centered,spacing:1.1,...options});
@@ -224,40 +223,109 @@ const vogue = {
  },
 };
 
-const olive="#343E2B";
+const tuscanInk = "#34271C";
+const tuscanOlive = "#30351D";
+const tuscanCream = "#F9EBD6";
+const terracotta = "#A43E23";
+const postcard = {preset:"postcard"};
+const tuscanPaper = () => image("paperGrain",prepared("paper-grain"),{box:box(0,0,390,1058)});
+const tuscanVenue = ["Villa Toscana","Villa Toscana"];
 const italian = {
  description:"Итальянская вилла, календарь, полароиды и приглашение в тёплой оливковой палитре.",
- tokens:{paper:"#F4EBDD",ink:olive,accent:"#5B613F"},
+ assetRevision:"vf-03",
+ tokens:{paper:"#F7EBDB",ink:tuscanInk,accent:terracotta},
  pages:{
   cover:page([
-   image("coverArch",crop("cover-scene-reference.png",undefined,[0,0,372,119]),{box:box(0,0,390,125)}),
-   image("coverScene",crop("cover-scene-reference.png",photoLabel,[0,443,372,425]),{box:box(0,442,390,446),focal:[.5,.4]}),
-   label("coverBrand","ITALIAN\nROMANCE","ITALIAN\nROMANCE",centered),shape("coverTopRule","#9D7B56"),
-   label("coverEyebrow","ПРИГЛАШЕНИЕ\nНА СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ",centered),
-   names("coverNames",67),shape("coverBottomPaper","#F4EBDD"),
-   date("coverDate",26),venueName("coverVenue",{...centered,size:15}),action("scrollNext",next,"arrow"),
+   image("coverArch",prepared("cover-arch"),{box:box(0,0,390,463)}),
+   image("coverScene",prepared("cover-scene",photoLabel),{box:box(0,463,390,443),focal:[.5,.46]}),
+   label("coverBrand","ITALIAN\nROMANCE","ITALIAN\nROMANCE",{...centered,box:box(138,131,135,48),size:15,spacing:5,line:1.55,weight:620}),
+   shape("coverTopRule","#A27B4C",{box:box(173,189,65,1)}),
+   shape("coverTopMark","#A27B4C",{box:box(202,186,6,6),rotation:45}),
+   label("coverEyebrow","ПРИГЛАШЕНИЕ\nНА СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ",{
+    ...centered,box:box(82,208,245,46),size:15,spacing:4.6,line:1.53,weight:630,
+   }),
+   title("coverNames",["Алибек\n&\nАлина","Алибек\n&\nАлина"],69,{
+    ...field(coupleLabel,"coupleNames"),box:box(66,274,279,189),align:"center",line:.85,weight:460,spacing:-1.15,
+    fitMinFontSize:39,accentLine:{text:"&",color:terracotta},
+   }),
+   image("coverBottomPaper",prepared("cover-paper"),{box:box(0,810,390,248)}),
+   date("coverDate",27,{box:box(84,914,251,36),dateFormat:"short-date",spacing:5.4,weight:530,fitMinFontSize:20}),
+   text("coverVenue",tuscanVenue,15,{...field(venueTitle,"venueName","location"),box:box(101,958,220,23),align:"center",color:terracotta,weight:650,spacing:3.4}),
+   action("scrollNext",next,"arrow","next",{...postcard,box:box(181,985,52,52)}),
   ]),
   invitation:page([
-   image("villaSketch",decoration("villa-sketch.png")),image("oliveTop",decoration("olive-top.png")),
-   invite("invitationCopy",17,{spacing:1}),shape("ruleAboveCalendar","#AF976C",{box:box(77,239,239,1)}),
-   calendar("calendar","month"),label("calendarNote","ДЕНЬ НАШЕЙ СВАДЬБЫ","БИЗДИН ТОЙ КҮНҮ",centered),
-   sectionTitle("programHeading","ПРОГРАММА ДНЯ","ТОЙДУН ПРОГРАММАСЫ",24),widget("program","schedule"),
-   image("landscapeFooter",decoration("landscape-footer.png")),
+   tuscanPaper(),
+   image("villaSketch",prepared("invitation-ornament"),{box:box(0,0,390,132)}),
+   title("invitationCopy",[
+    "С радостью приглашаем вас\nразделить с нами\nособенный день —\nнашу свадьбу",
+    "Өзгөчө күнүбүздү —\nүйлөнүү тоюбузду —\nбиз менен бирге өткөрүүгө\nкубаныч менен чакырабыз",
+   ],21,{...field(inviteLabel,"invitationText"),...centered,box:box(33,131,324,94),line:1.095,weight:480,spacing:.4,fitMinFontSize:17}),
+   shape("ruleAboveCalendar","#A99374",{box:box(77,241,239,1)}),
+   shape("calendarMark","#976224",{box:box(192,238,7,7),rotation:45}),
+   calendar("calendar","month",{...postcard,box:box(22,250,348,284)}),
+   text("calendarNote",["День нашей свадьбы ♡","Үйлөнүү тоюбуздун күнү ♡"],18,{
+    box:box(93,530,263,34),family:"serif",align:"center",line:1.15,weight:520,color:terracotta,
+   }),
+   sectionTitle("programHeading","ПРОГРАММА ДНЯ","ТОЙДУН ПРОГРАММАСЫ",24,{
+    box:box(57,587,276,32),spacing:3.4,weight:480,fitMinFontSize:17,
+   }),
+   shape("programRuleLeft","#A99374",{box:box(30,622,38,1)}),
+   shape("programRuleRight","#A99374",{box:box(323,622,38,1)}),
+   widget("program","schedule",{},{
+    ...postcard,box:box(31,640,336,288),
+    items:[
+     ["16:00","Сбор гостей\nПриветственные напитки\nи лёгкие закуски","Конокторду тосуу\nСуусундуктар жана жеңил тамактар"],
+     ["17:00","Церемония\nТоржественная\nрегистрация брака","Салтанат\nНикени каттоо"],
+     ["18:30","Банкет\nПраздничный ужин и развлекательная программа","Банкет\nМайрамдык кечки тамак жана көңүл ачуу"],
+     ["22:00","Завершение\nОкончание вечера\nи тёплые пожелания","Кеченин аягы\nЖылуу каалоо-тилектер"],
+    ].map(([time,ru,ky])=>({time,label:{ru,ky}})),
+   }),
+   image("landscapeFooter",prepared("invitation-landscape"),{box:box(0,932,390,126)}),
   ]),
   gallery:page([
-   sectionTitle("storyQuote","В КАЖДОМ МГНОВЕНИИ —\nНАША ИСТОРИЯ","АР БИР КӨЗ ИРМЕМДЕ —\nБИЗДИН ТАРЫХ",23),shape("quoteRule","#A78D69"),
-   widget("polaroidGallery","gallery",{layout:"polaroids"},{images:["left","center","right"].map(position=>crop("gallery-"+position+"-reference.png",portrait))}),
-   image("venueStoryPreview",crop("venue-reference.png",photo("Фото истории","Баяндын сүрөтү")),{radius:7}),
-   sectionTitle("venueHeading","МЕСТО ПРОВЕДЕНИЯ","ТОЙ ӨТҮҮЧҮ ЖЕР",22),
-   venueName("venueName",{size:17}),inlineLocation("venueCard",{box:box(24,780,345,75)}),
-   image("venuePhoto",crop("venue-reference.png",venueLabel),{radius:8}),
+   tuscanPaper(),
+   image("galleryShadows",prepared("gallery-shadows"),{box:box(0,0,390,174)}),
+   title("openingQuote",["“","“"],50,{box:box(48,42,39,49),grow:false,color:"#A46F3F",weight:460}),
+   title("storyQuote",["Наша история — это\nпутешествие, которое\nпривело нас к этому дню","Биздин тарых —\nбизди ушул күнгө\nалып келген саякат"],21,{
+    ...field(["Цитата","Цитата"],"quoteText"),...centered,box:box(57,56,278,85),line:1.22,weight:480,fitMinFontSize:16,
+   }),
+   title("closingQuote",["”","”"],50,{box:box(309,126,40,55),grow:false,color:"#A46F3F",weight:460}),
+   shape("quoteRule","#A78D69",{box:box(158,153,67,1)}),
+   widget("polaroidGallery","gallery",{layout:"polaroids"},{
+    ...postcard,box:box(7,183,375,253),
+    images:[
+     prepared("polaroid-left",photo("Окно виллы","Вилланын терезеси")),
+     prepared("polaroid-center",portrait),
+     prepared("polaroid-right",photo("Лимоны","Лимондор")),
+    ],
+   }),
+   image("venueStoryPreview",prepared("venue-story",photo("Фото истории","Баяндын сүрөтү")),{radius:18}),
+   shape("venueRuleLeft","#A99374",{box:box(24,708,34,1)}),
+   shape("venueRuleRight","#A99374",{box:box(337,708,28,1)}),
+   sectionTitle("venueHeading","МЕСТО ПРОВЕДЕНИЯ","ТОЙ ӨТҮҮЧҮ ЖЕР",23,{
+    box:box(28,694,334,32),spacing:1.3,weight:500,fitMinFontSize:17,
+   }),
+   map("venueCard",{...postcard,multilineAddress:true,block:{showAddress:false,nameKey:"venueName"},address:["г. Бишкек,\nул. Курманжан Датки, 45","Бишкек ш.,\nКурманжан Датка көч., 45"]}),
+   image("venuePhoto",prepared("venue",venueLabel),{radius:19}),
   ]),
   rsvpPage:page([
-   image("envelope",decoration("envelope-seal.png")),
-   sectionTitle("rsvpHeading","ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ","КАТЫШУУҢУЗДУ\nЫРАСТАҢЫЗ",29),
-   guestIntro("rsvpIntro"),form("rsvpWidget"),music("musicCard"),
-   image("thanksOlive",decoration("thanks-olive.png")),sectionTitle("thanksText",closed[0],closed[1],25),shape("thanksRule","#A78D69"),
-  ]),
+   image("rsvpTexture",prepared("rsvp-texture"),{box:box(0,0,390,1058)}),
+   image("envelope",prepared("envelope"),{box:box(0,0,390,159)}),
+   sectionTitle("rsvpHeading","ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ","КАТЫШУУҢУЗДУ\nЫРАСТАҢЫЗ",33,{
+    box:box(38,165,314,74),weight:460,spacing:2.2,line:1.12,fitMinFontSize:26,
+   }),
+   title("rsvpIntro",["Будем рады разделить этот\nособенный день вместе с вами","Бул өзгөчө күндү сиздер менен\nбирге өткөрүүгө кубанычтабыз"],18,{
+    ...field(["Вступление к анкете","Анкетага кириш сөз"],"rsvpIntro","rsvp"),...centered,box:box(40,256,310,49),weight:470,line:1.16,
+   }),
+   form("rsvpWidget",{...postcard,accent:tuscanCream,buttonInk:tuscanInk,box:box(26,313,340,408)}),
+   widget("musicCard","music",{
+    title:{ru:"Наша музыка",ky:"Биздин музыка"},
+   },{...postcard,accent:tuscanCream,buttonInk:tuscanOlive,allowUpload:true,cover:prepared("music-cover")}),
+   image("rsvpFoliage",prepared("rsvp-foliage"),{box:box(0,883,390,175)}),
+   image("thanksOlive",prepared("thanks-olive"),{box:box(147,850,84,41)}),
+   title("thanksText",["Grazie!","Рахмат!"],55,{...centered,box:box(56,894,278,77),line:1.03,weight:450}),
+   shape("thanksRule",tuscanCream,{box:box(165,996,62,1)}),
+  ],{background:tuscanOlive,ink:tuscanCream,accent:tuscanCream}),
  },
 };
 

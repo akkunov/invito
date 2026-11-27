@@ -1,18 +1,19 @@
 "use client";
 import {useEffect,useLayoutEffect,useId,useRef,useState,type CSSProperties,type FormEvent} from "react";
-import {ArrowRight, AudioLines, Play, Cake, CalendarDays, ChevronDown, ConciergeBell, Link2, ExternalLink, LoaderCircle, Map as MapIcon, MapPin, Music2, Pause} from "lucide-react";
+import {ArrowRight, AudioLines, Play, Cake, CalendarDays, ChevronDown, ConciergeBell, Link2, ExternalLink, LoaderCircle, Map as MapIcon, MapPin, Music2, Pause, Sparkles, Wine} from "lucide-react";
 import Image from "next/image";
 import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {weddingCalendar} from "@/features/studio-v2/core/calendar.ts";
 import {StudioTurnstile} from "./studio-v2-turnstile";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema.ts";
-import {countdownParts,countdownTarget,locationAddress,mapUrl,submitGuestResponse,type GuestMode,type WidgetNode} from "@/features/studio-v2/core/invitation-behavior.ts";
+import {countdownParts,countdownTarget,hasMusicCard,locationAddress,mapUrl,submitGuestResponse,type GuestMode,type WidgetNode} from "@/features/studio-v2/core/invitation-behavior.ts";
 type Props={sectionLinks?:Partial<Record<"next"|"rsvp",string>>;node:WidgetNode;document:ProjectDocumentV2;guest:GuestMode;mediaUrls?:Readonly<Record<string,string>>;onMeasure?:(id:string,height:number)=>void};
 const words={
  ru:{name:"Ваше имя",yes:"Буду",no:"Не смогу",guests:"Количество гостей",submit:"Подтвердить",sending:"Отправка…",preview:"Проверка формы успешна. Ответ не отправлен.",sent:"Спасибо! Ответ принят.",error:"Проверьте имя и количество гостей. Если данные верны, попробуйте позже.",closed:"Приём ответов завершён",unavailable:"Приём ответов пока недоступен",days:"дни",hours:"часы",minutes:"мин",seconds:"сек",map:"Открыть карту",noAddress:"Укажите адрес",noPhotos:"Добавьте фотографии",previous:"Предыдущее фото",next:"Следующее фото",play:"Включить музыку",pause:"Остановить музыку",noMusic:"Добавьте аудиофайл",audioError:"Не удалось воспроизвести музыку",noSchedule:"Добавьте события",previewOnly:"Предпросмотр — данные не отправляются"},
  ky:{name:"Атыңыз",yes:"Келем",no:"Келе албайм",guests:"Коноктордун саны",submit:"Ырастоо",sending:"Жөнөтүлүүдө…",preview:"Форма текшерилди. Жооп жөнөтүлгөн жок.",sent:"Рахмат! Жообуңуз кабыл алынды.",error:"Атыңызды жана коноктордун санын текшериңиз. Маалымат туура болсо, кийин кайра аракет кылыңыз.",closed:"Жооп кабыл алуу аяктады",unavailable:"Азыр жооп кабыл алынбайт",days:"күн",hours:"саат",minutes:"мүн",seconds:"сек",map:"Картаны ачуу",noAddress:"Даректи жазыңыз",noPhotos:"Сүрөттөрдү кошуңуз",previous:"Мурунку сүрөт",next:"Кийинки сүрөт",play:"Музыканы ойнотуу",pause:"Музыканы токтотуу",noMusic:"Аудиофайл кошуңуз",audioError:"Музыканы ойнотуу мүмкүн болгон жок",noSchedule:"Иш-чараларды кошуңуз",previewOnly:"Алдын ала көрүү — маалымат жөнөтүлбөйт"}
 };
 const stationeryScheduleIcons=[Cake,Link2,ConciergeBell,Music2];
+const postcardScheduleIcons=[Wine,Link2,ConciergeBell,Sparkles];
 const editorialWords={
  ru:{attendance:"Будете ли вы присутствовать?",submit:"Отправить ответ",days:"дня",hours:"часов",minutes:"минут",seconds:"секунды",map:"Показать на карте"},
  ky:{attendance:"Тойго келесизби?",submit:"Жооп жөнөтүү",days:"күн",hours:"саат",minutes:"мүнөт",seconds:"секунд",map:"Картадан көрүү"},
@@ -31,11 +32,12 @@ function Countdown({target,locale,editorial,heritage,gilded,daysOnly}:{target:st
 }
 function Rsvp({node,document,guest}:Props){
  const b=node.block;if(b.kind!=="rsvp")return null;
- return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={isHeritagePresentation(document.presentation)||document.presentation==="collection"} gilded={document.presentation==="gilded"} alpine={document.presentation==="alpine"||document.presentation==="collection"} felt={document.presentation==="felt"} stationery={node.appearance.preset==="stationery"}/>;
+ return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={isHeritagePresentation(document.presentation)||document.presentation==="collection"} gilded={document.presentation==="gilded"} alpine={document.presentation==="alpine"||document.presentation==="collection"} felt={document.presentation==="felt"} stationery={node.appearance.preset==="stationery"} postcard={node.appearance.preset==="postcard"}/>;
 }
-function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded,alpine,felt,stationery}:{stationery:boolean;editorial:boolean;heritage:boolean;gilded:boolean;alpine:boolean;felt:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
+function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded,alpine,felt,stationery,postcard}:{postcard:boolean;stationery:boolean;editorial:boolean;heritage:boolean;gilded:boolean;alpine:boolean;felt:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
  const id=useId(),w=words[locale],copy=editorialWords[locale],nameRef=useRef<HTMLInputElement>(null);
  const hasNameLabel=alpine||felt;
+ const cardControls=stationery||postcard;
  const heritageCopy=locale==="ru"
   ?{attendance:"Вы будете присутствовать?",yes:"Да, буду",no:"К сожалению, нет",submit:"Подтвердить участие",required:"Введите ваше имя"}
   :{attendance:"Тойго келесизби?",yes:gilded||hasNameLabel?"Ооба, келем":"Ооба, барам",no:hasNameLabel?"Тилекке каршы, келе албайм":gilded?"Тилекке каршы, келбейм":"Тилекке каршы, бара албайм",submit:"Катышууну ырастоо",required:"Атыңызды жазыңыз"};
@@ -85,15 +87,15 @@ function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded,alpine,fe
   </div>}
   {!block.guestControl&&(editorial||attendance==="yes")&&<label>{!editorial&&w.guests}<select aria-label={editorial?w.guests:undefined} value={editorial&&attendance!=="yes"?0:Math.min(guests,block.maxGuests)} disabled={inputDisabled||attendance==="no"} onChange={e=>setGuests(Number(e.target.value))}>{editorial&&<option value={0} disabled>{w.guests}</option>}{Array.from({length:block.maxGuests},(_,i)=><option key={i+1} value={i+1}>{heritage?guestCount(i+1,locale):i+1}</option>)}</select>{heritage&&<ChevronDown size={felt?20:18} className="v2-heritage-select-icon" aria-hidden="true"/>}</label>}
   {alpine&&attendance==="no"&&<p className="v2-alpine-decline">{locale==="ru"?"При отказе число гостей не указывается.":"Келбесеңиз, коноктордун саны көрсөтүлбөйт."}</p>}
-  {block.wish&&<label className="v2-guest-wish">{locale==="ru"?(stationery?"Пожелание для нас":"Пожелание (необязательно)"):(stationery?"Бизге каалоо-тилек":"Каалоо-тилек (милдеттүү эмес)")}
-   <textarea disabled={inputDisabled} maxLength={500} value={wish} onChange={e=>setWish(e.target.value)} placeholder={locale==="ru"?(stationery?"Напишите тёплые слова ♡":"Напишите тёплые слова"):"Жылуу сөздөрүңүздү жазыңыз"}/>
+  {block.wish&&<label className="v2-guest-wish">{locale==="ru"?(cardControls?"Пожелание для нас":"Пожелание (необязательно)"):(cardControls?"Бизге каалоо-тилек":"Каалоо-тилек (милдеттүү эмес)")}
+   <textarea disabled={inputDisabled} maxLength={500} value={wish} onChange={e=>setWish(e.target.value)} placeholder={locale==="ru"?(cardControls?"Напишите тёплые слова ♡":"Напишите тёплые слова"):"Жылуу сөздөрүңүздү жазыңыз"}/>
    <span>{wish.length} / 500</span>
   </label>}
   <label className="v2-guest-honeypot" aria-hidden="true">Website<input ref={honeypot}
      name="website" tabIndex={-1} autoComplete="off"/></label>
   {challengeSiteKey&&<StudioTurnstile siteKey={challengeSiteKey} onToken={setChallengeToken}
     resetKey={challengeReset}/>}
-  <button type="submit" disabled={disabled} aria-busy={showSubmitProgress&&status==="sending"?true:undefined}>{showSubmitProgress&&status==="sending"&&<LoaderCircle size={18} className="v2-gilded-spinner" aria-hidden="true"/>}{status==="sending"?responseCopy.sending:submitLabel}{stationery&&status!=="sending"&&<ArrowRight size={23} aria-hidden="true"/>}</button>
+  <button type="submit" disabled={disabled} aria-busy={showSubmitProgress&&status==="sending"?true:undefined}>{showSubmitProgress&&status==="sending"&&<LoaderCircle size={18} className="v2-gilded-spinner" aria-hidden="true"/>}{status==="sending"?responseCopy.sending:submitLabel}{cardControls&&status!=="sending"&&<ArrowRight size={23} aria-hidden="true"/>}</button>
   <div id={id} className="v2-guest-status" data-error={hasNameLabel&&status==="error"&&!!name.trim()?true:undefined} role="status">{closed?w.closed:unavailable?w.unavailable:status==="preview"?w.preview:status==="sent"?responseCopy.sent:status==="error"&&(!heritage||name.trim())?responseCopy.error:guest.mode==="preview"&&!editorial&&!heritage?w.previewOnly:""}</div>
  </form>;
 }
@@ -163,7 +165,7 @@ function PlanSchedule({block,locale,disabled}:{block:Extract<WidgetNode["block"]
  </div>;
 }
 
-function Calendar({block,doc,disabled,stationery}:{stationery:boolean;block:Extract<WidgetNode["block"],{kind:"calendar"}>;doc:ProjectDocumentV2;disabled:boolean}) {
+function Calendar({block,doc,disabled,stationery,postcard}:{postcard:boolean;stationery:boolean;block:Extract<WidgetNode["block"],{kind:"calendar"}>;doc:ProjectDocumentV2;disabled:boolean}) {
  const instant=countdownTarget(doc,block);
  const months=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
  const weekdays=doc.locale==="ru"?["Пн","Вт","Ср","Чт","Пт","Сб","Вс"]:["Дш","Шш","Шр","Бш","Жм","Иш","Жк"];
@@ -175,6 +177,8 @@ function Calendar({block,doc,disabled,stationery}:{stationery:boolean;block:Extr
  const last=new Date(Date.UTC(Math.floor(month/12),month%12+1,0)).getUTCDate();
  const blank=(start.getUTCDay()+6)%7;
  const title=block.title[doc.locale]||(doc.locale==="ru"?"В календарь":"Жылнаамага кошуу");
+ const monthLabel=months[start.getUTCMonth()]+" "+start.getUTCFullYear();
+ const eventLabel=doc.locale==="ru"?"День свадьбы":"Той күнү";
  const names=doc.values?.coupleNames;
  const address=doc.values?.venueAddress;
  function download(){
@@ -187,12 +191,17 @@ function Calendar({block,doc,disabled,stationery}:{stationery:boolean;block:Extr
  if(block.layout==="button")return <button type="button" className="v2-guest-link" disabled={disabled} onClick={download}>{stationery&&<CalendarDays size={20} aria-hidden="true"/>}{title}</button>;
  return <div className="v2-collection-month">
   <div className="v2-month-header"><button type="button" disabled={disabled} aria-label={doc.locale==="ru"?"Предыдущий месяц":"Мурунку ай"} onClick={()=>setOffset(value=>value-1)}>‹</button>
-   <strong>{months[start.getUTCMonth()]} {start.getUTCFullYear()}</strong>
+   {postcard&&offset!==0?<button type="button" className="v2-month-return" disabled={disabled}
+    aria-label={doc.locale==="ru"?"К месяцу свадьбы":"Той өтүүчү айга кайтуу"} onClick={()=>setOffset(0)}>{monthLabel}</button>:<strong>{monthLabel}</strong>}
    <button type="button" disabled={disabled} aria-label={doc.locale==="ru"?"Следующий месяц":"Кийинки ай"} onClick={()=>setOffset(value=>value+1)}>›</button></div>
   <div className="v2-month-days">
-   {weekdays.map(day=><span key={day}>{day}</span>)}
+   {weekdays.map(day=><span className="v2-month-weekday" key={day}>{day}</span>)}
    {Array.from({length:blank},(_,i)=><span key={"empty"+i} aria-hidden="true"/>)}
-   {Array.from({length:last},(_,i)=><span key={i} data-event-day={month===eventMonth&&i+1===event.getUTCDate()||undefined}>{i+1}</span>)}
+   {Array.from({length:last},(_,i)=>{
+    const selected=month===eventMonth&&i+1===event.getUTCDate();
+    return <span key={i} data-event-day={selected||undefined} aria-current={postcard&&selected?"date":undefined}
+     aria-label={postcard&&selected?eventLabel+" — "+(i+1):undefined}>{i+1}</span>;
+   })}
   </div>
  </div>;
 }
@@ -257,7 +266,8 @@ export function InvitationBlockView(props:Props){
  const heritage=isHeritagePresentation(document.presentation)||collection;
  const measureRef=useRef<HTMLDivElement>(null);
  const {onMeasure}=props;
- const musicSource=b.kind==="music"&&a.preset==="stationery"?b.source:undefined;
+ const postcard=a.preset==="postcard";
+ const musicSource=b.kind==="music"&&hasMusicCard(a.preset)?b.source:undefined;
  useLayoutEffect(()=>{
   const content=measureRef.current?.querySelector<HTMLElement>("form, .v2-guest-schedule, .v2-heritage-location, .v2-collection-plan, .v2-stationery-music");
   if(!heritage||!content||!onMeasure)return;
@@ -270,22 +280,26 @@ export function InvitationBlockView(props:Props){
  const mapLabel=gilded||alpine||felt||collection?<><MapIcon size={alpine?22:24}/>{document.locale==="ru"?"Открыть карту":"Картаны ачуу"}{a.preset!=="contact-sheet"&&<ExternalLink size={18}/>}</>:heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
  const style={fontFamily:editorial||heritage?"var(--font-ui), Arial, sans-serif":a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent,"--v2-guest-button-ink":a.buttonColor} as CSSProperties;
  return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout&&b.layout!=="carousel"?" v2-guest-block-mosaic":"")} ref={measureRef} data-heritage-widget={heritage?b.kind:undefined} data-editorial-widget={editorial?b.kind:undefined} data-widget-preset={a.preset} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
- {b.kind!=="calendar"&&b.kind!=="sectionLink"&&!(b.kind==="music"&&a.preset==="stationery")&&b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
+ {b.kind!=="calendar"&&b.kind!=="sectionLink"&&!(b.kind==="music"&&hasMusicCard(a.preset))&&b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
  {b.kind==="rsvp"&&<Rsvp {...props}/>}
- {b.kind==="calendar"&&<Calendar block={b} doc={document} disabled={guest.mode==="studio"} stationery={a.preset==="stationery"}/>}
+ {b.kind==="calendar"&&<Calendar block={b} doc={document} disabled={guest.mode==="studio"} stationery={a.preset==="stationery"} postcard={postcard}/>}
  {b.kind==="sectionLink"&&(props.sectionLinks?.[b.destination]
   ?<a className="v2-guest-link" data-style={b.style} href={props.sectionLinks[b.destination]} aria-label={b.title[document.locale]}>{b.style==="arrow"?<ChevronDown size={24}/>:b.title[document.locale]}</a>
   :<span className="v2-guest-link" data-style={b.style}>{b.style==="arrow"?<ChevronDown size={24}/>:b.title[document.locale]}</span>)}
  {b.kind==="countdown"&&<Countdown target={countdownTarget(document,b)} locale={document.locale} editorial={editorial} heritage={heritage} gilded={gilded||alpine||felt} daysOnly={b.layout==="days"}/>}
  {b.kind==="location"&&(()=>{
   const address=locationAddress(document,b);
-  if(!address.trim())return <p>{w.noAddress}</p>;
+  if(!address.trim())return <p>{postcard&&guest.mode==="live"?(document.locale==="ru"?"Адрес уточняется":"Дарек такталууда"):w.noAddress}</p>;
+  const venue=b.nameKey?document.values?.[b.nameKey]:undefined;
+  const label=postcard?<><MapPin className="v2-postcard-pin" size={26} aria-hidden="true"/>
+   <span className="v2-location-card-copy">{venue?.type==="text"&&venue.value[document.locale]&&<strong>{venue.value[document.locale]}</strong>}<span>{address}</span></span>
+   <ExternalLink size={24} aria-hidden="true"/></>:mapLabel;
   const location=<>
-   {b.showAddress!==false&&(editorial||heritage)&&<MapPin size={felt?35:alpine?34:gilded?35:heritage?32:11} strokeWidth={gilded?1.7:undefined} aria-hidden="true"/>}
-   {b.showAddress!==false&&<p>{address}</p>}
+   {!postcard&&b.showAddress!==false&&(editorial||heritage)&&<MapPin size={felt?35:alpine?34:gilded?35:heritage?32:11} strokeWidth={gilded?1.7:undefined} aria-hidden="true"/>}
+   {!postcard&&b.showAddress!==false&&<p>{address}</p>}
    {guest.mode==="studio"
-    ?<span className="v2-guest-link">{mapLabel}</span>
-    :<a className="v2-guest-link" href={mapUrl(address)} target="_blank" rel="noopener noreferrer">{mapLabel}</a>}
+    ?<span className="v2-guest-link">{label}</span>
+    :<a className="v2-guest-link" href={mapUrl(address)} title={postcard?w.map:undefined} target="_blank" rel="noopener noreferrer">{label}</a>}
   </>;
   return heritage?<div className="v2-heritage-location">{location}</div>:location;
  })()}
@@ -294,7 +308,7 @@ export function InvitationBlockView(props:Props){
   const cover=b.coverAssetId?document.assets[b.coverAssetId]:undefined;
   const coverUrl=cover?.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+cover.storageKey:
    cover?props.mediaUrls?.[cover.storageKey]:undefined;
-  const card=a.preset==="stationery"?{cover:coverUrl,title:b.title[document.locale]||w.play,caption:b.caption?.[document.locale]}:undefined;
+  const card=hasMusicCard(a.preset)?{cover:coverUrl,title:b.title[document.locale]||w.play,caption:b.caption?.[document.locale]}:undefined;
   return <Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source}
     locale={document.locale} guest={guest} editorial={editorial||heritage} card={card}/>;
  })()}
@@ -303,8 +317,8 @@ export function InvitationBlockView(props:Props){
    const label=item.label[document.locale];
    if(!b.layout)return <div key={i}><time>{item.time}</time><span>{label}</span></div>;
    const [title,...description]=label.split("\n");
-   const Mark=a.preset==="stationery"?stationeryScheduleIcons[i]:undefined;
-   return <div key={i}>{a.preset==="stationery"&&<span className="v2-stationery-event-mark" aria-hidden="true">{Mark&&<Mark size={26} strokeWidth={1.5}/>}</span>}<time>{item.time}</time><span><strong>{title}</strong>{description.length>0&&<span>{description.join("\n")}</span>}</span></div>;
+   const Mark=postcard?postcardScheduleIcons[i]:a.preset==="stationery"?stationeryScheduleIcons[i]:undefined;
+   return <div key={i}>{(a.preset==="stationery"||postcard)&&<span className="v2-stationery-event-mark" aria-hidden="true">{Mark&&<Mark size={26} strokeWidth={1.5}/>}</span>}<time>{item.time}</time><span><strong>{title}</strong>{description.length>0&&<span>{description.join("\n")}</span>}</span></div>;
   }):<p>{w.noSchedule}</p>}
  </div>)}
  </div>;

@@ -145,3 +145,45 @@ test("Vogue Wedding keeps its monochrome treatment and decorative layers when re
   assert.deepEqual(next.nodes[id],node);
  }
 });
+
+test("Italian Romance connects one date and one place to the existing widgets and keeps six replaceable photos",()=>{
+ const pack=JSON.parse(readFileSync(new URL("../templates/packages/italian-romance.v1.json",import.meta.url),"utf8"));
+ const {snapshot,contract}=validatedTemplateVersion(pack.document,pack.personalization);
+ const {invitation_calendar:calendar,gallery_polaroidGallery:gallery,gallery_venueCard:location}=snapshot.nodes;
+ const imageFields=contract.fields.filter(field=>field.kind==="image");
+ assert.deepEqual(imageFields.map(field=>field.nodeId),["cover_coverScene","gallery_venueStoryPreview","gallery_venuePhoto"]);
+ assert.equal(gallery.block.layout,"polaroids");
+ assert.equal(gallery.block.assetIds.length,3);
+ assert.equal(contract.fields.find(field=>field.nodeId===gallery.id).maxPhotos,4);
+ assert.equal(location.block.nameKey,"venueName");
+ assert.equal(location.block.addressKey,"venueAddress");
+ assert.deepEqual(snapshot.nodes.cover_coverNames.accentLine,{text:"&",color:"#A43E23"});
+ assert.equal(snapshot.nodes.rsvpPage_rsvpWidget.block.wish,true);
+ assert.equal(snapshot.nodes.rsvpPage_rsvpWidget.block.guestControl,"stepper");
+ assert.equal(snapshot.nodes.rsvpPage_musicCard.block.source,"");
+ assert.throws(()=>validatedTemplateVersion({...snapshot,nodes:{
+  ...snapshot.nodes,[location.id]:{...location,block:{...location.block,nameKey:"ceremonyDate"}},
+ }},contract));
+
+ const date="2028-02-29T17:00:00+06:00";
+ const reversedGallery=[...gallery.block.assetIds].reverse();
+ const values=Object.fromEntries(imageFields.map((field,i)=>[field.id,{kind:"image",assetId:gallery.block.assetIds[i]}]));
+ const personalized=bindDocument(finalizePersonalization(snapshot,contract,{values:{
+  ...values,
+  ceremonyDate:{kind:"binding",value:{type:"date",value:date}},
+  [gallery.id]:{kind:"gallery",assetIds:reversedGallery},
+ }}));
+ assert.equal(calendar.block.layout,"month");
+ assert.equal(countdownTarget(personalized,personalized.nodes[calendar.id].block),date);
+ assert.match(personalized.nodes.cover_coverDate.runs[0].text,/29 ФЕВРАЛЯ 2028/);
+ assert.deepEqual(personalized.nodes[gallery.id].block.assetIds,reversedGallery);
+ for (const field of imageFields) {
+  assert.equal(personalized.nodes[field.nodeId].assetId,values[field.id].assetId);
+ }
+ for (const node of Object.values(snapshot.nodes)) {
+  if (node.type==="image"&&snapshot.assets[node.assetId].decorative) {
+   assert.equal(node.locked,true);
+   assert.deepEqual(personalized.nodes[node.id],node);
+  }
+ }
+});
