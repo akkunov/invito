@@ -27,7 +27,7 @@ test("customer media upload cannot use a workspace without OWNER membership",asy
   };
   const media={startUpload:async()=>{uploadCalled=true;}};
   const service=new CustomerInvitationsService(db as never,media as never,{} as never);
-  await assert.rejects(()=>service.startPhoto("owner-uuid",{
+  await assert.rejects(()=>service.startMedia("owner-uuid",{
     name:"portrait.png",mimeType:"image/png",bytes:100,sha256:"a".repeat(64),
   }),ForbiddenException);
   assert.equal(uploadCalled,false);

@@ -1,6 +1,7 @@
 import type {ProjectDocumentV2} from "./document.schema.ts";
+import {musicAssetId} from "./invitation.schema.ts";
 import {parseProjectV2,mediaAssetRefSchema} from "./document.schema.ts";
-import {personalizationSchema,personalizationPatchSchema,type PersonalizationContract,type EditableField,type PersonalizedValue} from "./personalization.schema.ts";
+import {personalizationSchema,personalizationPatchSchema,type PersonalizationContract,type PersonalizationPatch,type EditableField,type PersonalizedValue} from "./personalization.schema.ts";
 import {noteOverrides} from "./linked-components.ts";
 type Asset=ProjectDocumentV2["assets"][string];
 type Issue={fieldId:string;message:string};
@@ -26,6 +27,17 @@ export function contractIssues(doc:ProjectDocumentV2,contract:PersonalizationCon
   if(!node||(f.kind==="image"?node.type!=="image":f.kind==="textStyle"?node.type!=="text":node.type!=="widget"||node.block.kind!==f.kind))add(f,"Слой отсутствует или изменил тип");
  }
  return issues;
+}
+/** Returns only newly chosen uploads. Bundled or template-approved tracks are separate. */
+export function uploadedMusicIds(contract:PersonalizationContract,patch:PersonalizationPatch):string[] {
+ const ids=new Set<string>();
+ for(const field of contract.fields){
+  const value=patch.values[field.id];
+  if(field.kind!=="music"||!field.allowUpload||value?.kind!=="music"||field.sources.includes(value.source))continue;
+  const id=musicAssetId(value.source);
+  if(id)ids.add(id);
+ }
+ return [...ids];
 }
 export function readPersonalizedValue(doc:ProjectDocumentV2,f:EditableField):PersonalizedValue|undefined{
  if("key" in f){const value=doc.values?.[f.key];return value?{kind:"binding",value:structuredClone(value)}:undefined;}
@@ -79,7 +91,7 @@ function checkValue(f:EditableField,v:PersonalizedValue,doc:ProjectDocumentV2,lo
   }
   case "gallery":if(v.kind!=="gallery")return reject("Неверный тип");if(v.assetIds.length>f.maxPhotos||complete&&f.required&&!v.assetIds.length)reject("Недопустимое количество фото");v.assetIds.forEach(id=>{if(asset(id).decorative)reject("Выберите фотографию");});break;
   case "schedule":if(v.kind!=="schedule")return reject("Неверный тип");if(v.items.length>f.maxItems||complete&&f.required&&!v.items.length)reject("Недопустимое количество событий");for(const item of v.items)requiredText(item.label);break;
-  case "music":if(v.kind!=="music")return reject("Неверный тип");if(v.source&&!f.sources.includes(v.source)||complete&&f.required&&!v.source)reject("Музыка не входит в разрешённый список");break;
+  case "music":if(v.kind!=="music")return reject("Неверный тип");if(v.source&&!f.sources.includes(v.source)&&!(f.allowUpload&&musicAssetId(v.source))||complete&&f.required&&!v.source)reject("Музыка не входит в разрешённый список");break;
   case "rsvp":if(v.kind!=="rsvp")return reject("Неверный тип");if(v.maxGuests>f.maxGuests)reject("Превышен лимит гостей");break;
   case "theme":if(v.kind!=="theme")return reject("Неверный тип");if(v.themeId===null?!f.allowBase:!f.themeIds.includes(v.themeId))reject("Тема не разрешена");break;
  }
@@ -130,7 +142,10 @@ export function personalizeDocument(source:ProjectDocumentV2,rawContract:unknown
    const b=node.block;
    if(f.kind==="gallery"&&v.kind==="gallery"&&b.kind==="gallery")b.assetIds=[...v.assetIds];
    else if(f.kind==="schedule"&&v.kind==="schedule"&&b.kind==="schedule")b.items=structuredClone(v.items);
-   else if(f.kind==="music"&&v.kind==="music"&&b.kind==="music")b.source=v.source;
+   else if(f.kind==="music"&&v.kind==="music"&&b.kind==="music"){
+    const uploaded=f.allowUpload&&!f.sources.includes(v.source)?musicAssetId(v.source):undefined;
+    b.source=uploaded?"asset:"+uploaded:v.source;
+   }
    else if(f.kind==="rsvp"&&v.kind==="rsvp"&&b.kind==="rsvp"){b.deadline=v.deadline;b.maxGuests=v.maxGuests;}
    else invalid("Invalid widget field");
   }else invalid("Invalid field target");

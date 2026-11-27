@@ -5,7 +5,8 @@ import {MediaService} from "../media/media.service.js";
 import {MediaObjectStore} from "../media/media-object-store.js";
 import {validatedTemplate} from "../documents/documents-input.js";
 import {personalizationPatchSchema,type PersonalizationPatch} from "../../../../src/features/studio-v2/core/personalization.schema.js";
-import {personalizeDocument} from "../../../../src/features/studio-v2/core/personalization.js";
+import type {UploadMime} from "../media/media-policy.js";
+import {personalizeDocument,uploadedMusicIds} from "../../../../src/features/studio-v2/core/personalization.js";
 import type {ProjectDocumentV2} from "../../../../src/features/studio-v2/core/document.schema.js";
 
 const json=(value:unknown)=>value as Prisma.InputJsonValue;
@@ -43,17 +44,17 @@ export class CustomerInvitationsService {
     return workspace.id;
   }
 
-  async startPhoto(userId:string,input:{name:string;mimeType:"image/jpeg"|"image/png"|"image/webp";bytes:number;sha256:string}){
+  async startMedia(userId:string,input:{name:string;mimeType:UploadMime;bytes:number;sha256:string}){
     const workspaceId=await this.personalWorkspace(userId);
     return this.media.startUpload(userId,workspaceId,input);
   }
-  async photoUrl(userId:string,id:string){
+  async mediaUrl(userId:string,id:string){
     const workspaceId=await this.personalWorkspace(userId);
     const asset=await this.db.mediaAsset.findFirst({where:{id,workspaceId,uploadedById:userId,status:"READY"},select:{id:true}});
     if(!asset)throw new NotFoundException("CUSTOMER_MEDIA_NOT_FOUND");
     return this.media.readUrl(userId,workspaceId,id);
   }
-  async completePhoto(userId:string,id:string){
+  async completeMedia(userId:string,id:string){
     const workspaceId=await this.personalWorkspace(userId);
     return this.media.completeUpload(userId,workspaceId,id);
   }
@@ -101,7 +102,15 @@ export class CustomerInvitationsService {
     for(const a of assets)if(!a.pixelHeight||!a.pixelWidth)throw new UnprocessableEntityException("INVALID_IMAGE_DIMENSIONS");
     try{personalizeDocument(template.snapshot,template.contract,patch,assets,true);}
     catch{throw new UnprocessableEntityException("INVALID_PERSONALIZATION_VALUES");}
-    return {patch,assets,rows};
+    // The template can allow a new file independently of its immutable track list.
+    // Resolve the file inside the draft owner's Workspace before saving any patch.
+    const audioIds=uploadedMusicIds(template.contract,patch);
+    const audio=audioIds.length?await this.db.mediaAsset.findMany({
+      where:{id:{in:audioIds},workspaceId,uploadedById:userId,status:"READY",mimeType:"audio/mpeg"},
+      select:{id:true,storageKey:true,mimeType:true},
+    }):[];
+    if(audio.length!==audioIds.length)throw new UnprocessableEntityException("CUSTOMER_AUDIO_NOT_READY_OR_NOT_OWNED");
+    return {patch,assets,rows:[...rows,...audio]};
   }
 
   async create(userId:string,versionId:string){

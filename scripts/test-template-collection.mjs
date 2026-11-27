@@ -71,3 +71,49 @@ test("Calendar export escapes and folds UTF-8 content with a stable UID and UTC 
  assert.doesNotMatch(ics,/DTEND/);
  assert.ok(ics.split("\r\n").every(line=>Buffer.byteLength(line)<=75));
 });
+
+test("Love Story preserves its six photo slots, decorative layers and one event date",()=>{
+ const pack=JSON.parse(readFileSync(new URL("../templates/packages/love-story.v1.json",import.meta.url),"utf8"));
+ const {snapshot,contract}=validatedTemplateVersion(pack.document,pack.personalization);
+ const photos=contract.fields.filter(field=>field.kind==="image");
+ assert.deepEqual(photos.map(field=>field.nodeId),[
+  "cover_coverPhoto","story_meetingPhoto","story_tripPhoto","story_proposalPhoto","details_venuePhoto","rsvpPage_closingPhoto",
+ ]);
+ const replacementIds=photos.map(field=>snapshot.nodes[field.nodeId].assetId);
+ const values=Object.fromEntries(photos.map((field,index)=>[field.id,{kind:"image",assetId:replacementIds[(index+1)%photos.length]}]));
+ const date="2027-06-12T18:00:00+06:00";
+ values.ceremonyDate={kind:"binding",value:{type:"date",value:date}};
+ const patched=bindDocument(finalizePersonalization(snapshot,contract,{locale:"ky",values}));
+ for (const [index,field] of photos.entries()) {
+  assert.deepEqual(patched.nodes[field.nodeId],{
+   ...snapshot.nodes[field.nodeId],assetId:replacementIds[(index+1)%photos.length],
+  });
+ }
+ for (const node of Object.values(snapshot.nodes)) {
+  if (node.type==="image"&&snapshot.assets[node.assetId].decorative) {
+   assert.equal(node.locked,true);
+   assert.deepEqual(patched.nodes[node.id],node);
+  }
+ }
+ assert.match(patched.nodes.cover_date.runs[0].text,/12-ИЮНЬ 2027/);
+ assert.equal(patched.nodes.details_ticketTime.runs[0].text,"18:00");
+ assert.equal(countdownTarget(patched,patched.nodes.details_calendarAction.block),date);
+ assert.equal(snapshot.nodes.rsvpPage_rsvpWidget.appearance.preset,"stationery");
+});
+
+test("Love Story opts into verified music references while legacy tracks remain allowlisted",()=>{
+ const pack=JSON.parse(readFileSync(new URL("../templates/packages/love-story.v1.json",import.meta.url),"utf8"));
+ const {snapshot,contract}=validatedTemplateVersion(pack.document,pack.personalization);
+ const id="rsvpPage_music";
+ const source="asset:36F3B7FE-B28A-4185-B0E3-989EB71BAFC0";
+ const patch={values:{[id]:{kind:"music",source}}};
+ assert.equal(finalizePersonalization(snapshot,contract,patch).nodes[id].block.source,source.toLowerCase());
+ const legacy={...contract,fields:contract.fields.map(field=>{
+  if(field.id!==id)return field;
+  const {allowUpload,...unchanged}=field;
+  return unchanged;
+ })};
+ assert.throws(()=>finalizePersonalization(snapshot,legacy,patch));
+ assert.throws(()=>finalizePersonalization(snapshot,contract,{values:{[id]:{kind:"music",source:"https://example.test/unlisted.mp3"}}}));
+ assert.equal(finalizePersonalization(snapshot,contract,{values:{[id]:{kind:"music",source:""}}}).nodes[id].block.source,"");
+});

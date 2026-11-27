@@ -1,6 +1,6 @@
 # VF-01 — Love Story — повторная визуальная приёмка
 
-Приоритет `P0`. [Реестр задач](../PROJECT-STATUS.md)
+Приоритет `P0`. Статус `DONE`. Ветка `feat/eventiq-4-1-vf-01-love-story`. [Реестр задач](../PROJECT-STATUS.md)
 
 ## Цель
 
@@ -8,7 +8,7 @@
 
 ## Текущее состояние
 
-Пакет love-story.v1.json и артефакты импорта 4.0 есть. Отдельной повторной ручной приёмки 4.1 по четырём бордам нет. Исходные борды в px: 01 — 390×1045, 02 — 390×1045, 03 — 390×1045, 04 — 390×1045.
+Исходный дизайн на `d68201b` отклонён владельцем. Кандидат восстановил слои и кадры четырёх артбордов, сохранив контракты редактирования и старые URL ресурсов. Четыре комплекта артефактов сняты при 390 × 1045, DPR 1. Владелец принял все четыре артборда 27 ноября 2026 года на [`83b118e0db9501f4ac0a06e5ae5b71cef9bac98e`](https://github.com/akkunov/invito/commit/83b118e0db9501f4ac0a06e5ae5b71cef9bac98e). [Сравнения, результаты и локальный запуск](../../studio-v2/LOVE-STORY.md)
 
 ## Зависимости
 
@@ -51,3 +51,18 @@ Playwright 4 борда при исходных размерах и мобиль
 ## Definition of Done
 
 В PR приложены 4 комплекта артефактов, функциональные результаты, QA matrix, SHA рендера и явная отметка ручной приёмки по каждому борду. Обновлён реестр. При открытом визуальном дефекте запись остаётся REVIEW или BLOCKED с объяснением.
+
+## Передача на ревью
+
+[`d37a4e3794ac321c4c3cdeff59a1f3334b874923`](https://github.com/akkunov/invito/commit/d37a4e3794ac321c4c3cdeff59a1f3334b874923) · [PR #81](https://github.com/akkunov/invito/pull/81)
+
+Проверены 12 экранов RU/KY, все шесть замен фото, все доступные тексты, даты и время, RSVP и загрузка MP3. На отдельной PostgreSQL прошли верификация, сохранение, повторное открытие и публикация. Исходный lint остался 52/52. Владелец разрешил слияние [PR #81](https://github.com/akkunov/invito/pull/81) при успешных GitHub Actions и существующей [блокировке Vercel](Q-04-vercel-preview-blocked.md). Следующая задача после слияния — VF-02. [Отчёт](../../studio-v2/LOVE-STORY.md) · [Подготовленная VF-02](VF-02-vogue-wedding.md)
+
+## Ручная приёмка
+
+| Артборд | Решение владельца | Сравнение |
+| --- | --- | --- |
+| Обложка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-01/01.webp) |
+| Приглашение и программа | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-01/02.webp) |
+| Галерея и площадка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-01/03.webp) |
+| RSVP и музыка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-01/04.webp) |

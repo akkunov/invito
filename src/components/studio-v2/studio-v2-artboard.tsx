@@ -28,7 +28,8 @@ function TextContent({node,onMeasure,editorial,heritage}:{node:TextNode;editoria
   measure();const observer=new ResizeObserver(measure);observer.observe(el);
   return()=>observer.disconnect();
  },[node.id,node.autoHeight,onMeasure]);
- return <div ref={ref} style={{width:"100%",fontSize:editorial?node.runs[0].style.fontSize:undefined,fontFamily:heritage?(node.runs[0].style.fontFamily==="serif"?"var(--v2-invitation-serif, var(--font-display)), Georgia, serif":"var(--font-ui), Arial, sans-serif"):undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node} editorial={editorial} heritage={heritage}/></div>;
+ const widthScale=node.widthScale??1;
+ return <div ref={ref} style={{width:`${100/widthScale}%`,transform:widthScale===1?undefined:`scaleX(${widthScale})`,transformOrigin:"left center",fontSize:editorial?node.runs[0].style.fontSize:undefined,fontFamily:heritage?(node.runs[0].style.fontFamily==="serif"?"var(--v2-invitation-serif, var(--font-display)), Georgia, serif":"var(--font-ui), Arial, sans-serif"):undefined,whiteSpace:"pre-wrap",overflowWrap:"anywhere",lineHeight:node.lineHeight??1.14,letterSpacing:node.letterSpacing??0}}><TextRuns node={node} editorial={editorial} heritage={heritage}/></div>;
 }
 export type ArtboardTextOptions={sectionLinks?:Partial<Record<"next"|"rsvp",string>>;motionPlayback?:MotionPlayback;guest?:GuestMode;mediaUrls?:Readonly<Record<string,string>>;editingId?:string|null;onMeasure?:(id:string,height:number)=>void;renderEditor?:(node:TextNode)=>React.ReactNode};
 function nodeStyle(node: ProjectNodeV2): CSSProperties {
@@ -49,7 +50,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
   const fluidWidget=(document.presentation==="alpine"||document.presentation==="felt"||document.presentation==="collection")&&options.guest?.mode!=="studio"&&node.type==="widget"
-    &&["rsvp","location","schedule"].includes(node.block.kind);
+    &&(["rsvp","location","schedule"].includes(node.block.kind)||node.block.kind==="music"&&node.appearance.preset==="stationery");
   switch (node.type) {
     case "frame":
       return <div key={id} data-studio-node={id} style={{

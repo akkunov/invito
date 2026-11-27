@@ -9,7 +9,7 @@ import {createPublicationSchema, unpublishSchema, rsvpSchema} from "./modules/pu
 import {templatePackageSchema} from "./modules/documents/template-package.js";
 import {catalogPublishSchema} from "./modules/catalog/catalog.controller.js";
 import {musicCatalogSchema} from "../../src/features/invitations/music-catalog.schema.js";
-import {createCustomerInvitationSchema,updateCustomerInvitationSchema,customerPhotoSchema} from "./modules/customer-invitations/customer-invitations.controller.js";
+import {createCustomerInvitationSchema,updateCustomerInvitationSchema} from "./modules/customer-invitations/customer-invitations.controller.js";
 import {publishCustomerSchema,unpublishCustomerSchema} from "./modules/customer-invitations/customer-publication.controller.js";
 
 /**
@@ -131,19 +131,19 @@ const endpoints: Endpoint[] = [
   {method:"get",path:"/api/v1/customer/invitations",tag:"Customer Invitations",
     summary:"Получить список своих черновиков",description:"Только черновики авторизованного пользователя.",errors:[401]},
   {method:"get",path:"/api/v1/customer/invitations/{id}",tag:"Customer Invitations",
-    summary:"Загрузить черновик и его фотографии",description:"Проверяет ownerId, возвращает разрешённый patch, verified asset descriptors и временные R2 URL.",errors:[400,401,404,422]},
+    summary:"Загрузить черновик и его медиа",description:"Проверяет ownerId, возвращает разрешённый patch, verified asset descriptors и временные R2 URL.",errors:[400,401,404,422]},
   {method:"patch",path:"/api/v1/customer/invitations/{id}",tag:"Customer Invitations",
-    summary:"Сохранить личные изменения CAS",description:"Сервер сверяет права на все новые изображения и контракт текущей версии. expectedRevision защищает от перезаписи.",
+    summary:"Сохранить личные изменения CAS",description:"Сервер сверяет права на все новые медиа и контракт текущей версии. expectedRevision защищает от перезаписи.",
     requestBody:body(schema(updateCustomerInvitationSchema)),errors:[400,401,404,409,422]},
   {method:"post",path:"/api/v1/customer/media/uploads",tag:"Customer Invitations",
-    summary:"Получить signed PUT URL для собственной фотографии",
-    description:"Авторизованная загрузка изображения в личный Workspace пользователя через временную R2 PUT-ссылку.",
-    requestBody:body(schema(customerPhotoSchema)),errors:[400,401,413,503]},
+    summary:"Получить signed PUT URL для своего изображения или MP3",
+    description:"Авторизованная загрузка изображения или MP3 в личный Workspace пользователя через временную R2 PUT-ссылку.",
+    requestBody:body(schema(startUploadInput)),errors:[400,401,413,503]},
   {method:"post",path:"/api/v1/customer/media/{id}/complete",tag:"Customer Invitations",
-    summary:"Проверить и завершить загрузку фотографии",
+    summary:"Проверить и завершить загрузку медиа",
     description:"Подтверждает существование, тип, размер и хеш загруженного объекта перед переводом медиа в READY.",errors:[400,401,404,409,422,503]},
   {method:"get",path:"/api/v1/customer/media/{id}/read-url",tag:"Customer Invitations",
-    summary:"Получить временный URL своей фотографии",
+    summary:"Получить временный URL своего медиа",
     description:"Только владелец получает краткоживущую подписанную ссылку для просмотра своего READY-медиа.",errors:[400,401,404,503]},
   {method:"get",path:"/api/v1/customer/invitations/{id}/publication",tag:"Customer Invitations",
     summary:"Моя публикация",description:"Текущий статус публикации собственного черновика; null, если ещё не опубликован.",errors:[400,401,404]},

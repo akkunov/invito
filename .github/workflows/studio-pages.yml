@@ -37,33 +37,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build isolated static Studio (no application backend)
-        shell: bash
-        env:
-          NEXT_PUBLIC_PAGES_BASE_PATH: /invito
-        run: |
-          set -euo pipefail
-          rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor' 'src/app/[locale]/i'
-          rm 'src/app/[locale]/page.tsx'
-          cat > next.config.ts <<'CONFIG'
-          import type { NextConfig } from "next";
-          const config: NextConfig = {
-            output: "export",
-            basePath: "/invito",
-            images: { unoptimized: true },
-            trailingSlash: true,
-          };
-          export default config;
-          CONFIG
-          npm run build
-          test -f out/ru/admin/studio/index.html
-          touch out/.nojekyll
-          cat > out/index.html <<'HTML'
-          <!doctype html>
-          <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-          <meta http-equiv="refresh" content="0;url=/invito/ru/admin/studio/">
-          <title>INVITO Studio Preview</title></head>
-          <body><a href="/invito/ru/admin/studio/">Открыть INVITO Studio</a></body></html>
-          HTML
+        run: bash scripts/build-studio-pages.sh
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload generated site

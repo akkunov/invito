@@ -59,12 +59,7 @@ export async function saveCustomerDraft(id:string,expectedRevision:number,patch:
   return customerApi<{id:string;revision:number;updatedAt:string}>(
     "/customer/invitations/"+encodeURIComponent(id),"PATCH",{expectedRevision,patch});
 }
-export async function uploadCustomerPhoto(file:File,progress?:(value:string)=>void){
-  if(!["image/png","image/jpeg","image/webp"].includes(file.type)||file.size>20*1024*1024||file.size===0){
-    throw new Error("INVALID_IMAGE_FILE");
-  }
-  const cfg=config(),token=await getSupabaseAccessToken(cfg);
-  if(!token)throw new CustomerCloudError(401,"SIGN_IN_REQUIRED");
+async function uploadCustomerMedia(file:File,progress?:(value:string)=>void){
   const bytes=await file.arrayBuffer();
   const sha256=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)))
     .map(byte=>byte.toString(16).padStart(2,"0")).join("");
@@ -77,33 +72,53 @@ export async function uploadCustomerPhoto(file:File,progress?:(value:string)=>vo
   const url=new URL(ticket.uploadUrl);
   if(url.protocol!=="https:"||!url.hostname.endsWith(".r2.cloudflarestorage.com")||
     ticket.headers?.["Content-Type"]!==file.type)throw new Error("UNTRUSTED_SIGNED_UPLOAD_URL");
+  const base="/customer/media/"+encodeURIComponent(ticket.id);
   progress?.("uploading");
   const put=await fetch(url.href,{
     method:"PUT",headers:ticket.headers,body:file,cache:"no-store",credentials:"omit",redirect:"error",
   });
   if(!put.ok)throw new CustomerCloudError(put.status,"R2_PUT_FAILED");
   progress?.("verifying");
-  const completed=await customerApi<{
-    id:string;storageKey:string;name:string;mimeType:"image/png"|"image/jpeg"|"image/webp";
-    sizeBytes:number;pixelWidth:number;pixelHeight:number;status:string;
-  }>("/customer/media/"+ticket.id+"/complete","POST");
-  if(completed.id!==ticket.id||completed.status!=="READY"||completed.sizeBytes!==file.size){
+  const asset=await customerApi<{
+    id:string;storageKey:string;name:string;mimeType:VerifiedCustomerAsset["mimeType"]|"audio/mpeg";
+    sizeBytes:number;pixelWidth:number|null;pixelHeight:number|null;status:string;
+  }>(base+"/complete","POST");
+  if(asset.id!==ticket.id||asset.status!=="READY"||asset.sizeBytes!==file.size||
+    asset.storageKey!=="asset:"+ticket.id||asset.mimeType!==file.type){
     throw new Error("INVALID_CUSTOMER_MEDIA_RESPONSE");
   }
-  const read=await customerApi<{url:string;expiresInSeconds:number}>(
-    "/customer/media/"+ticket.id+"/read-url");
+  const read=await customerApi<{url:string;expiresInSeconds:number}>(base+"/read-url");
   const trusted=new URL(read.url);
+  const maxTtl=file.type==="audio/mpeg"?1200:60;
   if(trusted.protocol!=="https:"||!trusted.hostname.endsWith(".r2.cloudflarestorage.com")||
-    read.expiresInSeconds<1||read.expiresInSeconds>60)throw new Error("UNTRUSTED_MEDIA_READ_URL");
+    !Number.isFinite(read.expiresInSeconds)||read.expiresInSeconds<1||read.expiresInSeconds>maxTtl){
+    throw new Error("UNTRUSTED_MEDIA_READ_URL");
+  }
   progress?.("ready");
-  const asset:VerifiedCustomerAsset={
-    id:"customer_"+ticket.id.replace(/-/g,""),
-    storageKey:"asset:"+ticket.id,
-    name:completed.name,mimeType:completed.mimeType,
-    sizeBytes:completed.sizeBytes,
-    pixelWidth:completed.pixelWidth,pixelHeight:completed.pixelHeight,
+  return {asset,url:trusted.href};
+}
+
+export async function uploadCustomerPhoto(file:File,progress?:(value:string)=>void){
+  if(!["image/png","image/jpeg","image/webp"].includes(file.type)||file.size>20*1024*1024||file.size===0){
+    throw new Error("INVALID_IMAGE_FILE");
+  }
+  const {asset,url}=await uploadCustomerMedia(file,progress);
+  if(asset.mimeType==="audio/mpeg"||!asset.pixelWidth||!asset.pixelHeight)throw new Error("INVALID_CUSTOMER_IMAGE");
+  const photo:VerifiedCustomerAsset={
+    id:"customer_"+asset.id.replace(/-/g,""),storageKey:asset.storageKey,name:asset.name,
+    mimeType:asset.mimeType,sizeBytes:asset.sizeBytes,pixelWidth:asset.pixelWidth,pixelHeight:asset.pixelHeight,
   };
-  return {asset,url:read.url};
+  return {asset:photo,url};
+}
+
+export async function uploadCustomerAudio(file:File){
+  const supportedMime=["audio/mpeg","audio/mp3",""].includes(file.type);
+  if(!supportedMime||!file.name.toLowerCase().endsWith(".mp3")||!file.size||file.size>15*1024*1024){
+    throw new Error("INVALID_AUDIO_FILE");
+  }
+  const mp3=file.type==="audio/mpeg"?file:new File([file],file.name,{type:"audio/mpeg"});
+  const {asset,url}=await uploadCustomerMedia(mp3);
+  return {source:asset.storageKey,url};
 }
 
 export type CustomerPublication={

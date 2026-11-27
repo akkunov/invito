@@ -76,7 +76,9 @@ const nodeSchema = z.discriminatedUnion("type", [
     lineHeight: z.number().finite().min(0.8).max(4).optional(),
     letterSpacing: z.number().finite().min(-10).max(60).optional(),
     autoHeight: z.boolean().optional(),
-    dateFormat: z.enum(["date","numeric","weekday","time","date-time"]).optional(),
+    widthScale: z.number().finite().min(.65).max(1).optional(),
+    fitMinFontSize: z.number().finite().min(6).max(100).optional(),
+    dateFormat: z.enum(["date","short-date","numeric","weekday","time","date-time"]).optional(),
     bindingKey: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/).nullable(),
   }),
   baseNodeSchema.extend({
@@ -166,6 +168,7 @@ export const projectDocumentSchema = z.strictObject({
     if(node.type!=="widget")return;
     const b=node.block;
     if(b.kind==="gallery")for(const id of b.assetIds)if(!doc.assets[id])issue(path,"Missing gallery asset");
+    if(b.kind==="music"&&b.coverAssetId&&!doc.assets[b.coverAssetId])issue(path,"Missing music cover asset");
     if(b.kind==="calendar"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Calendar requires date variable");
     if(b.kind==="countdown"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Countdown requires date variable");
     if(b.kind==="location"&&b.addressKey&&doc.variables[b.addressKey]?.type!=="text")issue(path,"Location requires text variable");

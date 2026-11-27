@@ -5,7 +5,7 @@ import {useEffect,useMemo,useRef,useState,type MouseEvent} from "react";
 import {ArrowLeft,ArrowRight,Check,Eye,Pencil,RotateCcw,RotateCw,Save,X,Type,Image as ImageIcon,Layers,Palette,Music2,Cloud,ChevronDown,LockKeyhole,EyeOff,ArrowUp,ArrowDown,Plus} from "lucide-react";
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 import {
-  finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,
+  finalizePersonalization,personalizationIssues,personalizeDocument,readPersonalizedValue,uploadedMusicIds,
 } from "@/features/studio-v2/core/personalization";
 import {
   personalizationPatchSchema,type EditableField,type PersonalizationContract,
@@ -180,26 +180,27 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     return()=>{active=false;window.clearInterval(timer);};
   },[slug,versionId]);
 
+  const audioKeys=uploadedMusicIds(contract,patch).map(id=>"asset:"+id).join(" ");
+  const customerReadKeys=useMemo(()=>[...new Set([
+    ...customerAssets.map(asset=>asset.storageKey),...audioKeys.split(" ").filter(Boolean),
+  ])],[customerAssets,audioKeys]);
   useEffect(()=>{
-    if(!customerAssets.length)return;
+    if(!customerReadKeys.length)return;
     let active=true;
     const refresh=async()=>{
-      try{
-        const entries=await Promise.allSettled(customerAssets.map(async asset=>{
-          const id=asset.storageKey.slice("asset:".length);
-          const data=await customerApi<{url:string;expiresInSeconds:number}>(
-            "/customer/media/"+encodeURIComponent(id)+"/read-url");
-          const url=new URL(data.url);
-          if(url.protocol!=="https:"||!url.hostname.endsWith(".r2.cloudflarestorage.com"))throw Error("INVALID_URL");
-          return [asset.storageKey,data.url] as const;
-        }));
-        if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries.flatMap(entry=>entry.status==="fulfilled"?[entry.value]:[]))}));
-      }catch{}
+      const entries=await Promise.allSettled(customerReadKeys.map(async key=>{
+        const data=await customerApi<{url:string;expiresInSeconds:number}>(
+          "/customer/media/"+encodeURIComponent(key.slice("asset:".length))+"/read-url");
+        const url=new URL(data.url);
+        if(url.protocol!=="https:"||!url.hostname.endsWith(".r2.cloudflarestorage.com"))throw Error("INVALID_URL");
+        return [key,data.url] as const;
+      }));
+      if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries.flatMap(entry=>entry.status==="fulfilled"?[entry.value]:[]))}));
     };
     void refresh();
     const timer=window.setInterval(()=>void refresh(),45_000);
     return()=>{active=false;window.clearInterval(timer);};
-  },[customerAssets]);
+  },[customerReadKeys]);
 
   const document=useMemo(()=>personalizeDocument(source,contract,patch,assetsForPatch(patch,customerAssets),true),[source,contract,patch,customerAssets]);
   const mergedUrls=useMemo(()=>({...templateUrls,...customerUrls}),[templateUrls,customerUrls]);
@@ -466,7 +467,12 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
               <div className={review&&fieldError.has(field.id)?"ce-field-invalid":""} key={field.id}>
                 <SimpleField field={field} value={readPersonalizedValue(document,field)}
                   document={document} locale={locale} locales={isMobileViewport&&selectedNodeId&&step==="main"?[document.locale]:contract.locales}
-                  urls={mergedUrls} musicLibrary={isMobileViewport} onChange={value=>update(field.id,value)}/>
+                  urls={mergedUrls} musicLibrary={isMobileViewport}
+                  onMusicUploaded={({source,url})=>{
+                    setCustomerUrls(old=>({...old,[source]:url}));
+                    update(field.id,{kind:"music",source});
+                  }}
+                  onChange={value=>update(field.id,value)}/>
               </div>):
               <p className="ce-empty">{isMobileViewport&&step==="appearance"&&mobileTool==="style"?t.mobileStyleHint+" "+t.mobileLocked:
                 isMobileViewport&&step==="appearance"&&mobileTool==="music"?t.mobileNoMusic:hasFields?t.noFields:t.unsupported}</p>}
