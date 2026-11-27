@@ -78,6 +78,7 @@ const nodeSchema = z.discriminatedUnion("type", [
     autoHeight: z.boolean().optional(),
     widthScale: z.number().finite().min(.65).max(1).optional(),
     fitMinFontSize: z.number().finite().min(6).max(100).optional(),
+    accentLine: z.strictObject({text: z.string().min(1).max(12), color: z.string().regex(/^#[0-9a-f]{6}$/i)}).optional(),
     dateFormat: z.enum(["date","short-date","numeric","weekday","time","date-time"]).optional(),
     bindingKey: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/).nullable(),
   }),
@@ -171,7 +172,7 @@ export const projectDocumentSchema = z.strictObject({
     if(b.kind==="music"&&b.coverAssetId&&!doc.assets[b.coverAssetId])issue(path,"Missing music cover asset");
     if(b.kind==="calendar"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Calendar requires date variable");
     if(b.kind==="countdown"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Countdown requires date variable");
-    if(b.kind==="location"&&b.addressKey&&doc.variables[b.addressKey]?.type!=="text")issue(path,"Location requires text variable");
+    if(b.kind==="location"&&[b.addressKey,b.nameKey].some(key=>key&&doc.variables[key]?.type!=="text"))issue(path,"Location requires text variable");
   };
   for(const [id,token] of Object.entries(doc.tokens??{}))if(id!==token.id)issue(["tokens",id],"Style key mismatch");
   for(const [id,theme] of Object.entries(doc.themes??{})){

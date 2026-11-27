@@ -72,6 +72,9 @@ export function formatEventDate(instant:string,locale:Locale,format:NonNullable<
 export function countdownTarget(doc:ProjectDocumentV2,b:Extract<InvitationBlock,{kind:"countdown"|"calendar"}>){
  const v=b.targetKey?doc.values?.[b.targetKey]:null;return v?.type==="date"?v.value:b.target;
 }
+export function hasMusicCard(preset: WidgetNode["appearance"]["preset"]): boolean {
+ return preset==="stationery"||preset==="postcard";
+}
 export function locationAddress(doc:ProjectDocumentV2,b:Extract<InvitationBlock,{kind:"location"}>){
  const v=b.addressKey?doc.values?.[b.addressKey]:null;return v?.type==="text"?v.value[doc.locale]:b.address[doc.locale];
 }

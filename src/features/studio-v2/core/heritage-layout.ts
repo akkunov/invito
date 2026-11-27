@@ -1,3 +1,4 @@
+import {hasMusicCard} from "./invitation-behavior.ts";
 import type {ProjectDocumentV2,ProjectNodeV2} from "./document.schema.ts";
 
 export function isHeritagePresentation(presentation: ProjectDocumentV2["presentation"]): boolean {
@@ -6,7 +7,7 @@ export function isHeritagePresentation(presentation: ProjectDocumentV2["presenta
 
 function canGrow(node:ProjectNodeV2):boolean {
  if(node.type==="text")return node.autoHeight===true;
- return node.type==="widget"&&(["rsvp","schedule","location"].includes(node.block.kind)||node.block.kind==="music"&&node.appearance.preset==="stationery");
+ return node.type==="widget"&&(["rsvp","schedule","location"].includes(node.block.kind)||node.block.kind==="music"&&hasMusicCard(node.appearance.preset));
 }
 
 function lineAdvance(text:string):number {

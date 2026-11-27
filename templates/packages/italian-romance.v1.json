@@ -108,13 +108,14 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4EBDD",
+        "background": "#F7EBDB",
         "clip": true,
         "children": [
           "cover_coverArch",
           "cover_coverScene",
           "cover_coverBrand",
           "cover_coverTopRule",
+          "cover_coverTopMark",
           "cover_coverEyebrow",
           "cover_coverNames",
           "cover_coverBottomPaper",
@@ -129,7 +130,7 @@
         "x": 0,
         "y": 0,
         "width": 390,
-        "height": 125,
+        "height": 463,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -144,9 +145,9 @@
         "id": "cover_coverScene",
         "parentId": "coverRoot",
         "x": 0,
-        "y": 442,
+        "y": 463,
         "width": 390,
-        "height": 446,
+        "height": 443,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -155,15 +156,15 @@
         "assetId": "cover_coverScene",
         "fit": "cover",
         "focalX": 0.5,
-        "focalY": 0.4
+        "focalY": 0.46
       },
       "cover_coverBrand": {
         "id": "cover_coverBrand",
         "parentId": "coverRoot",
-        "x": 149,
+        "x": 138,
         "y": 131,
-        "width": 117,
-        "height": 41,
+        "width": 135,
+        "height": 48,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -175,9 +176,9 @@
             "text": "ITALIAN\nROMANCE",
             "style": {
               "fontFamily": "sans",
-              "fontSize": 13,
-              "fontWeight": 650,
-              "color": "#343E2B",
+              "fontSize": 15,
+              "fontWeight": 620,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -185,34 +186,51 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 2,
-        "lineHeight": 1.12,
+        "letterSpacing": 5,
+        "lineHeight": 1.55,
         "autoHeight": true
       },
       "cover_coverTopRule": {
         "id": "cover_coverTopRule",
         "parentId": "coverRoot",
-        "x": 174,
-        "y": 186,
-        "width": 64,
-        "height": 7,
+        "x": 173,
+        "y": 189,
+        "width": 65,
+        "height": 1,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#9D7B56",
+        "fill": "#A27B4C",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "cover_coverTopMark": {
+        "id": "cover_coverTopMark",
+        "parentId": "coverRoot",
+        "x": 202,
+        "y": 186,
+        "width": 6,
+        "height": 6,
+        "rotation": 45,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#A27B4C",
         "stroke": null,
         "strokeWidth": 0
       },
       "cover_coverEyebrow": {
         "id": "cover_coverEyebrow",
         "parentId": "coverRoot",
-        "x": 113,
+        "x": 82,
         "y": 208,
-        "width": 183,
-        "height": 42,
+        "width": 245,
+        "height": 46,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -224,9 +242,9 @@
             "text": "ПРИГЛАШЕНИЕ\nНА СВАДЬБУ",
             "style": {
               "fontFamily": "sans",
-              "fontSize": 13,
-              "fontWeight": 650,
-              "color": "#343E2B",
+              "fontSize": 15,
+              "fontWeight": 630,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -234,17 +252,17 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 2,
-        "lineHeight": 1.12,
+        "letterSpacing": 4.6,
+        "lineHeight": 1.53,
         "autoHeight": true
       },
       "cover_coverNames": {
         "id": "cover_coverNames",
         "parentId": "coverRoot",
-        "x": 77,
-        "y": 275,
-        "width": 256,
-        "height": 174,
+        "x": 66,
+        "y": 274,
+        "width": 279,
+        "height": 189,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -253,12 +271,12 @@
         "bindingKey": "coupleNames",
         "runs": [
           {
-            "text": "АЛИБЕК\nИ АЛИНА",
+            "text": "Алибек\n&\nАлина",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 67,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontSize": 69,
+              "fontWeight": 460,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -266,33 +284,38 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": -1.7,
-        "lineHeight": 0.94,
-        "autoHeight": true
+        "letterSpacing": -1.15,
+        "lineHeight": 0.85,
+        "autoHeight": true,
+        "fitMinFontSize": 39,
+        "accentLine": {
+          "text": "&",
+          "color": "#A43E23"
+        }
       },
       "cover_coverBottomPaper": {
         "id": "cover_coverBottomPaper",
         "parentId": "coverRoot",
         "x": 0,
-        "y": 879,
+        "y": 810,
         "width": 390,
-        "height": 179,
+        "height": 248,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
         "locked": true,
-        "type": "shape",
-        "shape": "rectangle",
-        "fill": "#F4EBDD",
-        "stroke": null,
-        "strokeWidth": 0
+        "type": "image",
+        "assetId": "cover_coverBottomPaper",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
       },
       "cover_coverDate": {
         "id": "cover_coverDate",
         "parentId": "coverRoot",
-        "x": 90,
-        "y": 915,
-        "width": 237,
+        "x": 84,
+        "y": 914,
+        "width": 251,
         "height": 36,
         "rotation": 0,
         "opacity": 1,
@@ -305,9 +328,9 @@
             "text": "",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 26,
-              "fontWeight": 600,
-              "color": "#343E2B",
+              "fontSize": 27,
+              "fontWeight": 530,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -315,18 +338,19 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 0,
+        "letterSpacing": 5.4,
         "lineHeight": 1.12,
         "autoHeight": true,
-        "dateFormat": "date"
+        "fitMinFontSize": 20,
+        "dateFormat": "short-date"
       },
       "cover_coverVenue": {
         "id": "cover_coverVenue",
         "parentId": "coverRoot",
-        "x": 112,
+        "x": 101,
         "y": 958,
-        "width": 200,
-        "height": 21,
+        "width": 220,
+        "height": 23,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -335,12 +359,12 @@
         "bindingKey": "venueName",
         "runs": [
           {
-            "text": "VILLA TOSCANA",
+            "text": "Villa Toscana",
             "style": {
-              "fontFamily": "serif",
+              "fontFamily": "sans",
               "fontSize": 15,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontWeight": 650,
+              "color": "#A43E23",
               "italic": false,
               "underline": false,
               "strike": false
@@ -348,17 +372,17 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 0,
+        "letterSpacing": 3.4,
         "lineHeight": 1.12,
         "autoHeight": true
       },
       "cover_scrollNext": {
         "id": "cover_scrollNext",
         "parentId": "coverRoot",
-        "x": 183,
-        "y": 988,
-        "width": 46,
-        "height": 48,
+        "x": 181,
+        "y": 985,
+        "width": 52,
+        "height": 52,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -376,9 +400,10 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#34271C",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#A43E23",
+          "preset": "postcard"
         }
       },
       "invitationRoot": {
@@ -402,27 +427,47 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4EBDD",
+        "background": "#F7EBDB",
         "clip": true,
         "children": [
+          "invitation_paperGrain",
           "invitation_villaSketch",
-          "invitation_oliveTop",
           "invitation_invitationCopy",
           "invitation_ruleAboveCalendar",
+          "invitation_calendarMark",
           "invitation_calendar",
           "invitation_calendarNote",
           "invitation_programHeading",
+          "invitation_programRuleLeft",
+          "invitation_programRuleRight",
           "invitation_program",
           "invitation_landscapeFooter"
         ]
       },
+      "invitation_paperGrain": {
+        "id": "invitation_paperGrain",
+        "parentId": "invitationRoot",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1058,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "invitation_paperGrain",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
       "invitation_villaSketch": {
         "id": "invitation_villaSketch",
         "parentId": "invitationRoot",
-        "x": 27,
-        "y": 43,
-        "width": 332,
-        "height": 85,
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 132,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -433,30 +478,13 @@
         "focalX": 0.5,
         "focalY": 0.5
       },
-      "invitation_oliveTop": {
-        "id": "invitation_oliveTop",
-        "parentId": "invitationRoot",
-        "x": 261,
-        "y": 0,
-        "width": 129,
-        "height": 137,
-        "rotation": 0,
-        "opacity": 1,
-        "visible": true,
-        "locked": true,
-        "type": "image",
-        "assetId": "invitation_oliveTop",
-        "fit": "cover",
-        "focalX": 0.5,
-        "focalY": 0.5
-      },
       "invitation_invitationCopy": {
         "id": "invitation_invitationCopy",
         "parentId": "invitationRoot",
-        "x": 42,
+        "x": 33,
         "y": 131,
-        "width": 307,
-        "height": 92,
+        "width": 324,
+        "height": 94,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -465,12 +493,12 @@
         "bindingKey": "invitationText",
         "runs": [
           {
-            "text": "С радостью приглашаем вас разделить с нами особенный день — нашу свадьбу.",
+            "text": "С радостью приглашаем вас\nразделить с нами\nособенный день —\nнашу свадьбу",
             "style": {
-              "fontFamily": "sans",
-              "fontSize": 17,
-              "fontWeight": 500,
-              "color": "#343E2B",
+              "fontFamily": "serif",
+              "fontSize": 21,
+              "fontWeight": 480,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -478,15 +506,16 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1,
-        "lineHeight": 1.12,
-        "autoHeight": true
+        "letterSpacing": 0.4,
+        "lineHeight": 1.095,
+        "autoHeight": true,
+        "fitMinFontSize": 17
       },
       "invitation_ruleAboveCalendar": {
         "id": "invitation_ruleAboveCalendar",
         "parentId": "invitationRoot",
         "x": 77,
-        "y": 239,
+        "y": 241,
         "width": 239,
         "height": 1,
         "rotation": 0,
@@ -495,17 +524,34 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#AF976C",
+        "fill": "#A99374",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "invitation_calendarMark": {
+        "id": "invitation_calendarMark",
+        "parentId": "invitationRoot",
+        "x": 192,
+        "y": 238,
+        "width": 7,
+        "height": 7,
+        "rotation": 45,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#976224",
         "stroke": null,
         "strokeWidth": 0
       },
       "invitation_calendar": {
         "id": "invitation_calendar",
         "parentId": "invitationRoot",
-        "x": 31,
-        "y": 257,
-        "width": 332,
-        "height": 269,
+        "x": 22,
+        "y": 250,
+        "width": 348,
+        "height": 284,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -524,18 +570,19 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#34271C",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#A43E23",
+          "preset": "postcard"
         }
       },
       "invitation_calendarNote": {
         "id": "invitation_calendarNote",
         "parentId": "invitationRoot",
-        "x": 102,
-        "y": 524,
-        "width": 233,
-        "height": 40,
+        "x": 93,
+        "y": 530,
+        "width": 263,
+        "height": 34,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -544,12 +591,12 @@
         "bindingKey": "invitation_calendarNote",
         "runs": [
           {
-            "text": "ДЕНЬ НАШЕЙ СВАДЬБЫ",
+            "text": "День нашей свадьбы ♡",
             "style": {
-              "fontFamily": "sans",
-              "fontSize": 13,
-              "fontWeight": 650,
-              "color": "#343E2B",
+              "fontFamily": "serif",
+              "fontSize": 18,
+              "fontWeight": 520,
+              "color": "#A43E23",
               "italic": false,
               "underline": false,
               "strike": false
@@ -557,17 +604,17 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 2,
-        "lineHeight": 1.12,
+        "letterSpacing": 0,
+        "lineHeight": 1.15,
         "autoHeight": true
       },
       "invitation_programHeading": {
         "id": "invitation_programHeading",
         "parentId": "invitationRoot",
-        "x": 61,
-        "y": 588,
-        "width": 277,
-        "height": 30,
+        "x": 57,
+        "y": 587,
+        "width": 276,
+        "height": 32,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -580,8 +627,8 @@
             "style": {
               "fontFamily": "serif",
               "fontSize": 24,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontWeight": 480,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -589,9 +636,44 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
+        "letterSpacing": 3.4,
         "lineHeight": 1.12,
-        "autoHeight": true
+        "autoHeight": true,
+        "fitMinFontSize": 17
+      },
+      "invitation_programRuleLeft": {
+        "id": "invitation_programRuleLeft",
+        "parentId": "invitationRoot",
+        "x": 30,
+        "y": 622,
+        "width": 38,
+        "height": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#A99374",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "invitation_programRuleRight": {
+        "id": "invitation_programRuleRight",
+        "parentId": "invitationRoot",
+        "x": 323,
+        "y": 622,
+        "width": 38,
+        "height": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#A99374",
+        "stroke": null,
+        "strokeWidth": 0
       },
       "invitation_program": {
         "id": "invitation_program",
@@ -599,7 +681,7 @@
         "x": 31,
         "y": 640,
         "width": 336,
-        "height": 281,
+        "height": 288,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -616,29 +698,29 @@
             {
               "time": "16:00",
               "label": {
-                "ru": "Сбор гостей\nПриветственные напитки",
-                "ky": "Конокторду тосуу\nСуусундуктар"
+                "ru": "Сбор гостей\nПриветственные напитки\nи лёгкие закуски",
+                "ky": "Конокторду тосуу\nСуусундуктар жана жеңил тамактар"
               }
             },
             {
               "time": "17:00",
               "label": {
-                "ru": "Церемония\nТоржественная регистрация",
-                "ky": "Нике салтанаты\nНикени каттоо"
+                "ru": "Церемония\nТоржественная\nрегистрация брака",
+                "ky": "Салтанат\nНикени каттоо"
               }
             },
             {
               "time": "18:30",
               "label": {
-                "ru": "Праздничный ужин",
-                "ky": "Майрамдык кечки тамак"
+                "ru": "Банкет\nПраздничный ужин и развлекательная программа",
+                "ky": "Банкет\nМайрамдык кечки тамак жана көңүл ачуу"
               }
             },
             {
               "time": "22:00",
               "label": {
-                "ru": "Музыка и танцы",
-                "ky": "Музыка жана бий"
+                "ru": "Завершение\nОкончание вечера\nи тёплые пожелания",
+                "ky": "Кеченин аягы\nЖылуу каалоо-тилектер"
               }
             }
           ]
@@ -646,18 +728,19 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#34271C",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#A43E23",
+          "preset": "postcard"
         }
       },
       "invitation_landscapeFooter": {
         "id": "invitation_landscapeFooter",
         "parentId": "invitationRoot",
         "x": 0,
-        "y": 933,
+        "y": 932,
         "width": 390,
-        "height": 125,
+        "height": 126,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -689,40 +772,111 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4EBDD",
+        "background": "#F7EBDB",
         "clip": true,
         "children": [
+          "gallery_paperGrain",
+          "gallery_galleryShadows",
+          "gallery_openingQuote",
           "gallery_storyQuote",
+          "gallery_closingQuote",
           "gallery_quoteRule",
           "gallery_polaroidGallery",
           "gallery_venueStoryPreview",
+          "gallery_venueRuleLeft",
+          "gallery_venueRuleRight",
           "gallery_venueHeading",
-          "gallery_venueName",
           "gallery_venueCard",
           "gallery_venuePhoto"
         ]
       },
+      "gallery_paperGrain": {
+        "id": "gallery_paperGrain",
+        "parentId": "galleryRoot",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1058,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "gallery_paperGrain",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "gallery_galleryShadows": {
+        "id": "gallery_galleryShadows",
+        "parentId": "galleryRoot",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 174,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "gallery_galleryShadows",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
+      "gallery_openingQuote": {
+        "id": "gallery_openingQuote",
+        "parentId": "galleryRoot",
+        "x": 48,
+        "y": 42,
+        "width": 39,
+        "height": 49,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "gallery_openingQuote",
+        "runs": [
+          {
+            "text": "“",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 50,
+              "fontWeight": 460,
+              "color": "#A46F3F",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": false
+      },
       "gallery_storyQuote": {
         "id": "gallery_storyQuote",
         "parentId": "galleryRoot",
-        "x": 47,
-        "y": 55,
-        "width": 299,
+        "x": 57,
+        "y": 56,
+        "width": 278,
         "height": 85,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
         "locked": true,
         "type": "text",
-        "bindingKey": "gallery_storyQuote",
+        "bindingKey": "quoteText",
         "runs": [
           {
-            "text": "В КАЖДОМ МГНОВЕНИИ —\nНАША ИСТОРИЯ",
+            "text": "Наша история — это\nпутешествие, которое\nпривело нас к этому дню",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 23,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontSize": 21,
+              "fontWeight": 480,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -730,17 +884,50 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
+        "letterSpacing": 0,
+        "lineHeight": 1.22,
+        "autoHeight": true,
+        "fitMinFontSize": 16
+      },
+      "gallery_closingQuote": {
+        "id": "gallery_closingQuote",
+        "parentId": "galleryRoot",
+        "x": 309,
+        "y": 126,
+        "width": 40,
+        "height": 55,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "gallery_closingQuote",
+        "runs": [
+          {
+            "text": "”",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 50,
+              "fontWeight": 460,
+              "color": "#A46F3F",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
         "lineHeight": 1.12,
-        "autoHeight": true
+        "autoHeight": false
       },
       "gallery_quoteRule": {
         "id": "gallery_quoteRule",
         "parentId": "galleryRoot",
-        "x": 159,
-        "y": 151,
-        "width": 66,
-        "height": 5,
+        "x": 158,
+        "y": 153,
+        "width": 67,
+        "height": 1,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -779,9 +966,10 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#34271C",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#A43E23",
+          "preset": "postcard"
         }
       },
       "gallery_venueStoryPreview": {
@@ -797,10 +985,10 @@
         "locked": true,
         "visual": {
           "corners": {
-            "topLeft": 7,
-            "topRight": 7,
-            "bottomLeft": 7,
-            "bottomRight": 7
+            "topLeft": 18,
+            "topRight": 18,
+            "bottomLeft": 18,
+            "bottomRight": 18
           }
         },
         "type": "image",
@@ -809,13 +997,47 @@
         "focalX": 0.5,
         "focalY": 0.5
       },
+      "gallery_venueRuleLeft": {
+        "id": "gallery_venueRuleLeft",
+        "parentId": "galleryRoot",
+        "x": 24,
+        "y": 708,
+        "width": 34,
+        "height": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#A99374",
+        "stroke": null,
+        "strokeWidth": 0
+      },
+      "gallery_venueRuleRight": {
+        "id": "gallery_venueRuleRight",
+        "parentId": "galleryRoot",
+        "x": 337,
+        "y": 708,
+        "width": 28,
+        "height": 1,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "shape",
+        "shape": "rectangle",
+        "fill": "#A99374",
+        "stroke": null,
+        "strokeWidth": 0
+      },
       "gallery_venueHeading": {
         "id": "gallery_venueHeading",
         "parentId": "galleryRoot",
-        "x": 23,
-        "y": 697,
-        "width": 342,
-        "height": 28,
+        "x": 28,
+        "y": 694,
+        "width": 334,
+        "height": 32,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -827,9 +1049,9 @@
             "text": "МЕСТО ПРОВЕДЕНИЯ",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 22,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontSize": 23,
+              "fontWeight": 500,
+              "color": "#34271C",
               "italic": false,
               "underline": false,
               "strike": false
@@ -837,49 +1059,18 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
+        "letterSpacing": 1.3,
         "lineHeight": 1.12,
-        "autoHeight": true
-      },
-      "gallery_venueName": {
-        "id": "gallery_venueName",
-        "parentId": "galleryRoot",
-        "x": 81,
-        "y": 761,
-        "width": 242,
-        "height": 22,
-        "rotation": 0,
-        "opacity": 1,
-        "visible": true,
-        "locked": true,
-        "type": "text",
-        "bindingKey": "venueName",
-        "runs": [
-          {
-            "text": "VILLA TOSCANA",
-            "style": {
-              "fontFamily": "serif",
-              "fontSize": 17,
-              "fontWeight": 550,
-              "color": "#343E2B",
-              "italic": false,
-              "underline": false,
-              "strike": false
-            }
-          }
-        ],
-        "textAlign": "left",
-        "letterSpacing": 0,
-        "lineHeight": 1.12,
-        "autoHeight": true
+        "autoHeight": true,
+        "fitMinFontSize": 17
       },
       "gallery_venueCard": {
         "id": "gallery_venueCard",
         "parentId": "galleryRoot",
-        "x": 24,
-        "y": 780,
-        "width": 345,
-        "height": 75,
+        "x": 21,
+        "y": 745,
+        "width": 347,
+        "height": 88,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -891,19 +1082,21 @@
             "ru": "",
             "ky": ""
           },
-          "showAddress": true,
+          "showAddress": false,
+          "nameKey": "venueName",
           "address": {
-            "ru": "Бишкек, Кыргызстан",
-            "ky": "Бишкек, Кыргызстан"
+            "ru": "г. Бишкек,\nул. Курманжан Датки, 45",
+            "ky": "Бишкек ш.,\nКурманжан Датка көч., 45"
           },
           "addressKey": "venueAddress"
         },
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#34271C",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#A43E23",
+          "preset": "postcard"
         }
       },
       "gallery_venuePhoto": {
@@ -919,10 +1112,10 @@
         "locked": true,
         "visual": {
           "corners": {
-            "topLeft": 8,
-            "topRight": 8,
-            "bottomLeft": 8,
-            "bottomRight": 8
+            "topLeft": 19,
+            "topRight": 19,
+            "bottomLeft": 19,
+            "bottomRight": 19
           }
         },
         "type": "image",
@@ -952,26 +1145,45 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4EBDD",
+        "background": "#30351D",
         "clip": true,
         "children": [
+          "rsvpPage_rsvpTexture",
           "rsvpPage_envelope",
           "rsvpPage_rsvpHeading",
           "rsvpPage_rsvpIntro",
           "rsvpPage_rsvpWidget",
           "rsvpPage_musicCard",
+          "rsvpPage_rsvpFoliage",
           "rsvpPage_thanksOlive",
           "rsvpPage_thanksText",
           "rsvpPage_thanksRule"
         ]
       },
+      "rsvpPage_rsvpTexture": {
+        "id": "rsvpPage_rsvpTexture",
+        "parentId": "rsvpPageRoot",
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 1058,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "rsvpPage_rsvpTexture",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
+      },
       "rsvpPage_envelope": {
         "id": "rsvpPage_envelope",
         "parentId": "rsvpPageRoot",
-        "x": 21,
+        "x": 0,
         "y": 0,
-        "width": 352,
-        "height": 154,
+        "width": 390,
+        "height": 159,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -985,10 +1197,10 @@
       "rsvpPage_rsvpHeading": {
         "id": "rsvpPage_rsvpHeading",
         "parentId": "rsvpPageRoot",
-        "x": 53,
-        "y": 167,
-        "width": 290,
-        "height": 70,
+        "x": 38,
+        "y": 165,
+        "width": 314,
+        "height": 74,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1000,9 +1212,9 @@
             "text": "ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 29,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontSize": 33,
+              "fontWeight": 460,
+              "color": "#F9EBD6",
               "italic": false,
               "underline": false,
               "strike": false
@@ -1010,17 +1222,18 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
+        "letterSpacing": 2.2,
         "lineHeight": 1.12,
-        "autoHeight": true
+        "autoHeight": true,
+        "fitMinFontSize": 26
       },
       "rsvpPage_rsvpIntro": {
         "id": "rsvpPage_rsvpIntro",
         "parentId": "rsvpPageRoot",
-        "x": 55,
-        "y": 257,
-        "width": 290,
-        "height": 42,
+        "x": 40,
+        "y": 256,
+        "width": 310,
+        "height": 49,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1029,12 +1242,12 @@
         "bindingKey": "rsvpIntro",
         "runs": [
           {
-            "text": "Будем рады разделить этот особенный день вместе с вами.",
+            "text": "Будем рады разделить этот\nособенный день вместе с вами",
             "style": {
-              "fontFamily": "sans",
-              "fontSize": 16,
-              "fontWeight": 500,
-              "color": "#343E2B",
+              "fontFamily": "serif",
+              "fontSize": 18,
+              "fontWeight": 470,
+              "color": "#F9EBD6",
               "italic": false,
               "underline": false,
               "strike": false
@@ -1043,16 +1256,16 @@
         ],
         "textAlign": "center",
         "letterSpacing": 0,
-        "lineHeight": 1.12,
+        "lineHeight": 1.16,
         "autoHeight": true
       },
       "rsvpPage_rsvpWidget": {
         "id": "rsvpPage_rsvpWidget",
         "parentId": "rsvpPageRoot",
         "x": 26,
-        "y": 316,
+        "y": 313,
         "width": 340,
-        "height": 399,
+        "height": 408,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1073,9 +1286,11 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#F9EBD6",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#F9EBD6",
+          "preset": "postcard",
+          "buttonColor": "#34271C"
         }
       },
       "rsvpPage_musicCard": {
@@ -1093,26 +1308,46 @@
         "block": {
           "kind": "music",
           "title": {
-            "ru": "",
-            "ky": ""
+            "ru": "Наша музыка",
+            "ky": "Биздин музыка"
           },
-          "source": ""
+          "source": "",
+          "coverAssetId": "rsvpPage_musicCard_cover"
         },
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#343E2B",
+          "color": "#F9EBD6",
           "background": "transparent",
-          "accent": "#5B613F"
+          "accent": "#F9EBD6",
+          "preset": "postcard",
+          "buttonColor": "#30351D"
         }
+      },
+      "rsvpPage_rsvpFoliage": {
+        "id": "rsvpPage_rsvpFoliage",
+        "parentId": "rsvpPageRoot",
+        "x": 0,
+        "y": 883,
+        "width": 390,
+        "height": 175,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "rsvpPage_rsvpFoliage",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
       },
       "rsvpPage_thanksOlive": {
         "id": "rsvpPage_thanksOlive",
         "parentId": "rsvpPageRoot",
-        "x": 150,
-        "y": 858,
-        "width": 80,
-        "height": 34,
+        "x": 147,
+        "y": 850,
+        "width": 84,
+        "height": 41,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1126,10 +1361,10 @@
       "rsvpPage_thanksText": {
         "id": "rsvpPage_thanksText",
         "parentId": "rsvpPageRoot",
-        "x": 94,
-        "y": 888,
-        "width": 198,
-        "height": 97,
+        "x": 56,
+        "y": 894,
+        "width": 278,
+        "height": 77,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1138,12 +1373,12 @@
         "bindingKey": "rsvpPage_thanksText",
         "runs": [
           {
-            "text": "ДО ВСТРЕЧИ!",
+            "text": "Grazie!",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 25,
-              "fontWeight": 550,
-              "color": "#343E2B",
+              "fontSize": 55,
+              "fontWeight": 450,
+              "color": "#F9EBD6",
               "italic": false,
               "underline": false,
               "strike": false
@@ -1151,24 +1386,24 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
-        "lineHeight": 1.12,
+        "letterSpacing": 0,
+        "lineHeight": 1.03,
         "autoHeight": true
       },
       "rsvpPage_thanksRule": {
         "id": "rsvpPage_thanksRule",
         "parentId": "rsvpPageRoot",
-        "x": 164,
-        "y": 995,
-        "width": 63,
-        "height": 7,
+        "x": 165,
+        "y": 996,
+        "width": 62,
+        "height": 1,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#A78D69",
+        "fill": "#F9EBD6",
         "stroke": null,
         "strokeWidth": 0
       }
@@ -1176,116 +1411,176 @@
     "assets": {
       "cover_coverArch": {
         "id": "cover_coverArch",
-        "name": "cover-scene-reference.png",
-        "storageKey": "/images/collection/italian-romance/cover_coverArch.webp",
+        "name": "cover-arch.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/cover-arch.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 372,
-        "pixelHeight": 119,
-        "sizeBytes": 18428,
+        "pixelWidth": 390,
+        "pixelHeight": 463,
+        "sizeBytes": 48260,
+        "decorative": true
+      },
+      "cover_coverBottomPaper": {
+        "id": "cover_coverBottomPaper",
+        "name": "cover-paper.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/cover-paper.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 390,
+        "pixelHeight": 248,
+        "sizeBytes": 19956,
         "decorative": true
       },
       "cover_coverScene": {
         "id": "cover_coverScene",
         "name": "Обложка",
-        "storageKey": "/images/collection/italian-romance/cover_coverScene.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/cover-scene.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 372,
-        "pixelHeight": 425,
-        "sizeBytes": 44972
+        "pixelWidth": 390,
+        "pixelHeight": 443,
+        "sizeBytes": 51080
+      },
+      "gallery_galleryShadows": {
+        "id": "gallery_galleryShadows",
+        "name": "gallery-shadows.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/gallery-shadows.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 390,
+        "pixelHeight": 174,
+        "sizeBytes": 5090,
+        "decorative": true
+      },
+      "gallery_paperGrain": {
+        "id": "gallery_paperGrain",
+        "name": "paper-grain.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/paper-grain.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 390,
+        "pixelHeight": 1060,
+        "sizeBytes": 1482,
+        "decorative": true
       },
       "gallery_polaroidGallery_1": {
         "id": "gallery_polaroidGallery_1",
-        "name": "Портрет пары",
-        "storageKey": "/images/collection/italian-romance/gallery_polaroidGallery_1.webp",
+        "name": "Окно виллы",
+        "storageKey": "/images/collection/italian-romance/vf-03/polaroid-left.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 100,
-        "pixelHeight": 135,
-        "sizeBytes": 7810
+        "pixelWidth": 83,
+        "pixelHeight": 125,
+        "sizeBytes": 6330
       },
       "gallery_polaroidGallery_2": {
         "id": "gallery_polaroidGallery_2",
         "name": "Портрет пары",
-        "storageKey": "/images/collection/italian-romance/gallery_polaroidGallery_2.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/polaroid-center.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 150,
-        "pixelHeight": 194,
-        "sizeBytes": 10750
+        "pixelWidth": 145,
+        "pixelHeight": 188,
+        "sizeBytes": 9762
       },
       "gallery_polaroidGallery_3": {
         "id": "gallery_polaroidGallery_3",
-        "name": "Портрет пары",
-        "storageKey": "/images/collection/italian-romance/gallery_polaroidGallery_3.webp",
+        "name": "Лимоны",
+        "storageKey": "/images/collection/italian-romance/vf-03/polaroid-right.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 70,
-        "pixelHeight": 125,
-        "sizeBytes": 4490
+        "pixelWidth": 58,
+        "pixelHeight": 113,
+        "sizeBytes": 3358
       },
       "gallery_venuePhoto": {
         "id": "gallery_venuePhoto",
         "name": "Фотография площадки",
-        "storageKey": "/images/collection/italian-romance/gallery_venuePhoto.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/venue.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 352,
-        "pixelHeight": 165,
-        "sizeBytes": 33352
+        "pixelWidth": 365,
+        "pixelHeight": 173,
+        "sizeBytes": 37308
       },
       "gallery_venueStoryPreview": {
         "id": "gallery_venueStoryPreview",
         "name": "Фото истории",
-        "storageKey": "/images/collection/italian-romance/gallery_venueStoryPreview.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/venue-story.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 352,
-        "pixelHeight": 165,
-        "sizeBytes": 33352
+        "pixelWidth": 367,
+        "pixelHeight": 198,
+        "sizeBytes": 38828
       },
       "invitation_landscapeFooter": {
         "id": "invitation_landscapeFooter",
-        "name": "landscape-footer.png",
-        "storageKey": "/images/collection/italian-romance/invitation_landscapeFooter.webp",
+        "name": "invitation-landscape.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/invitation-landscape.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 373,
-        "pixelHeight": 119,
-        "sizeBytes": 22888,
+        "pixelWidth": 390,
+        "pixelHeight": 126,
+        "sizeBytes": 25496,
         "decorative": true
       },
-      "invitation_oliveTop": {
-        "id": "invitation_oliveTop",
-        "name": "olive-top.png",
-        "storageKey": "/images/collection/italian-romance/invitation_oliveTop.webp",
+      "invitation_paperGrain": {
+        "id": "invitation_paperGrain",
+        "name": "paper-grain.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/paper-grain.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 123,
-        "pixelHeight": 131,
-        "sizeBytes": 7486,
+        "pixelWidth": 390,
+        "pixelHeight": 1060,
+        "sizeBytes": 1482,
         "decorative": true
       },
       "invitation_villaSketch": {
         "id": "invitation_villaSketch",
-        "name": "villa-sketch.png",
-        "storageKey": "/images/collection/italian-romance/invitation_villaSketch.webp",
+        "name": "invitation-ornament.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/invitation-ornament.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 318,
-        "pixelHeight": 81,
-        "sizeBytes": 11914,
+        "pixelWidth": 390,
+        "pixelHeight": 132,
+        "sizeBytes": 20670,
         "decorative": true
       },
       "rsvpPage_envelope": {
         "id": "rsvpPage_envelope",
-        "name": "envelope-seal.png",
-        "storageKey": "/images/collection/italian-romance/rsvpPage_envelope.webp",
+        "name": "envelope.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/envelope.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 335,
-        "pixelHeight": 147,
-        "sizeBytes": 14006,
+        "pixelWidth": 390,
+        "pixelHeight": 159,
+        "sizeBytes": 16920,
+        "decorative": true
+      },
+      "rsvpPage_musicCard_cover": {
+        "id": "rsvpPage_musicCard_cover",
+        "name": "music-cover.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/music-cover.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 57,
+        "pixelHeight": 51,
+        "sizeBytes": 2608,
+        "decorative": true
+      },
+      "rsvpPage_rsvpFoliage": {
+        "id": "rsvpPage_rsvpFoliage",
+        "name": "rsvp-foliage.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/rsvp-foliage.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 390,
+        "pixelHeight": 175,
+        "sizeBytes": 6346,
+        "decorative": true
+      },
+      "rsvpPage_rsvpTexture": {
+        "id": "rsvpPage_rsvpTexture",
+        "name": "rsvp-texture.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/rsvp-texture.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 390,
+        "pixelHeight": 885,
+        "sizeBytes": 1670,
         "decorative": true
       },
       "rsvpPage_thanksOlive": {
         "id": "rsvpPage_thanksOlive",
-        "name": "thanks-olive.png",
-        "storageKey": "/images/collection/italian-romance/rsvpPage_thanksOlive.webp",
+        "name": "thanks-olive.webp",
+        "storageKey": "/images/collection/italian-romance/vf-03/thanks-olive.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 76,
-        "pixelHeight": 32,
-        "sizeBytes": 1038,
+        "pixelWidth": 84,
+        "pixelHeight": 41,
+        "sizeBytes": 900,
         "decorative": true
       }
     },
@@ -1346,11 +1641,25 @@
           "ky": "Текст programHeading"
         }
       },
-      "gallery_storyQuote": {
+      "gallery_openingQuote": {
         "type": "text",
         "label": {
-          "ru": "Текст storyQuote",
-          "ky": "Текст storyQuote"
+          "ru": "Текст openingQuote",
+          "ky": "Текст openingQuote"
+        }
+      },
+      "quoteText": {
+        "type": "text",
+        "label": {
+          "ru": "Цитата",
+          "ky": "Цитата"
+        }
+      },
+      "gallery_closingQuote": {
+        "type": "text",
+        "label": {
+          "ru": "Текст closingQuote",
+          "ky": "Текст closingQuote"
         }
       },
       "gallery_venueHeading": {
@@ -1411,29 +1720,29 @@
       "coupleNames": {
         "type": "text",
         "value": {
-          "ru": "АЛИБЕК\nИ АЛИНА",
-          "ky": "АЛИБЕК\nЖАНА АЛИНА"
+          "ru": "Алибек\n&\nАлина",
+          "ky": "Алибек\n&\nАлина"
         }
       },
       "venueName": {
         "type": "text",
         "value": {
-          "ru": "VILLA TOSCANA",
-          "ky": "VILLA TOSCANA"
+          "ru": "Villa Toscana",
+          "ky": "Villa Toscana"
         }
       },
       "invitationText": {
         "type": "text",
         "value": {
-          "ru": "С радостью приглашаем вас разделить с нами особенный день — нашу свадьбу.",
-          "ky": "Биздин өзгөчө күнүбүздү — үйлөнүү тоюбузду — бирге өткөрүүгө чакырабыз."
+          "ru": "С радостью приглашаем вас\nразделить с нами\nособенный день —\nнашу свадьбу",
+          "ky": "Өзгөчө күнүбүздү —\nүйлөнүү тоюбузду —\nбиз менен бирге өткөрүүгө\nкубаныч менен чакырабыз"
         }
       },
       "invitation_calendarNote": {
         "type": "text",
         "value": {
-          "ru": "ДЕНЬ НАШЕЙ СВАДЬБЫ",
-          "ky": "БИЗДИН ТОЙ КҮНҮ"
+          "ru": "День нашей свадьбы ♡",
+          "ky": "Үйлөнүү тоюбуздун күнү ♡"
         }
       },
       "invitation_programHeading": {
@@ -1443,11 +1752,25 @@
           "ky": "ТОЙДУН ПРОГРАММАСЫ"
         }
       },
-      "gallery_storyQuote": {
+      "gallery_openingQuote": {
         "type": "text",
         "value": {
-          "ru": "В КАЖДОМ МГНОВЕНИИ —\nНАША ИСТОРИЯ",
-          "ky": "АР БИР КӨЗ ИРМЕМДЕ —\nБИЗДИН ТАРЫХ"
+          "ru": "“",
+          "ky": "“"
+        }
+      },
+      "quoteText": {
+        "type": "text",
+        "value": {
+          "ru": "Наша история — это\nпутешествие, которое\nпривело нас к этому дню",
+          "ky": "Биздин тарых —\nбизди ушул күнгө\nалып келген саякат"
+        }
+      },
+      "gallery_closingQuote": {
+        "type": "text",
+        "value": {
+          "ru": "”",
+          "ky": "”"
         }
       },
       "gallery_venueHeading": {
@@ -1460,8 +1783,8 @@
       "venueAddress": {
         "type": "text",
         "value": {
-          "ru": "Бишкек, Кыргызстан",
-          "ky": "Бишкек, Кыргызстан"
+          "ru": "г. Бишкек,\nул. Курманжан Датки, 45",
+          "ky": "Бишкек ш.,\nКурманжан Датка көч., 45"
         }
       },
       "rsvpPage_rsvpHeading": {
@@ -1474,15 +1797,15 @@
       "rsvpIntro": {
         "type": "text",
         "value": {
-          "ru": "Будем рады разделить этот особенный день вместе с вами.",
-          "ky": "Бул өзгөчө күндү сиздер менен бирге өткөрүүгө кубанычтабыз."
+          "ru": "Будем рады разделить этот\nособенный день вместе с вами",
+          "ky": "Бул өзгөчө күндү сиздер менен\nбирге өткөрүүгө кубанычтабыз"
         }
       },
       "rsvpPage_thanksText": {
         "type": "text",
         "value": {
-          "ru": "ДО ВСТРЕЧИ!",
-          "ky": "КӨРҮШКӨНЧӨ!"
+          "ru": "Grazie!",
+          "ky": "Рахмат!"
         }
       }
     }
@@ -1570,6 +1893,19 @@
         "maxItems": 20
       },
       {
+        "id": "quoteText",
+        "label": {
+          "ru": "Цитата",
+          "ky": "Цитата"
+        },
+        "section": "main",
+        "required": true,
+        "kind": "text",
+        "key": "quoteText",
+        "maxLength": 500,
+        "multiline": true
+      },
+      {
         "id": "gallery_polaroidGallery",
         "label": {
           "ru": "Фотогалерея",
@@ -1605,7 +1941,7 @@
         "kind": "text",
         "key": "venueAddress",
         "maxLength": 300,
-        "multiline": false
+        "multiline": true
       },
       {
         "id": "gallery_venuePhoto",
@@ -1655,7 +1991,8 @@
         "required": false,
         "kind": "music",
         "nodeId": "rsvpPage_musicCard",
-        "sources": []
+        "sources": [],
+        "allowUpload": true
       }
     ]
   }

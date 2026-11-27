@@ -5,8 +5,8 @@ import {useStudioMotion,type MotionPlayback} from "./use-studio-motion";
 import {appearanceCss,maskCss,contentTransform} from "@/features/studio-v2/core/appearance.ts";
 import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {InvitationBlockView} from "./studio-v2-invitation-block";
-import type {GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
-import { memo, useMemo, useLayoutEffect, useRef, type CSSProperties } from "react";
+import {hasMusicCard,type GuestMode} from "@/features/studio-v2/core/invitation-behavior.ts";
+import { Fragment, memo, useMemo, useLayoutEffect, useRef, type CSSProperties } from "react";
 import type { TextNode, TextStyle } from "@/features/studio-v2/core/rich-text-engine.ts";
 import type { ProjectDocumentV2, ProjectNodeV2 } from "@/features/studio-v2/core/document.schema.ts";
 
@@ -18,7 +18,16 @@ export function textRunStyle(style:TextStyle):CSSProperties{
  return {fontFamily:fonts[style.fontFamily],fontSize:style.fontSize,fontWeight:style.fontWeight,fontStyle:style.italic?"italic":"normal",textDecoration:[style.underline?"underline":"",style.strike?"line-through":""].filter(Boolean).join(" "),color:style.color};
 }
 export function TextRuns({node,editorial=false,heritage=false}:{node:TextNode;editorial?:boolean;heritage?:boolean}){
- return <>{node.runs.map((run,index)=><span key={index} style={{...textRunStyle(run.style),...(heritage&&run.style.fontFamily==="serif"?{fontFamily:"var(--v2-invitation-serif, var(--font-display)), Georgia, serif"}:editorial&&run.style.fontFamily==="sans"?{fontFamily:"var(--font-ui), Arial, sans-serif"}:{})}}>{run.text}</span>)}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
+ const accentLine=node.accentLine;
+ return <>{node.runs.map((run,index)=>{
+  const style=textRunStyle(run.style);
+  if(heritage&&run.style.fontFamily==="serif")style.fontFamily="var(--v2-invitation-serif, var(--font-display)), Georgia, serif";
+  if(editorial&&run.style.fontFamily==="sans")style.fontFamily="var(--font-ui), Arial, sans-serif";
+  const content=accentLine?run.text.split("\n").map((line,i)=><Fragment key={i}>
+   {i>0&&"\n"}{line===accentLine.text?<span style={{color:accentLine.color,fontSize:".82em"}}>{line}</span>:line}
+  </Fragment>):run.text;
+  return <span key={index} style={style}>{content}</span>;
+ })}{node.runs.map(r=>r.text).join("").endsWith("\n")&&<span aria-hidden="true">{"\u200b"}</span>}</>;
 }
 function TextContent({node,onMeasure,editorial,heritage}:{node:TextNode;editorial:boolean;heritage:boolean;onMeasure?:(id:string,height:number)=>void}){
  const ref=useRef<HTMLDivElement>(null);
@@ -50,7 +59,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
   const fluidWidget=(document.presentation==="alpine"||document.presentation==="felt"||document.presentation==="collection")&&options.guest?.mode!=="studio"&&node.type==="widget"
-    &&(["rsvp","location","schedule"].includes(node.block.kind)||node.block.kind==="music"&&node.appearance.preset==="stationery");
+    &&(["rsvp","location","schedule"].includes(node.block.kind)||node.block.kind==="music"&&hasMusicCard(node.appearance.preset));
   switch (node.type) {
     case "frame":
       return <div key={id} data-studio-node={id} style={{
