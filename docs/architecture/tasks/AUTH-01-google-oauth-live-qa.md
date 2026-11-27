@@ -1,4 +1,4 @@
-# AUTH-01 — Живая приёмка Google OAuth на тестовом Supabase
+# AUTH-01 — Техническая приёмка Google OAuth и PKCE
 
 Приоритет `P0`. [Реестр задач](../PROJECT-STATUS.md)
 
@@ -8,7 +8,7 @@
 
 ## Текущее состояние
 
-Callback и Google flag присутствуют. unit и прежний mock-browser прошли; живой провайдер и доставка почты не подтверждены.
+Проверка кода и loopback-матрица вынесены на момент PR #85. Настоящие Google consent, Supabase allowlist, доставка email и проверка на живых устройствах ожидают отдельный настроенный staging. [Аудит и воспроизведение PowerShell](../AUTH-SESSION-AUDIT.md)
 
 ## Зависимости
 
@@ -49,3 +49,5 @@ test:google-auth, mock + реальный Playwright/manual с синтетич�
 ## Definition of Done
 
 Acceptance Criteria закрыты воспроизводимыми проверками. В реестре указаны SHA, PR, проверенная среда, результаты, ручная приёмка или основание «не применимо» и ограничения. Откат проверен в объёме задачи.
+
+Техническая приёмка владельца на Windows зафиксирована. Живые проверки перенесены в [AUTH-03](AUTH-03-live-production-gate.md).

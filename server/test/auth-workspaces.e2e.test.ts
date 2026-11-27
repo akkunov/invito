@@ -49,11 +49,11 @@ test("POSTGRES integration: JWT, identity and workspace boundaries", async t => 
     }
   });
 
-  const jwt = async (subject: string, extra: Record<string, unknown> = {}) =>
+  const jwt = async (subject: string, extra: Record<string, unknown> = {}, expiresIn = "5m") =>
     new SignJWT({name: "Test Account", ...extra})
       .setProtectedHeader({alg: "RS256", kid: "invito-ci-key"})
       .setIssuer(issuer).setAudience("invito-api-integration")
-      .setSubject(subject).setIssuedAt().setExpirationTime("5m").sign(privateKey);
+      .setSubject(subject).setIssuedAt().setExpirationTime(expiresIn).sign(privateKey);
 
   const subjectA = "owner-" + randomUUID();
   const subjectB = "viewer-" + randomUUID();
@@ -74,6 +74,10 @@ test("POSTGRES integration: JWT, identity and workspace boundaries", async t => 
   assert.equal((await request("/health/ready")).status, 200, "real PostgreSQL readiness");
   assert.equal((await request("/me")).status, 401, "reject anonymous private API");
   assert.equal((await request("/me", "not.a.real.jwt")).status, 401, "reject invalid JWT");
+
+  const expired = await jwt(subjectA, {}, "-1m");
+  assert.equal((await request("/me", expired)).status, 401, "reject an expired token despite valid signature");
+  assert.equal((await request("/customer/account/overview", expired)).status, 401, "protect customer routes when the session expires");
 
   const ownerResponse = await request("/me", tokenA);
   assert.equal(ownerResponse.status, 200);

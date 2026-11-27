@@ -3,14 +3,17 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import {Check,Music2,Search,Upload} from "lucide-react";
 import {musicCatalogSchema,type MusicTrack} from "@/features/invitations/music-catalog.schema";
-import {CustomerCloudError,uploadCustomerAudio} from "@/features/invitations/customer-cloud";
+import {CustomerCloudError} from "@/features/invitations/customer-cloud";
 import type {Locale} from "@/i18n/locales";
 
 /** One picker for the legacy and versioned editor adapters.
  * The versioned adapter passes its exact immutable permitted sources. */
-export function MusicLibraryPicker({locale,allowedSources,value,onChoose,onUploaded}:{
+type UploadedTrack={source:string;url:string};
+type UploadMusic=(file:File)=>Promise<UploadedTrack>;
+
+export function MusicLibraryPicker({locale,allowedSources,value,onChoose,onUploaded,uploadMusic}:{
  locale:Locale;allowedSources?:readonly string[];value:string;onChoose:(source:string,track?:MusicTrack)=>void;
- onUploaded?:(result:{source:string;url:string})=>void;
+ onUploaded?:(result:UploadedTrack)=>void;uploadMusic?:UploadMusic;
 }){
  const ru=locale==="ru",t=(a:string,b:string)=>ru?a:b;
  const [tracks,setTracks]=useState<MusicTrack[]>([]);
@@ -48,13 +51,13 @@ export function MusicLibraryPicker({locale,allowedSources,value,onChoose,onUploa
     {preview===item.source&&!item.source.startsWith("asset:")&&<audio controls preload="none" src={item.source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+item.source:item.source}/>}
     {preview===item.source&&item.source.startsWith("asset:")&&<small>{t("Прослушайте в приглашении после выбора.","Тандагандан кийин чакыруудан угуңуз.")}</small>}
    </div>)}
-   {onUploaded&&<MusicUpload locale={locale} selected={!!value&&!(allowedSources??[]).includes(value)} onUploaded={onUploaded}/>}
+   {uploadMusic&&onUploaded&&<MusicUpload uploadMusic={uploadMusic} locale={locale} selected={!!value&&!(allowedSources??[]).includes(value)} onUploaded={onUploaded}/>}
    <p className="ue-music-hint">{t("Музыка у гостей запускается по нажатию. Используйте только файлы с правом публичного воспроизведения.","Коноктор баскычты басканда музыка ойнойт. Уруксат берилген файлдарды колдонуңуз.")}</p>
  </div>;
 }
 
-function MusicUpload({locale,selected,onUploaded}:{
- locale:Locale;selected:boolean;onUploaded:(result:{source:string;url:string})=>void;
+function MusicUpload({locale,selected,onUploaded,uploadMusic}:{
+ locale:Locale;selected:boolean;onUploaded:(result:UploadedTrack)=>void;uploadMusic:UploadMusic;
 }){
  const ru=locale==="ru";
  const input=useRef<HTMLInputElement>(null);
@@ -65,7 +68,7 @@ function MusicUpload({locale,selected,onUploaded}:{
  async function upload(file:File){
   setBusy(true);setStatus("idle");
   try{
-   const result=await uploadCustomerAudio(file);
+   const result=await uploadMusic(file);
    latest.current?.(result);
    setStatus("done");
   }catch(error){

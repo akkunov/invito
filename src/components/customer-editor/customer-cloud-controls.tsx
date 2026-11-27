@@ -2,7 +2,8 @@
 
 import {useEffect,useRef,useState} from "react";
 import {CloudUpload,ImagePlus,ExternalLink,Copy,Send} from "lucide-react";
-import {useCustomerSession} from "@/features/auth/browser/use-customer-session";
+import type {useCustomerSession} from "@/features/auth/browser/use-customer-session";
+import {cancelCustomerRequestWith} from "@/features/auth/browser/supabase-session";
 import {CustomerSignIn} from "./customer-sign-in";
 import {
   CustomerCloudError,createCustomerDraft,getCustomerDraft,getCustomerPublication,publishCustomerInvitation,unpublishCustomerInvitation,listCustomerDrafts,saveCustomerDraft,
@@ -15,6 +16,7 @@ import {prepareCustomerPhoto} from "@/features/invitations/prepare-customer-phot
 type UploadResult={asset:VerifiedCustomerAsset;url:string};
 
 type Props={
+  session:ReturnType<typeof useCustomerSession>;
   locale:Locale;templateVersionId:string;preferredDraftId?:string;patch:PersonalizationPatch;
   publishMode?:boolean;canPublish?:boolean;
   onBeforeSignIn:()=>void;
@@ -23,16 +25,12 @@ type Props={
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number;maxPhotos?:number;currentCount?:number}>;
   preferredUploadTargetId?:string;
 };
-export function CustomerCloudControls(props:Props){
-  const session=useCustomerSession();
-  return <CloudControls key={session.user?.id??session.status} {...props} session={session}/>;
-}
-
-function CloudControls({
+export function CustomerCloudControls({
   locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,
   publishMode=false,canPublish=false,onBeforeSignIn,session,
-}:Props&{session:ReturnType<typeof useCustomerSession>}){
-  const userId=session.user?.id??null;
+}:Props){
+  const {scope}=session;
+  const userId=scope?.subject??null;
   const [info,setInfo]=useState("");
   const [loading,setLoading]=useState(false);
   const [cloudId,setCloudId]=useState<string|null>(null);
@@ -68,10 +66,10 @@ function CloudControls({
   },[personalKey,preferredDraftId]);
 
   useEffect(()=>{
-    if(!userId){setAvailableDrafts([]);return;}
-    let active=true;
-    void listCustomerDrafts().then(items=>{
-      if(!active)return;
+    if(!scope){setAvailableDrafts([]);return;}
+    const controller=new AbortController();
+    void listCustomerDrafts(cancelCustomerRequestWith(scope,controller.signal)).then(items=>{
+      if(controller.signal.aborted||scope.signal.aborted)return;
       const matching=items.filter(item=>item.templateVersionId===templateVersionId);
       setAvailableDrafts(matching);
       if(!personalKey)return;
@@ -83,14 +81,14 @@ function CloudControls({
         setRevision(null);
       }
     }).catch(()=>{});
-    return()=>{active=false;};
-  },[userId,templateVersionId,personalKey]);
+    return()=>controller.abort();
+  },[scope,templateVersionId,personalKey]);
 
   useEffect(()=>{
-    if(!userId||!cloudId||!publishMode)return;
-    let active=true;
-    void getCustomerPublication(cloudId).then(value=>{
-      if(!active)return;
+    if(!scope||!cloudId||!publishMode)return;
+    const controller=new AbortController();
+    void getCustomerPublication(cancelCustomerRequestWith(scope,controller.signal),cloudId).then(value=>{
+      if(controller.signal.aborted||scope.signal.aborted)return;
       if(value?.status==="ACTIVE"){
         setActiveRelease(value.latestRelease);
         setPublishedUrl(window.location.origin+"/"+locale+"/c/"+value.slug);
@@ -101,15 +99,15 @@ function CloudControls({
         if(value?.slug)setPublicSlug(value.slug);
       }
     }).catch(()=>{});
-    return()=>{active=false;};
-  },[cloudId,userId,publishMode,locale]);
+    return()=>controller.abort();
+  },[cloudId,scope,publishMode,locale]);
 
   async function hidePublication(){
-    if(!cloudId||activeRelease===null||loading)return;
+    if(!scope||!cloudId||activeRelease===null||loading)return;
     if(!window.confirm(ru?"Закрыть доступ гостям? Черновик останется в аккаунте.":"Конокторго кирүүнү жабасызбы? Черновик сакталат."))return;
     setLoading(true);setInfo("");
     try{
-      await unpublishCustomerInvitation(cloudId,activeRelease);
+      await unpublishCustomerInvitation(scope,cloudId,activeRelease);
       setActiveRelease(null);setPublishedUrl("");
       setInfo(ru?"Публикация скрыта. Черновик сохранён.":"Чакыруу жабылды. Черновик сакталды.");
     }catch{setInfo(ru?"Не удалось снять публикацию. Обновите страницу и повторите.":"Жарыялоону жабуу мүмкүн болбоду.");}
@@ -117,7 +115,7 @@ function CloudControls({
   }
 
   async function save(){
-    if(!userId||loading)return;
+    if(!scope||loading)return;
     setLoading(true);setInfo("");
     try{
       let id=cloudId,rev=revision;
@@ -127,7 +125,7 @@ function CloudControls({
           id=saved;
           throw new Error("CLOUD_REVISION_NOT_LOADED");
         }else{
-          const created=await createCustomerDraft(templateVersionId);
+          const created=await createCustomerDraft(scope,templateVersionId);
           id=created.id;rev=created.revision;
           if(personalKey)window.localStorage.setItem(personalKey,id);
         }
@@ -136,7 +134,7 @@ function CloudControls({
         throw new Error("CLOUD_REVISION_NOT_LOADED");
       }
       if(!id||rev===null)throw new Error("CLOUD_REVISION_UNAVAILABLE");
-      const saved=await saveCustomerDraft(id,rev,patch);
+      const saved=await saveCustomerDraft(scope,id,rev,patch);
       setRevision(saved.revision);
       if(personalKey)window.localStorage.setItem(personalKey+":revision",String(saved.revision));
       setInfo(ru?"Сохранено в вашем аккаунте.":"Аккаунтуңузга сакталды.");
@@ -152,7 +150,7 @@ function CloudControls({
   }
 
   async function load(){
-    if(!userId||!personalKey||loading)return;
+    if(!scope||!personalKey||loading)return;
     if(Object.keys(patch.values).length&& !window.confirm(ru?
       "Заменить локальные изменения облачной версией? Несохранённые правки на устройстве будут потеряны.":
       "Жергиликтүү өзгөртүүлөр булуттагы версия менен алмаштырылсынбы? Сакталбаган өзгөртүүлөр жоголот."))return;
@@ -160,8 +158,9 @@ function CloudControls({
     try{
       const id=cloudId||window.localStorage.getItem(personalKey);
       if(!id){setInfo(ru?"Облачного черновика пока нет.":"Булуттагы черновик жок.");return;}
-      const remote=await getCustomerDraft(id);
+      const remote=await getCustomerDraft(scope,id);
       if(remote.templateVersionId!==templateVersionId)throw new Error("TEMPLATE_VERSION_MISMATCH");
+      scope.signal.throwIfAborted();
       onLoad(remote.patch,remote.assets,remote.mediaUrls);
       setCloudId(id);setRevision(remote.revision);
       window.localStorage.setItem(personalKey,id);
@@ -172,7 +171,7 @@ function CloudControls({
   }
 
   async function publish(){
-    if(!userId||loading||!canPublish)return;
+    if(!scope||loading||!canPublish)return;
     if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(publicSlug)||publicSlug.length<3||publicSlug.length>80){
       setInfo(ru?"Адрес должен содержать 3–80 строчных латинских букв, цифр или дефисов.":"Дарек 3–80 латын тамгасы, сан же дефис болсун.");
       return;
@@ -185,18 +184,18 @@ function CloudControls({
         if(previous){
           throw new Error("CLOUD_REVISION_NOT_LOADED");
         }
-        const created=await createCustomerDraft(templateVersionId);
+        const created=await createCustomerDraft(scope,templateVersionId);
         id=created.id;rev=created.revision;
         setCloudId(id);
         if(personalKey)window.localStorage.setItem(personalKey,id);
       }
       if(!id||rev===null)throw new Error("CLOUD_REVISION_NOT_LOADED");
       // Publish only the same patch that was atomically saved to the owner's draft.
-      const saved=await saveCustomerDraft(id,rev,patch);
+      const saved=await saveCustomerDraft(scope,id,rev,patch);
       setRevision(saved.revision);
       if(personalKey)window.localStorage.setItem(personalKey+":revision",String(saved.revision));
-      const current=await getCustomerPublication(id);
-      const release=await publishCustomerInvitation(id,{
+      const current=await getCustomerPublication(scope,id);
+      const release=await publishCustomerInvitation(scope,id,{
         slug:current?.slug??publicSlug,
         expectedRevision:saved.revision,
         expectedRelease:current?.latestRelease??0,
@@ -231,7 +230,7 @@ function CloudControls({
   },[publishMode,publicSlug]);
 
   async function photos(files:File[],mode:"replace"|"append"){
-    if(!userId||!target||uploadLock.current||loading||!files.length)return;
+    if(!scope||!target||uploadLock.current||loading||!files.length)return;
     if(!globalThis.crypto?.subtle){setInfo(ru?"Для загрузки фото откройте сайт через HTTPS или localhost.":"Сүрөт жүктөө үчүн сайтты HTTPS же localhost аркылуу ачыңыз.");return;}
     const selected=target;
     const limit=selected.kind==="gallery"?(selected.maxPhotos??4):1;
@@ -244,11 +243,12 @@ function CloudControls({
     const failures:string[]=[];
     try{
       for(const [index,file] of files.entries()){
+        scope.signal.throwIfAborted();
         setUploadProgress({current:index+1,total:files.length});
         setUploadPhase("checking");
         try{
           const prepared=await prepareCustomerPhoto(file,{minWidth:selected.minWidth,minHeight:selected.minHeight});
-          results.push(await uploadCustomerPhoto(prepared,setUploadPhase));
+          results.push(await uploadCustomerPhoto(scope,prepared,setUploadPhase));
         }catch(error){
           const reason=error instanceof Error?error.message:"";
           const hint=reason==="IMAGE_INPUT_TOO_LARGE"?(ru?"файл пустой или больше 60 МБ":"файл бош же 60 МБдан чоң"):
@@ -257,6 +257,7 @@ function CloudControls({
           results.push(null);failures.push(file.name+" ("+hint+")");
         }
       }
+      scope.signal.throwIfAborted();
       const success=results.filter(Boolean).length;
       if(success)latestUpload.current(selected.id,results,mode);
       setInfo((ru?"Загружено ":"Жүктөлдү ")+success+" / "+files.length+

@@ -12,9 +12,11 @@
 
 ## Зависимости
 
-[REL-01](REL-01-release-staging-rehearsal.md), [TPL-04](TPL-04-template-version-rollout.md)
+[REL-01](REL-01-release-staging-rehearsal.md), [TPL-04](TPL-04-template-version-rollout.md), [AUTH-03](AUTH-03-live-production-gate.md)
 
 ## Scope
+
+Первая партия ограничена принятыми версиями VF-01–VF-03. Последующие партии включают свои принятые версии. Для каждого кандидата сверяются версия, SHA и явная ручная визуальная приёмка.
 
 Готовность конфигов, health/alerts, риск и rollback, smoke, согласованный rollout и release report.
 

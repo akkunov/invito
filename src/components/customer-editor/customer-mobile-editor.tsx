@@ -14,10 +14,13 @@ import {
 import {StudioV2ProjectRenderer} from "@/components/studio-v2/studio-v2-project-renderer";
 import {SimpleField} from "@/components/studio-v2/studio-v2-simple-fields";
 import type {Locale} from "@/i18n/locales";
+import {useCustomerSession} from "@/features/auth/browser/use-customer-session";
+import {cancelCustomerRequestWith} from "@/features/auth/browser/supabase-session";
+import {useAuthReturnStatus} from "./customer-sign-in";
 import {CustomerCloudControls} from "./customer-cloud-controls";
 import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {galleryAfterUpload} from "@/features/invitations/photo-geometry";
-import {customerApi,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
+import {CustomerCloudError,customerApi,uploadCustomerAudio,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
 import {UniversalMobileEditor} from "./universal-mobile-editor";
 import {UniversalSectionManager} from "./universal-section-manager";
@@ -77,7 +80,8 @@ type Props={
 const initialPatch=(source:ProjectDocumentV2,contract:PersonalizationContract):PersonalizationPatch=>({
   values:{},...(!contract.locales.includes(source.locale)?{locale:contract.locales[0]}:{})
 });
-const draftStorageKey=(id:string)=>"eventiq:customer-draft:v1:"+id;
+const draftStorageKey=(versionId:string,draftId:string|undefined,subject:string|null)=>
+  ["eventiq:customer-draft:v2",subject??"guest",versionId,draftId??"new"].join(":");
 function assetsForPatch(patch:PersonalizationPatch,assets:readonly VerifiedCustomerAsset[]){
   const ids=new Set<string>();
   for(const value of Object.values(patch.values)){
@@ -88,28 +92,35 @@ function assetsForPatch(patch:PersonalizationPatch,assets:readonly VerifiedCusto
 }
 
 function persistLocalDraft(cacheKey:string,patch:PersonalizationPatch,assets:VerifiedCustomerAsset[]){
-  if(Object.keys(patch.values).length||patch.locale||patch.sections){
-    window.localStorage.setItem(cacheKey,JSON.stringify(patch));
-    window.localStorage.setItem(cacheKey+":assets",JSON.stringify(assetsForPatch(patch,assets)));
-  }else{
-    window.localStorage.removeItem(cacheKey);
-    window.localStorage.removeItem(cacheKey+":assets");
-  }
+  window.localStorage.setItem(cacheKey,JSON.stringify({patch,assets:assetsForPatch(patch,assets)}));
 }
 
-export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftId,source,contract,mediaUrls}:Props){
+export function CustomerMobileEditor(props:Props){
+  const session=useCustomerSession();
+  const authReturnStatus=useAuthReturnStatus();
+  const subject=session.user?.id??null;
+  if(session.status==="loading"){
+    return <p role="status">{props.locale==="ru"?"Проверяем вход…":"Кирүү текшерилүүдө…"}</p>;
+  }
+  // Remount the whole document, history and signed media boundary, not only its cloud panel.
+  const key=draftStorageKey(props.versionId,props.preferredDraftId,subject);
+  return <CustomerEditor key={key} {...props} session={session}
+    reopenSignIn={session.status==="signed-out"&&authReturnStatus!==null}/>;
+}
+
+function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,contract,mediaUrls,session,reopenSignIn}:Props&{session:ReturnType<typeof useCustomerSession>;reopenSignIn:boolean}){
   const t=dictionary[locale];
-  const [step,setStep]=useState<Step>("main");
+  const [step,setStep]=useState<Step>(reopenSignIn?"appearance":"main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
   const mobileFormRef=useRef<HTMLDivElement>(null);
   const mobileCanvasRef=useRef<HTMLDivElement>(null);
   const mobileTriggerRef=useRef<HTMLButtonElement|null>(null);
   const [isMobileViewport,setIsMobileViewport]=useState(false);
-  const [mobileSheetOpen,setMobileSheetOpen]=useState(false);
+  const [mobileSheetOpen,setMobileSheetOpen]=useState(reopenSignIn);
   const [selectedFieldId,setSelectedFieldId]=useState<string|null>(null);
   const [selectedNodeId,setSelectedNodeId]=useState<string|null>(null);
   const [activeMobilePage,setActiveMobilePage]=useState(0);
-  const [mobileTool,setMobileTool]=useState<"text"|"photo"|"style"|"music">("text");
+  const [mobileTool,setMobileTool]=useState<"text"|"photo"|"style"|"music">(reopenSignIn?"photo":"text");
   const [mobileSectionsOpen,setMobileSectionsOpen]=useState(false);
   const [past,setPast]=useState<PersonalizationPatch[]>([]);
   const [future,setFuture]=useState<PersonalizationPatch[]>([]);
@@ -122,7 +133,18 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
   const [customerAssets,setCustomerAssets]=useState<VerifiedCustomerAsset[]>([]);
   const [customerUrls,setCustomerUrls]=useState<Record<string,string>>({});
   const [templateUrls,setTemplateUrls]=useState(mediaUrls);
-  const cacheKey=draftStorageKey(versionId);
+  const {scope}=session;
+  const subject=scope?.subject??null;
+  const cacheKey=draftStorageKey(versionId,preferredDraftId,subject);
+  const guestKey=draftStorageKey(versionId,preferredDraftId,null);
+
+  useEffect(()=>{
+    if(!reopenSignIn)return;
+    const frame=window.requestAnimationFrame(()=>{
+      mobileFormRef.current?.querySelector(".ce-cloud-auth")?.scrollIntoView({block:"nearest"});
+    });
+    return()=>window.cancelAnimationFrame(frame);
+  },[reopenSignIn]);
 
   useEffect(()=>{
     const media=window.matchMedia("(max-width: 850px)");
@@ -133,11 +155,12 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
 
   useEffect(()=>{
     try {
-      const stored=window.localStorage.getItem(cacheKey);
+      // v1 keys mixed account and guest data without recording ownership. Leave them untouched.
+      const stored=window.localStorage.getItem(cacheKey)??window.localStorage.getItem(guestKey);
       if(stored){
-        const parsed=personalizationPatchSchema.parse(JSON.parse(stored));
-        const storedAssets=window.localStorage.getItem(cacheKey+":assets");
-        const parsedAssets=storedAssets?JSON.parse(storedAssets) as VerifiedCustomerAsset[]:[];
+        const cached=JSON.parse(stored) as {patch:unknown;assets:VerifiedCustomerAsset[]};
+        const parsed=personalizationPatchSchema.parse(cached.patch);
+        const parsedAssets=cached.assets;
         if(!Array.isArray(parsedAssets))throw Error("INVALID_ASSET_CACHE");
         personalizeDocument(source,contract,parsed,assetsForPatch(parsed,parsedAssets),true);
         setCustomerAssets(parsedAssets);
@@ -147,7 +170,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     }catch{
       setWarning(dictionary[locale].invalidDraft);
     }finally{setHydrated(true);}
-  },[cacheKey,source,contract,locale]);
+  },[cacheKey,guestKey,source,contract,locale]);
 
   useEffect(()=>{
     if(!hydrated)return;
@@ -185,22 +208,23 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
     ...customerAssets.map(asset=>asset.storageKey),...audioKeys.split(" ").filter(Boolean),
   ])],[customerAssets,audioKeys]);
   useEffect(()=>{
-    if(!customerReadKeys.length)return;
-    let active=true;
+    if(!scope||!customerReadKeys.length)return;
+    const controller=new AbortController();
+    const request=cancelCustomerRequestWith(scope,controller.signal);
     const refresh=async()=>{
       const entries=await Promise.allSettled(customerReadKeys.map(async key=>{
-        const data=await customerApi<{url:string;expiresInSeconds:number}>(
+        const data=await customerApi<{url:string;expiresInSeconds:number}>(request,
           "/customer/media/"+encodeURIComponent(key.slice("asset:".length))+"/read-url");
         const url=new URL(data.url);
         if(url.protocol!=="https:"||!url.hostname.endsWith(".r2.cloudflarestorage.com"))throw Error("INVALID_URL");
         return [key,data.url] as const;
       }));
-      if(active)setCustomerUrls(old=>({...old,...Object.fromEntries(entries.flatMap(entry=>entry.status==="fulfilled"?[entry.value]:[]))}));
+      if(!request.signal.aborted)setCustomerUrls(old=>({...old,...Object.fromEntries(entries.flatMap(entry=>entry.status==="fulfilled"?[entry.value]:[]))}));
     };
     void refresh();
     const timer=window.setInterval(()=>void refresh(),45_000);
-    return()=>{active=false;window.clearInterval(timer);};
-  },[customerReadKeys]);
+    return()=>{controller.abort();window.clearInterval(timer);};
+  },[customerReadKeys,scope]);
 
   const document=useMemo(()=>personalizeDocument(source,contract,patch,assetsForPatch(patch,customerAssets),true),[source,contract,patch,customerAssets]);
   const mergedUrls=useMemo(()=>({...templateUrls,...customerUrls}),[templateUrls,customerUrls]);
@@ -468,6 +492,10 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                 <SimpleField field={field} value={readPersonalizedValue(document,field)}
                   document={document} locale={locale} locales={isMobileViewport&&selectedNodeId&&step==="main"?[document.locale]:contract.locales}
                   urls={mergedUrls} musicLibrary={isMobileViewport}
+                  uploadMusic={async file=>{
+                    if(!scope)throw new CustomerCloudError(401,"SIGN_IN_REQUIRED");
+                    return uploadCustomerAudio(scope,file);
+                  }}
                   onMusicUploaded={({source,url})=>{
                     setCustomerUrls(old=>({...old,[source]:url}));
                     update(field.id,{kind:"music",source});
@@ -478,7 +506,7 @@ export function CustomerMobileEditor({locale,slug,name,versionId,preferredDraftI
                 isMobileViewport&&step==="appearance"&&mobileTool==="music"?t.mobileNoMusic:hasFields?t.noFields:t.unsupported}</p>}
           <div className={step==="publish"||step==="appearance"&&(!isMobileViewport||mobileTool==="photo")?"ce-cloud-mount":"ce-cloud-mount ce-cloud-mount-hidden"}>
             <CustomerCloudControls
-            locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
+            session={session} locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
             onBeforeSignIn={()=>persistLocalDraft(cacheKey,patch,customerAssets)}
             uploadTargets={uploadTargets}

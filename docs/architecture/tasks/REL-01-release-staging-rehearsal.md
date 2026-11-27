@@ -12,9 +12,11 @@
 
 ## Зависимости
 
-[TPL-03](TPL-03-template-update-rehearsal.md), [VF-01](VF-01-love-story.md), [VF-02](VF-02-vogue-wedding.md), [VF-03](VF-03-italian-romance.md), [VF-04](VF-04-cinema-wedding.md), [VF-05](VF-05-secret-garden.md), [VF-06](VF-06-boarding-pass.md), [VF-07](VF-07-wedding-newspaper.md), [VF-08](VF-08-digital-envelope.md), [VF-09](VF-09-art-gallery.md), [VF-10](VF-10-minimal-architecture.md), [CAT-04](CAT-04-catalog-cards-and-editor.md), [ED-05](ED-05-editor-publish-review.md), [ST-02](ST-02-studio-cloud-version-actions.md), [ST-03](ST-03-studio-scale-and-regressions.md), [AUTH-01](AUTH-01-google-oauth-live-qa.md), [ACC-02](ACC-02-account-share-and-qr.md), [WA-05](WA-05-whatsapp-sandbox-qa.md), [MUS-08](MUS-08-music-live-device-qa.md), [Q-02](Q-02-lint-and-ci-baseline.md), [Q-03](Q-03-catalog-and-studio-scale.md), [SEC-01](SEC-01-security-boundaries-review.md)
+[TPL-03](TPL-03-template-update-rehearsal.md), [VF-01](VF-01-love-story.md), [VF-02](VF-02-vogue-wedding.md), [VF-03](VF-03-italian-romance.md), [CAT-04](CAT-04-catalog-cards-and-editor.md), [ED-05](ED-05-editor-publish-review.md), [ST-02](ST-02-studio-cloud-version-actions.md), [ST-03](ST-03-studio-scale-and-regressions.md), [AUTH-01](AUTH-01-google-oauth-live-qa.md), [AUTH-02](AUTH-02-session-boundaries.md), [ACC-02](ACC-02-account-share-and-qr.md), [WA-05](WA-05-whatsapp-sandbox-qa.md), [MUS-08](MUS-08-music-live-device-qa.md), [Q-02](Q-02-lint-and-ci-baseline.md), [Q-03](Q-03-catalog-and-studio-scale.md), [SEC-01](SEC-01-security-boundaries-review.md)
 
 ## Scope
+
+Первая партия ограничена принятыми версиями VF-01–VF-03. Последующие партии включают свои принятые версии. Для каждого кандидата сверяются версия, SHA и явная ручная визуальная приёмка.
 
 Временная интеграционная среда, типы, migrations up/compatibility, browsers/providers, backup/restore, нагрузка и отчёт.
 

@@ -56,7 +56,8 @@
     "templates:compile": "node --experimental-strip-types scripts/compile-template-collection.mjs",
     "test:template-collection": "node --experimental-strip-types --test scripts/test-template-collection.mjs",
     "test:template-assets": "node --experimental-strip-types --test scripts/test-template-assets.mjs",
-    "test:google-auth": "node --experimental-strip-types --test scripts/test-google-auth.mjs"
+    "test:google-auth": "node --experimental-strip-types --test scripts/test-google-auth.mjs",
+    "test:auth-session-browser": "node scripts/test-auth-session-browser.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

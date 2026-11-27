@@ -18,6 +18,10 @@ function subscribeToNavigation(listener: () => void) {
   return () => window.removeEventListener("popstate", listener);
 }
 
+export function useAuthReturnStatus() {
+  return useSyncExternalStore(subscribeToNavigation, getAuthReturnStatus, () => null);
+}
+
 type Props = {
   locale: Locale;
   client: SupabaseClient;
@@ -48,7 +52,7 @@ export function CustomerSignIn({locale, client, beforeRedirect, className, actio
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<keyof typeof copy | null>(null);
 
-  const callbackStatus = useSyncExternalStore(subscribeToNavigation, getAuthReturnStatus, () => null);
+  const callbackStatus = useAuthReturnStatus();
   const feedback = status ?? (busy ? null : callbackStatus);
 
   async function signIn(provider: "google" | "email") {

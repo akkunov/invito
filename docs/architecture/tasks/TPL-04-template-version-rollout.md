@@ -12,9 +12,11 @@
 
 ## Зависимости
 
-[TPL-03](TPL-03-template-update-rehearsal.md), [VF-01](VF-01-love-story.md), [VF-02](VF-02-vogue-wedding.md), [VF-03](VF-03-italian-romance.md), [VF-04](VF-04-cinema-wedding.md), [VF-05](VF-05-secret-garden.md), [VF-06](VF-06-boarding-pass.md), [VF-07](VF-07-wedding-newspaper.md), [VF-08](VF-08-digital-envelope.md), [VF-09](VF-09-art-gallery.md), [VF-10](VF-10-minimal-architecture.md)
+[TPL-03](TPL-03-template-update-rehearsal.md), [VF-01](VF-01-love-story.md), [VF-02](VF-02-vogue-wedding.md), [VF-03](VF-03-italian-romance.md)
 
 ## Scope
+
+Первая партия ограничена принятыми версиями VF-01–VF-03. Последующие партии включают свои принятые версии. Для каждого кандидата сверяются версия, SHA и явная ручная визуальная приёмка.
 
 Контролируемое продвижение проверенных версий с журналом операций.
 
