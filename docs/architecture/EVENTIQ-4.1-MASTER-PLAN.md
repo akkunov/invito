@@ -129,6 +129,7 @@ flowchart LR
   TED_01 --> TCAT_04
   T000 --> TED_01
   T000 --> TED_02
+  TAUTH_02 --> TED_02
   TED_01 --> TED_03
   TED_02 --> TED_03
   TAUTH_02 --> TED_03
