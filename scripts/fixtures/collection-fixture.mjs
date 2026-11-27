@@ -1,7 +1,7 @@
 import {readFile} from "node:fs/promises";
 import {createServer} from "node:http";
 
-export function serveCollectionFixture({name, slug, port, appOrigin, packagePath, version, scenarios, configure, demoAudio}) {
+export function serveCollectionFixture({name, slug, port, appOrigin, packagePath, version, scenarios, configure, demoAudio, rsvpNode = "rsvpPage_rsvpWidget"}) {
   const catalog = "/api/v1/catalog/templates/" + slug;
   const guest = "/api/v1/public/customer-invitations/" + slug;
   const invitations = new Set(["", ...scenarios].map(suffix => guest + suffix));
@@ -31,7 +31,7 @@ export function serveCollectionFixture({name, slug, port, appOrigin, packagePath
         if (path === catalog) return reply(200, {...manifest, templateVersionId: version, document, personalization, mediaUrls: {}});
         const suffix = path.slice(guest.length);
         const mediaUrls = configure(document, suffix) ?? {};
-        if (suffix === "-closed") document.nodes.rsvpPage_rsvpWidget.block.deadline = "2024-01-01T00:00:00Z";
+        if (suffix === "-closed") document.nodes[rsvpNode].block.deadline = "2024-01-01T00:00:00Z";
         return reply(200, {
           slug: path.split("/").at(-1), release: 1, sha256: "fixture", document, mediaUrls,
           rsvpEnabled: suffix !== "-unavailable", turnstileSiteKey: null,
