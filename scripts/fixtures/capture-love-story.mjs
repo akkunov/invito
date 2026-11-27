@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {createHash, randomUUID} from "node:crypto";
+import {ownerUploadFixture} from "./owner-upload-fixture.mjs";
 import {mkdir, readFile} from "node:fs/promises";
 import {createRequire} from "node:module";
 import {resolve} from "node:path";
@@ -29,7 +29,7 @@ async function open(width, locale, {slug = "love-story", height = 1045, editor =
     const target = new URL(route.request().url());
     return [origin.origin, fixtureOrigin].includes(target.origin) ? route.continue() : route.abort();
   });
-  const uploads = authenticated ? await ownerFixture(page) : undefined;
+  const uploads = authenticated ? await ownerUploadFixture(page,{origin,fixtureOrigin,storageHost:"vf01.r2.cloudflarestorage.com",photoWidth:390,photoHeight:651}) : undefined;
   page.on("pageerror", error => errors.push(error.message));
   await page.clock.setFixedTime(new Date("2026-11-24T00:35:24Z"));
   const path = editor ? "/editor?template=love-story" : "/c/" + slug;
@@ -48,57 +48,6 @@ async function open(width, locale, {slug = "love-story", height = 1045, editor =
 
 async function shot(page, name, fullPage = false) {
   await page.screenshot({path: resolve(output, name + ".png"), fullPage, animations: "disabled"});
-}
-
-async function ownerFixture(page){
-  const user={id:randomUUID(),aud:"authenticated",role:"authenticated",email:"fixture@example.test"};
-  const encode=value=>Buffer.from(JSON.stringify(value)).toString("base64url");
-  const expiry=Math.floor(Date.now()/1000)+3600;
-  const token=encode({alg:"HS256",typ:"JWT"})+"."+encode({sub:user.id,exp:expiry})+".QA";
-  const session={access_token:token,refresh_token:"fixture",user,expires_at:expiry,expires_in:3600,token_type:"bearer"};
-  await page.context().addCookies([{name:"sb-localhost-auth-token",value:"base64-"+encode(session),url:origin.origin}]);
-  const tickets=new Map();
-  const cors={"access-control-allow-origin":origin.origin,"access-control-allow-methods":"GET,POST,PUT,OPTIONS","access-control-allow-headers":"*"};
-  const mockStorage="https://vf01.r2.cloudflarestorage.com";
-  await page.route(fixtureOrigin+"/api/v1/customer/**",async route=>{
-    const req=route.request();
-    const path=new URL(req.url()).pathname;
-    const reply=(json,status=200)=>route.fulfill({json,status,headers:cors});
-    if(req.method()==="OPTIONS")return route.fulfill({status:204,headers:cors});
-    assert.equal(req.headers().authorization,"Bearer "+token);
-    if(path.endsWith("/invitations"))return reply([]);
-    if(path.endsWith("/uploads")){
-      const id=randomUUID();
-      const request=req.postDataJSON();
-      tickets.set(id,request);
-      return reply({id,uploadUrl:mockStorage+"/upload/"+id,headers:{"Content-Type":request.mimeType}},201);
-    }
-    const match=path.match(/\/media\/([^/]+)\/(complete|read-url)$/);
-    const ticket=match&&tickets.get(match[1]);
-    if(!ticket?.body)return reply({},404);
-    const id=match[1];
-    if(match[2]==="complete"){
-      const audio=ticket.mimeType==="audio/mpeg";
-      return reply({id,storageKey:"asset:"+id,mimeType:ticket.mimeType,sizeBytes:ticket.bytes,name:ticket.name,status:"READY",
-        pixelWidth:audio?null:390,pixelHeight:audio?null:651},201);
-    }
-    return reply({url:mockStorage+"/read/"+id,expiresInSeconds:ticket.mimeType==="audio/mpeg"?1200:60});
-  });
-  await page.route(mockStorage+"/**",async route=>{
-    const req=route.request();
-    if(req.method()==="OPTIONS")return route.fulfill({status:204,headers:cors});
-    const ticket=tickets.get(new URL(req.url()).pathname.split("/").at(-1));
-    assert.ok(ticket);
-    if(req.method()==="PUT"){
-      const body=req.postDataBuffer();
-      assert.equal(body.length,ticket.bytes);
-      assert.equal(createHash("sha256").update(body).digest("hex"),ticket.sha256);
-      ticket.body=body;
-      return route.fulfill({status:200,headers:cors,body:""});
-    }
-    return route.fulfill({status:200,headers:cors,body:ticket.body,contentType:ticket.mimeType});
-  });
-  return tickets;
 }
 
 async function checkOwnerEdits(editor, preview, uploads){
