@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {useEffect,useRef,useState} from "react";
 import {CloudUpload,ImagePlus,ExternalLink,Copy,Send} from "lucide-react";
 import type {useCustomerSession} from "@/features/auth/browser/use-customer-session";
@@ -30,6 +31,7 @@ export function CustomerCloudControls({
   locale,slug,templateVersionId,preferredDraftId,baseRevision,onRevision,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,
   publishMode=false,canPublish=false,onBeforeSignIn,session,
 }:Props){
+  const router=useRouter();
   const {scope}=session;
   const userId=scope?.subject??null;
   const [info,setInfo]=useState("");
@@ -115,7 +117,7 @@ export function CustomerCloudControls({
     setLoading(true);setInfo("");
     try{
       const {id}=await savePatch();
-      if(!preferredDraftId)window.location.assign(draftHref(id));
+      if(!preferredDraftId)router.replace(draftHref(id));
       setInfo(ru?"Сохранено в вашем аккаунте.":"Аккаунтуңузга сакталды.");
     }catch(e){
       setInfo(e instanceof Error&&e.message==="CLOUD_REVISION_NOT_LOADED"
@@ -305,7 +307,7 @@ export function CustomerCloudControls({
       </div>
     </>}
       {slug&&<button type="button" className="ce-secondary" disabled={loading||fileBusy}
-        onClick={()=>window.location.assign(`/${locale}/editor?template=${encodeURIComponent(slug)}&local=${crypto.randomUUID()}`)}>
+        onClick={()=>router.push(`/${locale}/editor?template=${encodeURIComponent(slug)}&local=${crypto.randomUUID()}`)}>
         {ru?"Новый черновик":"Жаңы черновик"}
       </button>}
     {info&&<p role="status" className="ce-cloud-info">{info}</p>}
