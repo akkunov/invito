@@ -11,7 +11,7 @@ export const accountOverviewQuery=z.strictObject({
   page:z.coerce.number().int().min(1).max(10000).default(1),
   limit:z.coerce.number().int().min(1).max(24).default(8),
 });
-export const createCustomerInvitationSchema=z.strictObject({templateVersionId:uuid});
+export const createCustomerInvitationSchema=z.strictObject({templateVersionId:uuid,patch:personalizationPatchSchema.optional()});
 export const updateCustomerInvitationSchema=z.strictObject({expectedRevision:z.number().int().min(1),patch:personalizationPatchSchema});
 
 @Controller("customer")
@@ -28,8 +28,8 @@ export class CustomerInvitationsController {
   @Post("invitations")
   @Header("Cache-Control","no-store")
   create(@Req() request:AuthenticatedRequest,@Body() body:unknown){
-    const {templateVersionId}=parseInput(createCustomerInvitationSchema,body);
-    return this.service.create(request.user.id,templateVersionId);
+    const {templateVersionId,patch}=parseInput(createCustomerInvitationSchema,body);
+    return this.service.create(request.user.id,templateVersionId,patch);
   }
 
   @Get("invitations")
@@ -40,6 +40,12 @@ export class CustomerInvitationsController {
   @Header("Cache-Control","no-store")
   get(@Req() request:AuthenticatedRequest,@Param("id") id:string){
     return this.service.get(request.user.id,parseInput(uuid,id));
+  }
+
+  @Get("invitations/:id/editor-source")
+  @Header("Cache-Control","private, no-store")
+  editorSource(@Req() request:AuthenticatedRequest,@Param("id") id:string){
+    return this.service.editorSource(request.user.id,parseInput(uuid,id));
   }
 
   @Patch("invitations/:id")

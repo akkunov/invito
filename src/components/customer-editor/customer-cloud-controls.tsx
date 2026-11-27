@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 import {CloudUpload,ImagePlus,ExternalLink,Copy,Send} from "lucide-react";
 import type {useCustomerSession} from "@/features/auth/browser/use-customer-session";
@@ -17,24 +18,23 @@ type UploadResult={asset:VerifiedCustomerAsset;url:string};
 
 type Props={
   session:ReturnType<typeof useCustomerSession>;
-  locale:Locale;templateVersionId:string;preferredDraftId?:string;patch:PersonalizationPatch;
+  locale:Locale;slug:string|null;templateVersionId:string;preferredDraftId?:string;baseRevision:number|null;onRevision:(revision:number)=>void;patch:PersonalizationPatch;
   publishMode?:boolean;canPublish?:boolean;
   onBeforeSignIn:()=>void;
-  onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>)=>void;
+  onLoad:(patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],urls:Record<string,string>,revision:number)=>void;
   onUploaded:(fieldId:string,results:(UploadResult|null)[],mode:"replace"|"append")=>void;
   uploadTargets:Array<{id:string;label:string;kind:"image"|"gallery";minWidth:number;minHeight:number;maxPhotos?:number;currentCount?:number}>;
   preferredUploadTargetId?:string;
 };
 export function CustomerCloudControls({
-  locale,templateVersionId,preferredDraftId,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,
+  locale,slug,templateVersionId,preferredDraftId,baseRevision,onRevision,patch,onLoad,onUploaded,uploadTargets,preferredUploadTargetId,
   publishMode=false,canPublish=false,onBeforeSignIn,session,
 }:Props){
   const {scope}=session;
   const userId=scope?.subject??null;
   const [info,setInfo]=useState("");
   const [loading,setLoading]=useState(false);
-  const [cloudId,setCloudId]=useState<string|null>(null);
-  const [revision,setRevision]=useState<number|null>(null);
+  const [cloudId,setCloudId]=useState<string|null>(preferredDraftId??null);
   const [fileBusy,setFileBusy]=useState(false);
   const [uploadPhase,setUploadPhase]=useState("");
   const [uploadProgress,setUploadProgress]=useState({current:0,total:0});
@@ -52,37 +52,17 @@ export function CustomerCloudControls({
   useEffect(()=>{
     if(preferredUploadTargetId&&uploadTargets.some(item=>item.id===preferredUploadTargetId))setSelectedTarget(preferredUploadTargetId);
   },[preferredUploadTargetId,uploadTargets]);
-  const personalKey=userId?"eventiq:cloud-draft:v1:"+userId+":"+templateVersionId:null;
+  const draftHref=(id:string)=>`/${locale}/editor?draft=${encodeURIComponent(id)}`;
 
   useEffect(()=>{
-    if(!personalKey){setCloudId(null);setRevision(null);return;}
-    let id:string|null=null;
-    try{id=window.localStorage.getItem(personalKey);}catch{}
-    setCloudId(preferredDraftId??id);
-    try {
-      const rev=window.localStorage.getItem(personalKey+":revision");
-      setRevision(!preferredDraftId||id===preferredDraftId ? rev&&Number.isSafeInteger(Number(rev))&&Number(rev)>=1?Number(rev):null : null);
-    }catch{setRevision(null);}
-  },[personalKey,preferredDraftId]);
-
-  useEffect(()=>{
-    if(!scope){setAvailableDrafts([]);return;}
+    if(!scope)return;
     const controller=new AbortController();
-    void listCustomerDrafts(cancelCustomerRequestWith(scope,controller.signal)).then(items=>{
-      if(controller.signal.aborted||scope.signal.aborted)return;
-      const matching=items.filter(item=>item.templateVersionId===templateVersionId);
-      setAvailableDrafts(matching);
-      if(!personalKey)return;
-      const saved=window.localStorage.getItem(personalKey);
-      if(!saved && matching[0]){
-        // A new device discovers the existing account draft, but never overwrites
-        // local changes until the user explicitly selects "Open cloud copy".
-        setCloudId(matching[0].id);
-        setRevision(null);
-      }
+    const request=cancelCustomerRequestWith(scope,controller.signal);
+    void listCustomerDrafts(request).then(items=>{
+      if(!request.signal.aborted)setAvailableDrafts(items.filter(item=>item.templateVersionId===templateVersionId));
     }).catch(()=>{});
     return()=>controller.abort();
-  },[scope,templateVersionId,personalKey]);
+  },[scope,templateVersionId]);
 
   useEffect(()=>{
     if(!scope||!cloudId||!publishMode)return;
@@ -114,29 +94,28 @@ export function CustomerCloudControls({
     finally{setLoading(false);}
   }
 
+  async function savePatch(){
+    if(!scope)throw Error("SIGN_IN_REQUIRED");
+    if(!cloudId){
+      const created=await createCustomerDraft(scope,templateVersionId,patch);
+      scope.signal.throwIfAborted();
+      setCloudId(created.id);
+      onRevision(created.revision);
+      return {id:created.id,revision:created.revision};
+    }
+    if(baseRevision===null)throw Error("CLOUD_REVISION_NOT_LOADED");
+    const saved=await saveCustomerDraft(scope,cloudId,baseRevision,patch);
+    scope.signal.throwIfAborted();
+    onRevision(saved.revision);
+    return {id:cloudId,revision:saved.revision};
+  }
+
   async function save(){
     if(!scope||loading)return;
     setLoading(true);setInfo("");
     try{
-      let id=cloudId,rev=revision;
-      if(!id){
-        const saved=personalKey?window.localStorage.getItem(personalKey):null;
-        if(saved){
-          id=saved;
-          throw new Error("CLOUD_REVISION_NOT_LOADED");
-        }else{
-          const created=await createCustomerDraft(scope,templateVersionId);
-          id=created.id;rev=created.revision;
-          if(personalKey)window.localStorage.setItem(personalKey,id);
-        }
-        setCloudId(id);
-      }else if(rev===null){
-        throw new Error("CLOUD_REVISION_NOT_LOADED");
-      }
-      if(!id||rev===null)throw new Error("CLOUD_REVISION_UNAVAILABLE");
-      const saved=await saveCustomerDraft(scope,id,rev,patch);
-      setRevision(saved.revision);
-      if(personalKey)window.localStorage.setItem(personalKey+":revision",String(saved.revision));
+      const {id}=await savePatch();
+      if(!preferredDraftId)window.location.assign(draftHref(id));
       setInfo(ru?"Сохранено в вашем аккаунте.":"Аккаунтуңузга сакталды.");
     }catch(e){
       setInfo(e instanceof Error&&e.message==="CLOUD_REVISION_NOT_LOADED"
@@ -150,21 +129,16 @@ export function CustomerCloudControls({
   }
 
   async function load(){
-    if(!scope||!personalKey||loading)return;
+    if(!scope||!cloudId||loading)return;
     if(Object.keys(patch.values).length&& !window.confirm(ru?
       "Заменить локальные изменения облачной версией? Несохранённые правки на устройстве будут потеряны.":
       "Жергиликтүү өзгөртүүлөр булуттагы версия менен алмаштырылсынбы? Сакталбаган өзгөртүүлөр жоголот."))return;
     setLoading(true);setInfo("");
     try{
-      const id=cloudId||window.localStorage.getItem(personalKey);
-      if(!id){setInfo(ru?"Облачного черновика пока нет.":"Булуттагы черновик жок.");return;}
-      const remote=await getCustomerDraft(scope,id);
-      if(remote.templateVersionId!==templateVersionId)throw new Error("TEMPLATE_VERSION_MISMATCH");
+      const remote=await getCustomerDraft(scope,cloudId);
+      if(remote.templateVersionId!==templateVersionId)throw Error("TEMPLATE_VERSION_MISMATCH");
       scope.signal.throwIfAborted();
-      onLoad(remote.patch,remote.assets,remote.mediaUrls);
-      setCloudId(id);setRevision(remote.revision);
-      window.localStorage.setItem(personalKey,id);
-      window.localStorage.setItem(personalKey+":revision",String(remote.revision));
+      onLoad(remote.patch,remote.assets,remote.mediaUrls,remote.revision);
       setInfo(ru?"Облачная версия загружена.":"Булуттагы версия жүктөлдү.");
     }catch{setInfo(ru?"Не удалось загрузить облачный черновик.":"Булуттагы черновик ачылган жок.");}
     finally{setLoading(false);}
@@ -178,26 +152,11 @@ export function CustomerCloudControls({
     }
     setLoading(true);setInfo("");
     try{
-      let id=cloudId,rev=revision;
-      if(!id){
-        const previous=personalKey?window.localStorage.getItem(personalKey):null;
-        if(previous){
-          throw new Error("CLOUD_REVISION_NOT_LOADED");
-        }
-        const created=await createCustomerDraft(scope,templateVersionId);
-        id=created.id;rev=created.revision;
-        setCloudId(id);
-        if(personalKey)window.localStorage.setItem(personalKey,id);
-      }
-      if(!id||rev===null)throw new Error("CLOUD_REVISION_NOT_LOADED");
-      // Publish only the same patch that was atomically saved to the owner's draft.
-      const saved=await saveCustomerDraft(scope,id,rev,patch);
-      setRevision(saved.revision);
-      if(personalKey)window.localStorage.setItem(personalKey+":revision",String(saved.revision));
+      const {id,revision}=await savePatch();
       const current=await getCustomerPublication(scope,id);
       const release=await publishCustomerInvitation(scope,id,{
         slug:current?.slug??publicSlug,
-        expectedRevision:saved.revision,
+        expectedRevision:revision,
         expectedRelease:current?.latestRelease??0,
       });
       const url=window.location.origin+"/"+locale+"/c/"+release.slug;
@@ -276,15 +235,11 @@ export function CustomerCloudControls({
       <CustomerSignIn locale={locale} client={session.client} beforeRedirect={onBeforeSignIn} className="ce-cloud-auth" actionClassName="ce-primary"/>
     </div>:
     <>
-      {availableDrafts.length>0&&<label className="ce-language">
-        <span>{ru?"Ваши черновики в аккаунте":"Аккаунттагы черновиктер"}</span>
-        <select value={cloudId??""} onChange={e=>{setCloudId(e.target.value);setRevision(null);}}>
-          {!cloudId&&<option value="">{ru?"Выберите черновик":"Черновикти тандаңыз"}</option>}
-          {availableDrafts.map(draft=><option value={draft.id} key={draft.id}>
-            {draft.templateVersion.template.name} · {new Date(draft.updatedAt).toLocaleDateString(locale==="ru"?"ru-RU":"ky-KG")}
-          </option>)}
-        </select>
-      </label>}
+      {availableDrafts.filter(draft=>draft.id!==cloudId).map(draft=>
+        <Link className="ce-secondary" href={draftHref(draft.id)} key={draft.id}>
+          {draft.templateVersion.template.name} · {new Date(draft.updatedAt).toLocaleString(locale==="ru"?"ru-RU":"ky-KG")}
+        </Link>
+      )}
       {publishMode&&<div className="ce-publish">
         <label className="ce-language"><span>{ru?"Адрес приглашения":"Чакыруу дареги"}</span>
           <input aria-label={ru?"Адрес приглашения":"Чакыруу дареги"}
@@ -345,10 +300,14 @@ export function CustomerCloudControls({
         </div>
         <div className="ce-cloud-actions">
           <button type="button" className="ce-primary" disabled={loading||fileBusy} onClick={()=>void save()}><CloudUpload size={16}/>{loading?"…":ru?"Сохранить":"Сактоо"}</button>
-          <button type="button" className="ce-secondary" disabled={loading||fileBusy} onClick={()=>void load()}>{ru?"Загрузить сохранённое":"Сакталганын жүктөө"}</button>
+          <button type="button" className="ce-secondary" disabled={loading||fileBusy||!cloudId} onClick={()=>void load()}>{ru?"Загрузить сохранённое":"Сакталганын жүктөө"}</button>
         </div>
       </div>
     </>}
+      {slug&&<button type="button" className="ce-secondary" disabled={loading||fileBusy}
+        onClick={()=>window.location.assign(`/${locale}/editor?template=${encodeURIComponent(slug)}&local=${crypto.randomUUID()}`)}>
+        {ru?"Новый черновик":"Жаңы черновик"}
+      </button>}
     {info&&<p role="status" className="ce-cloud-info">{info}</p>}
   </section>;
 }

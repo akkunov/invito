@@ -29,3 +29,11 @@ test("OAuth return paths accept only Eventiq customer routes in the requested lo
   assert.equal(authReturnPath("/ru/account#guest", "ru"), "/ru/account");
   assert.equal(authReturnPath("/ru/editor?template=shyrdak&draft=bad", "ru"), "/ru/editor?template=shyrdak");
 });
+
+test("OAuth preserves private draft-only links and separate local slots", () => {
+  const id = "0ed185da-035a-4bb9-8613-2f5a7ff7816d";
+  assert.equal(authReturnPath("/ru/editor?draft="+id, "ru"), "/ru/editor?draft="+id);
+  assert.equal(authReturnPath("/ru/editor?template=love-story&local="+id,"ru"),
+    "/ru/editor?template=love-story&local="+id);
+  assert.equal(authReturnPath("/ru/editor?template=love-story&local=bad","ru"),"/ru/editor?template=love-story");
+});

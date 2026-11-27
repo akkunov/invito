@@ -50,12 +50,18 @@ export type CustomerDraftListItem={
 export async function listCustomerDrafts(scope:CustomerRequestScope){
   return customerApi<CustomerDraftListItem[]>(scope,"/customer/invitations");
 }
-export async function createCustomerDraft(scope:CustomerRequestScope,templateVersionId:string){
+export async function createCustomerDraft(scope:CustomerRequestScope,templateVersionId:string,patch:PersonalizationPatch){
   return customerApi<{id:string;revision:number;templateVersionId:string}>(
-    scope,"/customer/invitations","POST",{templateVersionId});
+    scope,"/customer/invitations","POST",{templateVersionId,patch});
 }
 export async function getCustomerDraft(scope:CustomerRequestScope,id:string){
   return customerApi<CustomerDraft>(scope,"/customer/invitations/"+encodeURIComponent(id));
+}
+export function getCustomerEditorSource(scope:CustomerRequestScope,id:string){
+  return customerApi<{draft:CustomerDraft;source:{
+    versionId:string;name:string;slug:string|null;document:unknown;personalization:unknown;
+    mediaUrls:Record<string,string>;
+  }}>(scope,"/customer/invitations/"+encodeURIComponent(id)+"/editor-source");
 }
 export async function saveCustomerDraft(scope:CustomerRequestScope,id:string,expectedRevision:number,patch:PersonalizationPatch){
   return customerApi<{id:string;revision:number;updatedAt:string}>(

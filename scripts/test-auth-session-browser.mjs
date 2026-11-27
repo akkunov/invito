@@ -22,7 +22,11 @@ const templates = new Map(await Promise.all(["love-story","vogue-wedding","itali
 })));
 const love = templates.get("love-story");
 const draftId = randomUUID();
-const editorPath = "/ru/editor?template=love-story&draft="+draftId;
+const draftId2 = randomUUID();
+const pinnedPath = "/ru/editor?draft="+draftId;
+const editorPath = "/ru/editor?template=love-story&local="+randomUUID()+"&version="+love.templateVersionId;
+const publicV2 = {...love,templateVersionId:randomUUID()};
+let usePublicV2 = false;
 const editorNode = '[data-studio-node="cover_names"]';
 const guest = "Локальный черновик до входа";
 const privateTitle = "Приватный черновик аккаунта A";
@@ -126,7 +130,8 @@ const server=createServer(async (request,response)=>{
       return response.writeHead(204).end();
     }
     if(url.pathname.startsWith("/api/v1/catalog/templates/")){
-      const pack=templates.get(url.pathname.split("/").at(-1));
+      const slug=url.pathname.split("/").at(-1);
+      const pack=slug==="love-story"&&usePublicV2?publicV2:templates.get(slug);
       return json(pack??{},pack?200:404);
     }
     if(url.pathname.startsWith("/api/v1/customer/")){
@@ -141,10 +146,13 @@ const server=createServer(async (request,response)=>{
         return json(overview(user));
       }
       if(url.pathname.endsWith("/customer/invitations"))return json([]);
-      if(url.pathname.endsWith("/customer/invitations/"+draftId)&&user.id===alice.id){
-        return json({id:draftId,revision:1,templateVersionId:love.templateVersionId,
-          patch:{values:{coupleNames:{kind:"binding",value:{type:"text",value:{ru:privateTitle,ky:privateTitle}}}}},
-          assets:[],mediaUrls:{},updatedAt:"2026-01-01T00:00:00Z"});
+      const [,id,sourcePart]=url.pathname.match(/\/customer\/invitations\/([^/]+)(?:\/(editor-source))?$/)??[];
+      if((id===draftId||id===draftId2)&&user.id===alice.id){
+        const title=id===draftId?privateTitle:"Второе приглашение";
+        const draft={id,revision:1,templateVersionId:love.templateVersionId,
+          patch:{values:{coupleNames:{kind:"binding",value:{type:"text",value:{ru:title,ky:title}}}}},
+          assets:[],mediaUrls:{},updatedAt:"2026-01-01T00:00:00Z"};
+        return sourcePart?json({draft,source:{...love,slug:"love-story",versionId:love.templateVersionId}}):json(draft);
       }
     }
     return json({},404);
@@ -210,11 +218,27 @@ try{
   assert.equal(verifiedExchanges,1);
   await editor.reload();
   await editorPreview(editor).getByText(guest,{exact:true}).waitFor();
-  await photo(editor).click();
-  editor.once("dialog",dialog=>dialog.accept());
-  await editor.getByRole("button",{name:"Загрузить сохранённое",exact:true}).click();
-  await editorPreview(editor).getByText(privateTitle,{exact:true}).waitFor();
-  await editor.locator(".ce-mobile-sheet-handle button").click();
+  const ownerEditor=await mobile.newPage();
+  usePublicV2=true;
+  await visit(ownerEditor,pinnedPath);
+  await editorPreview(ownerEditor).getByText(privateTitle,{exact:true}).waitFor();
+  await editorPreview(ownerEditor).locator(editorNode).click();
+  await ownerEditor.getByRole("dialog").getByRole("textbox",{name:/ ru$/}).first().fill("Правка первого приглашения");
+  await editorPreview(ownerEditor).getByText("Правка первого приглашения",{exact:true}).waitFor();
+  await visit(ownerEditor,"/ru/editor?draft="+draftId2);
+  await editorPreview(ownerEditor).getByText("Второе приглашение",{exact:true}).waitFor();
+  assert.equal(await editorPreview(ownerEditor).getByText("Правка первого приглашения").count(),0);
+  await visit(ownerEditor,pinnedPath);
+  await editorPreview(ownerEditor).getByText("Правка первого приглашения",{exact:true}).waitFor();
+  await ownerEditor.reload();
+  await editorPreview(ownerEditor).getByText("Правка первого приглашения",{exact:true}).waitFor();
+  await shot(ownerEditor,"05-owner-pinned-draft");
+  const retired=await mobile.newPage();
+  await visit(retired,editorPath);
+  await retired.getByText("Версия шаблона изменилась.",{exact:false}).waitFor();
+  assert.equal(await editorPreview(retired).count(),0);
+  await retired.close();
+  usePublicV2=false;
 
   const switcher=await mobile.newPage();
   await visit(switcher,"/ru/invitations");
@@ -226,6 +250,8 @@ try{
   const closed=once(pendingOverview,"close",{signal:AbortSignal.timeout(12000)});
   await logout(switcher);
   await google(stale).waitFor();
+  await google(ownerEditor).waitFor();
+  assert.equal(await editorPreview(ownerEditor).count(),0);
   await photo(editor).click();
   await google(editor).waitFor();
   await editorPreview(editor).getByText(guest,{exact:true}).waitFor();
@@ -235,6 +261,8 @@ try{
   await google(switcher).click();
   await entry(switcher,bob).waitFor();
   await entry(stale,bob).waitFor();
+  await ownerEditor.getByText("Черновик недоступен.",{exact:false}).waitFor();
+  assert.equal(await editorPreview(ownerEditor).count(),0);
   await closed;
   assert.equal(pendingOverview.writableEnded,false,"Logout cancels the old request");
   onOverview=undefined;
@@ -295,7 +323,7 @@ try{
   }
   assert.deepEqual(upstreamErrors,[]);
   assert.deepEqual(pageErrors,[]);
-  console.log("Auth browser fixture passed: PKCE, callback, OTP, draft recovery, refresh, expiry, logout and account switch. RU/KY, 320/390/1440px.");
+  console.log("Auth browser fixture passed: PKCE, callback, OTP, draft recovery, pinned version, two drafts, refresh, expiry, logout and account switch. RU/KY, 320/390/1440px.");
 }finally{
   await browser?.close();
   server.closeAllConnections();

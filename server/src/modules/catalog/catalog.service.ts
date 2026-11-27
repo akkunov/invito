@@ -1,3 +1,4 @@
+import {signTemplateMedia} from "../documents/template-media.js";
 import {ConflictException, Inject, Injectable, NotFoundException, UnprocessableEntityException} from "@nestjs/common";
 import {PrismaService} from "../../database/prisma.service.js";
 import {MediaObjectStore} from "../media/media-object-store.js";
@@ -66,16 +67,7 @@ export class CatalogService {
     const version=row.publishedVersion;
     const {snapshot,contract}=validatedTemplate(version.document,version.personalization);
     if(!contract)throw new NotFoundException("TEMPLATE_NOT_FOUND");
-    const ids=[...new Set(Object.values(snapshot.assets).map(a=>a.storageKey).filter(k=>k.startsWith("asset:")).map(k=>k.slice(6)))];
-    const media=ids.length?await this.db.mediaAsset.findMany({
-      where:{workspaceId:row.workspaceId,id:{in:ids},status:"READY"},
-      select:{id:true,storageKey:true,mimeType:true},
-    }):[];
-    if(media.length!==ids.length)throw new NotFoundException("TEMPLATE_MEDIA_UNAVAILABLE");
-    const mediaUrls:Record<string,string>={};
-    await Promise.all(media.map(async asset=>{
-      mediaUrls["asset:"+asset.id]=await this.media.signRead(asset.storageKey,asset.mimeType);
-    }));
+    const mediaUrls=await signTemplateMedia(this.db,this.media,row.workspaceId,snapshot);
     return {id:row.id,slug:row.publicSlug!,name:row.name,description:row.description,
       category:row.category,version:version.number,templateVersionId:version.id,
       document:snapshot,personalization:contract,mediaUrls};

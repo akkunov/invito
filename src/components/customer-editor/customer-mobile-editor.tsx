@@ -20,7 +20,7 @@ import {useAuthReturnStatus} from "./customer-sign-in";
 import {CustomerCloudControls} from "./customer-cloud-controls";
 import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {galleryAfterUpload} from "@/features/invitations/photo-geometry";
-import {CustomerCloudError,customerApi,uploadCustomerAudio,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
+import {CustomerCloudError,customerApi,getCustomerEditorSource,uploadCustomerAudio,type CustomerDraft,type VerifiedCustomerAsset} from "@/features/invitations/customer-cloud";
 import {editableFieldForNode} from "@/features/invitations/mobile-editor-selection";
 import {UniversalMobileEditor} from "./universal-mobile-editor";
 import {UniversalSectionManager} from "./universal-section-manager";
@@ -72,8 +72,8 @@ const dictionary={
   },
 } as const;
 
-type Props={
-  locale:Locale;slug:string;name:string;versionId:string;preferredDraftId?:string;
+export type CustomerEditorProps={
+  locale:Locale;slug:string|null;name:string;versionId:string;initialDraft?:CustomerDraft;localDraftId?:string;
   source:ProjectDocumentV2;contract:PersonalizationContract;
   mediaUrls:Record<string,string>;
 };
@@ -91,24 +91,28 @@ function assetsForPatch(patch:PersonalizationPatch,assets:readonly VerifiedCusto
   return assets.filter(asset=>ids.has(asset.id));
 }
 
-function persistLocalDraft(cacheKey:string,patch:PersonalizationPatch,assets:VerifiedCustomerAsset[]){
-  window.localStorage.setItem(cacheKey,JSON.stringify({patch,assets:assetsForPatch(patch,assets)}));
+function persistLocalDraft(cacheKey:string,patch:PersonalizationPatch,assets:VerifiedCustomerAsset[],baseRevision:number|null){
+  window.localStorage.setItem(cacheKey,JSON.stringify({patch,assets:assetsForPatch(patch,assets),baseRevision}));
 }
 
-export function CustomerMobileEditor(props:Props){
+export function CustomerMobileEditor(props:CustomerEditorProps){
   const session=useCustomerSession();
+  return <CustomerEditorSession {...props} session={session}/>;
+}
+
+export function CustomerEditorSession({session,...props}:CustomerEditorProps&{session:ReturnType<typeof useCustomerSession>}){
   const authReturnStatus=useAuthReturnStatus();
   const subject=session.user?.id??null;
   if(session.status==="loading"){
     return <p role="status">{props.locale==="ru"?"Проверяем вход…":"Кирүү текшерилүүдө…"}</p>;
   }
   // Remount the whole document, history and signed media boundary, not only its cloud panel.
-  const key=draftStorageKey(props.versionId,props.preferredDraftId,subject);
+  const key=draftStorageKey(props.versionId,props.initialDraft?.id??(props.localDraftId?"local:"+props.localDraftId:undefined),subject);
   return <CustomerEditor key={key} {...props} session={session}
     reopenSignIn={session.status==="signed-out"&&authReturnStatus!==null}/>;
 }
 
-function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,contract,mediaUrls,session,reopenSignIn}:Props&{session:ReturnType<typeof useCustomerSession>;reopenSignIn:boolean}){
+function CustomerEditor({locale,slug,name,versionId,initialDraft,localDraftId,source,contract,mediaUrls,session,reopenSignIn}:CustomerEditorProps&{session:ReturnType<typeof useCustomerSession>;reopenSignIn:boolean}){
   const t=dictionary[locale];
   const [step,setStep]=useState<Step>(reopenSignIn?"appearance":"main");
   const [mode,setMode]=useState<"edit"|"preview">("edit");
@@ -124,19 +128,28 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
   const [mobileSectionsOpen,setMobileSectionsOpen]=useState(false);
   const [past,setPast]=useState<PersonalizationPatch[]>([]);
   const [future,setFuture]=useState<PersonalizationPatch[]>([]);
-  const [patch,setPatch]=useState<PersonalizationPatch>(()=>initialPatch(source,contract));
+  const [patch,setPatch]=useState<PersonalizationPatch>(()=>initialDraft?.patch??initialPatch(source,contract));
+  const [baseRevision,setBaseRevision]=useState<number|null>(initialDraft?.revision??null);
   const [hydrated,setHydrated]=useState(false);
   const [warning,setWarning]=useState("");
   const [status,setStatus]=useState("");
   const [review,setReview]=useState(false);
   const [previewRun,setPreviewRun]=useState(0);
-  const [customerAssets,setCustomerAssets]=useState<VerifiedCustomerAsset[]>([]);
-  const [customerUrls,setCustomerUrls]=useState<Record<string,string>>({});
+  const [customerAssets,setCustomerAssets]=useState<VerifiedCustomerAsset[]>(initialDraft?.assets??[]);
+  const [customerUrls,setCustomerUrls]=useState<Record<string,string>>(initialDraft?.mediaUrls??{});
   const [templateUrls,setTemplateUrls]=useState(mediaUrls);
   const {scope}=session;
   const subject=scope?.subject??null;
-  const cacheKey=draftStorageKey(versionId,preferredDraftId,subject);
-  const guestKey=draftStorageKey(versionId,preferredDraftId,null);
+  const cacheKey=draftStorageKey(versionId,initialDraft?.id??(localDraftId?"local:"+localDraftId:undefined),subject);
+  const guestKey=draftStorageKey(versionId,initialDraft?.id??(localDraftId?"local:"+localDraftId:undefined),null);
+
+  useEffect(()=>{
+    if(initialDraft)return;
+    const url=new URL(window.location.href);
+    if(url.searchParams.has("version"))return;
+    url.searchParams.set("version",versionId);
+    window.history.replaceState(window.history.state,"",url);
+  },[initialDraft,versionId]);
 
   useEffect(()=>{
     if(!reopenSignIn)return;
@@ -156,13 +169,14 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
   useEffect(()=>{
     try {
       // v1 keys mixed account and guest data without recording ownership. Leave them untouched.
-      const stored=window.localStorage.getItem(cacheKey)??window.localStorage.getItem(guestKey);
+      const stored=window.localStorage.getItem(cacheKey)??(!initialDraft?window.localStorage.getItem(guestKey):null);
       if(stored){
-        const cached=JSON.parse(stored) as {patch:unknown;assets:VerifiedCustomerAsset[]};
+        const cached=JSON.parse(stored) as {patch:unknown;assets:VerifiedCustomerAsset[];baseRevision?:number};
         const parsed=personalizationPatchSchema.parse(cached.patch);
         const parsedAssets=cached.assets;
         if(!Array.isArray(parsedAssets))throw Error("INVALID_ASSET_CACHE");
         personalizeDocument(source,contract,parsed,assetsForPatch(parsed,parsedAssets),true);
+        setBaseRevision(typeof cached.baseRevision==="number"&&Number.isSafeInteger(cached.baseRevision)&&cached.baseRevision>0?cached.baseRevision:null);
         setCustomerAssets(parsedAssets);
         setPatch(parsed);
         setStatus(dictionary[locale].restore);
@@ -170,27 +184,33 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
     }catch{
       setWarning(dictionary[locale].invalidDraft);
     }finally{setHydrated(true);}
-  },[cacheKey,guestKey,source,contract,locale]);
+  },[cacheKey,guestKey,source,contract,locale,initialDraft]);
 
   useEffect(()=>{
     if(!hydrated)return;
     try {
-      persistLocalDraft(cacheKey,patch,customerAssets);
+      persistLocalDraft(cacheKey,patch,customerAssets,baseRevision);
       setStatus(dictionary[locale].saveLocal);
     }catch{setWarning(dictionary[locale].storageError);}
-  },[cacheKey,patch,customerAssets,hydrated,locale]);
+  },[cacheKey,patch,customerAssets,baseRevision,hydrated,locale]);
 
   useEffect(()=>{
     // R2 read capabilities expire quickly. Refresh only trusted signed URLs;
     // do not replace the version-pinned source document while the user edits.
     const api=process.env.NEXT_PUBLIC_API_URL;
-    if(!api)return;
+    if(!api||!Object.keys(mediaUrls).length)return;
     let active=true;
     const refresh=async()=>{
       try{
-        const response=await fetch((api.endsWith("/")?api.slice(0,-1):api)+"/catalog/templates/"+encodeURIComponent(slug),{cache:"no-store"});
-        if(!response.ok)return;
-        const data=await response.json() as {templateVersionId?:string;mediaUrls?:Record<string,string>};
+        let data:{templateVersionId?:string;mediaUrls?:Record<string,string>};
+        if(initialDraft&&scope){
+          const {source}=await getCustomerEditorSource(scope,initialDraft.id);
+          data={templateVersionId:source.versionId,mediaUrls:source.mediaUrls};
+        }else if(slug){
+          const response=await fetch(api.replace(/\/$/,"")+"/catalog/templates/"+encodeURIComponent(slug),{cache:"no-store"});
+          if(!response.ok)return;
+          data=await response.json();
+        }else return;
         if(!active||data.templateVersionId!==versionId||!data.mediaUrls)return;
         const valid=Object.values(data.mediaUrls).every(raw=>{
           const url=new URL(raw);
@@ -201,7 +221,7 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
     };
     const timer=window.setInterval(()=>void refresh(),45_000);
     return()=>{active=false;window.clearInterval(timer);};
-  },[slug,versionId]);
+  },[slug,versionId,initialDraft,scope,mediaUrls]);
 
   const audioKeys=uploadedMusicIds(contract,patch).map(id=>"asset:"+id).join(" ");
   const customerReadKeys=useMemo(()=>[...new Set([
@@ -406,7 +426,7 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
     guest={{mode:"preview"}}/>;
 
   return <UniversalMobileEditor
-    locale={locale} backHref={`/${locale}/catalog/${slug}`} title={name}
+    locale={locale} backHref={(slug?`/${locale}/catalog/${slug}`:`/${locale}/invitations`)} title={name}
     sheetOpen={mobileSheetOpen} activeTool={mobileSectionsOpen?"sections":mobileSheetOpen?mobileTool:"text"}
     pageIndex={activePageIndex} pageCount={visiblePages.length} pageName={pageLabel(visiblePages[activePageIndex]?.id??"")}
     onNavigate={delta=>{const page=visiblePages[activePageIndex+delta];if(page)jumpPreview(page.id);}}
@@ -420,7 +440,7 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
     canvas={preview} canvasRef={mobileCanvasRef} onCanvasClick={selectCanvasField}
     previewClassName={mode==="edit"?"ce-preview ce-mobile-hidden":"ce-preview"} onClose={closeMobileSheet}
     desktopHeader={<header className="ce-header">
-      <Link aria-label={t.back} href={`/${locale}/catalog/${slug}`} className="ce-icon"><ArrowLeft size={20}/></Link>
+      <Link aria-label={t.back} href={(slug?`/${locale}/catalog/${slug}`:`/${locale}/invitations`)} className="ce-icon"><ArrowLeft size={20}/></Link>
       <Link href={`/${locale}`} className="ce-logo">eventiq<span>.</span></Link>
       <Link className="ce-account-link" href={`/${locale}/invitations`}>{locale==="ru"?"Мои приглашения":"Менин чакырууларым"}</Link>
       <div className="ce-save-state" role="status"><Save size={14}/><span>{hydrated?status||t.saveLocal:t.notSaved}</span></div>
@@ -506,15 +526,15 @@ function CustomerEditor({locale,slug,name,versionId,preferredDraftId,source,cont
                 isMobileViewport&&step==="appearance"&&mobileTool==="music"?t.mobileNoMusic:hasFields?t.noFields:t.unsupported}</p>}
           <div className={step==="publish"||step==="appearance"&&(!isMobileViewport||mobileTool==="photo")?"ce-cloud-mount":"ce-cloud-mount ce-cloud-mount-hidden"}>
             <CustomerCloudControls
-            session={session} locale={locale} templateVersionId={versionId} preferredDraftId={preferredDraftId} patch={patch}
+            session={session} locale={locale} templateVersionId={versionId} preferredDraftId={initialDraft?.id} baseRevision={baseRevision} onRevision={setBaseRevision} slug={slug} patch={patch}
             publishMode={step==="publish"} canPublish={issues.length===0}
-            onBeforeSignIn={()=>persistLocalDraft(cacheKey,patch,customerAssets)}
+            onBeforeSignIn={()=>persistLocalDraft(cacheKey,patch,customerAssets,baseRevision)}
             uploadTargets={uploadTargets}
             preferredUploadTargetId={selectedFieldId??undefined}
-            onLoad={(remote,assets,urls)=>{
+            onLoad={(remote,assets,urls,revision)=>{
               try{
                 personalizeDocument(source,contract,remote,assets,true);
-                setCustomerAssets(assets);setCustomerUrls(urls);setPast([]);setFuture([]);setPatch(remote);
+                setBaseRevision(revision);setCustomerAssets(assets);setCustomerUrls(urls);setPast([]);setFuture([]);setPatch(remote);
                 setWarning("");setStatus(t.restore);
               }catch{setWarning(t.invalidDraft);}
             }}
