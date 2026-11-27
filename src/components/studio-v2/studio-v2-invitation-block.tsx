@@ -14,6 +14,7 @@ const words={
 };
 const stationeryScheduleIcons=[Cake,Link2,ConciergeBell,Music2];
 const postcardScheduleIcons=[Wine,Link2,ConciergeBell,Sparkles];
+const filmScheduleIcons=[Wine,Link2,ConciergeBell,Music2];
 const editorialWords={
  ru:{attendance:"Будете ли вы присутствовать?",submit:"Отправить ответ",days:"дня",hours:"часов",minutes:"минут",seconds:"секунды",map:"Показать на карте"},
  ky:{attendance:"Тойго келесизби?",submit:"Жооп жөнөтүү",days:"күн",hours:"саат",minutes:"мүнөт",seconds:"секунд",map:"Картадан көрүү"},
@@ -32,17 +33,17 @@ function Countdown({target,locale,editorial,heritage,gilded,daysOnly}:{target:st
 }
 function Rsvp({node,document,guest}:Props){
  const b=node.block;if(b.kind!=="rsvp")return null;
- return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={isHeritagePresentation(document.presentation)||document.presentation==="collection"} gilded={document.presentation==="gilded"} alpine={document.presentation==="alpine"||document.presentation==="collection"} felt={document.presentation==="felt"} stationery={node.appearance.preset==="stationery"} postcard={node.appearance.preset==="postcard"}/>;
+ return <RsvpForm key={node.id} block={b} nodeId={node.id} locale={document.locale} guest={guest} editorial={document.presentation==="editorial"} heritage={isHeritagePresentation(document.presentation)||document.presentation==="collection"} gilded={document.presentation==="gilded"} alpine={document.presentation==="alpine"||document.presentation==="collection"} felt={document.presentation==="felt"} stationery={node.appearance.preset==="stationery"} postcard={node.appearance.preset==="postcard"} film={node.appearance.preset==="film"}/>;
 }
-function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded,alpine,felt,stationery,postcard}:{postcard:boolean;stationery:boolean;editorial:boolean;heritage:boolean;gilded:boolean;alpine:boolean;felt:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
+function RsvpForm({block,nodeId,locale,guest,editorial,heritage,gilded,alpine,felt,stationery,postcard,film}:{film:boolean;postcard:boolean;stationery:boolean;editorial:boolean;heritage:boolean;gilded:boolean;alpine:boolean;felt:boolean;block:Extract<WidgetNode["block"],{kind:"rsvp"}>;nodeId:string;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
  const id=useId(),w=words[locale],copy=editorialWords[locale],nameRef=useRef<HTMLInputElement>(null);
  const hasNameLabel=alpine||felt;
- const cardControls=stationery||postcard;
+ const cardControls=stationery||postcard||film;
  const heritageCopy=locale==="ru"
   ?{attendance:"Вы будете присутствовать?",yes:"Да, буду",no:"К сожалению, нет",submit:"Подтвердить участие",required:"Введите ваше имя"}
   :{attendance:"Тойго келесизби?",yes:gilded||hasNameLabel?"Ооба, келем":"Ооба, барам",no:hasNameLabel?"Тилекке каршы, келе албайм":gilded?"Тилекке каршы, келбейм":"Тилекке каршы, бара албайм",submit:"Катышууну ырастоо",required:"Атыңызды жазыңыз"};
  const showSubmitProgress=gilded||hasNameLabel;
- const submitLabel=stationery?copy.submit:heritage?heritageCopy.submit:editorial?copy.submit:w.submit;
+ const submitLabel=stationery||film?copy.submit:heritage?heritageCopy.submit:editorial?copy.submit:w.submit;
  const responseCopy=felt?(locale==="ru"
   ?{sending:"Отправляем…",sent:"Ответ сохранён. Спасибо!",error:"Не удалось отправить ответ. Попробуйте ещё раз."}
   :{sending:w.sending,sent:"Жообуңуз сакталды. Рахмат!",error:"Жооп жөнөтүлгөн жок. Кайра аракет кылыңыз."}):w;
@@ -267,6 +268,7 @@ export function InvitationBlockView(props:Props){
  const measureRef=useRef<HTMLDivElement>(null);
  const {onMeasure}=props;
  const postcard=a.preset==="postcard";
+ const film=a.preset==="film";
  const musicSource=b.kind==="music"&&hasMusicCard(a.preset)?b.source:undefined;
  useLayoutEffect(()=>{
   const content=measureRef.current?.querySelector<HTMLElement>("form, .v2-guest-schedule, .v2-heritage-location, .v2-collection-plan, .v2-stationery-music");
@@ -282,7 +284,7 @@ export function InvitationBlockView(props:Props){
  return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout&&b.layout!=="carousel"?" v2-guest-block-mosaic":"")} ref={measureRef} data-heritage-widget={heritage?b.kind:undefined} data-editorial-widget={editorial?b.kind:undefined} data-widget-preset={a.preset} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
  {b.kind!=="calendar"&&b.kind!=="sectionLink"&&!(b.kind==="music"&&hasMusicCard(a.preset))&&b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
  {b.kind==="rsvp"&&<Rsvp {...props}/>}
- {b.kind==="calendar"&&<Calendar block={b} doc={document} disabled={guest.mode==="studio"} stationery={a.preset==="stationery"} postcard={postcard}/>}
+ {b.kind==="calendar"&&<Calendar block={b} doc={document} disabled={guest.mode==="studio"} stationery={a.preset==="stationery"||film} postcard={postcard}/>}
  {b.kind==="sectionLink"&&(props.sectionLinks?.[b.destination]
   ?<a className="v2-guest-link" data-style={b.style} href={props.sectionLinks[b.destination]} aria-label={b.title[document.locale]}>{b.style==="arrow"?<ChevronDown size={24}/>:b.title[document.locale]}</a>
   :<span className="v2-guest-link" data-style={b.style}>{b.style==="arrow"?<ChevronDown size={24}/>:b.title[document.locale]}</span>)}
@@ -317,8 +319,9 @@ export function InvitationBlockView(props:Props){
    const label=item.label[document.locale];
    if(!b.layout)return <div key={i}><time>{item.time}</time><span>{label}</span></div>;
    const [title,...description]=label.split("\n");
-   const Mark=postcard?postcardScheduleIcons[i]:a.preset==="stationery"?stationeryScheduleIcons[i]:undefined;
-   return <div key={i}>{(a.preset==="stationery"||postcard)&&<span className="v2-stationery-event-mark" aria-hidden="true">{Mark&&<Mark size={26} strokeWidth={1.5}/>}</span>}<time>{item.time}</time><span><strong>{title}</strong>{description.length>0&&<span>{description.join("\n")}</span>}</span></div>;
+   const icons=film?filmScheduleIcons:postcard?postcardScheduleIcons:a.preset==="stationery"?stationeryScheduleIcons:undefined;
+   const Mark=icons?.[i];
+   return <div key={i}>{icons&&<span className="v2-stationery-event-mark" aria-hidden="true">{Mark&&<Mark size={26} strokeWidth={1.5}/>}</span>}<time>{item.time}</time><span><strong>{title}</strong>{description.length>0&&<span>{description.join("\n")}</span>}</span></div>;
   }):<p>{w.noSchedule}</p>}
  </div>)}
  </div>;

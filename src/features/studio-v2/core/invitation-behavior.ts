@@ -49,7 +49,11 @@ export function bindDocument(doc:ProjectDocumentV2):ProjectDocumentV2{
      :bindingText(binding,doc.locale);
    const style={...n.runs[0].style};
    if(longKyrgyzDate)style.fontSize=Math.min(style.fontSize,19);
-   nodes[id]={...n,...(longKyrgyzDate?{letterSpacing:2}:{}),runs:[{text:value,style}]};
+   const runs=n.leadingLineStyles?value.split("\n").map((line,index,lines)=>({
+    text:line+(index<lines.length-1?"\n":""),
+    style:n.leadingLineStyles?.[index]??style,
+   })):[{text:value,style}];
+   nodes[id]={...n,...(longKyrgyzDate?{letterSpacing:2}:{}),runs};
   }
  }
  return {...doc,nodes};
@@ -65,6 +69,7 @@ export function formatEventDate(instant:string,locale:Locale,format:NonNullable<
  if(format==="date"||format==="short-date")return editorialDate(instant,locale,format==="date"&&locale==="ky");
  const parts=Object.fromEntries(calendarDateTime.formatToParts(new Date(instant)).map(part=>[part.type,part.value]));
  if(format==="weekday")return weekdayNames[locale][new Date(Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day))).getUTCDay()];
+ if(format==="day"||format==="month"||format==="year")return parts[format];
  const date=`${parts.day}.${parts.month}.${parts.year}`;
  const time=`${parts.hour}:${parts.minute}`;
  return format==="time"?time:format==="date-time"?`${date} · ${time}`:date;
@@ -73,7 +78,7 @@ export function countdownTarget(doc:ProjectDocumentV2,b:Extract<InvitationBlock,
  const v=b.targetKey?doc.values?.[b.targetKey]:null;return v?.type==="date"?v.value:b.target;
 }
 export function hasMusicCard(preset: WidgetNode["appearance"]["preset"]): boolean {
- return preset==="stationery"||preset==="postcard";
+ return preset==="stationery"||preset==="postcard"||preset==="film";
 }
 export function locationAddress(doc:ProjectDocumentV2,b:Extract<InvitationBlock,{kind:"location"}>){
  const v=b.addressKey?doc.values?.[b.addressKey]:null;return v?.type==="text"?v.value[doc.locale]:b.address[doc.locale];

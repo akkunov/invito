@@ -370,43 +370,135 @@ const boarding = {
  },
 };
 
+const film = {preset:"film"};
+const filmDark = "#211914";
+const filmIvory = "#F3E7D7";
+const filmRed = "#A52825";
+const filmInk = "#302017";
+const filmPaper = "#F8EBDC";
+const filmVenue = ["Villa Toscana","Villa Toscana"];
+const filmPaperGrain = h => image("paperGrain",prepared("paper-grain"),{box:box(0,0,430,h)});
+const filmShots = [
+ [[21,27],[154,20],[166,211],[30,219]],
+ [[24,22],[166,40],[144,216],[5,196]],
+ [[16,31],[155,19],[169,220],[31,232]],
+];
+const filmChapters = [
+ ["12.06.2022","Первая встреча","Биринчи жолугушуу","Мы познакомились совершенно случайно.","Биз күтүүсүз жерден таанышканбыз."],
+ ["18.08.2023","Первое путешествие","Биринчи саякат","Наше первое совместное путешествие.","Биздин биринчи чогуу саякатыбыз."],
+ ["14.02.2026","Она сказала «да»","Ал «ооба» деди","В этот день мы поняли — хотим провести вместе всю жизнь.","Ошол күнү өмүр бою бирге болууну чечтик."],
+];
+const filmSchedule = [
+ ["16:00","Сбор гостей\nПриветственные напитки и лёгкие закуски","Конокторду тосуу\nСуусундуктар жана жеңил тамактар"],
+ ["17:00","Церемония\nТоржественная регистрация брака","Салтанат\nНикени каттоо"],
+ ["18:30","Банкет\nПраздничный ужин и развлекательная программа","Банкет\nМайрамдык кечки тамак жана көңүл ачуу"],
+ ["22:00","Вечерняя часть\nМузыка, танцы и сюрпризы","Кечки программа\nМузыка, бий жана сюрприздер"],
+].map(([time,ru,ky])=>({time,label:{ru,ky}}));
 const cinema = {
- description:"Кинематографичное приглашение с тремя главами, тёмным постером и тёплой плёнкой.",
+ description:"Свадебная кинопремьера с постером, тремя эпизодами, программой и ответом гостя.",
+ assetRevision:"vf-04",
+ tokens:{paper:filmPaper,ink:filmInk,accent:filmRed},
  pages:{
   cover:page([
-   image("heroPoster",region(1,[13,193,403,346],photoLabel),{focal:[.5,.35]}),
-   shape("shadow","#201914",{box:box(0,729,430,173),opacity:.8}),
-   sectionTitle("header","КИНО О ЛЮБВИ","СҮЙҮҮ ТУУРАЛУУ ТАСМА",29),
-   label("eyebrow","ПРЕМЬЕРА НАШЕЙ ИСТОРИИ","БИЗДИН ТАРЫХТЫН ПРЕМЬЕРАСЫ",centered),
-   names("names",78),date("date",30,{spacing:1}),
-   venueName("venue",{...centered,size:18}),
-   image("landscape",region(1,[0,1323,430,245])),
-   action("next",next,"arrow"),
-  ]),
+   image("heroPoster",prepared("hero-poster",photoLabel),{box:box(0,0,430,844),focal:[.5,.4]}),
+   image("captionPaper",prepared("cover-caption-paper"),{box:box(0,844,430,486)}),
+   image("landscape",prepared("cover-landscape"),{box:box(0,1330,430,411)}),
+   image("laurelLeft",prepared("laurel-left"),{box:box(107,48,34,57)}),
+   image("laurelRight",prepared("laurel-right"),{box:box(293,65,42,53)}),
+   label("header","CINEMA\nWEDDING","CINEMA\nWEDDING",{...centered,box:box(144,58,142,46),size:17,spacing:7,line:1.15,weight:600}),
+   label("posterCaption","КАДР НАШЕЙ ИСТОРИИ","БИЗДИН ТАРЫХТАН КАДР",{...centered,box:box(48,746,334,35),size:15,spacing:4.8,line:1.2}),
+   label("eyebrow","ПРИГЛАШЕНИЕ\nНА НАШУ СВАДЬБУ","ҮЙЛӨНҮҮ ТОЮБУЗГА\nЧАКЫРУУ",{...centered,box:box(54,859,322,69),size:17,spacing:6,line:1.57,weight:600}),
+   shape("ruleAboveNames","#D1B596",{box:box(200,944,53,2)}),
+   title("names",["АЛИБЕК\n&\nАЛИНА","АЛИБЕК\n&\nАЛИНА"],79,{
+    ...field(coupleLabel,"coupleNames"),...centered,box:box(38,973,354,242),line:.87,weight:460,spacing:-1,fitMinFontSize:44,accentLine:{text:"&",color:"#D7614D"},
+   }),
+   shape("ruleAboveDate","#D1B596",{box:box(191,1226,69,2)}),
+   date("date",31,{box:box(47,1246,335,48),dateFormat:"short-date",spacing:6,weight:470,fitMinFontSize:23}),
+   text("venue",filmVenue,17,{...field(venueTitle,"venueName","location"),...centered,box:box(46,1296,338,29),spacing:5.2,weight:560}),
+   label("details","ПОДРОБНЕЕ","КЕНЕНИРЭЭК",{...centered,box:box(82,1616,266,24),size:14,spacing:4.4,weight:600}),
+   action("next",next,"arrow","next",{...film,box:box(189,1653,52,52)}),
+  ],{background:filmDark,ink:filmIvory}),
   story:page([
-   image("filmTrim",region(2,[0,0,110,108])),
-   sectionTitle("heading","НАША\nИСТОРИЯ\nВ КАДРАХ","БИЗДИН\nТАРЫХ\nКАДРЛАРДА",41),
-   invite("intro",17),
-   image("storyVideo",crop("event-venueHero-reference.png",photo("Кадр фильма","Тасманын кадры")),{radius:7}),
-   ...chapters("episode","episode","story-episode",{suffix:"-reference.png",size:16}),
-   image("reel",region(2,[0,1530,430,252])),
-  ],{background:"#F0DCC5",ink:"#392720"}),
+   filmPaperGrain(1782),
+   image("filmTrim",prepared("film-trim"),{box:box(0,0,180,170)}),
+   sectionTitle("heading","НАША\nИСТОРИЯ\nВ КАДРАХ","БИЗДИН\nТАРЫХ\nКАДРЛАРДА",34,{
+    box:box(44,110,342,130),spacing:5.5,line:1.18,weight:550,fitMinFontSize:27,
+   }),
+   text("intro",["КОРОТКАЯ ИСТОРИЯ\nО ТОМ, КАК ВСЁ\nНАЧАЛОСЬ","БААРЫ КАНТИП\nБАШТАЛГАНЫ ТУУРАЛУУ"],19,{
+    ...field(inviteLabel,"invitationText"),...centered,box:box(43,254,344,99),spacing:3.6,line:1.55,weight:530,fitMinFontSize:15,
+   }),
+   shape("stillMatte","#151312",{box:box(23,374,384,301),radius:22}),
+   image("storyVideo",prepared("story-still",photo("Кадр истории","Баяндын кадры")),{box:box(24,411,382,216),focal:[.5,.5]}),
+   label("stillCaption","КАДР ИЗ ИСТОРИИ","БАЯНДЫН КАДРЫ",{...centered,box:box(40,643,350,24),size:13,spacing:3,weight:550,color:filmIvory}),
+   ...filmChapters.flatMap(([day,ru,ky,description,translation],i)=>{
+    const episode=i+1;
+    const at="episode"+episode;
+    return [
+     image(at,prepared("episode-"+episode,photo(ru+" — фото",ky+" — сүрөт")),{
+      clip:filmShots[i].map(([x,y])=>[x/185*100,y/241*100]),
+     }),
+     image(at+"Frame",prepared("episode-"+episode+"-frame"),{box:box(22,[722,980,1247][i],185,241)}),
+     text(at+"Copy",[[day,ru.toUpperCase(),description].join("\n"),[day,ky.toUpperCase(),translation].join("\n")],18,{
+      ...field([ru,ky],at+"Copy"),box:box(218,[742,999,1264][i],190,208),line:1.35,weight:480,
+      leadingLines:[
+       {family:"serif",size:27,weight:610,color:"#8B2926"},
+       {family:"sans",size:21,weight:750,color:filmInk},
+      ],
+     }),
+    ];
+   }),
+   shape("episodeRule1","#BDA88E",{box:box(26,966,378,1)}),
+   shape("episodeRule2","#BDA88E",{box:box(26,1232,378,1)}),
+   image("reel",prepared("reel"),{box:box(0,1515,430,267)}),
+  ]),
   event:page([
-   image("venueHero",crop("event-venueHero-reference.png",photo("Панорама","Панорама"))),
-   sectionTitle("dateHeading","ДАТА ПРЕМЬЕРЫ","ПРЕМЬЕРА КҮНҮ",25),
-   date("date",39),calendar("calendar"),shape("divider","#A52825"),
-   sectionTitle("programHeading","ПРОГРАММА ДНЯ","ТОЙДУН ПРОГРАММАСЫ",30),widget("program","schedule"),
-   sectionTitle("venueHeading","МЕСТО ПРОВЕДЕНИЯ","ТОЙ ӨТҮҮЧҮ ЖЕР",26),
-   image("venuePhoto",crop("event-venuePhoto-reference.png",venueLabel),{radius:8}),
-   venueName("venueText",{...centered,size:25,box:box(41,1451,366,34)}),
-   venueAddress("venueAddress",{...centered,box:box(39,1490,352,31)}),outlineMap("map"),
-   image("foliage",region(3,[228,1630,202,140])),
-  ],{background:"#F9EFE4",ink:"#3C2C24"}),
+   filmPaperGrain(1770),
+   image("venueHero",prepared("venue-hero",photo("Панорама виллы","Вилланын панорамасы")),{box:box(0,0,430,326)}),
+   sectionTitle("dateHeading","ДАТА СВАДЬБЫ","ТОЙДУН КҮНҮ",24,{box:box(42,329,346,41),spacing:2.9,weight:540}),
+   date("date",52,{box:box(66,373,83,64),dateFormat:"day",weight:520,fitMinFontSize:37}),
+   date("month",52,{box:box(176,373,78,64),dateFormat:"month",weight:520,fitMinFontSize:37}),
+   date("year",52,{box:box(280,373,128,64),dateFormat:"year",weight:520}),
+   ...[["dayLabel","ДЕНЬ","КҮН",66,83],["monthLabel","МЕСЯЦ","АЙ",176,78],["yearLabel","ГОД","ЖЫЛ",280,128]].map(
+    ([id,ru,ky,x,w])=>label(id,ru,ky,{...centered,box:box(x,434,w,25),size:13,spacing:3.1,weight:650})),
+   shape("dateRule1","#9F8366",{box:box(156,389,1,56)}),
+   shape("dateRule2","#9F8366",{box:box(267,389,1,56)}),
+   widget("calendar","calendar",{layout:"button",title:{ru:"Добавить в календарь",ky:"Жылнаамага кошуу"}},{...film,box:box(31,473,368,56)}),
+   shape("divider","#9F7650",{box:box(138,566,166,1)}),
+   shape("dividerMark","#9F7650",{box:box(214,561,8,8),rotation:45}),
+   sectionTitle("programHeading","ПРОГРАММА ДНЯ","ТОЙДУН ПРОГРАММАСЫ",29,{
+    box:box(42,597,346,47),spacing:4.2,weight:540,fitMinFontSize:21,
+   }),
+   widget("program","schedule",{}, {...film,items:filmSchedule,box:box(26,665,378,394)}),
+   shape("venueRule","#9F7650",{box:box(138,1090,166,1)}),
+   shape("venueMark","#9F7650",{box:box(214,1085,8,8),rotation:45}),
+   sectionTitle("venueHeading","МЕСТО ПРОВЕДЕНИЯ","ТОЙ ӨТҮҮЧҮ ЖЕР",28,{
+    box:box(30,1118,370,45),spacing:3.4,weight:530,fitMinFontSize:20,
+   }),
+   image("venuePhoto",prepared("venue-photo",venueLabel),{box:box(17,1180,396,246),radius:22}),
+   image("venuePin",prepared("venue-pin"),{box:box(35,1447,24,42)}),
+   title("venueText",filmVenue,29,{box:box(72,1444,327,43),key:"venueName",weight:670}),
+   text("venueAddress",["г. Бишкек, ул. Курманжан Датки, 45","Бишкек ш., Курманжан Датка көч., 45"],16,{
+    ...field(["Адрес","Дарек"],"venueAddress","location"),box:box(72,1481,337,44),line:1.16,weight:540,
+   }),
+   outlineMap("map",film),
+   image("foliage",prepared("venue-foliage"),{box:box(207,1616,223,154)}),
+  ]),
   rsvp:page([
-   image("clapper",region(4,[0,0,430,334])),
-   sectionTitle("heading",reply[0],reply[1],38),guestIntro("intro"),
-   compactForm(28,536,374,673,{layout:"stacked"}),music("music"),image("closing",region(4,[0,1417,430,365])),
-  ],{background:"#261C17",ink:"#F8F1E7"}),
+   image("clapper",prepared("clapper"),{box:box(0,0,430,343)}),
+   image("closing",prepared("rsvp-closing"),{box:box(0,1417,430,365)}),
+   sectionTitle("heading","ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ","КАТЫШУУҢУЗДУ\nЫРАСТАҢЫЗ",39,{
+    box:box(29,351,372,105),spacing:1.4,line:1.13,weight:470,fitMinFontSize:31,
+   }),
+   title("intro",["Будем рады разделить этот\nособенный день вместе с вами","Бул өзгөчө күндү сиздер менен\nбирге өткөрүүгө кубанычтабыз"],20,{
+    ...field(["Вступление к анкете","Анкетага кириш сөз"],"rsvpIntro","rsvp"),...centered,box:box(35,464,360,71),line:1.18,weight:470,
+   }),
+   form("response",{...film,box:box(27,535,376,675),block:{layout:"stacked",guestControl:"stepper",wish:true},buttonInk:"#FFFFFF"}),
+   widget("music","music",{title:{ru:"Наша музыка",ky:"Биздин музыка"}},{
+    ...film,box:box(22,1251,386,121),accent:filmIvory,buttonInk:filmDark,allowUpload:true,cover:prepared("music-cover"),
+   }),
+   title("closingText",["Grazie!","Рахмат!"],59,{box:box(46,1485,274,90),align:"left",line:1.14,weight:430}),
+   shape("closingRule",filmIvory,{box:box(109,1586,94,1),rotation:-9}),
+  ],{background:filmDark,ink:filmIvory}),
  },
 };
 

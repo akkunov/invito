@@ -112,7 +112,7 @@ async function compile(entry, recipe) {
        }
        const size=op.size??18;
        node={...base,type:"text",bindingKey:key,runs:[{text:op.copy?.[0]??"",style:style(op.family??"sans",size,op.weight??500,ink)}],
-        textAlign:op.align??"left",letterSpacing:op.spacing??0,lineHeight:op.line??1.12,autoHeight:op.grow??true,...(op.widthScale?{widthScale:op.widthScale}:{}),...(op.fitMinFontSize?{fitMinFontSize:op.fitMinFontSize}:{}),...(op.accentLine?{accentLine:op.accentLine}:{}),...(op.dateFormat?{dateFormat:op.dateFormat}:{})};
+        textAlign:op.align??"left",letterSpacing:op.spacing??0,lineHeight:op.line??1.12,autoHeight:op.grow??true,...(op.widthScale?{widthScale:op.widthScale}:{}),...(op.fitMinFontSize?{fitMinFontSize:op.fitMinFontSize}:{}),...(op.accentLine?{accentLine:op.accentLine}:{}),...(op.leadingLines?{leadingLineStyles:op.leadingLines.map(line=>style(line.family,line.size,line.weight,line.color))}:{}),...(op.dateFormat?{dateFormat:op.dateFormat}:{})};
      }else if(op.type==="image"){
        const media=await asset(op.asset??id,op.media);
        node={...base,type:"image",assetId:media.id,fit:"cover",focalX:op.focal?.[0]??.5,focalY:op.focal?.[1]??.5};

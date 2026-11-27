@@ -2363,3 +2363,160 @@
  [data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] time { font-size: 20px; }
  [data-widget-preset="postcard"] .v2-month-header { font-size: 18px; letter-spacing: .14em; }
 }
+
+/* Film styling stays within the shared collection widgets. */
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-link {
+ min-height: 56px;
+ gap: 14px;
+ border-color: #826854;
+ border-radius: 14px;
+ font-weight: 680;
+ letter-spacing: .09em;
+ text-transform: uppercase;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-link[data-style="arrow"] {
+ width: 100%;
+ min-width: 44px;
+ min-height: 44px;
+ aspect-ratio: 1;
+ border-color: currentColor;
+ border-radius: 50%;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"][data-heritage-widget="calendar"] .v2-guest-link {
+ border-radius: 999px;
+}
+[data-widget-preset="film"] .v2-heritage-location { padding-top: 0; }
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-heritage-location svg { color: inherit; }
+
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule[data-layout="rows"] > div {
+ grid-template-columns: 78px 72px minmax(0, 1fr);
+ gap: 13px;
+ align-items: start;
+ min-height: 98px;
+ padding: 8px 0 10px 23px;
+ border: 0;
+}
+[data-widget-preset="film"][data-heritage-widget="schedule"] .v2-guest-schedule > div::before {
+ display: block;
+ top: 43px;
+ left: -5px;
+ width: 10px;
+ height: 10px;
+ box-sizing: border-box;
+ border: 2px solid #5A422C;
+ background: #F8EBDC;
+}
+[data-widget-preset="film"][data-heritage-widget="schedule"] .v2-guest-schedule > div:not(:last-child)::after {
+ display: block;
+ top: 51px;
+ bottom: -44px;
+ border-color: #785A40;
+}
+[data-widget-preset="film"] .v2-stationery-event-mark {
+ display: grid;
+ place-items: center;
+ min-height: 70px;
+ border: 1px solid #D9C3A9;
+ border-radius: 12px;
+ color: #5E432C;
+ background: #F2E3CF;
+}
+[data-widget-preset="film"] .v2-stationery-event-mark svg { width: 38px; height: 38px; }
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule[data-layout="rows"] time {
+ font: 660 26px/1.15 var(--font-display), Georgia, serif;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule strong {
+ font-size: 18px;
+ line-height: 22px;
+ font-weight: 740;
+ text-transform: uppercase;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule span {
+ font-size: 14px;
+ line-height: 17px;
+}
+
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-form :is(label,.v2-guest-options strong,.v2-guest-stepper > span) {
+ font-size: 17px;
+ line-height: 24px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-form
+:is(input[autocomplete="name"],.v2-guest-options label,textarea,.v2-guest-stepper > div) {
+ border: 1px solid #B4A28E;
+ border-radius: 13px;
+ color: inherit;
+ background: transparent;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-name { gap: 9px; }
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-form input[autocomplete="name"] {
+ min-height: 59px;
+ padding-inline: 19px;
+ font-size: 17px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-options {
+ grid-template-columns: minmax(0, 1fr);
+ gap: 10px;
+ margin-block: 18px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-options label {
+ min-height: 55px;
+ gap: 17px;
+ padding-inline: 17px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-options label:has(input:checked) {
+ background: #F3E7D7;
+ color: #271B15;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-options input[type="radio"]:checked {
+ box-shadow: inset 0 0 0 4px #F3E7D7;
+}
+[data-widget-preset="film"] .v2-guest-stepper { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 9px; }
+[data-widget-preset="film"] .v2-guest-stepper > div { min-height: 59px; grid-template-columns: 60px 1fr 60px; }
+[data-widget-preset="film"] .v2-guest-stepper output { font: 580 24px/1 var(--font-display), Georgia, serif; }
+[data-widget-preset="film"] .v2-guest-wish { margin-top: 23px; gap: 9px; }
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-wish textarea {
+ min-height: 110px;
+ padding: 13px 18px;
+ resize: vertical;
+}
+[data-widget-preset="film"] .v2-guest-wish > span { font: 500 13px/18px var(--font-ui), Arial, sans-serif; }
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-form button[type="submit"] {
+ position: relative;
+ min-height: 72px;
+ margin-top: 29px;
+ padding-inline: 46px;
+ border-radius: 999px;
+ font: 690 19px/1.24 var(--font-ui), Arial, sans-serif;
+ letter-spacing: .1em;
+ text-transform: uppercase;
+}
+[data-widget-preset="film"] .v2-guest-form button[type="submit"] .lucide-arrow-right {
+ position: absolute;
+ inset-inline-end: 23px;
+}
+[data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-form input[aria-invalid="true"] { border-color: #FFB29F; }
+[data-widget-preset="film"] :is(.v2-heritage-error,.v2-guest-status[data-error]) { color: #FFB29F; }
+
+[data-widget-preset="film"] .v2-stationery-music {
+ grid-template-columns: minmax(48px, 74px) minmax(0, 1fr) 46px minmax(29px, 77px);
+ min-height: 121px;
+ padding: 9px 16px;
+ border-color: #BCA590;
+}
+[data-widget-preset="film"] .v2-stationery-music-cover { height: 73px; border-radius: 9px; }
+[data-widget-preset="film"] .v2-stationery-music-copy strong { font-size: 15px; }
+[data-widget-preset="film"] .v2-stationery-music-wave { width: 100%; color: #E4D2BE; }
+@media (max-width: 390px) {
+ [data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule[data-layout="rows"] > div {
+  grid-template-columns: 48px 52px minmax(0, 1fr);
+  gap: 8px;
+  padding-inline-start: 15px;
+ }
+ [data-widget-preset="film"] .v2-stationery-event-mark { min-height: 52px; }
+ [data-widget-preset="film"] .v2-stationery-event-mark svg { width: 28px; height: 28px; }
+ [data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule[data-layout="rows"] time { font-size: 19px; }
+ [data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-schedule strong { font-size: 15px; }
+ [data-artboard-presentation="collection"] [data-widget-preset="film"] .v2-guest-form button[type="submit"] { font-size: 16px; }
+ [data-widget-preset="film"] .v2-stationery-music { grid-template-columns: 50px minmax(0, 1fr) 44px 33px; gap: 8px; }
+ [data-widget-preset="film"] .v2-stationery-music-cover { height: 51px; }
+}

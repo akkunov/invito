@@ -187,3 +187,38 @@ test("Italian Romance connects one date and one place to the existing widgets an
   }
  }
 });
+
+test("Cinema Wedding keeps seven photo slots, live chapter text and one wedding date",()=>{
+ const pack=JSON.parse(readFileSync(new URL("../templates/packages/cinema-wedding.v1.json",import.meta.url),"utf8"));
+ const {snapshot,contract}=validatedTemplateVersion(pack.document,pack.personalization);
+ const photos=contract.fields.filter(field=>field.kind==="image");
+ assert.deepEqual(photos.map(field=>field.nodeId),[
+  "cover_heroPoster","story_storyVideo","story_episode1","story_episode2","story_episode3","event_venueHero","event_venuePhoto",
+ ]);
+ assert.ok(Object.values(snapshot.assets).every(asset=>asset.mimeType==="image/webp"));
+ assert.equal(snapshot.nodes.rsvp_music.block.source,"");
+ assert.equal(snapshot.nodes.rsvp_response.appearance.preset,"film");
+ const values=Object.fromEntries(photos.map((field,i)=>[
+  field.id,{kind:"image",assetId:snapshot.nodes[photos[(i+1)%photos.length].nodeId].assetId},
+ ]));
+ const event="2028-02-29T00:25:00+06:00";
+ const chapter={ru:"01.01.2023\nНОВАЯ ГЛАВА\nКак всё начиналось",ky:"01.01.2023\nЖАҢЫ БАЯН\nКантип башталды"};
+ const next=bindDocument(finalizePersonalization(snapshot,contract,{locale:"ky",values:{
+  ...values,ceremonyDate:{kind:"binding",value:{type:"date",value:event}},
+  episode1Copy:{kind:"binding",value:{type:"text",value:chapter}},
+ }}));
+ for(const field of photos) assert.deepEqual(next.nodes[field.nodeId],{
+  ...snapshot.nodes[field.nodeId],assetId:values[field.id].assetId,
+ });
+ assert.deepEqual(next.nodes.story_episode1Copy.runs.map(run=>run.text.trim()),chapter.ky.split("\n"));
+ assert.equal(next.nodes.story_episode1Copy.runs[0].style.color,"#8B2926");
+ for(const [id,text] of [["event_date","29"],["event_month","02"],["event_year","2028"]]){
+  assert.equal(next.nodes[id].runs[0].text,text);
+ }
+ assert.equal(countdownTarget(next,next.nodes.event_calendar.block),event);
+ for(const id of ["story_episode1Frame","story_episode2Frame","story_episode3Frame"]){
+  assert.equal(snapshot.nodes[id].locked,true);
+  assert.ok(snapshot.assets[snapshot.nodes[id].assetId].decorative);
+  assert.deepEqual(next.nodes[id],snapshot.nodes[id]);
+ }
+});

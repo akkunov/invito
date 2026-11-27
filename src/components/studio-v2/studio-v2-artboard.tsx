@@ -23,6 +23,9 @@ export function TextRuns({node,editorial=false,heritage=false}:{node:TextNode;ed
   const style=textRunStyle(run.style);
   if(heritage&&run.style.fontFamily==="serif")style.fontFamily="var(--v2-invitation-serif, var(--font-display)), Georgia, serif";
   if(editorial&&run.style.fontFamily==="sans")style.fontFamily="var(--font-ui), Arial, sans-serif";
+  if(node.leadingLineStyles)return <span key={index} style={{...style,display:"block",lineHeight:1.14}}>
+   {run.text.endsWith("\n")?run.text.slice(0,-1)||"\u200b":run.text}
+  </span>;
   const content=accentLine?run.text.split("\n").map((line,i)=><Fragment key={i}>
    {i>0&&"\n"}{line===accentLine.text?<span style={{color:accentLine.color,fontSize:".82em"}}>{line}</span>:line}
   </Fragment>):run.text;
