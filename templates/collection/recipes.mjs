@@ -151,42 +151,76 @@ const chapters = (photoPrefix,textPrefix,filenamePrefix,options={}) => chapterCo
  ];
 });
 const closed = ["ДО ВСТРЕЧИ!","КӨРҮШКӨНЧӨ!"];
-const darkVogue = "#171717";
+const vogueInk = "#101010";
+const voguePaper = "#F8F5F2";
+const vogueRed = "#BD201D";
+const contactSheet = {preset:"contact-sheet"};
 const vogue = {
- description:"Монохромная обложка, лаконичная программа и контрастная гостевая форма.",
- tokens:{paper:"#F4F2EF",ink:"#111111",accent:"#951F25"},
+ description:"Монохромная журнальная обложка, контактный лист и контрастная гостевая форма.",
+ assetRevision:"vf-02",
+ tokens:{paper:voguePaper,ink:vogueInk,accent:vogueRed},
  pages:{
   cover:page([
-   image("coverPhoto",crop("cover-portrait-reference.png",photoLabel),{focal:[.5,.22]}),
-   shape("coverRule","#951F25"),
-   label("coverEyebrow","ПРИГЛАШЕНИЕ\nНА СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ"),
-   names("coverNames",73,{align:"left",line:.92,spacing:-3}),
-   shape("dateBacking","#F4F2EF",{box:box(0,872,390,176),opacity:.94}),
-   date("coverDate",27,{color:"#951F25",spacing:3}),
-   action("coverScroll",next,"arrow"),
+   image("coverPhoto",prepared("cover-portrait",photoLabel),{monochrome:true,focal:[.5,.36]}),
+   shape("coverRule",vogueRed),
+   label("coverEyebrow","ПРИГЛАШЕНИЕ\nНА СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ",{box:box(39,54,269,49),size:17,weight:700,spacing:6.7,line:1.43}),
+   names("coverNames",108,{box:box(29,132,361,204),align:"left",line:.94,spacing:-3.7,weight:470,widthScale:.70,fitMinFontSize:43}),
+   image("coverFabric",prepared("cover-fabric"),{box:box(0,803,390,245)}),
+   date("coverDate",31,{box:box(48,891,302,45),color:vogueRed,family:"sans",weight:740,spacing:5.1,fitMinFontSize:22}),
+   action("coverScroll",next,"arrow","next",contactSheet),
   ]),
   invitation:page([
-   invite("invitationText",19,{spacing:1.6}),
-   shape("invitationRule","#951F25"),widget("countdownWidget","countdown"),
-   shape("sectionRule","#B7AFAB"),sectionTitle("programHeading","ПРОГРАММА ДНЯ","ТОЙДУН ПРОГРАММАСЫ",26),
-   widget("scheduleWidget","schedule"),
-   image("mountainsFooter",decoration("mountains-light.png")),
+   text("invitationText",[
+    "С РАДОСТЬЮ ПРИГЛАШАЕМ\nВАС РАЗДЕЛИТЬ С НАМИ\nОСОБЕННЫЙ ДЕНЬ —\nНАШУ СВАДЬБУ",
+    "БИЗ ҮЧҮН ӨЗГӨЧӨ КҮНДҮ —\nҮЙЛӨНҮҮ ТОЮБУЗДУ —\nБИЗ МЕНЕН БИРГЕ ӨТКӨРҮҮГӨ\nЧАКЫРАБЫЗ",
+   ],18,{...field(inviteLabel,"invitationText"),box:box(22,78,346,107),align:"center",spacing:2.25,line:1.46,weight:530}),
+   shape("invitationRule",vogueRed),widget("countdownWidget","countdown",{},contactSheet),
+   shape("sectionRule","#DAD5CF",{box:box(29,363,336,1)}),
+   sectionTitle("programHeading","ПРОГРАММА ДНЯ","ТОЙДУН ПРОГРАММАСЫ",23,{family:"sans",weight:720,align:"left",spacing:5.35,line:1.2,fitMinFontSize:17}),
+   widget("scheduleWidget","schedule",{},{
+    ...contactSheet,box:box(28,450,339,385),
+    items:[
+     ["16:00","Сбор гостей\nПриветственные напитки","Конокторду тосуу\nСуусундуктар"],
+     ["17:00","Церемония\nТоржественная регистрация брака","Салтанат\nНикени каттоо"],
+     ["18:30","Банкет\nПраздничный ужин\nи развлекательная\nпрограмма","Майрамдык дасторкон\nКечки тамак жана көңүл ачуу программасы"],
+     ["22:00","Завершение\nОкончание вечера","Кеченин аягы\nТойдун жыйынтыгы"],
+    ].map(([time,ru,ky])=>({time,label:{ru,ky}})),
+   }),
+   image("mountainsFooter",prepared("mountains-light")),
   ]),
   gallery:page([
-   sectionTitle("galleryHeading","ГАЛЕРЕЯ","СҮРӨТТӨР",25,{align:"left"}),shape("galleryRule","#951F25"),
-   widget("galleryWidget","gallery",{layout:"stackedMosaic"},{images:[1,2,3,4].map(i=>crop("gallery-0"+i+".png",portrait))}),
-   shape("venueRule","#951F25"),sectionTitle("venueHeading","МЕСТО ПРОВЕДЕНИЯ","ТОЙ ӨТҮҮЧҮ ЖЕР",21,{align:"left"}),
-   image("venuePhoto",crop("venue.png",venueLabel),{radius:5}),venueName("venueName"),
-   venueAddress("venueAddress"),outlineMap("mapButton"),
+   sectionTitle("galleryHeading","ГАЛЕРЕЯ","СҮРӨТТӨР",23,{family:"sans",weight:720,align:"left",spacing:5,line:1.2}),
+   shape("galleryRule",vogueRed),
+   widget("galleryWidget","gallery",{layout:"stackedMosaic"},{...contactSheet,images:[1,2,3,4].map(i=>prepared(`gallery-0${i}`,portrait))}),
+   shape("venueRule",vogueRed),
+   sectionTitle("venueHeading","МЕСТО ПРОВЕДЕНИЯ","ТОЙ ӨТҮҮЧҮ ЖЕР",21,{family:"sans",weight:710,align:"left",spacing:4.5,line:1.15,fitMinFontSize:17}),
+   image("venuePhoto",prepared("venue",venueLabel),{monochrome:true}),
+   image("venuePin",prepared("venue-pin"),{box:box(25,878,28,34)}),
+   text("venueName",["РЕСТОРАН «АЛА-ТОО»","«АЛА-ТОО» РЕСТОРАНЫ"],20,{
+    ...field(venueTitle,"venueName","location"),weight:730,spacing:.6,
+   }),
+   text("venueAddress",["г. Бишкек, ул. Курманжан Датки, 45","Бишкек ш., Курманжан Датка көч., 45"],16,{
+    ...field(["Адрес","Дарек"],"venueAddress","location"),weight:500,
+   }),
+   outlineMap("mapButton",contactSheet),
   ]),
   rsvpPage:page([
-   shape("rsvpRule","#C65A56"),sectionTitle("rsvpHeading","ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ","КАТЫШУУҢУЗДУ\nЫРАСТАҢЫЗ",34),
-   guestIntro("rsvpIntro",{spacing:1.6}),
-   form("rsvpWidget",{block:{layout:"stacked",wish:false},accent:"#F4F2EF",buttonInk:"#171717"}),
-   shape("thanksRule","#C65A56"),sectionTitle("thanksText","СПАСИБО,\nЧТО ВЫ С НАМИ","БИЗ МЕНЕН БОЛГОНУҢУЗ\nҮЧҮН РАХМАТ",20),
-   image("mountainsFooterDark",decoration("mountains-dark.png")),
+   shape("rsvpRule",vogueRed),
+   sectionTitle("rsvpHeading","ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ","КАТЫШУУҢУЗДУ\nЫРАСТАҢЫЗ",49,{
+    box:box(23,81,344,108),line:1.04,weight:490,spacing:-.6,widthScale:.92,fitMinFontSize:34,
+   }),
+   text("rsvpIntro",[
+    "БУДЕМ РАДЫ\nРАЗДЕЛИТЬ ЭТОТ\nОСОБЕННЫЙ ДЕНЬ\nВМЕСТЕ С ВАМИ",
+    "БУЛ ӨЗГӨЧӨ КҮНДҮ\nСИЗДЕР МЕНЕН БИРГЕ\nӨТКӨРҮҮГӨ\nКУБАНЫЧТАБЫЗ",
+   ],16,{...field(["Вступление к анкете","Анкетага кириш сөз"],"rsvpIntro","rsvp"),box:box(59,211,272,99),align:"center",spacing:4.5,line:1.51,weight:520}),
+   form("rsvpWidget",{...contactSheet,block:{layout:"stacked",wish:false},accent:"#FAFAF8",buttonInk:vogueInk}),
+   shape("thanksRule",vogueRed),
+   sectionTitle("thanksText","СПАСИБО,\nЧТО ВЫ С НАМИ!","БИЗ МЕНЕН БОЛГОНУҢУЗ\nҮЧҮН РАХМАТ!",17,{
+    family:"sans",weight:530,spacing:4.7,line:1.45,fitMinFontSize:14,
+   }),
+   image("mountainsFooterDark",prepared("mountains-dark"),{box:box(0,912,390,136)}),
    music("music",{box:box(326,857,44,47)}),
-  ],{background:darkVogue,ink:"#F4F2EF"}),
+  ],{background:"#0F0F0F",ink:"#FAFAF8"}),
  },
 };
 

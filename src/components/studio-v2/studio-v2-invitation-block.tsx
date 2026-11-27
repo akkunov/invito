@@ -103,6 +103,7 @@ function guestCount(count:number,locale:ProjectDocumentV2["locale"]){
 }
 function MosaicGallery({node,document,guest,mediaUrls}:Props){
  const dialog=useRef<HTMLDialogElement>(null),touchStart=useRef<number|null>(null);
+ const numbered=node.appearance.preset==="contact-sheet";
  const [index,setIndex]=useState(0);
  const b=node.block;if(b.kind!=="gallery")return null;
  const assets=b.assetIds.map(id=>document.assets[id]).filter(Boolean);
@@ -131,6 +132,7 @@ function MosaicGallery({node,document,guest,mediaUrls}:Props){
     {assets.map((asset,i)=><button type="button" key={asset.id} disabled={guest.mode==="studio"} aria-label={(ru?"Открыть фото ":"Сүрөттү ачуу ")+(i+1)}
       onClick={()=>{setIndex(i);dialog.current?.showModal();}}>
       {url(asset)?<Image unoptimized fill src={url(asset)!} alt={asset.name} sizes="(max-width: 600px) 50vw, 600px"/>:<span>{asset.name}</span>}
+      {numbered&&<span className="v2-contact-sheet-index" aria-hidden="true">{String(i+1).padStart(2,"0")}</span>}
     </button>)}
    </div>}
    <dialog ref={dialog} className="v2-editorial-lightbox" aria-label={ru?"Фотогалерея":"Сүрөт галереясы"}
@@ -265,7 +267,7 @@ export function InvitationBlockView(props:Props){
   report();
   return ()=>observer.disconnect();
  },[heritage,node.id,onMeasure,musicSource]);
- const mapLabel=gilded||alpine||felt||collection?<><MapIcon size={alpine?22:24}/>{document.locale==="ru"?"Открыть карту":"Картаны ачуу"}<ExternalLink size={18}/></>:heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
+ const mapLabel=gilded||alpine||felt||collection?<><MapIcon size={alpine?22:24}/>{document.locale==="ru"?"Открыть карту":"Картаны ачуу"}{a.preset!=="contact-sheet"&&<ExternalLink size={18}/>}</>:heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
  const style={fontFamily:editorial||heritage?"var(--font-ui), Arial, sans-serif":a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent,"--v2-guest-button-ink":a.buttonColor} as CSSProperties;
  return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout&&b.layout!=="carousel"?" v2-guest-block-mosaic":"")} ref={measureRef} data-heritage-widget={heritage?b.kind:undefined} data-editorial-widget={editorial?b.kind:undefined} data-widget-preset={a.preset} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
  {b.kind!=="calendar"&&b.kind!=="sectionLink"&&!(b.kind==="music"&&a.preset==="stationery")&&b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}

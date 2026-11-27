@@ -4,7 +4,7 @@
   "manifest": {
     "slug": "vogue-wedding",
     "name": "Vogue Wedding",
-    "description": "Монохромная обложка, лаконичная программа и контрастная гостевая форма.",
+    "description": "Монохромная журнальная обложка, контактный лист и контрастная гостевая форма.",
     "category": "WEDDING",
     "tags": [
       "wedding",
@@ -108,14 +108,14 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4F2EF",
+        "background": "#F8F5F2",
         "clip": true,
         "children": [
           "cover_coverPhoto",
           "cover_coverRule",
           "cover_coverEyebrow",
           "cover_coverNames",
-          "cover_dateBacking",
+          "cover_coverFabric",
           "cover_coverDate",
           "cover_coverScroll"
         ]
@@ -135,7 +135,10 @@
         "assetId": "cover_coverPhoto",
         "fit": "cover",
         "focalX": 0.5,
-        "focalY": 0.22
+        "focalY": 0.36,
+        "visual": {
+          "imageTreatment": "monochrome"
+        }
       },
       "cover_coverRule": {
         "id": "cover_coverRule",
@@ -150,7 +153,7 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#951F25",
+        "fill": "#BD201D",
         "stroke": null,
         "strokeWidth": 0
       },
@@ -160,7 +163,7 @@
         "x": 39,
         "y": 54,
         "width": 269,
-        "height": 45,
+        "height": 49,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -172,9 +175,9 @@
             "text": "ПРИГЛАШЕНИЕ\nНА СВАДЬБУ",
             "style": {
               "fontFamily": "sans",
-              "fontSize": 13,
-              "fontWeight": 650,
-              "color": "#111111",
+              "fontSize": 17,
+              "fontWeight": 700,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -182,17 +185,17 @@
           }
         ],
         "textAlign": "left",
-        "letterSpacing": 2,
-        "lineHeight": 1.12,
+        "letterSpacing": 6.7,
+        "lineHeight": 1.43,
         "autoHeight": true
       },
       "cover_coverNames": {
         "id": "cover_coverNames",
         "parentId": "coverRoot",
-        "x": 28,
-        "y": 133,
-        "width": 340,
-        "height": 200,
+        "x": 29,
+        "y": 132,
+        "width": 361,
+        "height": 204,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -204,9 +207,9 @@
             "text": "АЛИБЕК\nИ АЛИНА",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 73,
-              "fontWeight": 550,
-              "color": "#111111",
+              "fontSize": 108,
+              "fontWeight": 470,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -214,34 +217,36 @@
           }
         ],
         "textAlign": "left",
-        "letterSpacing": -3,
-        "lineHeight": 0.92,
-        "autoHeight": true
+        "letterSpacing": -3.7,
+        "lineHeight": 0.94,
+        "autoHeight": true,
+        "widthScale": 0.7,
+        "fitMinFontSize": 43
       },
-      "cover_dateBacking": {
-        "id": "cover_dateBacking",
+      "cover_coverFabric": {
+        "id": "cover_coverFabric",
         "parentId": "coverRoot",
         "x": 0,
-        "y": 872,
+        "y": 803,
         "width": 390,
-        "height": 176,
+        "height": 245,
         "rotation": 0,
-        "opacity": 0.94,
+        "opacity": 1,
         "visible": true,
         "locked": true,
-        "type": "shape",
-        "shape": "rectangle",
-        "fill": "#F4F2EF",
-        "stroke": null,
-        "strokeWidth": 0
+        "type": "image",
+        "assetId": "cover_coverFabric",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5
       },
       "cover_coverDate": {
         "id": "cover_coverDate",
         "parentId": "coverRoot",
-        "x": 45,
-        "y": 886,
-        "width": 300,
-        "height": 49,
+        "x": 48,
+        "y": 891,
+        "width": 302,
+        "height": 45,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -252,10 +257,10 @@
           {
             "text": "",
             "style": {
-              "fontFamily": "serif",
-              "fontSize": 27,
-              "fontWeight": 600,
-              "color": "#951F25",
+              "fontFamily": "sans",
+              "fontSize": 31,
+              "fontWeight": 740,
+              "color": "#BD201D",
               "italic": false,
               "underline": false,
               "strike": false
@@ -263,9 +268,10 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 3,
+        "letterSpacing": 5.1,
         "lineHeight": 1.12,
         "autoHeight": true,
+        "fitMinFontSize": 22,
         "dateFormat": "date"
       },
       "cover_coverScroll": {
@@ -292,9 +298,10 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#111111",
+          "color": "#101010",
           "background": "transparent",
-          "accent": "#951F25"
+          "accent": "#BD201D",
+          "preset": "contact-sheet"
         }
       },
       "invitationRoot": {
@@ -318,7 +325,7 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4F2EF",
+        "background": "#F8F5F2",
         "clip": true,
         "children": [
           "invitation_invitationText",
@@ -333,10 +340,10 @@
       "invitation_invitationText": {
         "id": "invitation_invitationText",
         "parentId": "invitationRoot",
-        "x": 39,
+        "x": 22,
         "y": 78,
-        "width": 316,
-        "height": 103,
+        "width": 346,
+        "height": 107,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -345,12 +352,12 @@
         "bindingKey": "invitationText",
         "runs": [
           {
-            "text": "С радостью приглашаем вас разделить с нами особенный день — нашу свадьбу.",
+            "text": "С РАДОСТЬЮ ПРИГЛАШАЕМ\nВАС РАЗДЕЛИТЬ С НАМИ\nОСОБЕННЫЙ ДЕНЬ —\nНАШУ СВАДЬБУ",
             "style": {
               "fontFamily": "sans",
-              "fontSize": 19,
-              "fontWeight": 500,
-              "color": "#111111",
+              "fontSize": 18,
+              "fontWeight": 530,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -358,8 +365,8 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.6,
-        "lineHeight": 1.12,
+        "letterSpacing": 2.25,
+        "lineHeight": 1.46,
         "autoHeight": true
       },
       "invitation_invitationRule": {
@@ -375,7 +382,7 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#951F25",
+        "fill": "#BD201D",
         "stroke": null,
         "strokeWidth": 0
       },
@@ -403,25 +410,26 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#111111",
+          "color": "#101010",
           "background": "transparent",
-          "accent": "#951F25"
+          "accent": "#BD201D",
+          "preset": "contact-sheet"
         }
       },
       "invitation_sectionRule": {
         "id": "invitation_sectionRule",
         "parentId": "invitationRoot",
         "x": 29,
-        "y": 362,
-        "width": 337,
-        "height": 2,
+        "y": 363,
+        "width": 336,
+        "height": 1,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#B7AFAB",
+        "fill": "#DAD5CF",
         "stroke": null,
         "strokeWidth": 0
       },
@@ -442,20 +450,21 @@
           {
             "text": "ПРОГРАММА ДНЯ",
             "style": {
-              "fontFamily": "serif",
-              "fontSize": 26,
-              "fontWeight": 550,
-              "color": "#111111",
+              "fontFamily": "sans",
+              "fontSize": 23,
+              "fontWeight": 720,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
             }
           }
         ],
-        "textAlign": "center",
-        "letterSpacing": 1.1,
-        "lineHeight": 1.12,
-        "autoHeight": true
+        "textAlign": "left",
+        "letterSpacing": 5.35,
+        "lineHeight": 1.2,
+        "autoHeight": true,
+        "fitMinFontSize": 17
       },
       "invitation_scheduleWidget": {
         "id": "invitation_scheduleWidget",
@@ -463,7 +472,7 @@
         "x": 28,
         "y": 450,
         "width": 339,
-        "height": 350,
+        "height": 385,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -487,22 +496,22 @@
             {
               "time": "17:00",
               "label": {
-                "ru": "Церемония\nТоржественная регистрация",
-                "ky": "Нике салтанаты\nНикени каттоо"
+                "ru": "Церемония\nТоржественная регистрация брака",
+                "ky": "Салтанат\nНикени каттоо"
               }
             },
             {
               "time": "18:30",
               "label": {
-                "ru": "Праздничный ужин",
-                "ky": "Майрамдык кечки тамак"
+                "ru": "Банкет\nПраздничный ужин\nи развлекательная\nпрограмма",
+                "ky": "Майрамдык дасторкон\nКечки тамак жана көңүл ачуу программасы"
               }
             },
             {
               "time": "22:00",
               "label": {
-                "ru": "Музыка и танцы",
-                "ky": "Музыка жана бий"
+                "ru": "Завершение\nОкончание вечера",
+                "ky": "Кеченин аягы\nТойдун жыйынтыгы"
               }
             }
           ]
@@ -510,9 +519,10 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#111111",
+          "color": "#101010",
           "background": "transparent",
-          "accent": "#951F25"
+          "accent": "#BD201D",
+          "preset": "contact-sheet"
         }
       },
       "invitation_mountainsFooter": {
@@ -553,7 +563,7 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#F4F2EF",
+        "background": "#F8F5F2",
         "clip": true,
         "children": [
           "gallery_galleryHeading",
@@ -562,6 +572,7 @@
           "gallery_venueRule",
           "gallery_venueHeading",
           "gallery_venuePhoto",
+          "gallery_venuePin",
           "gallery_venueName",
           "gallery_venueAddress",
           "gallery_mapButton"
@@ -584,10 +595,10 @@
           {
             "text": "ГАЛЕРЕЯ",
             "style": {
-              "fontFamily": "serif",
-              "fontSize": 25,
-              "fontWeight": 550,
-              "color": "#111111",
+              "fontFamily": "sans",
+              "fontSize": 23,
+              "fontWeight": 720,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -595,8 +606,8 @@
           }
         ],
         "textAlign": "left",
-        "letterSpacing": 1.1,
-        "lineHeight": 1.12,
+        "letterSpacing": 5,
+        "lineHeight": 1.2,
         "autoHeight": true
       },
       "gallery_galleryRule": {
@@ -612,7 +623,7 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#951F25",
+        "fill": "#BD201D",
         "stroke": null,
         "strokeWidth": 0
       },
@@ -645,9 +656,10 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#111111",
+          "color": "#101010",
           "background": "transparent",
-          "accent": "#951F25"
+          "accent": "#BD201D",
+          "preset": "contact-sheet"
         }
       },
       "gallery_venueRule": {
@@ -663,7 +675,7 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#951F25",
+        "fill": "#BD201D",
         "stroke": null,
         "strokeWidth": 0
       },
@@ -684,10 +696,10 @@
           {
             "text": "МЕСТО ПРОВЕДЕНИЯ",
             "style": {
-              "fontFamily": "serif",
+              "fontFamily": "sans",
               "fontSize": 21,
-              "fontWeight": 550,
-              "color": "#111111",
+              "fontWeight": 710,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -695,9 +707,10 @@
           }
         ],
         "textAlign": "left",
-        "letterSpacing": 1.1,
-        "lineHeight": 1.12,
-        "autoHeight": true
+        "letterSpacing": 4.5,
+        "lineHeight": 1.15,
+        "autoHeight": true,
+        "fitMinFontSize": 17
       },
       "gallery_venuePhoto": {
         "id": "gallery_venuePhoto",
@@ -710,16 +723,28 @@
         "opacity": 1,
         "visible": true,
         "locked": true,
-        "visual": {
-          "corners": {
-            "topLeft": 5,
-            "topRight": 5,
-            "bottomLeft": 5,
-            "bottomRight": 5
-          }
-        },
         "type": "image",
         "assetId": "gallery_venuePhoto",
+        "fit": "cover",
+        "focalX": 0.5,
+        "focalY": 0.5,
+        "visual": {
+          "imageTreatment": "monochrome"
+        }
+      },
+      "gallery_venuePin": {
+        "id": "gallery_venuePin",
+        "parentId": "galleryRoot",
+        "x": 25,
+        "y": 878,
+        "width": 28,
+        "height": 34,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "image",
+        "assetId": "gallery_venuePin",
         "fit": "cover",
         "focalX": 0.5,
         "focalY": 0.5
@@ -739,12 +764,12 @@
         "bindingKey": "venueName",
         "runs": [
           {
-            "text": "VILLA TOSCANA",
+            "text": "РЕСТОРАН «АЛА-ТОО»",
             "style": {
-              "fontFamily": "serif",
-              "fontSize": 23,
-              "fontWeight": 550,
-              "color": "#111111",
+              "fontFamily": "sans",
+              "fontSize": 20,
+              "fontWeight": 730,
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -752,7 +777,7 @@
           }
         ],
         "textAlign": "left",
-        "letterSpacing": 0,
+        "letterSpacing": 0.6,
         "lineHeight": 1.12,
         "autoHeight": true
       },
@@ -771,12 +796,12 @@
         "bindingKey": "venueAddress",
         "runs": [
           {
-            "text": "г. Бишкек, Кыргызстан",
+            "text": "г. Бишкек, ул. Курманжан Датки, 45",
             "style": {
               "fontFamily": "sans",
-              "fontSize": 15,
+              "fontSize": 16,
               "fontWeight": 500,
-              "color": "#111111",
+              "color": "#101010",
               "italic": false,
               "underline": false,
               "strike": false
@@ -816,9 +841,10 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#111111",
+          "color": "#101010",
           "background": "transparent",
-          "accent": "#951F25"
+          "accent": "#BD201D",
+          "preset": "contact-sheet"
         }
       },
       "rsvpPageRoot": {
@@ -842,7 +868,7 @@
         },
         "gap": 0,
         "layout": "free",
-        "background": "#171717",
+        "background": "#0F0F0F",
         "clip": true,
         "children": [
           "rsvpPage_rsvpRule",
@@ -868,17 +894,17 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#C65A56",
+        "fill": "#BD201D",
         "stroke": null,
         "strokeWidth": 0
       },
       "rsvpPage_rsvpHeading": {
         "id": "rsvpPage_rsvpHeading",
         "parentId": "rsvpPageRoot",
-        "x": 27,
-        "y": 78,
-        "width": 340,
-        "height": 102,
+        "x": 23,
+        "y": 81,
+        "width": 344,
+        "height": 108,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -890,9 +916,9 @@
             "text": "ПОДТВЕРДИТЕ\nСВОЁ УЧАСТИЕ",
             "style": {
               "fontFamily": "serif",
-              "fontSize": 34,
-              "fontWeight": 550,
-              "color": "#F4F2EF",
+              "fontSize": 49,
+              "fontWeight": 490,
+              "color": "#FAFAF8",
               "italic": false,
               "underline": false,
               "strike": false
@@ -900,17 +926,19 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
-        "lineHeight": 1.12,
-        "autoHeight": true
+        "letterSpacing": -0.6,
+        "lineHeight": 1.04,
+        "autoHeight": true,
+        "widthScale": 0.92,
+        "fitMinFontSize": 34
       },
       "rsvpPage_rsvpIntro": {
         "id": "rsvpPage_rsvpIntro",
         "parentId": "rsvpPageRoot",
-        "x": 69,
+        "x": 59,
         "y": 211,
-        "width": 253,
-        "height": 95,
+        "width": 272,
+        "height": 99,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -919,12 +947,12 @@
         "bindingKey": "rsvpIntro",
         "runs": [
           {
-            "text": "Будем рады разделить этот особенный день вместе с вами.",
+            "text": "БУДЕМ РАДЫ\nРАЗДЕЛИТЬ ЭТОТ\nОСОБЕННЫЙ ДЕНЬ\nВМЕСТЕ С ВАМИ",
             "style": {
               "fontFamily": "sans",
               "fontSize": 16,
-              "fontWeight": 500,
-              "color": "#F4F2EF",
+              "fontWeight": 520,
+              "color": "#FAFAF8",
               "italic": false,
               "underline": false,
               "strike": false
@@ -932,8 +960,8 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.6,
-        "lineHeight": 1.12,
+        "letterSpacing": 4.5,
+        "lineHeight": 1.51,
         "autoHeight": true
       },
       "rsvpPage_rsvpWidget": {
@@ -962,10 +990,11 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#F4F2EF",
+          "color": "#FAFAF8",
           "background": "transparent",
-          "accent": "#F4F2EF",
-          "buttonColor": "#171717"
+          "accent": "#FAFAF8",
+          "preset": "contact-sheet",
+          "buttonColor": "#101010"
         }
       },
       "rsvpPage_thanksRule": {
@@ -981,7 +1010,7 @@
         "locked": true,
         "type": "shape",
         "shape": "rectangle",
-        "fill": "#C65A56",
+        "fill": "#BD201D",
         "stroke": null,
         "strokeWidth": 0
       },
@@ -1000,12 +1029,12 @@
         "bindingKey": "rsvpPage_thanksText",
         "runs": [
           {
-            "text": "СПАСИБО,\nЧТО ВЫ С НАМИ",
+            "text": "СПАСИБО,\nЧТО ВЫ С НАМИ!",
             "style": {
-              "fontFamily": "serif",
-              "fontSize": 20,
-              "fontWeight": 550,
-              "color": "#F4F2EF",
+              "fontFamily": "sans",
+              "fontSize": 17,
+              "fontWeight": 530,
+              "color": "#FAFAF8",
               "italic": false,
               "underline": false,
               "strike": false
@@ -1013,9 +1042,10 @@
           }
         ],
         "textAlign": "center",
-        "letterSpacing": 1.1,
-        "lineHeight": 1.12,
-        "autoHeight": true
+        "letterSpacing": 4.7,
+        "lineHeight": 1.45,
+        "autoHeight": true,
+        "fitMinFontSize": 14
       },
       "rsvpPage_mountainsFooterDark": {
         "id": "rsvpPage_mountainsFooterDark",
@@ -1057,85 +1087,105 @@
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
-          "color": "#F4F2EF",
+          "color": "#FAFAF8",
           "background": "transparent",
-          "accent": "#951F25"
+          "accent": "#BD201D"
         }
       }
     },
     "assets": {
+      "cover_coverFabric": {
+        "id": "cover_coverFabric",
+        "name": "cover-fabric.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/cover-fabric.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 390,
+        "pixelHeight": 245,
+        "sizeBytes": 5164,
+        "decorative": true
+      },
       "cover_coverPhoto": {
         "id": "cover_coverPhoto",
         "name": "Обложка",
-        "storageKey": "/images/collection/vogue-wedding/cover_coverPhoto.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/cover-portrait.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 368,
-        "pixelHeight": 519,
-        "sizeBytes": 30116
+        "pixelWidth": 390,
+        "pixelHeight": 712,
+        "sizeBytes": 40122
       },
       "gallery_galleryWidget_1": {
         "id": "gallery_galleryWidget_1",
         "name": "Портрет пары",
-        "storageKey": "/images/collection/vogue-wedding/gallery_galleryWidget_1.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/gallery-01.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 347,
-        "pixelHeight": 174,
-        "sizeBytes": 10762
+        "pixelWidth": 365,
+        "pixelHeight": 184,
+        "sizeBytes": 13524
       },
       "gallery_galleryWidget_2": {
         "id": "gallery_galleryWidget_2",
         "name": "Портрет пары",
-        "storageKey": "/images/collection/vogue-wedding/gallery_galleryWidget_2.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/gallery-02.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 171,
-        "pixelHeight": 181,
-        "sizeBytes": 5286
+        "pixelWidth": 180,
+        "pixelHeight": 191,
+        "sizeBytes": 6420
       },
       "gallery_galleryWidget_3": {
         "id": "gallery_galleryWidget_3",
         "name": "Портрет пары",
-        "storageKey": "/images/collection/vogue-wedding/gallery_galleryWidget_3.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/gallery-03.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 168,
-        "pixelHeight": 181,
-        "sizeBytes": 5522
+        "pixelWidth": 177,
+        "pixelHeight": 191,
+        "sizeBytes": 6696
       },
       "gallery_galleryWidget_4": {
         "id": "gallery_galleryWidget_4",
         "name": "Портрет пары",
-        "storageKey": "/images/collection/vogue-wedding/gallery_galleryWidget_4.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/gallery-04.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 347,
-        "pixelHeight": 134,
-        "sizeBytes": 11694
+        "pixelWidth": 365,
+        "pixelHeight": 142,
+        "sizeBytes": 14008
       },
       "gallery_venuePhoto": {
         "id": "gallery_venuePhoto",
         "name": "Фотография площадки",
-        "storageKey": "/images/collection/vogue-wedding/gallery_venuePhoto.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/venue.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 347,
-        "pixelHeight": 153,
-        "sizeBytes": 16370
+        "pixelWidth": 365,
+        "pixelHeight": 162,
+        "sizeBytes": 19846
+      },
+      "gallery_venuePin": {
+        "id": "gallery_venuePin",
+        "name": "venue-pin.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/venue-pin.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 28,
+        "pixelHeight": 34,
+        "sizeBytes": 550,
+        "decorative": true
       },
       "invitation_mountainsFooter": {
         "id": "invitation_mountainsFooter",
-        "name": "mountains-light.png",
-        "storageKey": "/images/collection/vogue-wedding/invitation_mountainsFooter.webp",
+        "name": "mountains-light.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/mountains-light.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 368,
-        "pixelHeight": 170,
-        "sizeBytes": 18588,
+        "pixelWidth": 390,
+        "pixelHeight": 181,
+        "sizeBytes": 23572,
         "decorative": true
       },
       "rsvpPage_mountainsFooterDark": {
         "id": "rsvpPage_mountainsFooterDark",
-        "name": "mountains-dark.png",
-        "storageKey": "/images/collection/vogue-wedding/rsvpPage_mountainsFooterDark.webp",
+        "name": "mountains-dark.webp",
+        "storageKey": "/images/collection/vogue-wedding/vf-02/mountains-dark.webp",
         "mimeType": "image/webp",
-        "pixelWidth": 368,
-        "pixelHeight": 128,
-        "sizeBytes": 11098,
+        "pixelWidth": 390,
+        "pixelHeight": 136,
+        "sizeBytes": 14126,
         "decorative": true
       }
     },
@@ -1247,8 +1297,8 @@
       "invitationText": {
         "type": "text",
         "value": {
-          "ru": "С радостью приглашаем вас разделить с нами особенный день — нашу свадьбу.",
-          "ky": "Биздин өзгөчө күнүбүздү — үйлөнүү тоюбузду — бирге өткөрүүгө чакырабыз."
+          "ru": "С РАДОСТЬЮ ПРИГЛАШАЕМ\nВАС РАЗДЕЛИТЬ С НАМИ\nОСОБЕННЫЙ ДЕНЬ —\nНАШУ СВАДЬБУ",
+          "ky": "БИЗ ҮЧҮН ӨЗГӨЧӨ КҮНДҮ —\nҮЙЛӨНҮҮ ТОЮБУЗДУ —\nБИЗ МЕНЕН БИРГЕ ӨТКӨРҮҮГӨ\nЧАКЫРАБЫЗ"
         }
       },
       "invitation_programHeading": {
@@ -1275,15 +1325,15 @@
       "venueName": {
         "type": "text",
         "value": {
-          "ru": "VILLA TOSCANA",
-          "ky": "VILLA TOSCANA"
+          "ru": "РЕСТОРАН «АЛА-ТОО»",
+          "ky": "«АЛА-ТОО» РЕСТОРАНЫ"
         }
       },
       "venueAddress": {
         "type": "text",
         "value": {
-          "ru": "г. Бишкек, Кыргызстан",
-          "ky": "Бишкек ш., Кыргызстан"
+          "ru": "г. Бишкек, ул. Курманжан Датки, 45",
+          "ky": "Бишкек ш., Курманжан Датка көч., 45"
         }
       },
       "rsvpPage_rsvpHeading": {
@@ -1296,15 +1346,15 @@
       "rsvpIntro": {
         "type": "text",
         "value": {
-          "ru": "Будем рады разделить этот особенный день вместе с вами.",
-          "ky": "Бул өзгөчө күндү сиздер менен бирге өткөрүүгө кубанычтабыз."
+          "ru": "БУДЕМ РАДЫ\nРАЗДЕЛИТЬ ЭТОТ\nОСОБЕННЫЙ ДЕНЬ\nВМЕСТЕ С ВАМИ",
+          "ky": "БУЛ ӨЗГӨЧӨ КҮНДҮ\nСИЗДЕР МЕНЕН БИРГЕ\nӨТКӨРҮҮГӨ\nКУБАНЫЧТАБЫЗ"
         }
       },
       "rsvpPage_thanksText": {
         "type": "text",
         "value": {
-          "ru": "СПАСИБО,\nЧТО ВЫ С НАМИ",
-          "ky": "БИЗ МЕНЕН БОЛГОНУҢУЗ\nҮЧҮН РАХМАТ"
+          "ru": "СПАСИБО,\nЧТО ВЫ С НАМИ!",
+          "ky": "БИЗ МЕНЕН БОЛГОНУҢУЗ\nҮЧҮН РАХМАТ!"
         }
       }
     }

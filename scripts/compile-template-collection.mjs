@@ -116,6 +116,7 @@ async function compile(entry, recipe) {
      }else if(op.type==="image"){
        const media=await asset(op.asset??id,op.media);
        node={...base,type:"image",assetId:media.id,fit:"cover",focalX:op.focal?.[0]??.5,focalY:op.focal?.[1]??.5};
+       if(op.monochrome)node.visual={...node.visual,imageTreatment:"monochrome"};
        if(op.mask)node.visual={...node.visual,mask:op.mask};
        if(op.clip)node.visual={...node.visual,clipPolygon:op.clip};
        if(op.media.label&&!op.media.decorative)field(id,op.media.label,"photos",{kind:"image",nodeId:id,minWidth:1,minHeight:1});
