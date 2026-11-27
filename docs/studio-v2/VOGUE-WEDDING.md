@@ -1,6 +1,6 @@
 # Vogue Wedding — VF-02
 
-Кандидат на ручную приёмку. Код [`458eb6f9244fd7689a052422e8c4bee56fd1f350`](https://github.com/akkunov/invito/commit/458eb6f9244fd7689a052422e8c4bee56fd1f350). [PR #82](https://github.com/akkunov/invito/pull/82) База сравнения — merge-коммит [`f040ba24c1849728f772965fc8102a77048a1480`](https://github.com/akkunov/invito/commit/f040ba24c1849728f772965fc8102a77048a1480). [Карточка VF-02](../architecture/tasks/VF-02-vogue-wedding.md)
+Владелец принял все четыре артборда 27 ноября 2026 года на [`f6bddb3230285e4c1fdc5997682909eacd1985ff`](https://github.com/akkunov/invito/commit/f6bddb3230285e4c1fdc5997682909eacd1985ff) и подтвердил успешный локальный запуск. Код [`458eb6f9244fd7689a052422e8c4bee56fd1f350`](https://github.com/akkunov/invito/commit/458eb6f9244fd7689a052422e8c4bee56fd1f350). [PR #82](https://github.com/akkunov/invito/pull/82) База сравнения — merge-коммит [`f040ba24c1849728f772965fc8102a77048a1480`](https://github.com/akkunov/invito/commit/f040ba24c1849728f772965fc8102a77048a1480). [Карточка VF-02](../architecture/tasks/VF-02-vogue-wedding.md)
 
 ## Локальная проверка без базы
 

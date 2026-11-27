@@ -1,6 +1,6 @@
 # VF-03 — Italian Romance — повторная визуальная приёмка
 
-Приоритет `P1`. [Реестр задач](../PROJECT-STATUS.md)
+Приоритет `P1`. Ветка `feat/eventiq-4-1-vf-03-italian-romance`. [Реестр задач](../PROJECT-STATUS.md)
 
 ## Цель
 
@@ -12,7 +12,7 @@
 
 ## Зависимости
 
-[VF-01](VF-01-love-story.md)
+[VF-01](VF-01-love-story.md) · [VF-02](VF-02-vogue-wedding.md)
 
 ## Scope
 

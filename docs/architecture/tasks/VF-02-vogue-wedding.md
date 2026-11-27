@@ -1,6 +1,6 @@
 # VF-02 — Vogue Wedding — повторная визуальная приёмка
 
-Приоритет `P1`. Статус `REVIEW`. Ветка `feat/eventiq-4-1-vf-02-vogue-wedding`. [Реестр задач](../PROJECT-STATUS.md)
+Приоритет `P1`. Статус `DONE`. Ветка `feat/eventiq-4-1-vf-02-vogue-wedding`. [Реестр задач](../PROJECT-STATUS.md)
 
 ## Цель
 
@@ -8,7 +8,7 @@
 
 ## Текущее состояние
 
-Готов кандидат с четырьмя артбордами 390 × 1048 CSS px, DPR 1. Все четыре ожидают ручной приёмки владельцем. База `f040ba2`, реализация [`458eb6f9244fd7689a052422e8c4bee56fd1f350`](https://github.com/akkunov/invito/commit/458eb6f9244fd7689a052422e8c4bee56fd1f350). [PR #82](https://github.com/akkunov/invito/pull/82) · [Сравнения, тесты и локальный запуск](../../studio-v2/VOGUE-WEDDING.md)
+Владелец принял все четыре артборда 390 × 1048 CSS px, DPR 1, 27 ноября 2026 года на [`f6bddb3230285e4c1fdc5997682909eacd1985ff`](https://github.com/akkunov/invito/commit/f6bddb3230285e4c1fdc5997682909eacd1985ff) и подтвердил успешный локальный запуск. База `f040ba2`, реализация [`458eb6f9244fd7689a052422e8c4bee56fd1f350`](https://github.com/akkunov/invito/commit/458eb6f9244fd7689a052422e8c4bee56fd1f350). [PR #82](https://github.com/akkunov/invito/pull/82) · [Сравнения, тесты и локальный запуск](../../studio-v2/VOGUE-WEDDING.md)
 
 ## Зависимости
 
@@ -56,4 +56,13 @@ Playwright 4 борда при исходных размерах и мобиль
 
 - Исправлены набор обложки, демонстрационные снимки, таймер и программа, контактный лист, место и форма RSVP. Общие возможности включаются опционально, ссылки прошлых версий сохранены.
 - Проверены RU/KY на ширинах 320–430 px, длинные имена, навигация, таймер, галерея, карта, редактирование шести снимков, текстов, даты и времени, лимита и срока RSVP. Сравнения и результаты собраны в [отчёте VF-02](../../studio-v2/VOGUE-WEDDING.md).
-- Следующее действие — визуальное решение владельца по четырём артбордам. VF-03 начинается после приёмки VF-02.
+- Владелец поручил слить PR #82 после проверки CI. После слияния начинается VF-03.
+
+## Ручная приёмка
+
+| Артборд | Решение владельца | Сравнение |
+| --- | --- | --- |
+| Обложка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-02/01.webp) |
+| Приглашение и программа | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-02/02.webp) |
+| Галерея и площадка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-02/03.webp) |
+| RSVP | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-02/04.webp) |
