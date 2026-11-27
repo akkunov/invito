@@ -2138,21 +2138,23 @@
  font-weight: 560;
 }
 [data-artboard-presentation="collection"] [data-widget-preset="postcard"] .v2-guest-schedule[data-layout="rows"] > div {
- grid-template-columns: 75px minmax(0, 1fr) 41px;
- gap: 9px;
+ grid-template-columns: 79px minmax(0, 1fr) 35px;
+ gap: 5px;
  align-items: start;
  min-height: 69px;
  padding: 5px 0 6px 23px;
  border: 0;
 }
 [data-widget-preset="postcard"][data-heritage-widget="schedule"] .v2-guest-schedule > div::before {
+ display: block;
  width: 8px;
  height: 8px;
  left: -4px;
  top: 16px;
  background: #9a652c;
 }
-[data-widget-preset="postcard"][data-heritage-widget="schedule"] .v2-guest-schedule > div::after {
+[data-widget-preset="postcard"][data-heritage-widget="schedule"] .v2-guest-schedule > div:not(:last-child)::after {
+ display: block;
  top: 20px;
  bottom: -20px;
  border-color: #9f8357;
