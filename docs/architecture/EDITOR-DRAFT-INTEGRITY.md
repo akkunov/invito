@@ -31,3 +31,5 @@ npm.cmd run test:auth-session-browser
 ```
 
 Браузерная матрица проверяет V1 после публикации V2, изоляцию двух черновиков одного владельца, reload, выход, смену аккаунта, OAuth и исключение чтения v1. На отдельном тестовом API можно повторить вручную через две записи в «Мои приглашения» и кнопку «Новый черновик». Проверки живого Google и email относятся к [AUTH-03](tasks/AUTH-03-live-production-gate.md).
+
+[PR #86 и CI](https://github.com/akkunov/invito/pull/86/checks).
