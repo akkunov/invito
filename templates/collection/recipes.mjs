@@ -97,8 +97,8 @@ const loveStory = {
    title("dayHeading",["НАШ ДЕНЬ","ТОЙ КҮНҮ"],32,{box:box(86,390,220,41),align:"center",spacing:5.6,weight:500,widthScale:.86,color:"#4F3029"}),
    widget("program","schedule",{layout:"rows"},{...paperPreset,items:loveStorySchedule,box:box(36,441,342,193)}),
    image("venuePhoto",prepared("details_venue",venueLabel),{radius:17}),
-   title("venueName",venue,25,{...field(venueTitle,"venueName","location"),box:box(71,847,296,32),weight:630,color:"#1E1B18"}),
    map("mapAction",{...paperPreset,box:box(26,856,337,120),block:{showAddress:true},address:["г. Бишкек, ул. Курманжан Датки, 45","Бишкек ш., Курманжан Датка көч., 45"]}),
+   title("venueName",venue,25,{...field(venueTitle,"venueName","location"),box:box(71,847,296,32),weight:630,color:"#1E1B18"}),
    image("venueFoliage",prepared("details_foliage"),{box:box(206,964,184,81)}),
   ]),
   rsvpPage:page([

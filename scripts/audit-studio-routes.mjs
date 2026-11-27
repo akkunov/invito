@@ -27,8 +27,9 @@ includes("src/app/[locale]/i/[slug]/page.tsx",'cache:"no-store"',"No stale invit
 includes("src/app/[locale]/i/[slug]/page.tsx","StudioV2PublicInvitation","Public renderer bound");
 includes("src/components/studio-v2/studio-v2-public-invitation.tsx","StudioV2ProjectRenderer","One Studio/guest rendering engine");
 includes("src/components/studio-v2/studio-v2-invitation-block.tsx","submitGuestResponse","Real RSVP widget connected");
-includes("scripts/build-studio-pages.sh","'src/app/[locale]/i'","Pages static export excludes dynamic guest route");
-includes(".github/workflows/studio-pages.yml","'src/app/[locale]/i'","GitHub Pages workflow excludes dynamic guest route");
+includes("scripts/build-studio-pages.sh","! -name admin ! -name layout.tsx","Pages export includes only Studio routes");
+for(const workflow of ["studio-pages","publish-studio-preview","riviera-checks"])
+ includes(".github/workflows/"+workflow+".yml","bash scripts/build-studio-pages.sh","Shared static Studio export");
 
 includes("src/app/[locale]/admin/studio/page.tsx","export default StudioV2Page","Legacy Studio URL uses current workspace");
 includes("src/components/studio-v2/studio-v2-template-manager.tsx","<StudioCloudTemplates","Authenticated template library reachable");

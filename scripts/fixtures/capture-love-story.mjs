@@ -119,7 +119,7 @@ async function checkOwnerEdits(editor, preview, uploads){
     await node.click();
     const sheet=editor.getByRole("dialog");
     if(field.kind==="text"){
-      const value=field.id.endsWith("Date")?"15.06.2024":"Тест "+field.label.ru;
+      const value=field.id.endsWith("Date")?"15.06.2024":field.id==="venueName"?"Тест-площадка":"Тест "+field.label.ru;
       await sheet.getByRole("textbox",{name:field.label.ru+" ru",exact:true}).fill(value);
       await node.getByText(value,{exact:true}).waitFor();
     }else if(field.kind==="date"){
@@ -128,6 +128,7 @@ async function checkOwnerEdits(editor, preview, uploads){
     }else if(field.kind==="schedule"){
       await sheet.locator('input[type="time"]').first().fill("15:45");
       await preview.getByText("15:45",{exact:true}).waitFor();
+      await preview.locator("[data-studio-node=details_ticketTime]").getByText("18:25",{exact:true}).waitFor();
     }else{
       await sheet.getByLabel("Количество гостей").selectOption("5");
       await sheet.locator('input[type="datetime-local"]').first().fill("2027-06-07T21:00");
@@ -157,6 +158,8 @@ async function checkOwnerEdits(editor, preview, uploads){
   const stored=await editor.evaluate(()=>JSON.parse(localStorage.getItem("eventiq:customer-draft:v1:692e3ce4-8b41-48be-b39b-c093be771c68")));
   for(const field of photoFields)assert.match(stored.values[field.id].assetId,/^customer_/);
   for(const field of fieldNodes)assert.ok(stored.values[field.id],field.id);
+  assert.equal(stored.values.ceremonyDate.value.value,"2027-06-12T18:25:00+06:00");
+  assert.equal(stored.values.details_program.items[0].time,"15:45");
   assert.equal(stored.values.rsvpPage_rsvpWidget.maxGuests,5);
   assert.equal(stored.values.rsvpPage_rsvpWidget.deadline,"2027-06-07T21:00:00+06:00");
   assert.match(stored.values.rsvpPage_music.source,/^asset:/);
@@ -186,9 +189,9 @@ try {
   await baseline.close();
 
   if (!captureOnly) {
-    for (const width of [320, 360, 375, 390, 412, 430]) {
+    for (const [width,height] of [[320,568],[360,800],[375,812],[390,844],[412,915],[430,932]]) {
       for (const locale of ["ru", "ky"]) {
-        const {page} = await open(width, locale, {height: 844});
+        const {page} = await open(width, locale, {height});
         await page.waitForFunction(target => document.querySelector("[data-preview-page]").clientWidth === target, width);
         const layout = await page.evaluate(() => ({
           lang: document.querySelector(".v2-project-renderer").lang,
@@ -271,7 +274,7 @@ try {
     await form.getByRole("status").getByText(/Ответ принят/).waitFor();
     await shot(guest, "rsvp-05-success");
     const player=guest.locator(".v2-stationery-music");
-    await player.getByRole("button",{name:"Включить музыку"}).click();
+    await player.getByRole("button",{name:"Включить музыку"}).press("Space");
     await player.getByRole("button",{name:"Остановить музыку"}).waitFor();
     await shot(guest,"music-playing");
     await player.getByRole("button",{name:"Остановить музыку"}).click();

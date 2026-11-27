@@ -19,6 +19,7 @@ npm run build
 test -f out/ru/admin/studio/index.html
 test -f out/ru/admin/studio-v2/index.html
 test -f out/ky/admin/studio-v2/index.html
+test ! -d out/ru/i && test ! -d out/ru/c && test ! -d out/ru/catalog
 touch out/.nojekyll
 printf '%s\n' "${GITHUB_SHA:-$(git rev-parse HEAD)}" > out/studio-build.txt
 cat > out/index.html <<'HTML'

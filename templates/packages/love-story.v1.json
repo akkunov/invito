@@ -1108,8 +1108,8 @@
           "details_dayHeading",
           "details_program",
           "details_venuePhoto",
-          "details_venueName",
           "details_mapAction",
+          "details_venueName",
           "details_venueFoliage"
         ]
       },
@@ -1461,38 +1461,6 @@
         "focalX": 0.5,
         "focalY": 0.5
       },
-      "details_venueName": {
-        "id": "details_venueName",
-        "parentId": "detailsRoot",
-        "x": 71,
-        "y": 847,
-        "width": 296,
-        "height": 32,
-        "rotation": 0,
-        "opacity": 1,
-        "visible": true,
-        "locked": true,
-        "type": "text",
-        "bindingKey": "venueName",
-        "runs": [
-          {
-            "text": "VILLA TOSCANA",
-            "style": {
-              "fontFamily": "serif",
-              "fontSize": 25,
-              "fontWeight": 630,
-              "color": "#1E1B18",
-              "italic": false,
-              "underline": false,
-              "strike": false
-            }
-          }
-        ],
-        "textAlign": "left",
-        "letterSpacing": 0,
-        "lineHeight": 1.12,
-        "autoHeight": true
-      },
       "details_mapAction": {
         "id": "details_mapAction",
         "parentId": "detailsRoot",
@@ -1526,6 +1494,38 @@
           "accent": "#791F35",
           "preset": "stationery"
         }
+      },
+      "details_venueName": {
+        "id": "details_venueName",
+        "parentId": "detailsRoot",
+        "x": 71,
+        "y": 847,
+        "width": 296,
+        "height": 32,
+        "rotation": 0,
+        "opacity": 1,
+        "visible": true,
+        "locked": true,
+        "type": "text",
+        "bindingKey": "venueName",
+        "runs": [
+          {
+            "text": "VILLA TOSCANA",
+            "style": {
+              "fontFamily": "serif",
+              "fontSize": 25,
+              "fontWeight": 630,
+              "color": "#1E1B18",
+              "italic": false,
+              "underline": false,
+              "strike": false
+            }
+          }
+        ],
+        "textAlign": "left",
+        "letterSpacing": 0,
+        "lineHeight": 1.12,
+        "autoHeight": true
       },
       "details_venueFoliage": {
         "id": "details_venueFoliage",
@@ -2220,18 +2220,18 @@
           "ky": "Текст dayHeading"
         }
       },
-      "venueName": {
-        "type": "text",
-        "label": {
-          "ru": "Название площадки",
-          "ky": "Той өтүүчү жердин аталышы"
-        }
-      },
       "venueAddress": {
         "type": "text",
         "label": {
           "ru": "Адрес",
           "ky": "Дарек"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "label": {
+          "ru": "Название площадки",
+          "ky": "Той өтүүчү жердин аталышы"
         }
       },
       "rsvpPage_rsvpHeading": {
@@ -2387,18 +2387,18 @@
           "ky": "ТОЙ КҮНҮ"
         }
       },
-      "venueName": {
-        "type": "text",
-        "value": {
-          "ru": "VILLA TOSCANA",
-          "ky": "VILLA TOSCANA"
-        }
-      },
       "venueAddress": {
         "type": "text",
         "value": {
           "ru": "г. Бишкек, ул. Курманжан Датки, 45",
           "ky": "Бишкек ш., Курманжан Датка көч., 45"
+        }
+      },
+      "venueName": {
+        "type": "text",
+        "value": {
+          "ru": "VILLA TOSCANA",
+          "ky": "VILLA TOSCANA"
         }
       },
       "rsvpPage_rsvpHeading": {
@@ -2656,19 +2656,6 @@
         "minHeight": 1
       },
       {
-        "id": "venueName",
-        "label": {
-          "ru": "Название площадки",
-          "ky": "Той өтүүчү жердин аталышы"
-        },
-        "section": "location",
-        "required": true,
-        "kind": "text",
-        "key": "venueName",
-        "maxLength": 500,
-        "multiline": true
-      },
-      {
         "id": "venueAddress",
         "label": {
           "ru": "Адрес",
@@ -2680,6 +2667,19 @@
         "key": "venueAddress",
         "maxLength": 300,
         "multiline": false
+      },
+      {
+        "id": "venueName",
+        "label": {
+          "ru": "Название площадки",
+          "ky": "Той өтүүчү жердин аталышы"
+        },
+        "section": "location",
+        "required": true,
+        "kind": "text",
+        "key": "venueName",
+        "maxLength": 500,
+        "multiline": true
       },
       {
         "id": "rsvpIntro",
