@@ -63,7 +63,7 @@ flowchart LR
   T000 --> TVF_01
   TVF_01 --> TVF_02
   TVF_02 --> TVF_03
-  TVF_01 --> TVF_04
+  TVF_03 --> TVF_04
   TVF_01 --> TVF_05
   TVF_01 --> TVF_06
   TVF_01 --> TVF_07
@@ -266,4 +266,4 @@ flowchart LR
 - Typecheck/lint/build и относящиеся регрессии идут на актуальном SHA. Измерения производительности фиксируют данные, устройство, браузер, объём ответа, число SQL и сетевых вызовов, p95 и артефакты. Для публичных поверхностей ориентиры 4.0 — полевые p75 LCP ≤2.5 с, INP ≤200 мс и CLS ≤0.1. Лабораторные результаты указываются отдельно. Релиз также требует проверки аутентификации, хранения, журналов, метрик, очередей и отката.
 - Внешние приёмки идут на тестовых Google/Supabase, test WABA и подтверждённых треках, с поддерживаемыми iOS Safari/Android Chrome. В mock-результатах отдельно отмечать недоступные живые проверки.
 
-Владелец принял четыре артборда Vogue Wedding на [`f6bddb3230285e4c1fdc5997682909eacd1985ff`](https://github.com/akkunov/invito/commit/f6bddb3230285e4c1fdc5997682909eacd1985ff). После слияния PR #82 следующая задача — VF-03 Italian Romance. [VF-02](tasks/VF-02-vogue-wedding.md) · [VF-03](tasks/VF-03-italian-romance.md)
+Владелец принял четыре артборда Italian Romance на [`c3683a35725536d0520d95d24804e17700f93741`](https://github.com/akkunov/invito/commit/c3683a35725536d0520d95d24804e17700f93741). После слияния PR #83 следующая задача — VF-04 Cinema Wedding. [VF-03](tasks/VF-03-italian-romance.md) · [VF-04](tasks/VF-04-cinema-wedding.md)

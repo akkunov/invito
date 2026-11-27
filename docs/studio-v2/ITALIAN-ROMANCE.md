@@ -1,6 +1,6 @@
 # Italian Romance — VF-03
 
-Кандидат на ручную приёмку. Код [`33be652429623c6d9c599cf787d944e44e14db74`](https://github.com/akkunov/invito/commit/33be652429623c6d9c599cf787d944e44e14db74). [PR #83](https://github.com/akkunov/invito/pull/83) База сравнения — [`d30d8a3e7dc59be4468884cf5d40157dc8a5cdff`](https://github.com/akkunov/invito/commit/d30d8a3e7dc59be4468884cf5d40157dc8a5cdff). [Карточка VF-03](../architecture/tasks/VF-03-italian-romance.md)
+Владелец принял все четыре артборда 27 ноября 2026 года на [`c3683a35725536d0520d95d24804e17700f93741`](https://github.com/akkunov/invito/commit/c3683a35725536d0520d95d24804e17700f93741). Код [`33be652429623c6d9c599cf787d944e44e14db74`](https://github.com/akkunov/invito/commit/33be652429623c6d9c599cf787d944e44e14db74). [PR #83](https://github.com/akkunov/invito/pull/83) База сравнения — [`d30d8a3e7dc59be4468884cf5d40157dc8a5cdff`](https://github.com/akkunov/invito/commit/d30d8a3e7dc59be4468884cf5d40157dc8a5cdff). [Карточка VF-03](../architecture/tasks/VF-03-italian-romance.md)
 
 ## Локальная проверка в Windows PowerShell
 

@@ -1,6 +1,6 @@
 # VF-03 — Italian Romance — повторная визуальная приёмка
 
-Приоритет `P1`. Статус `REVIEW`. Ветка `feat/eventiq-4-1-vf-03-italian-romance`. [Реестр задач](../PROJECT-STATUS.md)
+Приоритет `P1`. Статус `DONE`. Ветка `feat/eventiq-4-1-vf-03-italian-romance`. [Реестр задач](../PROJECT-STATUS.md)
 
 ## Цель
 
@@ -8,7 +8,7 @@
 
 ## Текущее состояние
 
-Готов кандидат с четырьмя артбордами 390 × 1058 CSS px, DPR 1. Код [`33be652429623c6d9c599cf787d944e44e14db74`](https://github.com/akkunov/invito/commit/33be652429623c6d9c599cf787d944e44e14db74). Все четыре ожидают ручной приёмки. [PR #83](https://github.com/akkunov/invito/pull/83) · [Отчёт, сравнения и PowerShell](../../studio-v2/ITALIAN-ROMANCE.md)
+Готов кандидат с четырьмя артбордами 390 × 1058 CSS px, DPR 1. Код [`33be652429623c6d9c599cf787d944e44e14db74`](https://github.com/akkunov/invito/commit/33be652429623c6d9c599cf787d944e44e14db74). Владелец принял все четыре артборда 27 ноября 2026 года на [`c3683a35725536d0520d95d24804e17700f93741`](https://github.com/akkunov/invito/commit/c3683a35725536d0520d95d24804e17700f93741). [PR #83](https://github.com/akkunov/invito/pull/83) · [Отчёт, сравнения и PowerShell](../../studio-v2/ITALIAN-ROMANCE.md)
 
 ## Зависимости
 
@@ -57,4 +57,13 @@ Playwright 4 борда при исходных размерах и мобиль
 
 - Обложка, календарь, полароиды, карточка места и оливковая форма восстановлены на общем рендерере. Сохранены ранее опубликованные ресурсы, шесть заменяемых фото и существующие поля. Видеокадр представлен фотографией по условию спецификации о наличии подтверждённого видео.
 - Сняты Reference / Before / After / Diff. Проверены RU/KY, длинные имена, календарь, альбом, карта, RSVP, музыкальная карточка, редактирование и локальный черновик.
-- Следующий шаг — ручная приёмка конкретного SHA и документированных отличий владельцем.
+- Владелец поручил слить PR #83 после проверки CI. После слияния начинается VF-04.
+
+## Ручная приёмка
+
+| Артборд | Решение владельца | Сравнение |
+| --- | --- | --- |
+| Обложка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-03/01.webp) |
+| Приглашение и программа | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-03/02.webp) |
+| Галерея и площадка | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-03/03.webp) |
+| RSVP | Принят | [Reference / Before / After / Diff](../../studio-v2/template-collection-qa/vf-03/04.webp) |
