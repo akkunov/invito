@@ -55,6 +55,7 @@
     "test:customer-photos": "node --experimental-strip-types --test scripts/test-customer-photo-upload.mjs",
     "templates:compile": "node --experimental-strip-types scripts/compile-template-collection.mjs",
     "test:template-collection": "node --experimental-strip-types --test scripts/test-template-collection.mjs",
+    "test:cinema-wedding": "node --experimental-strip-types --test --test-name-pattern=\"[Cc]inema[ -][Ww]edding\" scripts/test-template-collection.mjs",
     "test:template-assets": "node --experimental-strip-types --test scripts/test-template-assets.mjs",
     "test:google-auth": "node --experimental-strip-types --test scripts/test-google-auth.mjs"
   },
