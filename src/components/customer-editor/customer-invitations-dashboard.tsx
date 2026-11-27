@@ -4,8 +4,9 @@ import Link from "next/link";
 import {useCallback,useEffect,useState} from "react";
 import {CalendarDays,Check,Copy,Eye,LayoutDashboard,LogOut,Mail,RefreshCw,Settings,Users,X} from "lucide-react";
 import {useCustomerSession} from "@/features/auth/browser/use-customer-session";
+import {cancelCustomerRequestWith} from "@/features/auth/browser/supabase-session";
 import {CustomerSignIn} from "./customer-sign-in";
-import {customerApi,unpublishCustomerInvitation,
+import {CustomerCloudError,customerApi,unpublishCustomerInvitation,
   type CustomerDraftListItem,type CustomerPublication} from "@/features/invitations/customer-cloud";
 import type {Locale} from "@/i18n/locales";
 import {BrandWordmark} from "@/components/brand/brand-wordmark";
@@ -38,7 +39,8 @@ export function CustomerInvitationsDashboard({locale}:{locale:Locale}){
 
 function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType<typeof useCustomerSession>}){
   const ru=locale==="ru";
-  const signedIn=session.status==="signed-in";
+  const {scope}=session;
+  const signedIn=scope!==null;
   const [overview,setOverview]=useState<Overview|null>(null);
   const [section,setSection]=useState<Section>("overview");
   const [page,setPage]=useState(1);
@@ -51,15 +53,17 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
   const [busy,setBusy]=useState<string|null>(null);
   const [signingOut,setSigningOut]=useState(false);
   const refresh=useCallback(async (signal?:AbortSignal)=>{
-    if(!signedIn)return;
+    if(!scope)return;
     try{
       const result=await customerApi<Overview>(
-        "/customer/account/overview?page="+page,"GET",undefined,signal);
-      if(!signal?.aborted)setOverview(result);
-    }catch{
-      if(!signal?.aborted)setError(ru?"Не удалось загрузить приглашения. Повторите попытку.":"Чакырууларды жүктөө мүмкүн болгон жок.");
-    }finally{if(!signal?.aborted)setLoading(false);}
-  },[signedIn,ru,page]);
+        signal?cancelCustomerRequestWith(scope,signal):scope,"/customer/account/overview?page="+page);
+      if(!signal?.aborted&&!scope.signal.aborted)setOverview(result);
+    }catch(error){
+      if(!signal?.aborted&&!scope.signal.aborted)setError(error instanceof CustomerCloudError&&error.status===401
+        ?ru?"Сессия не подтверждена. Выйдите в профиле и войдите снова.":"Сессия ырасталган жок. Профилден чыгып, кайра кириңиз."
+        :ru?"Не удалось загрузить приглашения. Повторите попытку.":"Чакырууларды жүктөө мүмкүн болгон жок.");
+    }finally{if(!signal?.aborted&&!scope.signal.aborted)setLoading(false);}
+  },[scope,ru,page]);
   useEffect(()=>{
     const controller=new AbortController();
     void Promise.resolve().then(()=>{
@@ -82,10 +86,11 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
   }
 
   async function showReplies(id:string,page=1){
+    if(!scope)return;
     setBusy(id);setError("");
     try{
       const result=await customerApi<ReplyPage>(
-        "/customer/invitations/"+encodeURIComponent(id)+"/rsvp?page="+page+"&limit=20");
+        scope,"/customer/invitations/"+encodeURIComponent(id)+"/rsvp?page="+page+"&limit=20");
       setReplies(prev=>({...prev,[id]:page===1?result.items:[...(prev[id]??[]),...result.items]}));
       setNext(prev=>({...prev,[id]:result.nextPage}));
       setExpanded(id);
@@ -93,11 +98,11 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
     finally{setBusy(null);}
   }
   async function hide(entry:Entry){
-    if(!entry.publication||entry.publication.status!=="ACTIVE")return;
+    if(!scope||!entry.publication||entry.publication.status!=="ACTIVE")return;
     if(!window.confirm(ru?"Закрыть приглашение для гостей?":"Коноктор үчүн чакырууну жабасызбы?"))return;
     setBusy(entry.draft.id);
     try{
-      await unpublishCustomerInvitation(entry.draft.id,entry.publication.latestRelease);
+      await unpublishCustomerInvitation(scope,entry.draft.id,entry.publication.latestRelease);
       await refresh();
     }catch{setError(ru?"Не удалось закрыть приглашение.":"Чакырууну жабуу мүмкүн болгон жок.");}
     finally{setBusy(null);}

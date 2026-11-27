@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {mkdir, readFile} from "node:fs/promises";
 import {createRequire} from "node:module";
 import {resolve} from "node:path";
-import {ownerUploadFixture} from "./owner-upload-fixture.mjs";
+import {ownerUploadFixture,readOwnerDraft} from "./owner-upload-fixture.mjs";
 
 const require = createRequire(resolve(process.env.STUDIO_BROWSER_PREFIX ?? ".", "package.json"));
 const {chromium} = require("playwright");
@@ -241,7 +241,7 @@ async function checkEditor() {
     await input.setInputFiles(Array.from({length:count},(_,i)=>({name:id+"-"+i+".webp",mimeType:"image/webp",buffer})));
     await page.getByText(new RegExp(`Загружено ${count} / ${count}`)).waitFor();
   }
-  assert.equal([...tickets.values()].filter(value=>value.body).length,6);
+  assert.equal([...tickets.tickets.values()].filter(value=>value.body).length,6);
   const photos=preview.locator(".v2-editorial-mosaic img");
   assert.equal(await photos.count(),3);
   assert.ok((await photos.evaluateAll(images=>images.map(img=>img.src))).every(url=>url.startsWith("https://vf03.r2.cloudflarestorage.com/read/")));
@@ -254,7 +254,7 @@ async function checkEditor() {
   await sheet.getByLabel("Количество гостей").selectOption("5");
   await sheet.locator('input[type="datetime-local"]').first().fill("2027-06-07T21:00");
   await close.click();
-  const draft=await page.evaluate(()=>JSON.parse(localStorage.getItem("eventiq:customer-draft:v1:4a3887dd-875e-4933-b80f-4d247231847b")));
+  const draft=await readOwnerDraft(page,tickets.subject,"4a3887dd-875e-4933-b80f-4d247231847b");
   assert.match(draft.values.cover_coverScene.assetId,/^customer_/);
   assert.match(draft.values.gallery_venueStoryPreview.assetId,/^customer_/);
   assert.match(draft.values.gallery_venuePhoto.assetId,/^customer_/);

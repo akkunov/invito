@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {ownerUploadFixture} from "./owner-upload-fixture.mjs";
+import {ownerUploadFixture,readOwnerDraft} from "./owner-upload-fixture.mjs";
 import {mkdir, readFile} from "node:fs/promises";
 import {createRequire} from "node:module";
 import {resolve} from "node:path";
@@ -93,7 +93,7 @@ async function checkOwnerEdits(editor, preview, uploads){
     await target.selectOption(field.id);
     await photoInput.setInputFiles({name:field.id+".webp",mimeType:"image/webp",buffer:await readFile(photo)});
     await editor.getByText(/Загружено 1 \/ 1/).waitFor();
-    assert.equal([...uploads.values()].filter(ticket=>ticket.body).length,index+1);
+    assert.equal([...uploads.tickets.values()].filter(ticket=>ticket.body).length,index+1);
   }
   await close.click();
   await editor.getByRole("button",{name:"Музыка",exact:true}).click();
@@ -102,9 +102,9 @@ async function checkOwnerEdits(editor, preview, uploads){
   await editor.getByText(/Выберите файл MP3/).waitFor();
   await musicInput.setInputFiles({name:"qa-tone.mp3",mimeType:"audio/mpeg",buffer:await readFile(tonePath)});
   await editor.getByText("Трек добавлен в черновик.").waitFor();
-  assert.equal([...uploads.values()].filter(ticket=>ticket.body).length,7);
+  assert.equal([...uploads.tickets.values()].filter(ticket=>ticket.body).length,7);
   await shot(editor,"editor-music-upload");
-  const stored=await editor.evaluate(()=>JSON.parse(localStorage.getItem("eventiq:customer-draft:v1:692e3ce4-8b41-48be-b39b-c093be771c68")));
+  const stored=await readOwnerDraft(editor,uploads.subject,"692e3ce4-8b41-48be-b39b-c093be771c68");
   for(const field of photoFields)assert.match(stored.values[field.id].assetId,/^customer_/);
   for(const field of fieldNodes)assert.ok(stored.values[field.id],field.id);
   assert.equal(stored.values.ceremonyDate.value.value,"2027-06-12T18:25:00+06:00");

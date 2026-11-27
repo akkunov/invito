@@ -23,10 +23,10 @@ const buttonStyle = {border: 0, borderRadius: 6, background: accent,
   color: "#fff", padding: "10px 16px", font: "600 13px/1.3 system-ui", cursor: "pointer"};
 
 export function StudioV2Authenticated({locale}: {locale: Locale}) {
-  const config = useMemo(configuredSupabase, []);
+  const config = useMemo(() => configuredSupabase(), []);
   const client = useMemo(() => config ? getSupabaseBrowserClient(config) : null, [config]);
   const [status, setStatus] = useState<Status>(config ? "checking" : "anonymous");
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspace, setWorkspace] = useState<(Workspace & {subject:string}) | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [message, setMessage] = useState("");
   const [tokenMessage,setTokenMessage]=useState("");
@@ -36,7 +36,9 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
   const [formMessage, setFormMessage] = useState("");
   const emailRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const accessToken = useCallback(async () => config ? getSupabaseAccessToken(config) : null, [config]);
+  const workspaceSubject=workspace?.subject;
+  const accessToken = useCallback(async () =>
+    config && workspaceSubject ? getSupabaseAccessToken(config,workspaceSubject) : null, [config,workspaceSubject]);
 
   const remoteSettings = useMemo<RemoteSyncSettings | undefined>(() =>
     config && status === "ready" && workspace
@@ -47,14 +49,14 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
   useEffect(() => {
     if (!config || !client) return;
     let cancelled = false;
-    let requestId = 0;
+    let pending: AbortController | undefined;
     let connectedSubject: string | null = null;
 
     async function connect(session: Session | null) {
       if (cancelled) return;
       const subject = session?.user.id ?? null;
       if (subject && subject === connectedSubject) return; // INITIAL_SESSION and getSession may race.
-      const id = ++requestId;
+      pending?.abort();
       connectedSubject = subject;
       if (!session) {
         setWorkspace(null);
@@ -62,13 +64,16 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
         setStatus("anonymous");
         return;
       }
+      const request=new AbortController();
+      pending=request;
+      setDisplayName("");
       setStatus("connecting");
       setWorkspace(null);
       setMessage("");
       try {
         const api = async (path: string, init?: RequestInit) => {
           const response = await fetch(config!.apiBaseUrl + path, {
-            ...init,
+            ...init, signal:request.signal,
             headers: {
               "Authorization": "Bearer " + session.access_token,
               ...(init?.body ? {"Content-Type": "application/json"} : {}),
@@ -89,13 +94,13 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
           }) as Workspace;
         }
         if (!selected || !/^[a-f\d-]{36}$/i.test(selected.id)) throw new Error("WORKSPACE_INVALID");
-        if (!cancelled && id === requestId) {
-          setWorkspace(selected);
+        if (!request.signal.aborted) {
+          setWorkspace({...selected,subject:session.user.id});
           setDisplayName(me.displayName || "eventiq");
           setStatus("ready");
         }
       } catch (error) {
-        if (!cancelled && id === requestId) {
+        if (!request.signal.aborted) {
           setStatus("error");
           const code = error instanceof Error ? error.message : "UNKNOWN";
           setMessage(code.startsWith("API_")
@@ -115,7 +120,7 @@ export function StudioV2Authenticated({locale}: {locale: Locale}) {
       if (error) {setMessage("Не удалось восстановить сессию Supabase.");setStatus("error");return;}
       void connect(data.session);
     }).catch(() => {if (!cancelled) setStatus("error");});
-    return () => {cancelled = true; subscription.unsubscribe(); requestId++;};
+    return () => {cancelled = true; pending?.abort(); subscription.unsubscribe();};
   }, [client, config]);
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {mkdir, readFile} from "node:fs/promises";
 import {createRequire} from "node:module";
 import {resolve} from "node:path";
-import {ownerUploadFixture} from "./owner-upload-fixture.mjs";
+import {ownerUploadFixture,readOwnerDraft} from "./owner-upload-fixture.mjs";
 
 const require = createRequire(resolve(process.env.STUDIO_BROWSER_PREFIX ?? ".", "package.json"));
 const {chromium} = require("playwright");
@@ -168,7 +168,7 @@ async function checkEditor() {
     await input.setInputFiles(files);
     await page.getByText(new RegExp(`Загружено ${count} / ${count}`)).waitFor();
   }
-  assert.equal([...uploads.values()].filter(ticket => ticket.body).length,6);
+  assert.equal([...uploads.tickets.values()].filter(ticket => ticket.body).length,6);
   const mosaic = preview.locator(".v2-editorial-mosaic");
   await mosaic.locator("img").first().waitFor();
   assert.equal(await mosaic.locator("img").count(),4);
@@ -188,7 +188,7 @@ async function checkEditor() {
   await sheet.getByLabel("Количество гостей").selectOption("5");
   await sheet.locator('input[type="datetime-local"]').first().fill("2027-06-07T21:00");
   await close.click();
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("eventiq:customer-draft:v1:9aa5a875-fff4-4d92-ba35-a7f43e00a306")));
+  const stored = await readOwnerDraft(page,uploads.subject,"9aa5a875-fff4-4d92-ba35-a7f43e00a306");
   assert.match(stored.values.cover_coverPhoto.assetId,/^customer_/);
   assert.match(stored.values.gallery_venuePhoto.assetId,/^customer_/);
   assert.equal(new Set(stored.values.gallery_galleryWidget.assetIds).size,4);

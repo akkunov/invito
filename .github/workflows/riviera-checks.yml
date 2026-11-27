@@ -9,8 +9,9 @@ jobs:
   quality:
     env:
       NEXT_PUBLIC_API_URL: http://127.0.0.1:4000/api/v1
-      NEXT_PUBLIC_SUPABASE_URL: http://localhost:4000
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:4000
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local-browser-fixture
+      NEXT_PUBLIC_SUPABASE_GOOGLE_ENABLED: "true"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -68,6 +69,7 @@ jobs:
           PID=$!
           trap 'kill "$PID" || true' EXIT
           for i in {1..30}; do if curl -fsS http://127.0.0.1:4180/ru/editor?template=editorial-riviera-wedding > /dev/null; then break; fi; sleep 1; done
+          AUTH_QA_ARTIFACTS=studio-browser-artifacts/auth-sessions npm run test:auth-session-browser
           npm run test:customer-editor-browser
           node --experimental-strip-types scripts/test-studio-v2-public-browser.mjs
           export VF01_FIXTURE_PORT=4000 VF01_APP_ORIGIN=http://127.0.0.1:4180 VF01_API_ORIGIN=http://127.0.0.1:4000
