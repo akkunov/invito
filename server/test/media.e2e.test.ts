@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
 import {createServer} from "node:http";
 import {randomUUID, createHash} from "node:crypto";
 import type {AddressInfo} from "node:net";
@@ -49,8 +50,26 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
   const users: string[] = [];
   let workspaceId: string | null = null;
   let otherWorkspaceId: string | null = null;
+  let testTemplateId: string | undefined;
+  let draftId: string | undefined;
+  let personalWorkspaceId: string | undefined;
   t.after(async () => {
     try {
+      if(draftId){
+        await db.customerPublicationRelease.deleteMany({where:{publication:{draftId}}});
+        await db.customerPublication.deleteMany({where:{draftId}});
+        await db.invitationDraft.delete({where:{id:draftId}});
+      }
+      if(testTemplateId){
+        await db.template.update({where:{id:testTemplateId},data:{publishedVersionId:null}});
+        await db.templateVersion.deleteMany({where:{templateId:testTemplateId}});
+        await db.template.delete({where:{id:testTemplateId}});
+      }
+      if(personalWorkspaceId){
+        await db.auditEvent.deleteMany({where:{workspaceId:personalWorkspaceId}});
+        await db.mediaAsset.deleteMany({where:{workspaceId:personalWorkspaceId}});
+        await db.workspace.delete({where:{id:personalWorkspaceId}});
+      }
       if (workspaceId) {
         await db.auditEvent.deleteMany({where: {workspaceId}});
         await db.projectRevision.deleteMany({where: {project: {workspaceId}}});
@@ -226,6 +245,58 @@ test("Media #29.4: R2 verification, immutable keys and tenant access", async t =
   staged.set(audio.storageKey, {bytes:spoof,contentType:"audio/mpeg"});
   assert.equal((await request(root + "/" + audio.id + "/complete", owner, "POST")).status, 422);
   assert.equal((await db.mediaAsset.findUniqueOrThrow({where:{id:audio.id}})).status, "REJECTED");
+
+  await t.test("customer MP3 is verified, saved and published only for its owner",async()=>{
+    const pack=JSON.parse(await readFile(new URL("../../templates/packages/love-story.v1.json",import.meta.url),"utf8"));
+    const slug="audio-ci-"+randomUUID().slice(0,12);
+    const template=await db.template.create({data:{
+      workspaceId:workspaceId!,createdById:users[0]!,slug,name:"Audio QA",coverPageId:pack.manifest.coverPageId,
+    }});
+    testTemplateId=template.id;
+    const version=await db.templateVersion.create({data:{
+      templateId:template.id,createdById:users[0]!,number:1,
+      document:pack.document,personalization:pack.personalization,sha256:"a".repeat(64),
+    }});
+    await db.template.update({where:{id:template.id},data:{
+      publishedVersionId:version.id,status:"PUBLISHED",publicSlug:slug,latestVersion:1,
+    }});
+    const draft=await request("/customer/invitations",viewer,"POST",{templateVersionId:version.id});
+    assert.equal(draft.status,201,JSON.stringify(draft.data));
+    draftId=draft.data.id;
+    personalWorkspaceId=(await db.invitationDraft.findUniqueOrThrow({where:{id:draftId}})).workspaceId;
+    const bytes=await readFile(new URL("../../scripts/fixtures/media/qa-tone.mp3",import.meta.url));
+    const upload=await request("/customer/media/uploads",viewer,"POST",{
+      name:"qa-tone.mp3",mimeType:"audio/mpeg",bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex"),
+    });
+    assert.equal(upload.status,201,JSON.stringify(upload.data));
+    const id=upload.data.id;
+    const source="asset:"+id;
+    const editPath="/customer/invitations/"+draftId;
+    const save=(selected:string,token=viewer)=>request(editPath,token,"PATCH",{
+      expectedRevision:1,patch:{values:{rsvpPage_music:{kind:"music",source:selected}}},
+    });
+    assert.equal((await save(source)).status,422,"Pending audio must not be accepted");
+    assert.equal((await save("asset:"+mediaId)).status,422,"Foreign image must not be accepted as audio");
+    const pending=await db.mediaAsset.findUniqueOrThrow({where:{id}});
+    staged.set(pending.storageKey,{bytes,contentType:"audio/mpeg"});
+    assert.equal((await request("/customer/media/"+id+"/complete",viewer,"POST")).status,201);
+    const templateWorkspace=await db.workspace.findUniqueOrThrow({where:{id:workspaceId!}});
+    assert.notEqual((await request("/workspaces/"+templateWorkspace.id+"/media/"+id+"/read-url",owner)).status,200);
+    const signed=await request("/customer/media/"+id+"/read-url",viewer);
+    assert.equal(signed.data.expiresInSeconds,1200);
+    assert.equal((await save(source,owner)).status,404,"Foreign customer cannot edit the draft");
+    assert.equal((await save(source)).status,200);
+    const reopened=await request(editPath,viewer);
+    assert.equal(reopened.data.patch.values.rsvpPage_music.source,source);
+    assert.ok(reopened.data.mediaUrls[source]);
+    const published=await request(editPath+"/publish",viewer,"POST",{slug,expectedRevision:2,expectedRelease:0});
+    assert.equal(published.status,201,JSON.stringify(published.data));
+    const publicResponse=await fetch(base+"/public/customer-invitations/"+slug);
+    assert.equal(publicResponse.status,200);
+    const publication=await publicResponse.json();
+    assert.equal(publication.document.nodes.rsvpPage_music.block.source,source);
+    assert.ok(publication.mediaUrls[source]);
+  });
 });
 test("Cloudflare R2 SigV4 presigning works offline, with short image and bounded audio leases", async () => {
   const keys = ["R2_ACCOUNT_ID","R2_BUCKET","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","R2_ENDPOINT"] as const;

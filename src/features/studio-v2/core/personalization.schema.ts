@@ -13,7 +13,7 @@ export const editableFieldSchema=z.discriminatedUnion("kind",[
  common.extend({kind:z.literal("image"),nodeId:id,minWidth:z.number().int().min(1).max(4096),minHeight:z.number().int().min(1).max(4096),allowOriginalResolution:z.literal(true).optional()}),
  common.extend({kind:z.literal("gallery"),nodeId:id,maxPhotos:z.number().int().min(1).max(4)}),
  common.extend({kind:z.literal("schedule"),nodeId:id,maxItems:z.number().int().min(1).max(20)}),
- common.extend({kind:z.literal("music"),nodeId:id,sources:z.array(musicSourceSchema).max(50).refine(v=>v.every(Boolean)&&new Set(v).size===v.length,"Invalid music choices")}),
+ common.extend({kind:z.literal("music"),nodeId:id,allowUpload:z.literal(true).optional(),sources:z.array(musicSourceSchema).max(50).refine(v=>v.every(Boolean)&&new Set(v).size===v.length,"Invalid music choices")}),
  common.extend({kind:z.literal("rsvp"),nodeId:id,maxGuests:z.number().int().min(1).max(10)}),
  common.extend({kind:z.literal("theme"),themeIds:uniqueIds,allowBase:z.boolean()}),
 ]);
@@ -27,7 +27,7 @@ export const personalizationSchema=z.strictObject({version:z.literal(1),locales:
   if(f.kind==="number"&&f.min>f.max)ctx.addIssue({code:"custom",path:["fields",i],message:"Minimum exceeds maximum"});
   if(f.kind==="textStyle"&&(f.minFontSize>f.maxFontSize||f.lineHeightRange&&f.lineHeightRange.min>f.lineHeightRange.max||f.letterSpacingRange&&f.letterSpacingRange.min>f.letterSpacingRange.max))ctx.addIssue({code:"custom",path:["fields",i],message:"Invalid text style font range"});
   if(f.kind==="theme"&&!f.allowBase&&!f.themeIds.length)ctx.addIssue({code:"custom",path:["fields",i],message:"No theme choices"});
-  if(f.kind==="music"&&!f.sources.length&&f.required)ctx.addIssue({code:"custom",path:["fields",i],message:"No music choices"});
+  if(f.kind==="music"&&!f.sources.length&&!f.allowUpload&&f.required)ctx.addIssue({code:"custom",path:["fields",i],message:"No music choices"});
   ids.add(f.id);targets.add(target);
  }
 });

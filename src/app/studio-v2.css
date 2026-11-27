@@ -1841,7 +1841,7 @@
  color: #7a4824;
 }
 [data-widget-preset="stationery"] .v2-guest-schedule span {
- font-size: 13px;
+ font-size: 12.5px;
  line-height: 16px;
 }
 [data-widget-preset="stationery"] .v2-guest-form {
@@ -1912,3 +1912,37 @@
  }
  [data-widget-preset="stationery"] .v2-guest-schedule[data-layout="rows"] time { font-size: 18px; }
 }
+
+.v2-stationery-music {
+ display: grid;
+ grid-template-columns: minmax(44px, 68px) minmax(0, 1fr) 44px minmax(27px, 51px);
+ align-items: center;
+ gap: 10px;
+ min-height: 74px;
+ padding: 6px 10px;
+ border: 1px solid color-mix(in srgb, #a99b8d 58%, transparent);
+ border-radius: 16px;
+ text-align: start;
+}
+.v2-stationery-music-cover {
+ position: relative;
+ display: grid;
+ place-items: center;
+ height: 59px;
+ overflow: hidden;
+ border-radius: 10px;
+ background: color-mix(in srgb, var(--v2-guest-accent) 10%, transparent);
+}
+.v2-stationery-music-cover img { object-fit: cover; }
+.v2-stationery-music-copy { display: grid; gap: 4px; }
+.v2-stationery-music-copy strong { font-size: 14px; font-weight: 650; }
+.v2-stationery-music-copy small { font-size: 12px; }
+.v2-stationery-music-copy :is(strong, small) { overflow-wrap: anywhere; }
+[data-widget-preset="stationery"] .v2-stationery-music button {
+ width: 44px;
+ height: 44px;
+ padding: 0;
+ border-radius: 50%;
+}
+.v2-stationery-music-wave { max-width: 100%; justify-self: center; color: #4f3029; }
+.v2-stationery-music > p { grid-column: 1 / -1; font-size: 13px; }

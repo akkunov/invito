@@ -72,7 +72,7 @@ export class CustomerPublicationService {
       select:{id:true,workspaceId:true,uploadedById:true},
     }):[];
     if(assets.length!==ids.length)throw new UnprocessableEntityException("PUBLICATION_MEDIA_UNAVAILABLE");
-    const personalIds=new Set(owned.assets.map(asset=>asset.storageKey.slice(6)));
+    const personalIds=new Set(Object.keys(owned.mediaUrls).map(key=>key.slice(6)));
     if(assets.some(asset=>personalIds.has(asset.id)
       ?asset.workspaceId!==draft.workspaceId||asset.uploadedById!==userId
       :asset.workspaceId!==version.template.workspaceId))

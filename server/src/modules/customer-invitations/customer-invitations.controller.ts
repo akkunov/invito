@@ -13,7 +13,6 @@ export const accountOverviewQuery=z.strictObject({
 });
 export const createCustomerInvitationSchema=z.strictObject({templateVersionId:uuid});
 export const updateCustomerInvitationSchema=z.strictObject({expectedRevision:z.number().int().min(1),patch:personalizationPatchSchema});
-export const customerPhotoSchema=startUploadInput.safeExtend({mimeType:z.enum(["image/jpeg","image/png","image/webp"])});
 
 @Controller("customer")
 export class CustomerInvitationsController {
@@ -52,20 +51,20 @@ export class CustomerInvitationsController {
 
   @Post("media/uploads")
   @Header("Cache-Control","no-store")
-  startPhoto(@Req() request:AuthenticatedRequest,@Body() body:unknown){
-    const input=parseInput(customerPhotoSchema,body);
-    return this.service.startPhoto(request.user.id,input);
+  startMedia(@Req() request:AuthenticatedRequest,@Body() body:unknown){
+    const input=parseInput(startUploadInput,body);
+    return this.service.startMedia(request.user.id,input);
   }
 
   @Get("media/:id/read-url")
   @Header("Cache-Control","no-store")
-  photoUrl(@Req() request:AuthenticatedRequest,@Param("id") id:string){
-    return this.service.photoUrl(request.user.id,parseInput(uuid,id));
+  mediaUrl(@Req() request:AuthenticatedRequest,@Param("id") id:string){
+    return this.service.mediaUrl(request.user.id,parseInput(uuid,id));
   }
 
   @Post("media/:id/complete")
   @Header("Cache-Control","no-store")
-  completePhoto(@Req() request:AuthenticatedRequest,@Param("id") id:string){
-    return this.service.completePhoto(request.user.id,parseInput(uuid,id));
+  completeMedia(@Req() request:AuthenticatedRequest,@Param("id") id:string){
+    return this.service.completeMedia(request.user.id,parseInput(uuid,id));
   }
 }

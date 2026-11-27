@@ -139,8 +139,9 @@ async function compile(entry, recipe) {
         block={...block,assetIds:await Promise.all(op.images.map(async (media,i)=>(await asset(id+"_"+(i+1),media)).id))};
         field(id,["Фотогалерея","Сүрөт галереясы"],"photos",{kind:"gallery",nodeId:id,maxPhotos:4});
        }else if(op.kind==="music"){
-        block={...block,source:""};
-        field(id,["Музыка","Музыка"],"music",{kind:"music",nodeId:id,sources:[]});
+        const cover=op.cover?await asset(id+"_cover",op.cover):null;
+        block={...block,source:"",...(cover?{coverAssetId:cover.id}:{})};
+        field(id,["Музыка","Музыка"],"music",{kind:"music",nodeId:id,sources:[],...(op.allowUpload?{allowUpload:true}:{})});
        }else if(op.kind==="calendar"||op.kind==="countdown"){
         block={...block,target:collectionDate,targetKey:"ceremonyDate"};
        }

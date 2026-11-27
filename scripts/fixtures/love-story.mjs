@@ -7,7 +7,9 @@ const packagePath = process.argv[2] ?? new URL("../../templates/packages/love-st
 const version = "692e3ce4-8b41-48be-b39b-c093be771c68";
 const catalogPath = "/api/v1/catalog/templates/love-story";
 const publicPath = "/api/v1/public/customer-invitations/love-story";
-const views = new Set([publicPath, publicPath + "-long", publicPath + "-closed", publicPath + "-unavailable"]);
+const views = new Set([publicPath, publicPath + "-long", publicPath + "-closed", publicPath + "-unavailable", publicPath + "-silent"]);
+const demoSource = "asset:9f71594c-5a5c-4afa-aeee-9d06a5a6d645";
+const demoAudio = new URL("./media/qa-tone.mp3", import.meta.url);
 
 createServer(async (request, response) => {
   const reply = (status, body) => response.writeHead(status, {"Content-Type": "application/json"}).end(JSON.stringify(body));
@@ -18,6 +20,11 @@ createServer(async (request, response) => {
 
   try {
     const path = new URL(request.url, appOrigin).pathname;
+    if(request.method==="GET"&&path==="/qa-tone.mp3"){
+      const audio=await readFile(demoAudio);
+      return response.writeHead(200,{"Content-Type":"audio/mpeg","Content-Length":audio.length}).end(audio);
+    }
+    if(request.method==="GET"&&path==="/api/v1/catalog/music")return reply(200,{tracks:[]});
     if (request.method === "POST" && path === publicPath + "/rsvp") {
       const chunks = [];
       for await (const chunk of request) chunks.push(chunk);
@@ -39,9 +46,15 @@ createServer(async (request, response) => {
         };
       }
       if (path.endsWith("-closed")) document.nodes.rsvpPage_rsvpWidget.block.deadline = "2024-01-01T00:00:00Z";
+      const music=document.nodes.rsvpPage_music;
+      const mediaUrls={};
+      if(music?.appearance.preset==="stationery"&&!path.endsWith("-silent")){
+        music.block.source=demoSource;
+        mediaUrls[demoSource]="http://127.0.0.1:"+port+"/qa-tone.mp3";
+      }
       return reply(200, {
         slug: path.split("/").at(-1), release: 1, sha256: "fixture", document,
-        mediaUrls: {}, rsvpEnabled: !path.endsWith("-unavailable"), turnstileSiteKey: null,
+        mediaUrls, rsvpEnabled: !path.endsWith("-unavailable"), turnstileSiteKey: null,
       });
     }
     return reply(404, {});

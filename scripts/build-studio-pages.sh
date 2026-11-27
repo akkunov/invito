@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export NEXT_PUBLIC_PAGES_BASE_PATH=/invito
-rm -rf 'src/app/[locale]/templates' 'src/app/[locale]/editor' 'src/app/[locale]/i' 'src/app/[locale]/auth'
-rm -f 'src/app/[locale]/page.tsx' src/app/robots.ts src/app/sitemap.ts
+# Keep just the Studio route tree in the CI checkout. Runtime routes require the real API.
+find 'src/app/[locale]' -mindepth 1 -maxdepth 1 ! -name admin ! -name layout.tsx -exec rm -rf -- {} +
+rm -f src/app/manifest.ts src/app/robots.ts src/app/sitemap.ts
 rm -rf .next out
 cat > next.config.ts <<'CONFIG'
 import type { NextConfig } from "next";

@@ -100,3 +100,20 @@ test("Love Story preserves its six photo slots, decorative layers and one event 
  assert.equal(countdownTarget(patched,patched.nodes.details_calendarAction.block),date);
  assert.equal(snapshot.nodes.rsvpPage_rsvpWidget.appearance.preset,"stationery");
 });
+
+test("Love Story opts into verified music references while legacy tracks remain allowlisted",()=>{
+ const pack=JSON.parse(readFileSync(new URL("../templates/packages/love-story.v1.json",import.meta.url),"utf8"));
+ const {snapshot,contract}=validatedTemplateVersion(pack.document,pack.personalization);
+ const id="rsvpPage_music";
+ const source="asset:36F3B7FE-B28A-4185-B0E3-989EB71BAFC0";
+ const patch={values:{[id]:{kind:"music",source}}};
+ assert.equal(finalizePersonalization(snapshot,contract,patch).nodes[id].block.source,source.toLowerCase());
+ const legacy={...contract,fields:contract.fields.map(field=>{
+  if(field.id!==id)return field;
+  const {allowUpload,...unchanged}=field;
+  return unchanged;
+ })};
+ assert.throws(()=>finalizePersonalization(snapshot,legacy,patch));
+ assert.throws(()=>finalizePersonalization(snapshot,contract,{values:{[id]:{kind:"music",source:"https://example.test/unlisted.mp3"}}}));
+ assert.equal(finalizePersonalization(snapshot,contract,{values:{[id]:{kind:"music",source:""}}}).nodes[id].block.source,"");
+});

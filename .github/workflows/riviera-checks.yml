@@ -9,6 +9,8 @@ jobs:
   quality:
     env:
       NEXT_PUBLIC_API_URL: http://127.0.0.1:4000/api/v1
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:4000
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local-browser-fixture
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -19,6 +21,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:template-assets
+      - run: npm run test:template-collection
       - run: npm run test:google-auth
       - run: npm run test:riviera
       - run: npm run test:monochrome
@@ -67,6 +70,12 @@ jobs:
           for i in {1..30}; do if curl -fsS http://127.0.0.1:4180/ru/editor?template=editorial-riviera-wedding > /dev/null; then break; fi; sleep 1; done
           npm run test:customer-editor-browser
           node --experimental-strip-types scripts/test-studio-v2-public-browser.mjs
+          export VF01_FIXTURE_PORT=4000 VF01_APP_ORIGIN=http://127.0.0.1:4180 VF01_API_ORIGIN=http://127.0.0.1:4000
+          node scripts/fixtures/love-story.mjs > "$RUNNER_TEMP/love-story-api.log" 2>&1 &
+          API_PID=$!
+          trap 'kill "$PID" "$API_PID" || true' EXIT
+          curl --fail --retry 10 --retry-connrefused --retry-delay 1 -sS "$VF01_API_ORIGIN/api/v1/catalog/templates/love-story" > /dev/null
+          node scripts/fixtures/capture-love-story.mjs studio-browser-artifacts/love-story --owner
       - name: Build exact GitHub Pages static preview
         run: bash scripts/build-studio-pages.sh
       - name: Test static preview in Chromium

@@ -168,6 +168,7 @@ export const projectDocumentSchema = z.strictObject({
     if(node.type!=="widget")return;
     const b=node.block;
     if(b.kind==="gallery")for(const id of b.assetIds)if(!doc.assets[id])issue(path,"Missing gallery asset");
+    if(b.kind==="music"&&b.coverAssetId&&!doc.assets[b.coverAssetId])issue(path,"Missing music cover asset");
     if(b.kind==="calendar"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Calendar requires date variable");
     if(b.kind==="countdown"&&b.targetKey&&doc.variables[b.targetKey]?.type!=="date")issue(path,"Countdown requires date variable");
     if(b.kind==="location"&&b.addressKey&&doc.variables[b.addressKey]?.type!=="text")issue(path,"Location requires text variable");

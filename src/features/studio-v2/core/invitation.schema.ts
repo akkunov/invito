@@ -9,9 +9,12 @@ export const bindingValueSchema=z.discriminatedUnion("type",[
  z.strictObject({type:z.literal("number"),value:z.number().finite()}),
  z.strictObject({type:z.literal("boolean"),value:z.boolean()}),
 ]);
+export function musicAssetId(source:string):string|undefined {
+ return /^asset:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.exec(source)?.[1].toLowerCase();
+}
 export const musicSourceSchema=z.string().max(1000).refine(value=>{
  if(value==="")return true;
- if(/^asset:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value))return true;
+ if(musicAssetId(value))return true;
  if(/^\/audio\/[a-zA-Z0-9_/-]+\.(mp3|ogg|m4a|wav)$/i.test(value))return true;
  try{const url=new URL(value);return url.protocol==="https:"&&!url.username&&!url.password&&!url.hash&&/\.(mp3|ogg|m4a|wav)$/i.test(url.pathname);}catch{return false;}
 },"Use a verified asset:UUID, HTTPS audio file or /audio/ path");
@@ -22,7 +25,7 @@ export const invitationBlockSchema=z.discriminatedUnion("kind",[
  z.strictObject({kind:z.literal("countdown"),title:localized,layout:z.literal("days").optional(),target:instantSchema,targetKey:bindingKeySchema.nullable()}),
  z.strictObject({kind:z.literal("location"),title:localized,showAddress:z.boolean().optional(),address:localized,addressKey:bindingKeySchema.nullable()}),
  z.strictObject({kind:z.literal("gallery"),title:localized,layout:z.enum(["carousel","mosaic","stackedMosaic","polaroids","exhibition"]).optional(),assetIds:z.array(assetId).max(4).refine(ids=>new Set(ids).size===ids.length,"Duplicate photo")}),
- z.strictObject({kind:z.literal("music"),title:localized,source:musicSourceSchema}),
+ z.strictObject({kind:z.literal("music"),title:localized,source:musicSourceSchema,caption:localized.optional(),coverAssetId:assetId.optional()}),
  z.strictObject({kind:z.literal("schedule"),title:localized,layout:z.enum(["rows","spaced","plan"]).optional(),items:z.array(z.strictObject({time:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),label:localized})).max(20)}),
 ]);
 export const blockAppearanceSchema=z.strictObject({preset:z.literal("stationery").optional(),fontFamily:z.enum(["sans","serif"]),fontSize:z.number().min(12).max(100),color:z.string().regex(/^#[0-9A-Fa-f]{6}$/),background:z.union([z.literal("transparent"),z.string().regex(/^#[0-9A-Fa-f]{6}$/)]),buttonColor:z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),accent:z.string().regex(/^#[0-9A-Fa-f]{6}$/)});

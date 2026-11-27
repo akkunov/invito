@@ -6,7 +6,7 @@ import type {EditableField,PersonalizedValue} from "@/features/studio-v2/core/pe
 import type {ProjectDocumentV2} from "@/features/studio-v2/core/document.schema";
 
 type Locale="ru"|"ky";
-type Props={field:EditableField;value:PersonalizedValue|undefined;document:ProjectDocumentV2;locale:Locale;locales:readonly Locale[];urls?:Readonly<Record<string,string>>;musicLibrary?:boolean;onChange:(value:PersonalizedValue)=>void};
+type Props={field:EditableField;value:PersonalizedValue|undefined;document:ProjectDocumentV2;locale:Locale;locales:readonly Locale[];urls?:Readonly<Record<string,string>>;musicLibrary?:boolean;onMusicUploaded?:(value:{source:string;url:string})=>void;onChange:(value:PersonalizedValue)=>void};
 const copy=(locale:Locale,ru:string,ky:string)=>locale==="ky"?ky:ru;
 const localizedDate=(iso:string)=>{const ms=Date.parse(iso);return Number.isFinite(ms)?new Date(ms+6*3600000).toISOString().slice(0,16):"";};
 const toInstant=(value:string)=>value?value+":00+06:00":null;
@@ -16,7 +16,7 @@ function DateInput({value,onChange,locale}:{value:string|null;onChange:(date:str
 function NumberInput({value,min,max,onChange}:{value:number;min:number;max:number;onChange:(n:number)=>void}){
  return <StudioNumberInput min={min} max={max} value={value} onValueChange={value=>{if(value!==undefined)onChange(value);}}/>;
 }
-export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={},musicLibrary=false,onChange}:Props){
+export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={},musicLibrary=false,onMusicUploaded,onChange}:Props){
  const t=(ru:string,ky:string)=>copy(locale,ru,ky),title=f.label[locale];
  const binding=v?.kind==="binding"?v.value:undefined;
  const assets=Object.values(doc.assets).filter(asset=>!asset.decorative);
@@ -87,7 +87,7 @@ export function SimpleField({field:f,value:v,document:doc,locale,locales,urls={}
   const ids=v?.kind==="gallery"?v.assetIds:[];
   control=<><p className="se-media-hint">{t("Выберите фотографии для галереи","Галерея үчүн сүрөттөрдү тандаңыз")} · {ids.length}/{f.maxPhotos}</p><div className="se-media-grid" role="group" aria-label={title}>{assets.map(a=><label className="se-media-option" key={a.id} data-selected={ids.includes(a.id)}><input type="checkbox" aria-label={a.name} checked={ids.includes(a.id)} disabled={!ids.includes(a.id)&&ids.length>=f.maxPhotos} onChange={e=>onChange({kind:"gallery",assetIds:e.target.checked?[...ids,a.id]:ids.filter(id=>id!==a.id)})}/>{preview(a)}<span className="se-media-name">{a.name}</span><span className="se-media-selected" aria-hidden="true">✓</span></label>)}</div></>;break;
  }
- case "music":control=musicLibrary?<MusicLibraryPicker locale={locale} allowedSources={f.sources} value={v?.kind==="music"?v.source:""} onChoose={source=>onChange({kind:"music",source})}/>:<label className="se-control"><span>{t("Композиция","Музыка")}</span><select value={v?.kind==="music"?v.source:""} onChange={e=>onChange({kind:"music",source:e.target.value})}><option value="">{t("Без музыки","Музыкасыз")}</option>{f.sources.map((s,i)=><option value={s} key={s}>{t("Композиция","Музыка")} {i+1}</option>)}</select></label>;break;
+ case "music":control=musicLibrary||f.allowUpload&&onMusicUploaded?<MusicLibraryPicker locale={locale} allowedSources={f.sources} value={v?.kind==="music"?v.source:""} onChoose={source=>onChange({kind:"music",source})} onUploaded={f.allowUpload?onMusicUploaded:undefined}/>:<label className="se-control"><span>{t("Композиция","Музыка")}</span><select value={v?.kind==="music"?v.source:""} onChange={e=>onChange({kind:"music",source:e.target.value})}><option value="">{t("Без музыки","Музыкасыз")}</option>{f.sources.map((s,i)=><option value={s} key={s}>{t("Композиция","Музыка")} {i+1}</option>)}</select></label>;break;
  case "rsvp":{
   const deadline=v?.kind==="rsvp"?v.deadline:null,maxGuests=v?.kind==="rsvp"?v.maxGuests:1;
   control=<><label className="se-control"><span>{t("Подтвердить до","Ырастоо мөөнөтү")}</span><DateInput locale={locale} value={deadline} onChange={d=>onChange({kind:"rsvp",deadline:d,maxGuests})}/></label><label className="se-control"><span>{t("Количество гостей","Коноктордун саны")}</span><select value={maxGuests} onChange={e=>onChange({kind:"rsvp",deadline,maxGuests:Number(e.target.value)})}>{Array.from({length:f.maxGuests},(_,i)=><option key={i} value={i+1}>{i+1}</option>)}</select></label></>;break;

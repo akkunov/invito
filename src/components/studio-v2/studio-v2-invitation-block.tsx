@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useLayoutEffect,useId,useRef,useState,type CSSProperties,type FormEvent} from "react";
-import {ArrowRight, Cake, CalendarDays, ChevronDown, ConciergeBell, Link2, ExternalLink, LoaderCircle, Map as MapIcon, MapPin, Music2, Pause} from "lucide-react";
+import {ArrowRight, AudioLines, Play, Cake, CalendarDays, ChevronDown, ConciergeBell, Link2, ExternalLink, LoaderCircle, Map as MapIcon, MapPin, Music2, Pause} from "lucide-react";
 import Image from "next/image";
 import {isHeritagePresentation} from "@/features/studio-v2/core/heritage-layout.ts";
 import {weddingCalendar} from "@/features/studio-v2/core/calendar.ts";
@@ -201,25 +201,49 @@ function Gallery({node,document,guest,mediaUrls}:Props){
  const url=active.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+active.storageKey:mediaUrls?.[active.storageKey];
  return <div className="v2-guest-gallery"><div className="v2-guest-photo">{url?<Image unoptimized fill src={url} alt={active.name} sizes="(max-width: 768px) 100vw, 768px"/>:<span>{active.name}</span>}</div>{assets.length>1&&<div className="v2-guest-options"><button type="button" disabled={guest.mode==="studio"} aria-label={w.previous} onClick={()=>setIndex(i=>(i+assets.length-1)%assets.length)}>←</button><span>{index%assets.length+1} / {assets.length}</span><button type="button" disabled={guest.mode==="studio"} aria-label={w.next} onClick={()=>setIndex(i=>(i+1)%assets.length)}>→</button></div>}</div>;
 }
-function Music({source,locale,guest,editorial}:{source:string;editorial:boolean;locale:ProjectDocumentV2["locale"];guest:GuestMode}){
+function Music({source,locale,guest,editorial,card}:{source:string;editorial:boolean;locale:ProjectDocumentV2["locale"];guest:GuestMode;card?:{cover?:string;title:string;caption?:string}}){
  const ref=useRef<HTMLAudioElement|null>(null),[playing,setPlaying]=useState(false),[error,setError]=useState(false);
  const w=words[locale];
- // Signed URL refresh must not pause an already playing track; a different authored source changes the Music key.
- useEffect(()=>()=>{ref.current?.pause();ref.current=null;},[]);
+ // Signed URL renewal does not interrupt playback. A different track remounts this widget.
+ useEffect(()=>()=>{
+  const audio=ref.current;
+  if(audio){audio.onplay=null;audio.onpause=null;audio.onerror=null;audio.pause();}
+  ref.current=null;
+ },[]);
  async function toggle(){
   if(guest.mode==="studio"||!source)return;
   const url=source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+source:source;
-  // Never change a playing stream; on resume use a newer signed URL if available.
-  if(ref.current?.paused&&ref.current.src!==new URL(url,window.location.href).href){
-   ref.current.pause();ref.current=null;
+  if(ref.current?.paused&&(ref.current.error||ref.current.src!==new URL(url,window.location.href).href)){
+   ref.current.onplay=null;ref.current.onpause=null;ref.current.onerror=null;
+   ref.current=null;
   }
-  if(!ref.current){const audio=new Audio(url);audio.loop=true;ref.current=audio;}
+  if(!ref.current){
+   const audio=new Audio(url);
+   audio.loop=true;
+   audio.onplay=()=>setPlaying(true);
+   audio.onpause=()=>setPlaying(false);
+   audio.onerror=()=>{setError(true);setPlaying(false);};
+   ref.current=audio;
+  }
   const audio=ref.current;
-  if(!audio.paused){audio.pause();setPlaying(false);return;}
-  try{setError(false);await audio.play();setPlaying(true);}catch{setError(true);setPlaying(false);}
+  if(!audio.paused){audio.pause();return;}
+  try{setError(false);await audio.play();}catch{if(ref.current===audio){setError(true);setPlaying(false);}}
  }
- if(editorial&&!source)return null;
- return <><button type="button" aria-label={playing?w.pause:w.play} disabled={!source||guest.mode==="studio"} aria-pressed={playing} onClick={()=>void toggle()}>{editorial?(playing?<Pause size={17}/>:<Music2 size={17}/>):playing?w.pause:w.play}</button>{!source?<p>{w.noMusic}</p>:error?<p role="status">{w.audioError}</p>:null}</>;
+ if((editorial||card)&&!source)return null;
+ const button=<button type="button" aria-label={playing?w.pause:w.play} disabled={!source||guest.mode==="studio"} aria-pressed={playing} onClick={()=>void toggle()}>
+   {!(editorial||card)?(playing?w.pause:w.play):playing?<Pause size={17}/>:card?<Play size={17}/>:<Music2 size={17}/>}
+ </button>;
+ const notice=error?<p role="status">{w.audioError}</p>:null;
+ if(card)return <div className="v2-stationery-music">
+   <span className="v2-stationery-music-cover" aria-hidden="true">
+    {card.cover?<Image src={card.cover} alt="" fill sizes="68px" unoptimized/>:<Music2 size={23}/>}
+   </span>
+   <div className="v2-stationery-music-copy"><strong>{card.title}</strong>{card.caption&&<small>{card.caption}</small>}</div>
+   {button}
+   <AudioLines className="v2-stationery-music-wave" size={51} strokeWidth={1.25} aria-hidden="true"/>
+   {notice}
+ </div>;
+ return <>{button}{!source?<p>{w.noMusic}</p>:notice}</>;
 }
 export function InvitationBlockView(props:Props){
  const {node,document,guest}=props,b=node.block,w=words[document.locale],a=node.appearance;
@@ -231,19 +255,20 @@ export function InvitationBlockView(props:Props){
  const heritage=isHeritagePresentation(document.presentation)||collection;
  const measureRef=useRef<HTMLDivElement>(null);
  const {onMeasure}=props;
+ const musicSource=b.kind==="music"&&a.preset==="stationery"?b.source:undefined;
  useLayoutEffect(()=>{
-  const content=measureRef.current?.querySelector<HTMLElement>("form, .v2-guest-schedule, .v2-heritage-location, .v2-collection-plan");
+  const content=measureRef.current?.querySelector<HTMLElement>("form, .v2-guest-schedule, .v2-heritage-location, .v2-collection-plan, .v2-stationery-music");
   if(!heritage||!content||!onMeasure)return;
   const report=()=>onMeasure(node.id,content.offsetHeight);
   const observer=new ResizeObserver(report);
   observer.observe(content);
   report();
   return ()=>observer.disconnect();
- },[heritage,node.id,onMeasure]);
+ },[heritage,node.id,onMeasure,musicSource]);
  const mapLabel=gilded||alpine||felt||collection?<><MapIcon size={alpine?22:24}/>{document.locale==="ru"?"Открыть карту":"Картаны ачуу"}<ExternalLink size={18}/></>:heritage?<><MapIcon size={20}/>{editorialWords[document.locale].map}<ExternalLink size={16}/></>:editorial?<>{editorialWords[document.locale].map}<ExternalLink size={10}/></>:w.map;
  const style={fontFamily:editorial||heritage?"var(--font-ui), Arial, sans-serif":a.fontFamily==="serif"?"Georgia, serif":"Arial, sans-serif",fontSize:a.fontSize,color:a.color,background:a.background,"--v2-guest-accent":a.accent,"--v2-guest-button-ink":a.buttonColor} as CSSProperties;
  return <div className={"v2-guest-block"+(b.kind==="gallery"&&b.layout&&b.layout!=="carousel"?" v2-guest-block-mosaic":"")} ref={measureRef} data-heritage-widget={heritage?b.kind:undefined} data-editorial-widget={editorial?b.kind:undefined} data-widget-preset={a.preset} style={style} {...(guest.mode==="studio"?{inert:true}:{})}>
- {b.kind!=="calendar"&&b.kind!=="sectionLink"&&b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
+ {b.kind!=="calendar"&&b.kind!=="sectionLink"&&!(b.kind==="music"&&a.preset==="stationery")&&b.title[document.locale]&&<h3>{b.title[document.locale]}</h3>}
  {b.kind==="rsvp"&&<Rsvp {...props}/>}
  {b.kind==="calendar"&&<Calendar block={b} doc={document} disabled={guest.mode==="studio"} stationery={a.preset==="stationery"}/>}
  {b.kind==="sectionLink"&&(props.sectionLinks?.[b.destination]
@@ -263,7 +288,14 @@ export function InvitationBlockView(props:Props){
   return heritage?<div className="v2-heritage-location">{location}</div>:location;
  })()}
  {b.kind==="gallery"&&(b.layout&&b.layout!=="carousel"?<MosaicGallery {...props}/>:<Gallery {...props}/>)}
- {b.kind==="music"&&<Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source} locale={document.locale} guest={guest} editorial={editorial||heritage}/>}
+ {b.kind==="music"&&(()=>{
+  const cover=b.coverAssetId?document.assets[b.coverAssetId]:undefined;
+  const coverUrl=cover?.storageKey.startsWith("/images/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+cover.storageKey:
+   cover?props.mediaUrls?.[cover.storageKey]:undefined;
+  const card=a.preset==="stationery"?{cover:coverUrl,title:b.title[document.locale]||w.play,caption:b.caption?.[document.locale]}:undefined;
+  return <Music key={b.source} source={b.source.startsWith("asset:")?(props.mediaUrls?.[b.source]??""):b.source}
+    locale={document.locale} guest={guest} editorial={editorial||heritage} card={card}/>;
+ })()}
  {b.kind==="schedule"&&(b.layout==="plan"?<PlanSchedule block={b} locale={document.locale} disabled={guest.mode==="studio"}/>:<div className="v2-guest-schedule" data-layout={b.layout==="spaced"?"rows":b.layout} data-spaced={b.layout==="spaced"||undefined}>
   {b.items.length?b.items.map((item,i)=>{
    const label=item.label[document.locale];

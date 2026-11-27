@@ -1,14 +1,16 @@
 "use client";
 
-import {useEffect,useMemo,useState} from "react";
-import {Check,Music2,Search} from "lucide-react";
+import {useEffect,useMemo,useRef,useState} from "react";
+import {Check,Music2,Search,Upload} from "lucide-react";
 import {musicCatalogSchema,type MusicTrack} from "@/features/invitations/music-catalog.schema";
+import {CustomerCloudError,uploadCustomerAudio} from "@/features/invitations/customer-cloud";
 import type {Locale} from "@/i18n/locales";
 
 /** One picker for the legacy and versioned editor adapters.
  * The versioned adapter passes its exact immutable permitted sources. */
-export function MusicLibraryPicker({locale,allowedSources,value,onChoose}:{
+export function MusicLibraryPicker({locale,allowedSources,value,onChoose,onUploaded}:{
  locale:Locale;allowedSources?:readonly string[];value:string;onChoose:(source:string,track?:MusicTrack)=>void;
+ onUploaded?:(result:{source:string;url:string})=>void;
 }){
  const ru=locale==="ru",t=(a:string,b:string)=>ru?a:b;
  const [tracks,setTracks]=useState<MusicTrack[]>([]);
@@ -46,6 +48,50 @@ export function MusicLibraryPicker({locale,allowedSources,value,onChoose}:{
     {preview===item.source&&!item.source.startsWith("asset:")&&<audio controls preload="none" src={item.source.startsWith("/audio/")?(process.env.NEXT_PUBLIC_PAGES_BASE_PATH??"")+item.source:item.source}/>}
     {preview===item.source&&item.source.startsWith("asset:")&&<small>{t("Прослушайте в приглашении после выбора.","Тандагандан кийин чакыруудан угуңуз.")}</small>}
    </div>)}
+   {onUploaded&&<MusicUpload locale={locale} selected={!!value&&!(allowedSources??[]).includes(value)} onUploaded={onUploaded}/>}
    <p className="ue-music-hint">{t("Музыка у гостей запускается по нажатию. Используйте только файлы с правом публичного воспроизведения.","Коноктор баскычты басканда музыка ойнойт. Уруксат берилген файлдарды колдонуңуз.")}</p>
+ </div>;
+}
+
+function MusicUpload({locale,selected,onUploaded}:{
+ locale:Locale;selected:boolean;onUploaded:(result:{source:string;url:string})=>void;
+}){
+ const ru=locale==="ru";
+ const input=useRef<HTMLInputElement>(null);
+ const latest=useRef<typeof onUploaded|null>(null);
+ const [busy,setBusy]=useState(false);
+ const [status,setStatus]=useState<"idle"|"done"|"sign-in"|"format"|"error">("idle");
+ useEffect(()=>{latest.current=onUploaded;return()=>{latest.current=null;};},[onUploaded]);
+ async function upload(file:File){
+  setBusy(true);setStatus("idle");
+  try{
+   const result=await uploadCustomerAudio(file);
+   latest.current?.(result);
+   setStatus("done");
+  }catch(error){
+   setStatus(error instanceof CustomerCloudError&&error.status===401?"sign-in":
+    error instanceof Error&&error.message==="INVALID_AUDIO_FILE"?"format":"error");
+  }finally{
+   if(input.current)input.current.value="";
+   setBusy(false);
+  }
+ }
+ const messages={
+  "sign-in":ru?"Войдите в аккаунт, чтобы загрузить трек.":"Трек жүктөө үчүн аккаунтка кириңиз.",
+  format:ru?"Выберите файл MP3 размером до 15 МБ.":"15 МБга чейинки MP3 файлын тандаңыз.",
+  error:ru?"Не удалось проверить загрузку. Повторите попытку.":"Жүктөөнү текшерүү мүмкүн болгон жок. Кайра аракет кылыңыз.",
+  done:ru?"Трек добавлен в черновик.":"Трек черновикке кошулду.",
+  idle:"",
+ };
+ return <div className="ue-music-upload">
+   <input ref={input} type="file" accept="audio/mpeg,.mp3" hidden disabled={busy}
+     onChange={event=>{const file=event.target.files?.[0];if(file&&!busy)void upload(file);}}/>
+   <button type="button" className="ue-music-none" disabled={busy} aria-busy={busy} onClick={()=>input.current?.click()}>
+    <Upload size={17} aria-hidden="true"/>
+    {busy?(ru?"Загрузка и проверка…":"Жүктөлүүдө жана текшерилүүдө…"):
+      selected?(ru?"Заменить MP3":"MP3 алмаштыруу"):(ru?"Загрузить MP3":"MP3 жүктөө")}
+    {selected&&!busy&&<Check size={16} aria-hidden="true"/>}
+   </button>
+   <p className="ue-music-hint" role="status">{messages[status]||(ru?"MP3 · до 15 МБ":"MP3 · 15 МБга чейин")}</p>
  </div>;
 }

@@ -69,6 +69,7 @@ export const collectionStaticAssets = [
   "/images/collection/love-story/vf-01/rsvp_border.webp",
   "/images/collection/love-story/vf-01/rsvp_closing.webp",
   "/images/collection/love-story/vf-01/rsvp_footer.webp",
+  "/images/collection/love-story/vf-01/rsvp_music_cover.webp",
   "/images/collection/love-story/vf-01/rsvp_stamp.webp",
   "/images/collection/love-story/vf-01/rsvp_tape.webp",
   "/images/collection/love-story/vf-01/story_branches.webp",

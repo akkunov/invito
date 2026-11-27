@@ -605,7 +605,7 @@
         "x": 56,
         "y": 348,
         "width": 137,
-        "height": 84,
+        "height": 100,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1382,7 +1382,7 @@
         "parentId": "detailsRoot",
         "x": 36,
         "y": 441,
-        "width": 330,
+        "width": 342,
         "height": 193,
         "rotation": 0,
         "opacity": 1,
@@ -1702,7 +1702,7 @@
         "x": 34,
         "y": 214,
         "width": 332,
-        "height": 417,
+        "height": 426,
         "rotation": 0,
         "opacity": 1,
         "visible": true,
@@ -1744,17 +1744,23 @@
         "block": {
           "kind": "music",
           "title": {
-            "ru": "",
-            "ky": ""
+            "ru": "Наш трек",
+            "ky": "Биздин трек"
           },
-          "source": ""
+          "caption": {
+            "ru": "Свадебная мелодия",
+            "ky": "Тойдун обону"
+          },
+          "source": "",
+          "coverAssetId": "rsvpPage_music_cover"
         },
         "appearance": {
           "fontFamily": "sans",
           "fontSize": 16,
           "color": "#302824",
           "background": "transparent",
-          "accent": "#791F35"
+          "accent": "#791F35",
+          "preset": "stationery"
         }
       },
       "rsvpPage_closingPhoto": {
@@ -1953,6 +1959,16 @@
         "pixelWidth": 102,
         "pixelHeight": 56,
         "sizeBytes": 1834,
+        "decorative": true
+      },
+      "rsvpPage_music_cover": {
+        "id": "rsvpPage_music_cover",
+        "name": "rsvp_music_cover.webp",
+        "storageKey": "/images/collection/love-story/vf-01/rsvp_music_cover.webp",
+        "mimeType": "image/webp",
+        "pixelWidth": 68,
+        "pixelHeight": 57,
+        "sizeBytes": 2690,
         "decorative": true
       },
       "rsvpPage_paperGrain": {
@@ -2700,7 +2716,8 @@
         "required": false,
         "kind": "music",
         "nodeId": "rsvpPage_music",
-        "sources": []
+        "sources": [],
+        "allowUpload": true
       },
       {
         "id": "rsvpPage_closingPhoto",

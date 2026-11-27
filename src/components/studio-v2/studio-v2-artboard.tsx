@@ -50,7 +50,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
   if (!node || !node.visible) return null;
   const style = nodeStyle(node);
   const fluidWidget=(document.presentation==="alpine"||document.presentation==="felt"||document.presentation==="collection")&&options.guest?.mode!=="studio"&&node.type==="widget"
-    &&["rsvp","location","schedule"].includes(node.block.kind);
+    &&(["rsvp","location","schedule"].includes(node.block.kind)||node.block.kind==="music"&&node.appearance.preset==="stationery");
   switch (node.type) {
     case "frame":
       return <div key={id} data-studio-node={id} style={{
