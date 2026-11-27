@@ -8,7 +8,7 @@
 
 ## Текущее состояние
 
-Callback и Google flag присутствуют. unit и прежний mock-browser прошли; живой провайдер и доставка почты не подтверждены.
+Проверка кода и loopback-матрица вынесены на `REVIEW`. Настоящие Google consent, Supabase allowlist, доставка email и проверка на живых устройствах ожидают отдельный настроенный staging. [Аудит и воспроизведение PowerShell](../AUTH-SESSION-AUDIT.md)
 
 ## Зависимости
 
