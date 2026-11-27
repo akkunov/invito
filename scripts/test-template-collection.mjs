@@ -111,9 +111,37 @@ test("Love Story opts into verified music references while legacy tracks remain 
  const legacy={...contract,fields:contract.fields.map(field=>{
   if(field.id!==id)return field;
   const {allowUpload,...unchanged}=field;
+  assert.equal(allowUpload,true);
   return unchanged;
  })};
  assert.throws(()=>finalizePersonalization(snapshot,legacy,patch));
  assert.throws(()=>finalizePersonalization(snapshot,contract,{values:{[id]:{kind:"music",source:"https://example.test/unlisted.mp3"}}}));
  assert.equal(finalizePersonalization(snapshot,contract,{values:{[id]:{kind:"music",source:""}}}).nodes[id].block.source,"");
+});
+
+test("Vogue Wedding keeps its monochrome treatment and decorative layers when replacing all six photos",()=>{
+ const pack=JSON.parse(readFileSync(new URL("../templates/packages/vogue-wedding.v1.json",import.meta.url),"utf8"));
+ const {snapshot,contract}=validatedTemplateVersion(pack.document,pack.personalization);
+ const {cover_coverPhoto:cover,gallery_venuePhoto:venue,gallery_galleryWidget:gallery}=snapshot.nodes;
+ assert.equal(cover.visual.imageTreatment,"monochrome");
+ assert.equal(venue.visual.imageTreatment,"monochrome");
+ assert.equal(gallery.block.layout,"stackedMosaic");
+ assert.equal(gallery.appearance.preset,"contact-sheet");
+ assert.equal(gallery.block.assetIds.length,4);
+ const photoFields=contract.fields.filter(field=>field.kind==="image"||field.kind==="gallery");
+ assert.deepEqual(photoFields.map(field=>field.nodeId),[cover.id,gallery.id,venue.id]);
+ const replacedGallery=[...gallery.block.assetIds].reverse();
+ const next=finalizePersonalization(snapshot,contract,{locale:"ky",values:{
+  [cover.id]:{kind:"image",assetId:venue.assetId},
+  [venue.id]:{kind:"image",assetId:cover.assetId},
+  [gallery.id]:{kind:"gallery",assetIds:replacedGallery},
+ }});
+ assert.deepEqual(next.nodes[cover.id],{...cover,assetId:venue.assetId});
+ assert.deepEqual(next.nodes[venue.id],{...venue,assetId:cover.assetId});
+ assert.deepEqual(next.nodes[gallery.id].block.assetIds,replacedGallery);
+ for(const id of ["cover_coverFabric","gallery_venuePin","invitation_mountainsFooter","rsvpPage_mountainsFooterDark"]){
+  const node=snapshot.nodes[id];
+  assert.ok(node.locked&&snapshot.assets[node.assetId].decorative,id);
+  assert.deepEqual(next.nodes[id],node);
+ }
 });

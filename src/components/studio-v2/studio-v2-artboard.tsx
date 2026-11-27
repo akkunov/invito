@@ -75,7 +75,7 @@ function renderNode(document: ProjectDocumentV2, id: string, options:ArtboardTex
           fill loading={!!document.presentation&&(!asset.decorative||document.presentation==="felt")&&node.parentId===document.pages[0].rootNodeId?"eager":undefined}
           fetchPriority={document.presentation==="felt"&&!asset.decorative&&node.parentId===document.pages[0].rootNodeId?"high":undefined}
           sizes={document.presentation?"(max-width: 600px) 100vw, 590px":"(max-width: 900px) 300px, 500px"}
-          style={{ objectFit: asset.decorative?"fill":node.fit, objectPosition: `${(node.visual?.imageCrop?.x??node.focalX) * 100}% ${(node.visual?.imageCrop?.y??node.focalY) * 100}%`,transform:contentTransform(node),transformOrigin:`${(node.visual?.imageCrop?.x??node.focalX)*100}% ${(node.visual?.imageCrop?.y??node.focalY)*100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
+          style={{ filter:node.visual?.imageTreatment==="monochrome"?"grayscale(1)":undefined, objectFit: asset.decorative?"fill":node.fit, objectPosition: `${(node.visual?.imageCrop?.x??node.focalX) * 100}% ${(node.visual?.imageCrop?.y??node.focalY) * 100}%`,transform:contentTransform(node),transformOrigin:`${(node.visual?.imageCrop?.x??node.focalX)*100}% ${(node.visual?.imageCrop?.y??node.focalY)*100}%` }}/>:<div style={{background:"#e9e9e9",width:"100%",height:"100%",display:"grid",placeItems:"center",fontSize:18}}>Ресурс недоступен</div>}
       </div>;
     }
     case "widget":

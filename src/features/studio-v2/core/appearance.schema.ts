@@ -17,6 +17,7 @@ export const visualSchema=z.strictObject({
  clipPolygon:z.array(z.tuple([percentage,percentage])).min(3).max(64).optional(),
  mask:z.enum(["rectangle","ellipse","diamond","arch"]).optional(),
  flipX:z.boolean().optional(),flipY:z.boolean().optional(),
+ imageTreatment:z.literal("monochrome").optional(),
  imageCrop:z.strictObject({zoom:z.number().finite().min(1).max(5),x:z.number().finite().min(0).max(1),y:z.number().finite().min(0).max(1)}).optional()
 });
 export type VisualProperties=z.infer<typeof visualSchema>;
