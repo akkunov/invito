@@ -154,7 +154,6 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
       <div className="ci-grid">{entries.map(entry=>{
         const {draft,publication,summary}=entry;
         const isActive=publication?.status==="ACTIVE";
-        const slug=draft.templateVersion.template.publicSlug;
         return <article className="ci-card" key={draft.id}>
           <div className="ci-card-head"><span className={isActive?"ci-status ci-active":"ci-status"}>{isActive?
             ru?"Опубликовано":"Жарыяланган":publication?(ru?"Закрыто":"Жабылган"):"Черновик"}</span>
@@ -167,7 +166,7 @@ function InvitationsDashboard({locale,session}:{locale:Locale;session:ReturnType
             <div><X size={16}/><strong>{summary?.declined??0}</strong><small>{ru?"Не придут":"Келбейт"}</small></div>
           </div>
           <div className="ci-actions">
-            {slug&&<Link href={`/${locale}/editor?template=${encodeURIComponent(slug)}&draft=${encodeURIComponent(draft.id)}`}>{ru?"Редактировать":"Түзөтүү"}</Link>}
+            <Link href={`/${locale}/editor?draft=${encodeURIComponent(draft.id)}`}>{ru?"Редактировать":"Түзөтүү"}</Link>
             {isActive&&<a target="_blank" rel="noopener noreferrer" href={`/${locale}/c/${publication.slug}`}><Eye size={15}/>{ru?"Открыть":"Ачуу"}</a>}
             {isActive&&<button type="button" onClick={()=>void copy(publication.slug)}><Copy size={15}/>{ru?"Ссылка":"Шилтеме"}</button>}
           </div>

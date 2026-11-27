@@ -157,9 +157,26 @@ test("Studio templates and projects: tenant boundaries, immutable snapshots and 
   assert.equal(publishedV2.templateVersionId, candidateId);
   assert.equal(publishedV2.document.locale, "ky");
   assert.equal((await request("/customer/invitations", ownerToken, "POST", {templateVersionId: publishedV1.templateVersionId})).status, 404);
+  const namesPatch = {values:{names:{kind:"binding",value:{type:"text",value:{ru:"Второе приглашение",ky:"Экинчи чакыруу"}}}}};
+  const currentDraft = await request("/customer/invitations", ownerToken, "POST", {templateVersionId:candidateId,patch:namesPatch});
+  assert.equal(currentDraft.status, 201);
+  const currentId = (currentDraft.json as {id:string}).id;
+  const another = await request("/customer/invitations", ownerToken, "POST", {templateVersionId:candidateId});
+  assert.equal(another.status, 201);
+  assert.notEqual((another.json as {id:string}).id,currentId);
+  const createdCopy = await request("/customer/invitations/"+currentId,ownerToken);
+  assert.deepEqual((createdCopy.json as {patch:unknown}).patch,namesPatch);
   const oldDraftPath = "/customer/invitations/" + draftId;
   const oldDraft = await request(oldDraftPath, ownerToken);
   assert.equal((oldDraft.json as {templateVersionId: string}).templateVersionId, publishedV1.templateVersionId);
+  const editorSourcePath = oldDraftPath + "/editor-source";
+  const editorSource = await request(editorSourcePath, ownerToken);
+  assert.equal(editorSource.status, 200);
+  const pinned = editorSource.json as {source: {versionId: string; document: {locale: string}}};
+  assert.equal(pinned.source.versionId, publishedV1.templateVersionId);
+  assert.equal(pinned.source.document.locale, publishedV1.document.locale);
+  assert.equal((await request(editorSourcePath, outsiderToken)).status, 404);
+  assert.equal((await request(editorSourcePath, "")).status, 401);
   assert.equal((await request(oldDraftPath, ownerToken, "PATCH", {expectedRevision: 1, patch: {values: {}}})).status, 200);
 
   const projectInput = {title: "Project", document: doc};

@@ -1,3 +1,4 @@
+import {signTemplateMedia} from "../documents/template-media.js";
 import {ConflictException,ForbiddenException,Inject,Injectable,NotFoundException,UnprocessableEntityException} from "@nestjs/common";
 import {Prisma} from "../../generated/prisma/client.js";
 import {PrismaService} from "../../database/prisma.service.js";
@@ -63,7 +64,7 @@ export class CustomerInvitationsService {
     const version=await this.db.templateVersion.findUnique({
       where:{id:versionId},
       select:{id:true,number:true,document:true,personalization:true,
-        template:{select:{id:true,status:true,publicSlug:true,workspaceId:true,publishedVersionId:true}}},
+        template:{select:{id:true,name:true,status:true,publicSlug:true,workspaceId:true,publishedVersionId:true}}},
     });
     if(!version||(mustBePublished&&(version.template.status!=="PUBLISHED"||!version.template.publicSlug||version.template.publishedVersionId!==version.id)))
       throw new NotFoundException("TEMPLATE_NOT_PUBLISHED");
@@ -113,11 +114,12 @@ export class CustomerInvitationsService {
     return {patch,assets,rows:[...rows,...audio]};
   }
 
-  async create(userId:string,versionId:string){
+  async create(userId:string,versionId:string,initialPatch?:PersonalizationPatch){
     const template=await this.template(versionId);
     const workspaceId=await this.personalWorkspace(userId);
+    const patch=initialPatch?(await this.checkPatch(userId,workspaceId,template,initialPatch)).patch:EMPTY_PATCH;
     const created=await this.db.invitationDraft.create({
-      data:{ownerId:userId,workspaceId,templateVersionId:template.id,patch:json(EMPTY_PATCH)},
+      data:{ownerId:userId,workspaceId,templateVersionId:template.id,patch:json(patch)},
       select:{id:true,revision:true,templateVersionId:true,createdAt:true},
     });
     return created;
@@ -177,6 +179,18 @@ export class CustomerInvitationsService {
   }
 
   async get(userId:string,id:string){
+    const {draft}=await this.readDraft(userId,id);
+    return draft;
+  }
+
+  async editorSource(userId:string,id:string){
+    const {draft,template}=await this.readDraft(userId,id);
+    const mediaUrls=await signTemplateMedia(this.db,this.store,template.template.workspaceId,template.snapshot);
+    return {draft,source:{versionId:template.id,name:template.template.name,slug:template.template.publicSlug,
+      document:template.snapshot,personalization:template.contract,mediaUrls}};
+  }
+
+  private async readDraft(userId:string,id:string){
     const draft=await this.db.invitationDraft.findFirst({where:{id,ownerId:userId},
       select:{id:true,revision:true,patch:true,workspaceId:true,templateVersionId:true,updatedAt:true}});
     if(!draft)throw new NotFoundException("INVITATION_NOT_FOUND");
@@ -184,7 +198,7 @@ export class CustomerInvitationsService {
     const data=await this.checkPatch(userId,draft.workspaceId,template,draft.patch);
     const mediaUrls:Record<string,string>={};
     await Promise.all(data.rows.map(async a=>{mediaUrls["asset:"+a.id]=await this.store.signRead(a.storageKey,a.mimeType);}));
-    return {...draft,patch:data.patch,assets:data.assets,mediaUrls};
+    return {draft:{...draft,patch:data.patch,assets:data.assets,mediaUrls},template};
   }
 
   async save(userId:string,id:string,expectedRevision:number,raw:unknown){

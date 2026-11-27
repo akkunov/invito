@@ -132,6 +132,8 @@ const endpoints: Endpoint[] = [
     summary:"Получить список своих черновиков",description:"Только черновики авторизованного пользователя.",errors:[401]},
   {method:"get",path:"/api/v1/customer/invitations/{id}",tag:"Customer Invitations",
     summary:"Загрузить черновик и его медиа",description:"Проверяет ownerId, возвращает разрешённый patch, verified asset descriptors и временные R2 URL.",errors:[400,401,404,422]},
+  {method:"get",path:"/api/v1/customer/invitations/{id}/editor-source",tag:"Customer Invitations",
+    summary:"Открыть закреплённую версию черновика владельца",description:"Проверяет владельца черновика и возвращает его контракт и медиа по исходной версии.",errors:[400,401,404,422]},
   {method:"patch",path:"/api/v1/customer/invitations/{id}",tag:"Customer Invitations",
     summary:"Сохранить личные изменения CAS",description:"Сервер сверяет права на все новые медиа и контракт текущей версии. expectedRevision защищает от перезаписи.",
     requestBody:body(schema(updateCustomerInvitationSchema)),errors:[400,401,404,409,422]},
