@@ -8,7 +8,7 @@
 
 ## Текущее состояние
 
-Готов кандидат с четырьмя артбордами 390 × 1058 CSS px, DPR 1. Код [`4829044c139ede0ebe8a7d3cacb680683ceba77a`](https://github.com/akkunov/invito/commit/4829044c139ede0ebe8a7d3cacb680683ceba77a). Все четыре ожидают ручной приёмки. [PR #83](https://github.com/akkunov/invito/pull/83) · [Отчёт, сравнения и PowerShell](../../studio-v2/ITALIAN-ROMANCE.md)
+Готов кандидат с четырьмя артбордами 390 × 1058 CSS px, DPR 1. Код [`33be652429623c6d9c599cf787d944e44e14db74`](https://github.com/akkunov/invito/commit/33be652429623c6d9c599cf787d944e44e14db74). Все четыре ожидают ручной приёмки. [PR #83](https://github.com/akkunov/invito/pull/83) · [Отчёт, сравнения и PowerShell](../../studio-v2/ITALIAN-ROMANCE.md)
 
 ## Зависимости
 
