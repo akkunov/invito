@@ -23,6 +23,7 @@ const templates = new Map(await Promise.all(["love-story","vogue-wedding","itali
 const love = templates.get("love-story");
 const draftId = randomUUID();
 const draftId2 = randomUUID();
+const createdDrafts = new Map();
 const pinnedPath = "/ru/editor?draft="+draftId;
 const editorPath = "/ru/editor?template=love-story&local="+randomUUID()+"&version="+love.templateVersionId;
 const publicV2 = {...love,templateVersionId:randomUUID()};
@@ -145,8 +146,22 @@ const server=createServer(async (request,response)=>{
         }
         return json(overview(user));
       }
-      if(url.pathname.endsWith("/customer/invitations"))return json([]);
+      if(url.pathname.endsWith("/customer/invitations")){
+        if(request.method==="GET")return json([]);
+        assert.equal(request.method,"POST");
+        assert.equal(user.id,alice.id);
+        const {templateVersionId,patch}=await body(request);
+        assert.equal(templateVersionId,love.templateVersionId);
+        const id=randomUUID();
+        const draft={id,revision:1,templateVersionId,patch,assets:[],mediaUrls:{},updatedAt:"2026-01-01T00:00:00Z"};
+        createdDrafts.set(id,draft);
+        return json({id,revision:1,templateVersionId},201);
+      }
       const [,id,sourcePart]=url.pathname.match(/\/customer\/invitations\/([^/]+)(?:\/(editor-source))?$/)??[];
+      const created=createdDrafts.get(id);
+      if(created&&user.id===alice.id){
+        return sourcePart?json({draft:created,source:{...love,slug:"love-story",versionId:love.templateVersionId}}):json(created);
+      }
       if((id===draftId||id===draftId2)&&user.id===alice.id){
         const title=id===draftId?privateTitle:"Второе приглашение";
         const draft={id,revision:1,templateVersionId:love.templateVersionId,
@@ -218,6 +233,17 @@ try{
   assert.equal(verifiedExchanges,1);
   await editor.reload();
   await editorPreview(editor).getByText(guest,{exact:true}).waitFor();
+  const createdPage=await mobile.newPage();
+  await visit(createdPage,editorPath);
+  await editorPreview(createdPage).getByText(guest,{exact:true}).waitFor();
+  await photo(createdPage).click();
+  await createdPage.locator(".ce-cloud").getByRole("button",{name:"Сохранить",exact:true}).click();
+  await createdPage.waitForURL(/\/ru\/editor\?draft=/);
+  assert.equal(createdDrafts.size,1);
+  assert.ok(createdDrafts.has(new URL(createdPage.url()).searchParams.get("draft")));
+  await editorPreview(createdPage).getByText(guest,{exact:true}).waitFor();
+  await createdPage.close();
+
   const ownerEditor=await mobile.newPage();
   usePublicV2=true;
   await visit(ownerEditor,pinnedPath);
