@@ -46,23 +46,32 @@ async function compile(entry, recipe) {
  variable("ceremonyDate","date",collectionDate,["Дата и время свадьбы","Тойдун күнү жана убактысы"]);
  field("ceremonyDate",["Дата и время свадьбы","Тойдун күнү жана убактысы"],"date",{kind:"date",key:"ceremonyDate"},true);
 
- const assetsDir = join(root, "public/images/collection", entry.slug);
+ const assetPrefix = "/images/collection/"+entry.slug+"/"+(recipe.assetRevision ? recipe.assetRevision+"/" : "");
+ const assetsDir = join(root, "public", assetPrefix);
  await mkdir(assetsDir,{recursive:true});
  const loaded = new Map();
  const files = new Map();
  async function asset(id, spec) {
    if (loaded.has(id)) return loaded.get(id);
-   const path = spec.artboard ? join(reference,spec.artboard) : spec.prototype
+   const path = spec.prepared ? join(assetsDir,spec.prepared) : spec.artboard ? join(reference,spec.artboard) : spec.prototype
      ? join(handoff,"prototype/assets",spec.prototype) : join(reference,spec.source);
-   let pipeline = sharp(path);
-   if (spec.crop) {
-     const [left,top,width,height] = spec.crop;
-     pipeline = pipeline.extract({left,top,width,height});
+   let data, info, file;
+   if (spec.prepared) {
+     file = spec.prepared;
+     data = await readFile(path);
+     info = await sharp(data).metadata();
+     if (info.format !== "webp") throw new Error("Expected a prepared WebP: "+path);
+   } else {
+     let pipeline = sharp(path);
+     if (spec.crop) {
+       const [left,top,width,height] = spec.crop;
+       pipeline = pipeline.extract({left,top,width,height});
+     }
+     ({data, info} = await pipeline.webp({quality:91}).toBuffer({resolveWithObject:true}));
+     file = id + ".webp";
+     files.set(join(assetsDir,file),data);
    }
-   const {data, info} = await pipeline.webp({quality:91}).toBuffer({resolveWithObject:true});
-   const file = id + ".webp";
-   files.set(join(assetsDir,file),data);
-   const item = {id,name:spec.label?.[0]??basename(path),storageKey:"/images/collection/"+entry.slug+"/"+file,
+   const item = {id,name:spec.label?.[0]??basename(path),storageKey:assetPrefix+file,
      mimeType:"image/webp",pixelWidth:info.width,pixelHeight:info.height,sizeBytes:data.length,...(spec.decorative?{decorative:true}:{})};
    doc.assets[id]=item;
    loaded.set(id,item);
@@ -91,7 +100,7 @@ async function compile(entry, recipe) {
      const accent=op.accent??pageRecipe.accent??tokens.accent??tokens.wine??ink;
      let node;
      if(op.type==="shape"){
-       node={...base,type:"shape",shape:op.shape??"rectangle",fill:op.fill??accent,stroke:op.stroke??null,strokeWidth:op.stroke?1:0};
+       node={...base,type:"shape",shape:op.shape??"rectangle",fill:op.fill??accent,stroke:op.stroke??null,strokeWidth:op.stroke?op.strokeWidth??1:0};
        if(op.clip)node.visual={...node.visual,clipPolygon:op.clip};
        if(op.gradient)node.visual={...node.visual,fill:{kind:"linear",angle:op.gradient.angle,stops:op.gradient.stops}};
      }else if(op.type==="text"){
@@ -103,7 +112,7 @@ async function compile(entry, recipe) {
        }
        const size=op.size??18;
        node={...base,type:"text",bindingKey:key,runs:[{text:op.copy?.[0]??"",style:style(op.family??"sans",size,op.weight??500,ink)}],
-        textAlign:op.align??"left",letterSpacing:op.spacing??0,lineHeight:op.line??1.12,autoHeight:op.grow??true,...(op.dateFormat?{dateFormat:op.dateFormat}:{})};
+        textAlign:op.align??"left",letterSpacing:op.spacing??0,lineHeight:op.line??1.12,autoHeight:op.grow??true,...(op.widthScale?{widthScale:op.widthScale}:{}),...(op.fitMinFontSize?{fitMinFontSize:op.fitMinFontSize}:{}),...(op.dateFormat?{dateFormat:op.dateFormat}:{})};
      }else if(op.type==="image"){
        const media=await asset(op.asset??id,op.media);
        node={...base,type:"image",assetId:media.id,fit:"cover",focalX:op.focal?.[0]??.5,focalY:op.focal?.[1]??.5};
@@ -116,7 +125,7 @@ async function compile(entry, recipe) {
         block={...block,maxGuests:4,deadline:null};
         field(id,["Подтверждение участия","Катышууну ырастоо"],"rsvp",{kind:"rsvp",nodeId:id,maxGuests:10});
        }else if(op.kind==="schedule"){
-        block={...block,layout:block.layout??"rows",items:schedule};
+        block={...block,layout:block.layout??"rows",items:op.items??schedule};
         field(id,["Программа дня","Тойдун программасы"],"schedule",{kind:"schedule",nodeId:id,maxItems:20},true);
        }else if(op.kind==="location"){
         const addressKey="venueAddress";
@@ -135,7 +144,7 @@ async function compile(entry, recipe) {
        }else if(op.kind==="calendar"||op.kind==="countdown"){
         block={...block,target:collectionDate,targetKey:"ceremonyDate"};
        }
-       node={...base,height:["sectionLink","calendar","location"].includes(op.kind)?Math.max(48,base.height):base.height,type:"widget",block,appearance:{fontFamily:"sans",fontSize:16,color:ink,background:"transparent",accent,...(op.buttonInk??pageRecipe.buttonInk?{buttonColor:op.buttonInk??pageRecipe.buttonInk}:{})}};
+       node={...base,height:["sectionLink","calendar","location"].includes(op.kind)?Math.max(48,base.height):base.height,type:"widget",block,appearance:{fontFamily:"sans",fontSize:16,color:ink,background:"transparent",accent,...(op.preset?{preset:op.preset}:{}),...(op.buttonInk??pageRecipe.buttonInk?{buttonColor:op.buttonInk??pageRecipe.buttonInk}:{})}};
      }else throw new Error("Unrecognized layer "+id);
      doc.nodes[id]=node;
      rootNode.children.push(id);
@@ -146,7 +155,7 @@ async function compile(entry, recipe) {
   category:"WEDDING",tags:["wedding","collection","ru","ky"],coverPageId:doc.pages[0].id},document:doc,personalization};
  validatedTemplateVersion(doc,personalization);
  files.set(join(root,"templates/packages",entry.slug+".v1.json"),JSON.stringify(pack,null,2)+"\n");
- return {files, paths:Object.values(doc.assets).map(item=>item.storageKey)};
+ return {files, assetPrefix, paths:Object.values(doc.assets).map(item=>item.storageKey)};
 }
 
 const requested = process.argv.slice(2);
@@ -164,7 +173,7 @@ for(const slug of slugs) {
 const registry = resolve(root,"server/src/modules/documents/collection-static-assets.ts");
 const existing = await readFile(registry,"utf8").catch(error=>{if(error.code==="ENOENT")return "";throw error;});
 const unchanged = [...existing.matchAll(/"(\/images\/collection\/([^/]+)\/[^"]+)"/g)]
- .filter(match=>!slugs.includes(match[2])).map(match=>match[1]);
+ .map(match=>match[1]).filter(path=>!drafts.some(({assetPrefix})=>path.slice(0,path.lastIndexOf("/")+1)===assetPrefix));
 async function replaceFile(path, content) {
  const temporary = path + ".tmp-" + process.pid;
  await writeFile(temporary,content);
@@ -174,4 +183,4 @@ for(const {slug,files} of drafts) {
  for(const [path,data] of files)await replaceFile(path,data);
  console.log("Compiled "+slug);
 }
-await replaceFile(registry,"// Generated by scripts/compile-template-collection.mjs.\nexport const collectionStaticAssets = "+JSON.stringify([...unchanged,...paths].sort(),null,2)+" as const;\n");
+await replaceFile(registry,"// Generated by scripts/compile-template-collection.mjs.\nexport const collectionStaticAssets = "+JSON.stringify([...new Set([...unchanged,...paths])].sort(),null,2)+" as const;\n");

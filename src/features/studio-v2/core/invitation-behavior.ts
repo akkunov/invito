@@ -61,8 +61,8 @@ const weekdayNames={
  ru:["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"],
  ky:["Жекшемби","Дүйшөмбү","Шейшемби","Шаршемби","Бейшемби","Жума","Ишемби"],
 };
-export function formatEventDate(instant:string,locale:Locale,format:"date"|"numeric"|"weekday"|"time"|"date-time"):string {
- if(format==="date")return editorialDate(instant,locale,locale==="ky");
+export function formatEventDate(instant:string,locale:Locale,format:NonNullable<Extract<ProjectNodeV2,{type:"text"}>["dateFormat"]>):string {
+ if(format==="date"||format==="short-date")return editorialDate(instant,locale,format==="date"&&locale==="ky");
  const parts=Object.fromEntries(calendarDateTime.formatToParts(new Date(instant)).map(part=>[part.type,part.value]));
  if(format==="weekday")return weekdayNames[locale][new Date(Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day))).getUTCDay()];
  const date=`${parts.day}.${parts.month}.${parts.year}`;

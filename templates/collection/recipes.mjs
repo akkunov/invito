@@ -8,7 +8,6 @@ const date = (at,size,options={}) => text(at,null,size,{family:"serif",weight:60
 const image = (at,media,options={}) => ({type:"image",at,media,...options});
 const region = (artboard,crop,label) => ({artboard:artboard.toString().padStart(2,"0")+"-artboard.png",crop,label,decorative:!label});
 const crop = (source,label,crop) => ({source:"photo-crops/"+source,label,crop,decorative:!label});
-const original = (prototype,label) => ({prototype,label,decorative:!label});
 const shape = (at,fill,options={}) => ({type:"shape",at,fill,...options});
 const widget = (at,kind,block={},options={}) => ({type:"widget",at,kind,block,...options});
 const action = (at,copy,style="outline",destination="next",options={}) => widget(at,"sectionLink",{title:{ru:copy[0],ky:copy[1]},style,destination},options);
@@ -34,62 +33,87 @@ const photo = (ru,ky) => [ru,ky];
 const portrait = photo("Портрет пары","Түгөйлөрдүн портрети");
 const wine = "#791F35";
 
+const prepared = (name,label) => ({prepared:name+".webp",label,decorative:!label});
+const paperPreset = {preset:"stationery"};
+const paper = () => image("paperGrain",prepared("paper_grain"),{box:box(0,0,390,1045)});
+const loveStorySchedule = [
+ ["16:00","Сбор гостей\nПриветственные напитки","Конокторду тосуу\nСуусундуктар"],
+ ["17:00","Церемония\nТоржественная регистрация","Нике салтанаты\nНикени каттоо"],
+ ["18:30","Банкет\nПраздничный ужин и тосты","Банкет\nМайрамдык кечки тамак жана каалоолор"],
+ ["22:00","Вечерняя программа\nМузыка, танцы и сюрпризы","Кечки программа\nМузыка, бий жана сюрприздер"],
+].map(([time,ru,ky])=>({time,label:{ru,ky}}));
+
 const loveStory = {
  description:"История пары в фотокарточках, билет на свадьбу и почтовый ответ гостя.",
- tokens:{accent:wine},
+ assetRevision:"vf-01",
+ tokens:{accent:wine,paper:"#F1EBE1",ink:"#302824"},
  pages:{
   cover:page([
-   shape("coverSky","#B8CAD4"),
-   image("coverBranches",region(1,[278,0,112,138]),{box:box(278,0,112,138)}),
-   image("coverPhoto",original("cover.webp",photoLabel),{focal:[.5,.22]}),
-   text("eyebrow",["ПРИГЛАШЕНИЕ\nНА СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ"],13,{weight:650,spacing:3}),
+   image("coverSky",prepared("cover_sky"),{box:box(0,0,390,394)}),
+   image("coverPhoto",prepared("cover_photo",photoLabel),{box:box(0,394,390,651),focal:[.5,.38]}),
+   text("eyebrow",["ПРИГЛАШЕНИЕ\nНА СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРУУ"],16,{box:box(36,43,208,43),weight:560,spacing:5.3,line:1.3}),
    shape("eyebrowRule",wine),
-   title("names",["АЛИБЕК\nИ АЛИНА","АЛИБЕК\nЖАНА АЛИНА"],73,{...field(coupleLabel,"coupleNames"),spacing:-3,line:.98}),
-   date("date",24,{align:"left",spacing:3,color:wine}),
-   text("storyLink",["НАША ИСТОРИЯ","БИЗДИН ТАРЫХ"],12,{box:box(106,928,216,29),align:"center",spacing:3,color:"#302824"}),
+   title("names",["АЛИБЕК\nИ АЛИНА","АЛИБЕК\nЖАНА АЛИНА"],94,{...field(coupleLabel,"coupleNames"),box:box(37,141,347,190),spacing:-2.3,line:.95,weight:470,widthScale:.75,fitMinFontSize:46}),
+   date("date",30,{box:box(39,345,335,40),align:"left",spacing:6.5,color:wine,dateFormat:"short-date"}),
+   text("storyLink",["НАША ИСТОРИЯ","БИЗДИН ТАРЫХ"],19,{box:box(60,928,294,30),align:"center",spacing:6,color:"#302824",weight:520}),
    action("scrollIcon",next,"arrow"),
-  ],{background:"#B8CAD4"}),
+  ],{background:"#BCCCD4"}),
   story:page([
+   paper(),
+   image("oliveBranch",prepared("story_branches"),{box:box(209,0,181,166)}),
    shape("storyRule",wine),
-   title("storyTitle",["НАША\nИСТОРИЯ","БИЗДИН\nТАРЫХ"],32,{spacing:3,line:1}),
-   text("storySubtitle",["ТРИ ГЛАВЫ, КОТОРЫЕ\nПРИВЕЛИ НАС К ЭТОМУ ДНЮ","БИЗДИ УШУЛ КҮНГӨ\nАЛЫП КЕЛГЕН ҮЧ БАЯН"],11,{spacing:1.5,weight:650}),
+   title("storyTitle",["НАША\nИСТОРИЯ","БИЗДИН\nТАРЫХ"],39,{box:box(43,67,290,83),spacing:6,line:1.02,weight:470,color:"#4F3029"}),
+   text("storySubtitle",["ТРИ ГЛАВЫ, КОТОРЫЕ\nПРИВЕЛИ НАС К ЭТОМУ ДНЮ","БИЗДИ УШУЛ КҮНГӨ\nАЛЫП КЕЛГЕН ҮЧ БАЯН"],14,{box:box(45,159,322,42),spacing:2.8,weight:560,line:1.36}),
    shape("storyLine",wine),
    ...["meeting","trip","proposal"].flatMap((id,i)=>{
     const [day,ru,ky,description,translation]=chapterCopy[i];
+    const photoBox=[box(214,226,187,216),box(210,484,174,200),box(217,716,170,185)][i];
+    const turn=[-4.1,4.2,-4][i];
     return [
-     shape(id+"Dot",wine,{box:box(26,[273,508,735][i],10,10),shape:"circle"}),
-     title(id+"Date",[day,day],20,{...field([ru+" — дата",ky+" — күнү"],id+"Date"),color:wine}),
-     text(id+"Title",[ru,ky],15,{...field([ru+" — заголовок",ky+" — аталышы"],id+"Title"),weight:680}),
-     text(id+"Text",[description,translation],13,field([ru+" — описание",ky+" — баяны"],id+"Description")),
-     shape(id+"Mat","#FFF9F1",{box:box([190,189,195][i],[221,468,705][i],[196,198,191][i],[237,233,209][i]),rotation:[-3,3,-3][i]}),
-     image(id+"Photo",original(["first-meeting.webp","first-trip.webp","proposal.webp"][i],photo(ru+" — фото",ky+" — сүрөт")), {rotation:[-3,3,-3][i]}),
+     shape(id+"Dot","#F2EAE0",{box:box(24,[273,506,735][i],14,14),shape:"circle",stroke:wine,strokeWidth:4}),
+     title(id+"Date",[day,day],25,{...field([ru+" — дата",ky+" — күнү"],id+"Date"),box:box(54,[259,493,721][i],137,31),color:wine,weight:600}),
+     text(id+"Title",[
+      ["ПЕРВАЯ\nВСТРЕЧА","ПЕРВОЕ\nПУТЕШЕСТВИЕ","ОНА СКАЗАЛА\n«ДА»"][i],
+      ["БИРИНЧИ\nЖОЛУГУШУУ","БИРИНЧИ\nСАЯКАТ","АЛ «ООБА»\nДЕДИ"][i],
+     ],17,{...field([ru+" — заголовок",ky+" — аталышы"],id+"Title"),box:box(56,[294,529,756][i],139,47),family:i===2?"serif":"sans",weight:650,spacing:.55,line:1.17}),
+     text(id+"Text",[description,translation],14,{...field([ru+" — описание",ky+" — баяны"],id+"Description"),box:box(56,[348,581,811][i],137,[84,88,72][i]),line:1.15,weight:460}),
+     image(id+"Photo",prepared("story_"+id,photo(ru+" — фото",ky+" — сүрөт")),{box:photoBox,rotation:turn}),
+     image(id+"Film",prepared("story_"+id+"_frame"),{box:[box(179,215,211,247),box(183,472,207,232),box(192,701,198,222)][i]}),
+     text(id+"Number",[`0${i+1}`,`0${i+1}`],19,{box:box([352,358,349][i],[229,497,721][i],31,26),color:"#FFF9F1",weight:580,rotation:turn}),
     ];
    }),
-   image("landscapeFooter",original("landscape.webp")),
+   image("landscapeFooter",prepared("story_landscape"),{box:box(0,915,390,130)}),
   ]),
   details:page([
-   shape("ticketBacking",wine,{box:box(13,20,364,335),radius:16,rotation:-3}),
-   shape("ticket","#FFF9F1",{radius:13,stroke:"#D0B3A1",rotation:-2}),
-   text("ticketEyebrow",["ПРИГЛАШАЕМ ВАС\nНА НАШУ СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРАБЫЗ"],13,{...field(inviteLabel,"invitationText"),align:"center",spacing:2,weight:650}),
-   date("ticketDate",37,{color:wine,spacing:-1}),
-   shape("ticketLine","#A99B8D",{box:box(55,190,280,1)}),
-   date("ticketDay",14,{dateFormat:"weekday"}),
-   date("ticketTime",23,{dateFormat:"time",color:wine}),
-   calendar("calendarAction"),
-   title("dayHeading",["НАШ ДЕНЬ","ТОЙ КҮНҮ"],25,{align:"center",spacing:2}),
-   widget("program","schedule"),
-   image("venuePhoto",original("venue.webp",venueLabel),{radius:12}),
-   title("venueName",venue,22,field(venueTitle,"venueName","location")),
-   map("mapAction",{box:box(27,881,336,96),block:{},address:["г. Бишкек, ул. Курманжан Датки, 45","Бишкек ш., Курманжан Датка көч., 45"]}),
+   paper(),
+   image("ticketPaper",prepared("details_ticket"),{box:box(0,0,390,375)}),
+   text("ticketEyebrow",["ПРИГЛАШАЕМ ВАС\nНА НАШУ СВАДЬБУ","ҮЙЛӨНҮҮ ТОЙГО\nЧАКЫРАБЫЗ"],15,{...field(inviteLabel,"invitationText"),box:box(64,62,260,41),align:"center",spacing:3.7,weight:620,rotation:-3.1,line:1.32}),
+   date("ticketDate",46,{box:box(53,124,300,58),color:wine,spacing:0,widthScale:.9,rotation:-3.1,dateFormat:"short-date"}),
+   date("ticketDay",17,{box:box(71,201,110,33),dateFormat:"weekday",family:"sans",weight:620,spacing:2,rotation:-3.1}),
+   date("ticketTime",30,{box:box(191,189,113,37),dateFormat:"time",color:wine,rotation:-3.1}),
+   widget("calendarAction","calendar",{layout:"button",title:{ru:"В календарь",ky:"Жылнаамага"}},{...paperPreset,box:box(140,263,211,49),rotation:-2.3}),
+   shape("dayRuleLeft",wine,{box:box(37,411,51,1)}),
+   shape("dayRuleRight",wine,{box:box(312,411,51,1)}),
+   title("dayHeading",["НАШ ДЕНЬ","ТОЙ КҮНҮ"],32,{box:box(86,390,220,41),align:"center",spacing:5.6,weight:500,widthScale:.86,color:"#4F3029"}),
+   widget("program","schedule",{layout:"rows"},{...paperPreset,items:loveStorySchedule,box:box(36,441,330,193)}),
+   image("venuePhoto",prepared("details_venue",venueLabel),{radius:17}),
+   title("venueName",venue,25,{...field(venueTitle,"venueName","location"),box:box(71,847,296,32),weight:630,color:"#1E1B18"}),
+   map("mapAction",{...paperPreset,box:box(26,856,337,120),block:{showAddress:true},address:["г. Бишкек, ул. Курманжан Датки, 45","Бишкек ш., Курманжан Датка көч., 45"]}),
+   image("venueFoliage",prepared("details_foliage"),{box:box(206,964,184,81)}),
   ]),
   rsvpPage:page([
-   image("airmailBorder",region(4,[1,2,387,37])),
-   image("stamp",region(4,[277,39,91,87])),
-   title("rsvpHeading",["ОТПРАВЬТЕ\nСВОЙ ОТВЕТ","ЖООБУҢУЗДУ\nЖӨНӨТҮҢҮЗ"],24,{spacing:1.4}),
-   text("rsvpIntro",["Будем рады разделить этот особенный день вместе с вами.","Бул өзгөчө күндү сиздер менен бирге өткөрүүгө кубанычтабыз."],16,field(["Текст перед формой","Анкетанын алдындагы текст"],"rsvpIntro","rsvp")),
-   form("rsvpWidget"),
+   paper(),
+   image("airmailBorder",prepared("rsvp_border")),
+   image("stamp",prepared("rsvp_stamp"),{box:box(253,37,117,104)}),
+   title("rsvpHeading",["ОТПРАВЬТЕ\nСВОЙ ОТВЕТ","ЖООБУҢУЗДУ\nЖӨНӨТҮҢҮЗ"],30,{box:box(43,68,220,66),spacing:3.5,widthScale:.92,weight:470,line:1.05}),
+   text("rsvpIntro",["Будем рады разделить этот\nособенный день вместе с вами.","Бул өзгөчө күндү сиздер менен\nбирге өткөрүүгө кубанычтабыз."],16,{...field(["Текст перед формой","Анкетанын алдындагы текст"],"rsvpIntro","rsvp"),box:box(43,150,311,46),spacing:.25,line:1.35}),
+   form("rsvpWidget",{...paperPreset,box:box(34,214,332,417)}),
    music("music"),
-   image("closingPhoto",original("closing.webp",photo("Финальный снимок","Акыркы сүрөт")),{radius:9,rotation:-3}),
+   image("closingPhoto",prepared("rsvp_closing",photo("Финальный снимок","Акыркы сүрөт")),{
+    box:box(0,720,390,269),clip:[[0,20],[8,19],[48,10],[94,0],[100,87],[85,94],[71,92],[59,86],[44,91],[28,95],[0,100]],
+   }),
+   image("closingTape",prepared("rsvp_tape"),{box:box(25,726,102,56)}),
+   image("closingPaper",prepared("rsvp_footer"),{box:box(0,941,390,104)}),
   ]),
  },
 };

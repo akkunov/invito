@@ -86,10 +86,16 @@ export function layoutCollection(document: ProjectDocumentV2, width: number, mea
    const next = {...node, x: node.x * ratio, width: node.width * ratio, y: node.y + shift};
    if (canGrow(node)) next.height = Math.max(node.height, measurements[node.id] ?? 0);
    if (next.type === "text") {
-    next.runs = next.runs.map(run => ({
-     ...run,
-     style: {...run.style, fontSize: run.style.fontSize * Math.min(1.1, Math.max(.78, ratio))},
-    }));
+    const minFontSize = next.fitMinFontSize;
+    const scaleWidth = next.widthScale ?? 1;
+    const fittingSize = minFontSize === undefined ? undefined
+     : next.width / (Math.max(1,...next.runs.map(run=>run.text).join("").split("\n").map(lineAdvance))*scaleWidth);
+    next.runs = next.runs.map(run => {
+     const scaledSize = run.style.fontSize * Math.min(1.1, Math.max(.78, ratio));
+     const fontSize = minFontSize === undefined || fittingSize === undefined
+      ? scaledSize : Math.min(scaledSize, Math.max(minFontSize, fittingSize));
+     return {...run,style:{...run.style,fontSize}};
+    });
    }
    height = Math.max(height, next.y + next.height, root.height + shift);
    nodes[node.id] = next;

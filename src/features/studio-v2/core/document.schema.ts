@@ -76,7 +76,9 @@ const nodeSchema = z.discriminatedUnion("type", [
     lineHeight: z.number().finite().min(0.8).max(4).optional(),
     letterSpacing: z.number().finite().min(-10).max(60).optional(),
     autoHeight: z.boolean().optional(),
-    dateFormat: z.enum(["date","numeric","weekday","time","date-time"]).optional(),
+    widthScale: z.number().finite().min(.65).max(1).optional(),
+    fitMinFontSize: z.number().finite().min(6).max(100).optional(),
+    dateFormat: z.enum(["date","short-date","numeric","weekday","time","date-time"]).optional(),
     bindingKey: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_.-]{0,99}$/).nullable(),
   }),
   baseNodeSchema.extend({
