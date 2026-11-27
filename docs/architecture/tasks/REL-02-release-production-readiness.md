@@ -12,7 +12,7 @@
 
 ## Зависимости
 
-[REL-01](REL-01-release-staging-rehearsal.md), [TPL-04](TPL-04-template-version-rollout.md)
+[REL-01](REL-01-release-staging-rehearsal.md), [TPL-04](TPL-04-template-version-rollout.md), [AUTH-03](AUTH-03-live-production-gate.md)
 
 ## Scope
 
